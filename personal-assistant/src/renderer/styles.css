@@ -48,3 +48,13 @@ section {
   border-radius: 20px;
   padding: 4px 10px;
 }
+
+.status {
+  color: #86efac;
+  margin: 8px 0;
+}
+
+.error {
+  color: #fca5a5;
+  margin: 8px 0;
+}

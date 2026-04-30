@@ -3,15 +3,21 @@ import { getDb } from "../db";
 import { getHaToken, saveHaToken } from "./secrets";
 
 let baseUrl = "";
+const HA_BASE_URL_KEY = "ha.baseUrl";
 
 export async function configureHomeAssistant(url: string, token: string): Promise<void> {
-  baseUrl = url.replace(/\/$/, "");
+  baseUrl = normalizeUrl(url);
+  if (!baseUrl) throw new Error("Home Assistant URL is required");
   await saveHaToken(token);
+  getDb()
+    .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updatedAt=excluded.updatedAt")
+    .run(HA_BASE_URL_KEY, baseUrl, new Date().toISOString());
 }
 
 async function authedFetch(path: string, init?: RequestInit): Promise<Response> {
   const token = await getHaToken();
-  if (!token || !baseUrl) throw new Error("Home Assistant not configured");
+  const url = getConfiguredBaseUrl();
+  if (!token || !url) throw new Error("Home Assistant not configured");
   return fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
@@ -56,8 +62,20 @@ export async function refreshEntities(): Promise<void> {
 
 export async function toggleEntity(entityId: string): Promise<void> {
   const domain = entityId.split(".")[0];
-  await authedFetch(`/api/services/${domain}/toggle`, {
+  const res = await authedFetch(`/api/services/${domain}/toggle`, {
     method: "POST",
     body: JSON.stringify({ entity_id: entityId })
   });
+  if (!res.ok) throw new Error(`Toggle failed: ${res.status}`);
+}
+
+function getConfiguredBaseUrl(): string {
+  if (baseUrl) return baseUrl;
+  const row = getDb().prepare("SELECT value FROM app_settings WHERE key = ?").get(HA_BASE_URL_KEY) as { value?: string } | undefined;
+  baseUrl = normalizeUrl(row?.value || "");
+  return baseUrl;
+}
+
+function normalizeUrl(url: string): string {
+  return url.trim().replace(/\/$/, "");
 }

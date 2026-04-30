@@ -53,6 +53,12 @@ function migrations(database: Database.Database): void {
       endedAt TEXT NOT NULL,
       error TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
   `);
 }
 

@@ -10,13 +10,20 @@ export function App(): JSX.Element {
   const [devices, setDevices] = useState<Array<{ entityId: string; friendlyName: string; state: string }>>([]);
   const [logs, setLogs] = useState<Array<{ id: string; status: string; startedAt: string; error?: string }>>([]);
   const [rules, setRules] = useState<Array<{ id: string; name: string; triggerConfig: { at: string }; actionType: string }>>([]);
+  const [status, setStatus] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   async function refreshAll(): Promise<void> {
-    setNotes(await window.assistantApi.listNotes(query));
-    setReminders(await window.assistantApi.listReminders());
-    setDevices(await window.assistantApi.listDevices());
-    setLogs(await window.assistantApi.listExecutionLogs());
-    setRules(await window.assistantApi.listRules());
+    try {
+      setError("");
+      setNotes(await window.assistantApi.listNotes(query));
+      setReminders(await window.assistantApi.listReminders());
+      setDevices(await window.assistantApi.listDevices());
+      setLogs(await window.assistantApi.listExecutionLogs());
+      setRules(await window.assistantApi.listRules());
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   }
 
   useEffect(() => {
@@ -38,6 +45,8 @@ export function App(): JSX.Element {
   return (
     <main className="container">
       <h1>Personal Assistant</h1>
+      {status ? <p className="status">{status}</p> : null}
+      {error ? <p className="error">{error}</p> : null}
       <input placeholder="Command palette..." value={query} onChange={(e) => setQuery(e.target.value)} />
       <div className="row">
         {commandHints.map((hint) => (
@@ -64,14 +73,46 @@ export function App(): JSX.Element {
           <input placeholder="Long-lived access token" value={haToken} onChange={(e) => setHaToken(e.target.value)} />
         </div>
         <div className="row">
-          <button onClick={async () => { await window.assistantApi.configureHomeAssistant({ url: haUrl, token: haToken }); }}>Save</button>
-          <button onClick={async () => { alert((await window.assistantApi.testHomeAssistant()) ? "Connected" : "Failed"); }}>Test</button>
-          <button onClick={async () => { await window.assistantApi.refreshHomeAssistantEntities(); await refreshAll(); }}>Refresh Entities</button>
+          <button onClick={async () => {
+            try {
+              setError("");
+              await window.assistantApi.configureHomeAssistant({ url: haUrl, token: haToken });
+              setStatus("Home Assistant config saved.");
+            } catch (err) {
+              setError(getErrorMessage(err));
+            }
+          }}>Save</button>
+          <button onClick={async () => {
+            try {
+              setError("");
+              setStatus((await window.assistantApi.testHomeAssistant()) ? "Home Assistant connected." : "Home Assistant test failed.");
+            } catch (err) {
+              setError(getErrorMessage(err));
+            }
+          }}>Test</button>
+          <button onClick={async () => {
+            try {
+              setError("");
+              await window.assistantApi.refreshHomeAssistantEntities();
+              setStatus("Entities refreshed.");
+              await refreshAll();
+            } catch (err) {
+              setError(getErrorMessage(err));
+            }
+          }}>Refresh Entities</button>
         </div>
         <ul>
           {devices.map((d) => (
             <li key={d.entityId}>
-              {d.friendlyName} ({d.state}) <button onClick={async () => { await window.assistantApi.toggleDevice(d.entityId); await refreshAll(); }}>Toggle</button>
+              {d.friendlyName} ({d.state}) <button onClick={async () => {
+                try {
+                  setError("");
+                  await window.assistantApi.toggleDevice(d.entityId);
+                  await refreshAll();
+                } catch (err) {
+                  setError(getErrorMessage(err));
+                }
+              }}>Toggle</button>
             </li>
           ))}
         </ul>
@@ -89,6 +130,11 @@ export function App(): JSX.Element {
       </section>
     </main>
   );
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
 }
 
 function RuleForm({
