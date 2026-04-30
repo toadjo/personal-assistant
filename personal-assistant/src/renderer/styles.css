@@ -1,0 +1,50 @@
+body {
+  font-family: Segoe UI, sans-serif;
+  margin: 0;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.container {
+  padding: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+input, button, select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+input, select {
+  min-width: 260px;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+button {
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+}
+
+section {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.pill {
+  background: #334155;
+  border-radius: 20px;
+  padding: 4px 10px;
+}
