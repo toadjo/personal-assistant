@@ -1,7 +1,8 @@
 param(
     [int]$Keep = 3,
     [switch]$All,
-    [switch]$IncludeDist
+    [switch]$IncludeDist,
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,8 +14,12 @@ function Write-Step([string]$Message) {
 
 function Remove-IfExists([string]$Path) {
     if (Test-Path -LiteralPath $Path) {
-        Remove-Item -LiteralPath $Path -Recurse -Force
-        Write-Host "Removed: $Path"
+        if ($DryRun) {
+            Write-Host "Would remove: $Path"
+        } else {
+            Remove-Item -LiteralPath $Path -Recurse -Force
+            Write-Host "Removed: $Path"
+        }
     }
 }
 
@@ -23,7 +28,9 @@ function Get-VersionDirectories([string]$RootPath) {
         return @()
     }
 
-    return @(Get-ChildItem -Path $RootPath -Directory | Sort-Object LastWriteTime -Descending)
+    return @(Get-ChildItem -Path $RootPath -Directory | Where-Object {
+        $_.Name -match '^v\d+\.\d+\.\d+([\-+][0-9A-Za-z\.-]+)?$'
+    } | Sort-Object LastWriteTime -Descending)
 }
 
 function Prune-OlderDirectories([string]$RootPath, [int]$KeepCount) {
@@ -33,8 +40,12 @@ function Prune-OlderDirectories([string]$RootPath, [int]$KeepCount) {
     }
 
     $dirs | Select-Object -Skip $KeepCount | ForEach-Object {
-        Remove-Item -LiteralPath $_.FullName -Recurse -Force
-        Write-Host "Removed: $($_.FullName)"
+        if ($DryRun) {
+            Write-Host "Would remove: $($_.FullName)"
+        } else {
+            Remove-Item -LiteralPath $_.FullName -Recurse -Force
+            Write-Host "Removed: $($_.FullName)"
+        }
     }
 }
 
@@ -73,5 +84,9 @@ if ($IncludeDist) {
 }
 
 Write-Host ""
-Write-Host "Cleanup complete."
+if ($DryRun) {
+    Write-Host "Dry run complete."
+} else {
+    Write-Host "Cleanup complete."
+}
 Write-Host "Tip: run npm run release:build for next release."

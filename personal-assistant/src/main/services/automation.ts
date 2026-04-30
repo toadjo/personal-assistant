@@ -4,6 +4,10 @@ import { createReminder } from "./reminders";
 import { toggleEntity } from "./homeAssistant";
 import { AutomationRule } from "../../shared/types";
 
+const AUTOMATION_ACTION_TIMEOUT_MS = 10_000;
+const AUTOMATION_RETRY_ATTEMPTS = 3;
+const AUTOMATION_RETRY_DELAY_MS = 250;
+
 export function listRules(): AutomationRule[] {
   return getDb()
     .prepare("SELECT * FROM automation_rules ORDER BY name ASC")
@@ -45,33 +49,36 @@ export async function runAutomationCycle(): Promise<void> {
   const hhmm = new Date().toTimeString().slice(0, 5);
   const rules = getDb()
     .prepare("SELECT * FROM automation_rules WHERE enabled = 1 AND triggerType = 'time'")
-    .all() as Array<{ id: string; triggerConfig: string; actionType: string; actionConfig: string }>;
+    .all() as Array<{ id: string; name?: string; triggerConfig: string; actionType: string; actionConfig: string }>;
 
   for (const rule of rules) {
     const startedAt = new Date().toISOString();
     try {
       const trigger = validateTriggerConfig(safeParseObject(rule.triggerConfig, "automation triggerConfig"));
       if (trigger.at !== hhmm) continue;
-      const action = validateActionConfig(safeParseObject(rule.actionConfig, "automation actionConfig"));
-      await withRetry(async () => {
-        if (rule.actionType === "localReminder") {
-          if (!action.text) throw new Error("localReminder requires text");
-          createReminder({ text: action.text, dueAt: new Date().toISOString(), recurrence: "none" });
-        } else if (rule.actionType === "haToggle" && action.entityId) {
-          await toggleEntity(action.entityId);
-        } else {
-          throw new Error(
-            rule.actionType === "haToggle"
-              ? "haToggle action requires a valid entityId."
-              : `Unsupported action configuration for "${rule.actionType}".`
-          );
-        }
-      });
+      const actionType = validateActionType(rule.actionType);
+      const actionConfig = validateActionConfig(safeParseObject(rule.actionConfig, "automation actionConfig"));
+      await withRetry(() => executeAutomationAction(actionType, actionConfig), AUTOMATION_RETRY_ATTEMPTS);
       writeLog(rule.id, "success", startedAt, new Date().toISOString());
     } catch (error) {
-      writeLog(rule.id, "failed", startedAt, new Date().toISOString(), formatErrorMessage(error));
+      const ruleLabel = rule.name?.trim() || rule.id;
+      writeLog(rule.id, "failed", startedAt, new Date().toISOString(), `[${ruleLabel}] ${formatErrorMessage(error)}`);
     }
   }
+}
+
+async function executeAutomationAction(
+  actionType: "localReminder" | "haToggle",
+  actionConfig: Record<string, string>
+): Promise<void> {
+  if (actionType === "localReminder") {
+    if (!actionConfig.text) throw new Error("localReminder action requires non-empty text.");
+    createReminder({ text: actionConfig.text, dueAt: new Date().toISOString(), recurrence: "none" });
+    return;
+  }
+
+  if (!actionConfig.entityId) throw new Error("haToggle action requires a valid entityId.");
+  await toggleEntity(actionConfig.entityId);
 }
 
 async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<void> {
@@ -79,10 +86,13 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
   let lastError: unknown;
   for (let i = 0; i < safeAttempts; i += 1) {
     try {
-      await withTimeout(Promise.resolve(fn()), 10_000);
+      await withTimeout(Promise.resolve(fn()), AUTOMATION_ACTION_TIMEOUT_MS);
       return;
     } catch (error) {
       lastError = error;
+      if (i < safeAttempts - 1) {
+        await sleep(AUTOMATION_RETRY_DELAY_MS);
+      }
     }
   }
   throw new Error(`Automation failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`);
@@ -97,7 +107,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
     return await Promise.race([
       promise,
       new Promise<T>((_, reject) => {
-        timeoutRef = setTimeout(() => reject(new Error("Action timeout")), timeoutMs);
+        timeoutRef = setTimeout(() => reject(new Error(`Automation action timed out after ${timeoutMs}ms.`)), timeoutMs);
         timeoutRef.unref();
       })
     ]);
@@ -167,4 +177,11 @@ function validateActionConfig(actionConfig: unknown): Record<string, string> {
 function validateActionType(value: unknown): "localReminder" | "haToggle" {
   if (value === "localReminder" || value === "haToggle") return value;
   throw new Error("Automation action type must be 'localReminder' or 'haToggle'.");
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(resolve, ms);
+    timeout.unref();
+  });
 }

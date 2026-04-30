@@ -32,6 +32,10 @@ const haConfigSchema = z.object({
   url: z.string().trim().url().max(2_048),
   token: z.string().trim().max(4_096)
 });
+const uuidSchema = z.string().uuid();
+const optionalQuerySchema = z.string().optional();
+const positiveIntegerSchema = z.number().int().positive();
+const haEntityIdSchema = z.string().trim().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id");
 
 const ruleCreateSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -105,7 +109,7 @@ function createTray(window: BrowserWindow): void {
 function registerIpc(): void {
   ipcMain.handle("notes:list", (event, query) => {
     assertTrustedIpcSender(event);
-    return listNotes(z.string().optional().parse(query));
+    return listNotes(optionalQuerySchema.parse(query));
   });
   ipcMain.handle("notes:create", (event, payload) => {
     assertTrustedIpcSender(event);
@@ -113,7 +117,7 @@ function registerIpc(): void {
   });
   ipcMain.handle("notes:delete", (event, id) => {
     assertTrustedIpcSender(event);
-    return deleteNote(z.string().uuid().parse(id));
+    return deleteNote(uuidSchema.parse(id));
   });
   ipcMain.handle("reminders:list", (event) => {
     assertTrustedIpcSender(event);
@@ -125,15 +129,15 @@ function registerIpc(): void {
   });
   ipcMain.handle("reminders:complete", (event, id) => {
     assertTrustedIpcSender(event);
-    return completeReminder(z.string().uuid().parse(id));
+    return completeReminder(uuidSchema.parse(id));
   });
   ipcMain.handle("reminders:delete", (event, id) => {
     assertTrustedIpcSender(event);
-    return deleteReminder(z.string().uuid().parse(id));
+    return deleteReminder(uuidSchema.parse(id));
   });
   ipcMain.handle("reminders:snooze", (event, id, minutes) => {
     assertTrustedIpcSender(event);
-    return snoozeReminder(z.string().uuid().parse(id), z.number().int().positive().parse(minutes));
+    return snoozeReminder(uuidSchema.parse(id), positiveIntegerSchema.parse(minutes));
   });
 
   ipcMain.handle("ha:configure", (event, payload) => {
@@ -155,7 +159,7 @@ function registerIpc(): void {
   });
   ipcMain.handle("ha:toggle", (event, entityId) => {
     assertTrustedIpcSender(event);
-    return toggleEntity(z.string().trim().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id").parse(entityId));
+    return toggleEntity(haEntityIdSchema.parse(entityId));
   });
   ipcMain.handle("ha:listDevices", (event) => {
     assertTrustedIpcSender(event);
@@ -247,18 +251,23 @@ function showMainWindow(window: BrowserWindow): void {
 }
 
 function startAutomationScheduler(): () => void {
+  if (automationTimer) {
+    clearInterval(automationTimer);
+    automationTimer = null;
+  }
   let isRunningCycle = false;
   automationTimer = setInterval(() => {
     if (isRunningCycle) return;
     isRunningCycle = true;
     void runAutomationCycle()
       .catch((error) => {
-        console.error("Automation cycle failed", error);
+        console.error("Automation cycle failed", toErrorMessage(error));
       })
       .finally(() => {
         isRunningCycle = false;
       });
   }, AUTOMATION_CYCLE_INTERVAL_MS);
+  automationTimer.unref();
 
   return () => {
     if (automationTimer) {
@@ -266,6 +275,10 @@ function startAutomationScheduler(): () => void {
       automationTimer = null;
     }
   };
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function createTrayIcon() {

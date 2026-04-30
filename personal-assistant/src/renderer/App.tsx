@@ -18,9 +18,10 @@ type CommandIntent =
   | "unknown";
 type ParsedCommand = { intent: CommandIntent; args?: string; normalizedInput: string };
 type HaSetupState = "missingUrl" | "missingToken" | "ready";
+type HaRecoveryContext = "saving setup" | "testing connection" | "refreshing entities" | "toggling device";
 
-const INITIAL_VISIBLE_ITEMS = 30;
-const VISIBLE_ITEMS_STEP = 30;
+const INITIAL_VISIBLE_ITEMS = 12;
+const VISIBLE_ITEMS_STEP = 20;
 type WorkspaceSection = "dashboard" | "productivity" | "integrations" | "automation";
 const SECTION_LABEL_MAP: Record<WorkspaceSection, string> = {
   productivity: "Tasks",
@@ -83,6 +84,7 @@ export function App(): JSX.Element {
   const [logsVisible, setLogsVisible] = useState(INITIAL_VISIBLE_ITEMS);
   const [rulesVisible, setRulesVisible] = useState(INITIAL_VISIBLE_ITEMS);
   const [reminderFilter, setReminderFilter] = useState<"all" | "pending" | "done">("pending");
+  const [logFilter, setLogFilter] = useState<"all" | "failed" | "success">("all");
   const [isRunningCommand, setIsRunningCommand] = useState(false);
   const [calendarCursor, setCalendarCursor] = useState(() => {
     const now = new Date();
@@ -192,6 +194,21 @@ export function App(): JSX.Element {
     const nextReminders = await window.assistantApi.listReminders();
     setReminders(nextReminders);
   }, []);
+  const completeReminderWithFeedback = useCallback(async (id: string, options?: { quiet?: boolean }): Promise<void> => {
+    await window.assistantApi.completeReminder(id);
+    if (!options?.quiet) setStatus("Reminder marked as done.");
+    await refreshReminders();
+  }, [refreshReminders]);
+  const snoozeReminderWithFeedback = useCallback(async (id: string, minutes: number, options?: { quiet?: boolean }): Promise<void> => {
+    await window.assistantApi.snoozeReminder(id, minutes);
+    if (!options?.quiet) setStatus(`Reminder snoozed by ${formatSnoozeLabel(minutes)}.`);
+    await refreshReminders();
+  }, [refreshReminders]);
+  const deleteReminderWithFeedback = useCallback(async (id: string, options?: { quiet?: boolean }): Promise<void> => {
+    await window.assistantApi.deleteReminder(id);
+    if (!options?.quiet) setStatus("Reminder deleted.");
+    await refreshReminders();
+  }, [refreshReminders]);
 
   const refreshDevices = useCallback(async (): Promise<void> => {
     const nextDevices = await window.assistantApi.listDevices();
@@ -241,7 +258,7 @@ export function App(): JSX.Element {
         const config = await window.assistantApi.getHomeAssistantConfig();
         if (config.url) setHaUrl(config.url);
         setHasHaToken(config.hasToken);
-        if (config.hasToken) setStatus("Stored Home Assistant token detected.");
+        // Keep startup quiet and only surface actionable status/error messages.
       } catch {
         // Keep startup resilient even if config read fails.
       }
@@ -257,20 +274,10 @@ export function App(): JSX.Element {
     const off = window.assistantApi.onCommand((_, command) => {
       setCommandInput(command === "new note" ? "new note " : command);
       commandInputRef.current?.focus();
-      setStatus(`Tray command: ${command}`);
     });
     return off;
   }, []);
 
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      if (activeSection === "dashboard") commandInputRef.current?.focus();
-      if (activeSection === "productivity") quickNoteTitleRef.current?.focus();
-      if (activeSection === "integrations") haUrlInputRef.current?.focus();
-      if (activeSection === "automation") ruleNameInputRef.current?.focus();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [activeSection]);
   useEffect(() => {
     function onWindowKeyDown(event: globalThis.KeyboardEvent): void {
       const isCommandPaletteShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
@@ -278,6 +285,26 @@ export function App(): JSX.Element {
       event.preventDefault();
       setActiveSection("dashboard");
       commandInputRef.current?.focus();
+    }
+    window.addEventListener("keydown", onWindowKeyDown);
+    return () => window.removeEventListener("keydown", onWindowKeyDown);
+  }, []);
+  useEffect(() => {
+    function onWindowKeyDown(event: globalThis.KeyboardEvent): void {
+      if (!event.altKey || event.ctrlKey || event.metaKey) return;
+      const nextSection: WorkspaceSection | null =
+        event.key === "1"
+          ? "productivity"
+          : event.key === "2"
+            ? "dashboard"
+            : event.key === "3"
+              ? "integrations"
+              : event.key === "4"
+                ? "automation"
+                : null;
+      if (!nextSection) return;
+      event.preventDefault();
+      setActiveSection(nextSection);
     }
     window.addEventListener("keydown", onWindowKeyDown);
     return () => window.removeEventListener("keydown", onWindowKeyDown);
@@ -310,10 +337,13 @@ export function App(): JSX.Element {
     return ranked.slice(0, 5);
   }, [commandInput]);
   const pendingReminders = useMemo(() => reminders.filter((r) => r.status === "pending"), [reminders]);
-  const nowTimestamp = Date.now();
+  const doneRemindersCount = useMemo(() => reminders.filter((r) => r.status === "done").length, [reminders]);
   const overdueReminders = useMemo(
-    () => pendingReminders.filter((r) => new Date(r.dueAt).getTime() < nowTimestamp),
-    [pendingReminders, nowTimestamp]
+    () => {
+      const nowTimestamp = Date.now();
+      return pendingReminders.filter((r) => new Date(r.dueAt).getTime() < nowTimestamp);
+    },
+    [pendingReminders]
   );
   const visibleReminders = useMemo(
     () => reminders.filter((r) => reminderFilter === "all" || r.status === reminderFilter),
@@ -331,6 +361,11 @@ export function App(): JSX.Element {
         ? "Saved token detected. Add a new token only when rotating credentials."
         : "Save any changes, then run Test connection and Refresh entities."
       : "Complete URL and token, then click Save setup.";
+  const haSetupChecklist = [
+    `1) ${hasHaToken ? "Use saved token or paste a replacement token." : "Paste URL and long-lived token."}`,
+    "2) Run Test connection.",
+    "3) Run Refresh entities to sync devices."
+  ];
   const remindersByDate = useMemo(() => {
     const byDate = new Map<string, Reminder[]>();
     for (const reminder of reminders) {
@@ -374,7 +409,22 @@ export function App(): JSX.Element {
   );
   const visibleDevicesSlice = useMemo(() => devices.slice(0, devicesVisible), [devices, devicesVisible]);
   const visibleRulesSlice = useMemo(() => rules.slice(0, rulesVisible), [rules, rulesVisible]);
-  const visibleLogsSlice = useMemo(() => logs.slice(0, logsVisible), [logs, logsVisible]);
+  const filteredLogs = useMemo(
+    () => logs.filter((logEntry) => logFilter === "all" || logEntry.status === logFilter),
+    [logs, logFilter]
+  );
+  const visibleFilteredLogsSlice = useMemo(
+    () => filteredLogs.slice(0, logsVisible),
+    [filteredLogs, logsVisible]
+  );
+  const failedLogsCount = useMemo(
+    () => logs.filter((logEntry) => logEntry.status === "failed").length,
+    [logs]
+  );
+  const successfulLogsCount = useMemo(
+    () => logs.filter((logEntry) => logEntry.status === "success").length,
+    [logs]
+  );
   const selectedDateLabel = useMemo(() => formatDateLabel(selectedDateKey), [selectedDateKey]);
   const selectedMonthLabel = useMemo(
     () => calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" }),
@@ -516,7 +566,7 @@ export function App(): JSX.Element {
           </button>
         </div>
       </header>
-      <nav className="topNav" aria-label="Workspace sections" role="tablist">
+      <nav className="topNav" aria-label="Workspace sections" role="tablist" aria-orientation="horizontal">
         {SECTION_ORDER.map((section) => (
           <button
             key={section}
@@ -598,10 +648,10 @@ export function App(): JSX.Element {
           </form>
           <div className="row commandHintsRow">
             {commandHints.length ? commandHints.map((hint) => (
-              <button type="button" key={hint} className="pillButton" onClick={() => setCommandInput(hint)}>{hint}</button>
+              <button type="button" key={hint} className="pillButton" onClick={() => runPresetCommand(hint)}>{hint}</button>
             )) : <span className="muted">No matching command hints.</span>}
           </div>
-          <p className="muted assistantTip">Shortcut: Ctrl/Cmd+K focuses command input. Press Escape to clear.</p>
+          <p className="muted assistantTip">Shortcuts: Ctrl/Cmd+K focuses command input, Alt+1..4 switches sections, Escape clears.</p>
         </section>
 
         <section className="panel compactPanel">
@@ -677,6 +727,7 @@ export function App(): JSX.Element {
                 type="button"
                 key={`${cell.dateKey}-${idx}`}
                 className={`calendarCell calendarCellButton ${cell.isCurrentMonth ? "" : "calendarCellMuted"} ${cell.dateKey === todayKey ? "calendarCellToday" : ""} ${cell.dateKey === selectedDateKey ? "calendarCellSelected" : ""}`}
+                role="gridcell"
                 onClick={() => setSelectedDateKey(cell.dateKey)}
                 onFocus={() => {
                   if (cell.dateKey !== selectedDateKey) {
@@ -712,7 +763,7 @@ export function App(): JSX.Element {
                   try {
                     await Promise.all(pendingIds.map((id) => window.assistantApi.snoozeReminder(id, 60)));
                     setStatus(`Snoozed ${pendingIds.length} reminder(s) by 1 hour.`);
-                    await refreshAll();
+                    await refreshReminders();
                   } catch (err) {
                     setError(getErrorMessage(err));
                   }
@@ -727,7 +778,7 @@ export function App(): JSX.Element {
                   try {
                     await Promise.all(pendingIds.map((id) => window.assistantApi.completeReminder(id)));
                     setStatus(`Marked ${pendingIds.length} reminder(s) as done.`);
-                    await refreshAll();
+                    await refreshReminders();
                   } catch (err) {
                     setError(getErrorMessage(err));
                   }
@@ -752,9 +803,7 @@ export function App(): JSX.Element {
                       className="ghostButton"
                       onClick={async () => {
                         try {
-                          await window.assistantApi.completeReminder(r.id);
-                          setStatus("Reminder marked as done.");
-                          await refreshAll();
+                          await completeReminderWithFeedback(r.id, { quiet: true });
                         } catch (err) {
                           setError(getErrorMessage(err));
                         }
@@ -766,9 +815,7 @@ export function App(): JSX.Element {
                       className="ghostButton"
                       onClick={async () => {
                         try {
-                          await window.assistantApi.snoozeReminder(r.id, 60);
-                          setStatus("Reminder snoozed by 1 hour.");
-                          await refreshAll();
+                          await snoozeReminderWithFeedback(r.id, 60, { quiet: true });
                         } catch (err) {
                           setError(getErrorMessage(err));
                         }
@@ -781,9 +828,7 @@ export function App(): JSX.Element {
                       onClick={async () => {
                         if (!window.confirm("Delete this reminder?")) return;
                         try {
-                          await window.assistantApi.deleteReminder(r.id);
-                          setStatus("Reminder deleted.");
-                          await refreshAll();
+                          await deleteReminderWithFeedback(r.id);
                         } catch (err) {
                           setError(getErrorMessage(err));
                         }
@@ -853,13 +898,13 @@ export function App(): JSX.Element {
             <span className="pill graphitePill">Showing: {reminderFilter}</span>
           </div>
           <p className="muted sectionIntro">Schedule quickly and switch views in one click.</p>
-          <div className="row reminderFilterRow">
+          <div className="row reminderFilterRow" role="group" aria-label="Reminder filter">
             <button
               type="button"
               className={`ghostButton ${reminderFilter === "pending" ? "filterButtonActive" : ""}`}
               onClick={() => setReminderFilterWithVisibilityReset("pending")}
             >
-              Pending ({reminders.filter((r) => r.status === "pending").length})
+              Pending ({pendingReminders.length})
             </button>
             <button
               type="button"
@@ -873,11 +918,11 @@ export function App(): JSX.Element {
               className={`ghostButton ${reminderFilter === "done" ? "filterButtonActive" : ""}`}
               onClick={() => setReminderFilterWithVisibilityReset("done")}
             >
-              Done ({reminders.filter((r) => r.status === "done").length})
+              Done ({doneRemindersCount})
             </button>
           </div>
           <ReminderForm
-            onDone={refreshAll}
+            onDone={refreshReminders}
             onError={handleFormError}
           />
           <ul className="list">
@@ -896,9 +941,7 @@ export function App(): JSX.Element {
                       className="ghostButton"
                       onClick={async () => {
                         try {
-                          await window.assistantApi.completeReminder(r.id);
-                          setStatus("Reminder marked as done.");
-                          await refreshAll();
+                          await completeReminderWithFeedback(r.id, { quiet: true });
                         } catch (err) {
                           setError(getErrorMessage(err));
                         }
@@ -910,9 +953,19 @@ export function App(): JSX.Element {
                       className="ghostButton"
                       onClick={async () => {
                         try {
-                          await window.assistantApi.snoozeReminder(r.id, 60);
-                          setStatus("Reminder snoozed by 1 hour.");
-                          await refreshAll();
+                          await snoozeReminderWithFeedback(r.id, 15, { quiet: true });
+                        } catch (err) {
+                          setError(getErrorMessage(err));
+                        }
+                      }}
+                    >
+                      +15m
+                    </button>
+                    <button
+                      className="ghostButton"
+                      onClick={async () => {
+                        try {
+                          await snoozeReminderWithFeedback(r.id, 60, { quiet: true });
                         } catch (err) {
                           setError(getErrorMessage(err));
                         }
@@ -925,9 +978,7 @@ export function App(): JSX.Element {
                       onClick={async () => {
                         if (!window.confirm("Delete this reminder?")) return;
                         try {
-                          await window.assistantApi.deleteReminder(r.id);
-                          setStatus("Reminder deleted.");
-                          await refreshAll();
+                          await deleteReminderWithFeedback(r.id, { quiet: true });
                         } catch (err) {
                           setError(getErrorMessage(err));
                         }
@@ -954,6 +1005,7 @@ export function App(): JSX.Element {
           <span className={`pill ${haSetupState === "ready" ? "" : "graphitePill"}`}>{haReadinessLabel}</span>
         </div>
         <p className="muted sectionIntro">{haReadinessHint}</p>
+        <p className="muted">{haSetupChecklist.join(" ")}</p>
         <div className="row">
           <label className="srOnly" htmlFor="ha-url-input">Home Assistant URL</label>
           <input
@@ -986,7 +1038,7 @@ export function App(): JSX.Element {
                 setHaToken("");
                 setStatus("Home Assistant setup saved. Next: Test connection, then Refresh entities.");
               } catch (err) {
-                setError(getHaErrorMessage(err, "saving setup"));
+                setError(getHaErrorMessage(err, "saving setup", hasHaToken));
               } finally {
                 setIsSavingHa(false);
               }
@@ -1003,10 +1055,10 @@ export function App(): JSX.Element {
                 if (connected) {
                   setStatus("Home Assistant connected. Next: Refresh entities to sync devices.");
                 } else {
-                  setError("Connection test failed. Confirm URL, token, and API access, then try again.");
+                  setError("Connection test failed. Confirm URL and token, then retry Test connection.");
                 }
               } catch (err) {
-                setError(getHaErrorMessage(err, "testing connection"));
+                setError(getHaErrorMessage(err, "testing connection", hasHaToken));
               }
             }}
           >
@@ -1022,7 +1074,7 @@ export function App(): JSX.Element {
                 await refreshDevices();
                 setStatus("Entities refreshed. Device list is now up to date.");
               } catch (err) {
-                setError(getHaErrorMessage(err, "refreshing entities"));
+                setError(getHaErrorMessage(err, "refreshing entities", hasHaToken));
               } finally {
                 setIsRefreshingHa(false);
               }
@@ -1032,6 +1084,7 @@ export function App(): JSX.Element {
           </button>
         </div>
         {!canSaveHaConfig ? <p className="muted">Enter URL and token, then click Save setup.</p> : null}
+        {haReady && !devices.length ? <p className="muted">Connected but no devices yet? Run Refresh entities and check that lights/switches exist in Home Assistant.</p> : null}
         <details className="collapsibleGroup">
           <summary className="collapsibleSummary muted">Connection troubleshooting</summary>
           <ul className="list compactList">
@@ -1039,6 +1092,7 @@ export function App(): JSX.Element {
             <li>Create a long-lived access token in Home Assistant profile settings.</li>
             <li>401/403 errors usually mean token issue or missing token permissions.</li>
             <li>If connection passes but devices are empty, run Refresh entities.</li>
+            <li>If URL/token changed, click Save setup again before re-testing.</li>
           </ul>
         </details>
         <details className="collapsibleGroup">
@@ -1060,7 +1114,7 @@ export function App(): JSX.Element {
                     setStatus(`Toggled ${d.friendlyName}.`);
                     await refreshDevices();
                   } catch (err) {
-                    setError(getHaErrorMessage(err, "toggling device"));
+                    setError(getHaErrorMessage(err, "toggling device", hasHaToken));
                   }
                 }}
               >
@@ -1108,15 +1162,61 @@ export function App(): JSX.Element {
             <h2>Logs</h2>
             <span className="pill graphitePill">Runs</span>
           </summary>
+          <div className="snapshotGrid">
+            <div className="snapshotCard">
+              <p className="snapshotLabel">Recent runs</p>
+              <p className="snapshotValue">{logs.length}</p>
+            </div>
+            <div className="snapshotCard">
+              <p className="snapshotLabel">Success</p>
+              <p className="snapshotValue">{successfulLogsCount}</p>
+            </div>
+            <div className="snapshotCard">
+              <p className="snapshotLabel">Failed</p>
+              <p className="snapshotValue">{failedLogsCount}</p>
+            </div>
+          </div>
+          <div className="row reminderFilterRow">
+            <button
+              type="button"
+              className={`ghostButton ${logFilter === "all" ? "filterButtonActive" : ""}`}
+              onClick={() => {
+                setLogsVisible(INITIAL_VISIBLE_ITEMS);
+                setLogFilter("all");
+              }}
+            >
+              All ({logs.length})
+            </button>
+            <button
+              type="button"
+              className={`ghostButton ${logFilter === "success" ? "filterButtonActive" : ""}`}
+              onClick={() => {
+                setLogsVisible(INITIAL_VISIBLE_ITEMS);
+                setLogFilter("success");
+              }}
+            >
+              Success ({successfulLogsCount})
+            </button>
+            <button
+              type="button"
+              className={`ghostButton ${logFilter === "failed" ? "filterButtonActive" : ""}`}
+              onClick={() => {
+                setLogsVisible(INITIAL_VISIBLE_ITEMS);
+                setLogFilter("failed");
+              }}
+            >
+              Failed ({failedLogsCount})
+            </button>
+          </div>
           <ul className="list">
-            {isRefreshing ? <li className="muted">Loading logs...</li> : logs.length ? visibleLogsSlice.map((l) => (
+            {isRefreshing ? <li className="muted">Loading logs...</li> : filteredLogs.length ? visibleFilteredLogsSlice.map((l) => (
               <li key={l.id}>
-                <strong>{l.status === "success" ? "Success" : "Failed"}</strong> - {l.ruleName} - {l.actionLabel} - {new Date(l.startedAt).toLocaleString()} ({formatElapsedLabel(l.startedAt, l.endedAt)}, {getAutomationLogConfidenceLabel(l.status, l.error)} confidence)
+                <strong>{l.status === "success" ? "Success" : "Failed"}</strong> - {l.ruleName} - {l.actionLabel} - {new Date(l.startedAt).toLocaleString()} ({formatElapsedLabel(l.startedAt, l.endedAt)}, {getAutomationMonitoringSignalLabel(l.status, l.error)})
                 {l.error ? ` - ${l.error}` : ""}
               </li>
-            )) : <li className="muted">No execution logs yet.</li>}
+            )) : <li className="muted">No execution logs for this filter.</li>}
           </ul>
-          {logs.length > logsVisible ? (
+          {filteredLogs.length > logsVisible ? (
             <button className="ghostButton" onClick={() => setLogsVisible((current) => current + VISIBLE_ITEMS_STEP)}>
               Show more logs
             </button>
@@ -1132,25 +1232,39 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
-function getHaErrorMessage(err: unknown, operation: string): string {
+function getHaErrorMessage(err: unknown, operation: HaRecoveryContext, hasSavedToken: boolean): string {
   const raw = getErrorMessage(err);
   const lower = raw.toLowerCase();
+  const sharedRecovery = hasSavedToken
+    ? "Try Test connection again, then Refresh entities."
+    : "Save URL and token first, then run Test connection.";
+  const recoveryLabel = getHaRecoveryLabel(operation);
   if (lower.includes("401") || lower.includes("unauthorized")) {
-    return `Home Assistant ${operation} failed: token is invalid or expired.`;
+    return `Home Assistant ${operation} failed: token is invalid or expired. Next: create a new token, Save setup, then ${recoveryLabel}.`;
   }
   if (lower.includes("403") || lower.includes("forbidden")) {
-    return `Home Assistant ${operation} failed: token lacks required permissions.`;
+    return `Home Assistant ${operation} failed: token lacks required permissions. Next: update token scope, Save setup, then ${recoveryLabel}.`;
   }
   if (lower.includes("404")) {
-    return `Home Assistant ${operation} failed: URL or endpoint was not found.`;
+    return `Home Assistant ${operation} failed: URL or endpoint was not found. Next: verify URL, Save setup, then ${recoveryLabel}.`;
+  }
+  if (lower.includes("timed out") || lower.includes("timeout")) {
+    return `Home Assistant ${operation} timed out. Next: verify server is online, then retry.`;
   }
   if (lower.includes("not configured")) {
-    return "Home Assistant is not configured yet. Save URL and token first.";
+    return "Home Assistant is not configured yet. Next: add URL/token, Save setup, then run Test connection.";
   }
   if (lower.includes("request failed")) {
-    return `Home Assistant ${operation} failed: cannot reach server. Check URL and network connectivity.`;
+    return `Home Assistant ${operation} failed: cannot reach server. Next: check URL/network, then retry.`;
   }
-  return raw;
+  return `${raw} Next: ${sharedRecovery}`;
+}
+
+function getHaRecoveryLabel(operation: HaRecoveryContext): string {
+  if (operation === "saving setup") return "run Test connection";
+  if (operation === "testing connection") return "retry Test connection";
+  if (operation === "refreshing entities") return "run Refresh entities";
+  return "retry the action";
 }
 
 function formatAutomationActionLabel(actionType: "localReminder" | "haToggle", actionConfig: Record<string, string>): string {
@@ -1167,12 +1281,20 @@ function formatElapsedLabel(startedAt: string, endedAt: string): string {
   return seconds > 0 ? `${seconds}s` : "<1s";
 }
 
-function getAutomationLogConfidenceLabel(status: string, error?: string): "high" | "medium" | "low" {
-  if (status !== "success") return "low";
-  if (!error) return "high";
+function getAutomationMonitoringSignalLabel(status: string, error?: string): string {
+  if (status === "failed") {
+    if (!error) return "action failed";
+    const lower = error.toLowerCase();
+    if (lower.includes("timeout")) return "needs timeout tuning";
+    if (lower.includes("not configured")) return "setup required";
+    if (lower.includes("unsupported")) return "rule config issue";
+    return "needs review";
+  }
+  if (!error) return "healthy";
   const lower = error.toLowerCase();
-  if (lower.includes("retry") || lower.includes("timeout")) return "medium";
-  return "high";
+  if (lower.includes("retry")) return "recovered after retry";
+  if (lower.includes("timeout")) return "slow but recovered";
+  return "healthy";
 }
 
 function parseReminderCommand(bodyRaw: string): { text: string; dueAt: string } {
@@ -1483,7 +1605,17 @@ const ReminderForm = memo(function ReminderForm({
 }): JSX.Element {
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
+  const [quickMinutes, setQuickMinutes] = useState("15");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const applyQuickMinutes = useCallback((minutes: number) => {
+    setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + minutes * 60_000)));
+  }, []);
+  const applyTomorrowAt = useCallback((hours: number, minutes: number) => {
+    const due = new Date();
+    due.setDate(due.getDate() + 1);
+    due.setHours(hours, minutes, 0, 0);
+    setDueAt(toLocalDateTimeInputValue(due));
+  }, []);
   async function submitReminder(): Promise<void> {
     try {
       setIsSubmitting(true);
@@ -1517,6 +1649,34 @@ const ReminderForm = memo(function ReminderForm({
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Scheduling..." : "Schedule"}
       </button>
+      <div className="reminderQuickRow" role="group" aria-label="Reminder quick time presets">
+        <button type="button" className="ghostButton" onClick={() => applyQuickMinutes(15)}>+15m</button>
+        <button type="button" className="ghostButton" onClick={() => applyQuickMinutes(30)}>+30m</button>
+        <button type="button" className="ghostButton" onClick={() => applyQuickMinutes(60)}>+1h</button>
+        <button type="button" className="ghostButton" onClick={() => applyTomorrowAt(9, 0)}>Tomorrow 09:00</button>
+        <input
+          type="number"
+          min={1}
+          max={1440}
+          step={1}
+          value={quickMinutes}
+          onChange={(event) => setQuickMinutes(event.target.value)}
+          className="quickMinutesInput"
+          aria-label="Custom quick minutes"
+        />
+        <button
+          type="button"
+          className="ghostButton"
+          onClick={() => {
+            const parsed = Number(quickMinutes);
+            if (Number.isFinite(parsed) && parsed > 0) {
+              applyQuickMinutes(Math.min(1440, Math.floor(parsed)));
+            }
+          }}
+        >
+          Apply minutes
+        </button>
+      </div>
     </form>
   );
 });
@@ -1553,4 +1713,12 @@ function formatDateLabel(dateKey: string): string {
   const date = new Date(year, (month || 1) - 1, day || 1);
   if (Number.isNaN(date.getTime())) return dateKey;
   return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
+function formatSnoozeLabel(minutes: number): string {
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+  return `${minutes} minutes`;
 }

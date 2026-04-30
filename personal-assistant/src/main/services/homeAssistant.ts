@@ -4,6 +4,7 @@ import { getHaToken, saveHaToken } from "./secrets";
 
 let baseUrl = "";
 const HA_BASE_URL_KEY = "ha.baseUrl";
+const HA_REQUEST_TIMEOUT_MS = 10_000;
 
 export async function configureHomeAssistant(url: string, token: string): Promise<void> {
   baseUrl = normalizeUrl(url);
@@ -33,9 +34,8 @@ async function authedFetch(path: string, init?: RequestInit): Promise<Response> 
   const url = getConfiguredBaseUrl();
   if (!token || !url) throw new Error("Home Assistant not configured.");
   if (!path.startsWith("/")) throw new Error("Home Assistant request path must start with '/'.");
-  const timeoutMs = 10_000;
   const controller = new AbortController();
-  const timeoutRef = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutRef = setTimeout(() => controller.abort(), HA_REQUEST_TIMEOUT_MS);
   timeoutRef.unref();
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type")) {
@@ -50,7 +50,7 @@ async function authedFetch(path: string, init?: RequestInit): Promise<Response> 
     });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Home Assistant request timed out after ${timeoutMs}ms.`);
+      throw new Error(`Home Assistant request timed out after ${HA_REQUEST_TIMEOUT_MS}ms.`);
     }
     throw new Error(`Home Assistant request failed: ${toErrorMessage(error)}`);
   } finally {
@@ -115,6 +115,9 @@ export async function refreshEntities(): Promise<void> {
 }
 
 export async function toggleEntity(entityId: string): Promise<void> {
+  if (typeof entityId !== "string") {
+    throw new Error("Invalid Home Assistant entity ID.");
+  }
   const normalizedEntityId = entityId.trim().toLowerCase();
   if (!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(normalizedEntityId)) {
     throw new Error("Invalid Home Assistant entity ID.");

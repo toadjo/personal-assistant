@@ -3,6 +3,9 @@ import { BrowserWindow, Notification } from "electron";
 import { getDb } from "../db";
 import { Reminder } from "../../shared/types";
 
+const REMINDER_SCHEDULER_INTERVAL_MS = 30_000;
+const REMINDER_SCHEDULER_BATCH_LIMIT = 200;
+
 export function listReminders(): Reminder[] {
   return getDb()
     .prepare("SELECT * FROM reminders ORDER BY dueAt ASC")
@@ -66,8 +69,8 @@ export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeou
     try {
       const now = new Date().toISOString();
       const due = getDb()
-        .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC")
-        .all({ now }) as Reminder[];
+        .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC LIMIT @limit")
+        .all({ now, limit: REMINDER_SCHEDULER_BATCH_LIMIT }) as Reminder[];
       let hasReminderChanges = false;
       for (const item of due) {
         try {
@@ -104,7 +107,7 @@ export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeou
     } finally {
       isTickRunning = false;
     }
-  }, 30_000);
+  }, REMINDER_SCHEDULER_INTERVAL_MS);
   interval.unref();
   return interval;
 }

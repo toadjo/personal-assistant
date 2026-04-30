@@ -38,12 +38,15 @@ Notes:
 - Defaults to `package.json` version if `-Version` is omitted.
 - Updates `package.json` version to match (unless you pass `-SkipVersionBump`).
 - Runs smoke checks by default (skip with `-SkipSmoke`).
+- Refuses to overwrite an existing `release/v<version>` by default (opt in with `-ReplaceExisting`).
 - Validates required commands (`npm`, `npx`) and stops immediately if any release command fails.
+- Uses a staging output directory first, then moves artifacts into `release/v<version>` only after a successful build.
+- Validates that installer artifacts exist and fails if no `.exe` was produced.
 
 Usage:
 
 ```powershell
-npm run release:build -- [-Version <x.y.z|vx.y.z>] [-SkipVersionBump] [-SkipSmoke]
+npm run release:build -- [-Version <x.y.z|vx.y.z>] [-SkipVersionBump] [-SkipSmoke] [-ReplaceExisting]
 ```
 
 Examples:
@@ -57,6 +60,9 @@ npm run release:build -- -Version 1.1.0 -SkipVersionBump
 
 # Package without smoke validation
 npm run release:build -- -Version 1.1.1 -SkipSmoke
+
+# Rebuild the same version in place (replaces existing versioned output/history)
+npm run release:build -- -Version 1.1.1 -ReplaceExisting
 ```
 
 ### Cleanup old artifacts
@@ -78,7 +84,7 @@ npm run release:clean -- -IncludeDist
 Usage:
 
 ```powershell
-npm run release:clean -- [-Keep <n>] [-IncludeDist] [-All]
+npm run release:clean -- [-Keep <n>] [-IncludeDist] [-All] [-DryRun]
 ```
 
 Notes:
@@ -86,6 +92,8 @@ Notes:
 - `-All` removes all content under `release/` and `installer-history/`.
 - `-Keep` must be `0` or greater.
 - `-IncludeDist` can be combined with `-All` or prune mode.
+- Prune mode only deletes versioned folders that match `v<semver>` naming.
+- Use `-DryRun` to preview what cleanup would remove.
 
 ### Legacy one-off build
 

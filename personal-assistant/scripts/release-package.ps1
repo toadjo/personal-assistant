@@ -2,7 +2,8 @@ param(
     [string]$Version,
 
     [switch]$SkipVersionBump,
-    [switch]$SkipSmoke
+    [switch]$SkipSmoke,
+    [switch]$ReplaceExisting
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,6 +24,13 @@ function Invoke-CheckedCommand([string]$FileName, [string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) {
         $joinedArgs = $Arguments -join " "
         throw "Command failed ($LASTEXITCODE): $FileName $joinedArgs"
+    }
+}
+
+function Remove-IfExists([string]$Path) {
+    if (Test-Path -LiteralPath $Path) {
+        Remove-Item -LiteralPath $Path -Recurse -Force
+        Write-Host "Removed: $Path"
     }
 }
 
@@ -51,6 +59,7 @@ $normalizedVersion = $Version.TrimStart('v')
 $releaseTag = "v$normalizedVersion"
 $releaseRoot = Join-Path $projectRoot "release"
 $versionedOutput = Join-Path $releaseRoot $releaseTag
+$stagingOutput = Join-Path $releaseRoot "$releaseTag.__staging"
 $installerHistoryRoot = Join-Path $projectRoot "installer-history"
 $installerHistoryVersion = Join-Path $installerHistoryRoot $releaseTag
 
@@ -63,15 +72,25 @@ if (-not $SkipVersionBump) {
     Write-Step "Skipping package.json version update"
 }
 
-if ((Test-Path $versionedOutput) -or (Test-Path $installerHistoryVersion)) {
-    throw "Release artifacts already exist for $releaseTag. Use a new version or clean old artifacts first."
+if ((Test-Path -LiteralPath $versionedOutput) -or (Test-Path -LiteralPath $installerHistoryVersion)) {
+    if (-not $ReplaceExisting) {
+        throw "Release artifacts already exist for $releaseTag. Use -ReplaceExisting, pick a new version, or clean old artifacts first."
+    }
+
+    Write-Step "Replacing existing artifacts for $releaseTag"
+    Remove-IfExists $versionedOutput
+    Remove-IfExists $installerHistoryVersion
 }
+
+Remove-IfExists $stagingOutput
+New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $installerHistoryRoot -Force | Out-Null
 
 Write-Step "Building app bundles"
 Invoke-CheckedCommand "npm" @("run", "build")
 
 Write-Step "Building Windows installer"
-Invoke-CheckedCommand "npx" @("electron-builder", "--win", "nsis", "--config.directories.output=$versionedOutput")
+Invoke-CheckedCommand "npx" @("electron-builder", "--win", "nsis", "--config.directories.output=$stagingOutput")
 
 if (-not $SkipSmoke) {
     Write-Step "Running smoke check"
@@ -81,11 +100,30 @@ if (-not $SkipSmoke) {
 }
 
 Write-Step "Copying installer artifacts"
+if (-not (Test-Path -LiteralPath $stagingOutput)) {
+    throw "Installer output folder was not created: $stagingOutput"
+}
+
+New-Item -ItemType Directory -Path $versionedOutput -Force | Out-Null
+Get-ChildItem -Path $stagingOutput -Force | ForEach-Object {
+    Move-Item -Path $_.FullName -Destination $versionedOutput -Force
+}
+Remove-IfExists $stagingOutput
+
 New-Item -ItemType Directory -Path $installerHistoryVersion -Force | Out-Null
-Get-ChildItem -Path $versionedOutput -File | Where-Object {
+$copiedArtifacts = @(Get-ChildItem -Path $versionedOutput -File | Where-Object {
     $_.Name -match '\.(exe|blockmap|yml)$'
 } | ForEach-Object {
     Copy-Item -Path $_.FullName -Destination (Join-Path $installerHistoryVersion $_.Name) -Force
+    $_.Name
+})
+
+if ($copiedArtifacts.Count -eq 0) {
+    throw "No installer artifacts (.exe/.blockmap/.yml) were found in $versionedOutput"
+}
+
+if (-not ($copiedArtifacts | Where-Object { $_ -match '\.exe$' })) {
+    throw "Packaging produced no .exe installer in $versionedOutput"
 }
 
 Write-Step "Release complete"
