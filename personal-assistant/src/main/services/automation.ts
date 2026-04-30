@@ -17,12 +17,14 @@ export function listRules(): AutomationRule[] {
 }
 
 export function createTimeRule(input: Omit<AutomationRule, "id" | "triggerType">): AutomationRule {
+  const actionType = validateActionType(input.actionType);
   const rule: AutomationRule = {
     ...input,
     id: randomUUID(),
     triggerType: "time",
     name: normalizeName(input.name),
     triggerConfig: validateTriggerConfig(input.triggerConfig),
+    actionType,
     actionConfig: validateActionConfig(input.actionConfig),
     enabled: Boolean(input.enabled)
   };
@@ -58,7 +60,11 @@ export async function runAutomationCycle(): Promise<void> {
         } else if (rule.actionType === "haToggle" && action.entityId) {
           await toggleEntity(action.entityId);
         } else {
-          throw new Error(`Unsupported action configuration for ${rule.actionType}`);
+          throw new Error(
+            rule.actionType === "haToggle"
+              ? "haToggle action requires a valid entityId."
+              : `Unsupported action configuration for "${rule.actionType}".`
+          );
         }
       });
       writeLog(rule.id, "success", startedAt, new Date().toISOString());
@@ -69,25 +75,30 @@ export async function runAutomationCycle(): Promise<void> {
 }
 
 async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<void> {
+  const safeAttempts = Number.isInteger(attempts) && attempts > 0 ? attempts : 1;
   let lastError: unknown;
-  for (let i = 0; i < attempts; i += 1) {
+  for (let i = 0; i < safeAttempts; i += 1) {
     try {
       await withTimeout(Promise.resolve(fn()), 10_000);
       return;
     } catch (error) {
-      lastError = new Error(`Attempt ${i + 1}/${attempts} failed: ${formatErrorMessage(error)}`);
+      lastError = error;
     }
   }
-  throw lastError;
+  throw new Error(`Automation failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`);
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Timeout duration must be a positive number.");
+  }
   let timeoutRef: NodeJS.Timeout | undefined;
   try {
     return await Promise.race([
       promise,
       new Promise<T>((_, reject) => {
         timeoutRef = setTimeout(() => reject(new Error("Action timeout")), timeoutMs);
+        timeoutRef.unref();
       })
     ]);
   } finally {
@@ -134,7 +145,7 @@ function normalizeName(name: unknown): string {
 function validateTriggerConfig(triggerConfig: unknown): { at: string } {
   const config = triggerConfig as { at?: unknown };
   const at = typeof config?.at === "string" ? config.at.trim() : "";
-  if (!/^\d{2}:\d{2}$/.test(at)) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(at)) {
     throw new Error("Automation trigger time must use HH:MM format.");
   }
   return { at };
@@ -151,4 +162,9 @@ function validateActionConfig(actionConfig: unknown): Record<string, string> {
     }
   }
   return output;
+}
+
+function validateActionType(value: unknown): "localReminder" | "haToggle" {
+  if (value === "localReminder" || value === "haToggle") return value;
+  throw new Error("Automation action type must be 'localReminder' or 'haToggle'.");
 }

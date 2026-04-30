@@ -12,9 +12,29 @@ function Write-Step([string]$Message) {
 }
 
 function Remove-IfExists([string]$Path) {
-    if (Test-Path $Path) {
-        Remove-Item -Path $Path -Recurse -Force
+    if (Test-Path -LiteralPath $Path) {
+        Remove-Item -LiteralPath $Path -Recurse -Force
         Write-Host "Removed: $Path"
+    }
+}
+
+function Get-VersionDirectories([string]$RootPath) {
+    if (-not (Test-Path -LiteralPath $RootPath)) {
+        return @()
+    }
+
+    return @(Get-ChildItem -Path $RootPath -Directory | Sort-Object LastWriteTime -Descending)
+}
+
+function Prune-OlderDirectories([string]$RootPath, [int]$KeepCount) {
+    $dirs = Get-VersionDirectories $RootPath
+    if ($dirs.Count -le $KeepCount) {
+        return
+    }
+
+    $dirs | Select-Object -Skip $KeepCount | ForEach-Object {
+        Remove-Item -LiteralPath $_.FullName -Recurse -Force
+        Write-Host "Removed: $($_.FullName)"
     }
 }
 
@@ -42,26 +62,10 @@ if ($All) {
 }
 
 Write-Step "Pruning release folders (keep newest $Keep)"
-if (Test-Path $releaseRoot) {
-    $releaseDirs = Get-ChildItem -Path $releaseRoot -Directory | Sort-Object LastWriteTime -Descending
-    if ($releaseDirs.Count -gt $Keep) {
-        $releaseDirs | Select-Object -Skip $Keep | ForEach-Object {
-            Remove-Item -Path $_.FullName -Recurse -Force
-            Write-Host "Removed: $($_.FullName)"
-        }
-    }
-}
+Prune-OlderDirectories $releaseRoot $Keep
 
 Write-Step "Pruning installer-history folders (keep newest $Keep)"
-if (Test-Path $installerHistoryRoot) {
-    $historyDirs = Get-ChildItem -Path $installerHistoryRoot -Directory | Sort-Object LastWriteTime -Descending
-    if ($historyDirs.Count -gt $Keep) {
-        $historyDirs | Select-Object -Skip $Keep | ForEach-Object {
-            Remove-Item -Path $_.FullName -Recurse -Force
-            Write-Host "Removed: $($_.FullName)"
-        }
-    }
-}
+Prune-OlderDirectories $installerHistoryRoot $Keep
 
 if ($IncludeDist) {
     Write-Step "Removing dist"

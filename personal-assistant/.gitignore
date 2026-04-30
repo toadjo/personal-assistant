@@ -1,6 +1,12 @@
 node_modules/
 dist/
 release/
+installer-history/
+release-current-*/
+release-clean-*/
+release-fixed*/
+release-fixed-*/
+win-unpacked/
 release-clean-*/
 release-fixed*/
 release-fixed-*/

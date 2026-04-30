@@ -12,8 +12,25 @@ function Write-Step([string]$Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
 }
 
+function Assert-CommandExists([string]$CommandName) {
+    if (-not (Get-Command $CommandName -ErrorAction SilentlyContinue)) {
+        throw "Required command '$CommandName' is not available in PATH."
+    }
+}
+
+function Invoke-CheckedCommand([string]$FileName, [string[]]$Arguments) {
+    & $FileName @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        $joinedArgs = $Arguments -join " "
+        throw "Command failed ($LASTEXITCODE): $FileName $joinedArgs"
+    }
+}
+
 Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
 $projectRoot = Get-Location
+
+Assert-CommandExists "npm"
+Assert-CommandExists "npx"
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
     $packageJsonPath = Join-Path $projectRoot "package.json"
@@ -41,7 +58,7 @@ Write-Step "Starting release packaging for $releaseTag"
 
 if (-not $SkipVersionBump) {
     Write-Step "Updating package.json to $normalizedVersion"
-    npm version $normalizedVersion --no-git-tag-version | Out-Host
+    Invoke-CheckedCommand "npm" @("version", $normalizedVersion, "--no-git-tag-version")
 } else {
     Write-Step "Skipping package.json version update"
 }
@@ -51,14 +68,14 @@ if ((Test-Path $versionedOutput) -or (Test-Path $installerHistoryVersion)) {
 }
 
 Write-Step "Building app bundles"
-npm run build | Out-Host
+Invoke-CheckedCommand "npm" @("run", "build")
 
 Write-Step "Building Windows installer"
-npx electron-builder --win nsis --config.directories.output="$versionedOutput" | Out-Host
+Invoke-CheckedCommand "npx" @("electron-builder", "--win", "nsis", "--config.directories.output=$versionedOutput")
 
 if (-not $SkipSmoke) {
     Write-Step "Running smoke check"
-    npm run test:smoke | Out-Host
+    Invoke-CheckedCommand "npm" @("run", "test:smoke")
 } else {
     Write-Step "Skipping smoke check"
 }

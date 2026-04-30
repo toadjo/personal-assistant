@@ -247,27 +247,22 @@ function showMainWindow(window: BrowserWindow): void {
 }
 
 function startAutomationScheduler(): () => void {
-  let stopped = false;
+  let isRunningCycle = false;
+  automationTimer = setInterval(() => {
+    if (isRunningCycle) return;
+    isRunningCycle = true;
+    void runAutomationCycle()
+      .catch((error) => {
+        console.error("Automation cycle failed", error);
+      })
+      .finally(() => {
+        isRunningCycle = false;
+      });
+  }, AUTOMATION_CYCLE_INTERVAL_MS);
 
-  const scheduleNext = (): void => {
-    automationTimer = setTimeout(() => {
-      void runAutomationCycle()
-        .catch((error) => {
-          console.error("Automation cycle failed", error);
-        })
-        .finally(() => {
-          if (!stopped) {
-            scheduleNext();
-          }
-        });
-    }, AUTOMATION_CYCLE_INTERVAL_MS);
-  };
-
-  scheduleNext();
   return () => {
-    stopped = true;
     if (automationTimer) {
-      clearTimeout(automationTimer);
+      clearInterval(automationTimer);
       automationTimer = null;
     }
   };

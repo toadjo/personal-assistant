@@ -4,7 +4,10 @@ import { getDb } from "../db";
 import { Reminder } from "../../shared/types";
 
 export function listReminders(): Reminder[] {
-  return getDb().prepare("SELECT * FROM reminders ORDER BY dueAt ASC").all().map((row: any) => row as Reminder);
+  return getDb()
+    .prepare("SELECT * FROM reminders ORDER BY dueAt ASC")
+    .all()
+    .map((row: any) => mapReminder(row));
 }
 
 export function createReminder(input: Omit<Reminder, "id" | "status" | "notifyChannel">): Reminder {
@@ -36,8 +39,8 @@ export function deleteReminder(id: string): void {
 
 export function snoozeReminder(id: string, minutes: number): void {
   validateId(id, "Reminder");
-  if (!Number.isFinite(minutes) || minutes <= 0) {
-    throw new Error("Snooze time must be a positive number of minutes.");
+  if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 60 * 24 * 30) {
+    throw new Error("Snooze time must be between 1 and 43,200 minutes.");
   }
   const reminder = getDb()
     .prepare("SELECT * FROM reminders WHERE id=@id")
@@ -132,4 +135,17 @@ function normalizeIsoDate(value: unknown, fieldName: string): string {
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function mapReminder(row: any): Reminder {
+  const normalizedStatus = row?.status === "done" ? "done" : "pending";
+  const normalizedRecurrence = row?.recurrence === "daily" ? "daily" : "none";
+  return {
+    id: typeof row?.id === "string" ? row.id : "",
+    text: typeof row?.text === "string" ? row.text : "",
+    dueAt: normalizeIsoDate(row?.dueAt, "Reminder dueAt"),
+    recurrence: normalizedRecurrence,
+    status: normalizedStatus,
+    notifyChannel: "desktop"
+  };
 }

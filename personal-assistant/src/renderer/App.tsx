@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import type { Note, Reminder } from "../shared/types";
 
@@ -23,10 +23,10 @@ const INITIAL_VISIBLE_ITEMS = 30;
 const VISIBLE_ITEMS_STEP = 30;
 type WorkspaceSection = "dashboard" | "productivity" | "integrations" | "automation";
 const SECTION_LABEL_MAP: Record<WorkspaceSection, string> = {
-  dashboard: "Dashboard",
-  productivity: "Productivity",
-  integrations: "Integrations",
-  automation: "Automation"
+  productivity: "Tasks",
+  dashboard: "Command",
+  integrations: "Home",
+  automation: "Rules"
 };
 const COMMAND_EXAMPLES = [
   "help",
@@ -43,7 +43,8 @@ const COMMAND_EXAMPLES = [
   "refresh",
   "refresh devices"
 ] as const;
-const SECTION_ORDER: WorkspaceSection[] = ["dashboard", "productivity", "integrations", "automation"];
+const COMMAND_EXAMPLES_WITH_LOWER = COMMAND_EXAMPLES.map((sample) => ({ sample, lower: sample.toLowerCase() }));
+const SECTION_ORDER: WorkspaceSection[] = ["productivity", "dashboard", "integrations", "automation"];
 
 export function App(): JSX.Element {
   const [query, setQuery] = useState("");
@@ -92,7 +93,7 @@ export function App(): JSX.Element {
     const saved = window.localStorage.getItem("assistant-theme");
     return saved === "dark" || saved === "light" ? saved : "light";
   });
-  const [activeSection, setActiveSection] = useState<WorkspaceSection>("dashboard");
+  const [activeSection, setActiveSection] = useState<WorkspaceSection>("productivity");
   const commandInputRef = useRef<HTMLInputElement>(null);
   const quickNoteTitleRef = useRef<HTMLInputElement>(null);
   const haUrlInputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +119,9 @@ export function App(): JSX.Element {
 
   const getSectionButtonId = useCallback((section: WorkspaceSection) => `section-tab-${section}`, []);
   const getSectionPanelId = useCallback((section: WorkspaceSection) => `section-panel-${section}`, []);
+  const handleFormError = useCallback((message: string) => {
+    setError(message);
+  }, []);
 
   const handleTopNavKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, section: WorkspaceSection) => {
     const currentIndex = SECTION_ORDER.indexOf(section);
@@ -139,6 +143,45 @@ export function App(): JSX.Element {
       document.getElementById(getSectionButtonId(targetSection as WorkspaceSection))?.focus();
     });
   }, [getSectionButtonId]);
+  const selectCalendarDateByOffset = useCallback((offsetDays: number) => {
+    const selectedDate = parseDateKey(selectedDateKey);
+    if (!selectedDate) return;
+    const nextDate = addDays(selectedDate, offsetDays);
+    setSelectedDateKey(toLocalDateKey(nextDate));
+    setCalendarCursor(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+  }, [selectedDateKey]);
+  const handleCalendarGridKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.key)) return;
+    event.preventDefault();
+    if (event.key === "ArrowLeft") selectCalendarDateByOffset(-1);
+    if (event.key === "ArrowRight") selectCalendarDateByOffset(1);
+    if (event.key === "ArrowUp") selectCalendarDateByOffset(-7);
+    if (event.key === "ArrowDown") selectCalendarDateByOffset(7);
+    if (event.key === "Home") {
+      const selectedDate = parseDateKey(selectedDateKey);
+      if (!selectedDate) return;
+      selectCalendarDateByOffset(-selectedDate.getDay());
+    }
+    if (event.key === "End") {
+      const selectedDate = parseDateKey(selectedDateKey);
+      if (!selectedDate) return;
+      selectCalendarDateByOffset(6 - selectedDate.getDay());
+    }
+    if (event.key === "PageUp") {
+      const selectedDate = parseDateKey(selectedDateKey);
+      if (!selectedDate) return;
+      const nextDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, selectedDate.getDate());
+      setSelectedDateKey(toLocalDateKey(nextDate));
+      setCalendarCursor(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+    }
+    if (event.key === "PageDown") {
+      const selectedDate = parseDateKey(selectedDateKey);
+      if (!selectedDate) return;
+      const nextDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, selectedDate.getDate());
+      setSelectedDateKey(toLocalDateKey(nextDate));
+      setCalendarCursor(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+    }
+  }, [selectedDateKey, selectCalendarDateByOffset]);
 
   const refreshNotes = useCallback(async (searchTerm: string): Promise<void> => {
     const nextNotes = await window.assistantApi.listNotes(searchTerm);
@@ -228,6 +271,17 @@ export function App(): JSX.Element {
     }, 0);
     return () => window.clearTimeout(id);
   }, [activeSection]);
+  useEffect(() => {
+    function onWindowKeyDown(event: globalThis.KeyboardEvent): void {
+      const isCommandPaletteShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
+      if (!isCommandPaletteShortcut) return;
+      event.preventDefault();
+      setActiveSection("dashboard");
+      commandInputRef.current?.focus();
+    }
+    window.addEventListener("keydown", onWindowKeyDown);
+    return () => window.removeEventListener("keydown", onWindowKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!status && !error) return;
@@ -245,9 +299,8 @@ export function App(): JSX.Element {
 
   const commandHints = useMemo(() => {
     const term = commandInput.trim().toLowerCase();
-    const ranked = COMMAND_EXAMPLES
-      .map((sample) => {
-        const lower = sample.toLowerCase();
+    const ranked = COMMAND_EXAMPLES_WITH_LOWER
+      .map(({ sample, lower }) => {
         const rank = !term ? 2 : lower.startsWith(term) ? 0 : lower.includes(term) ? 1 : 3;
         return { sample, rank };
       })
@@ -257,9 +310,10 @@ export function App(): JSX.Element {
     return ranked.slice(0, 5);
   }, [commandInput]);
   const pendingReminders = useMemo(() => reminders.filter((r) => r.status === "pending"), [reminders]);
+  const nowTimestamp = Date.now();
   const overdueReminders = useMemo(
-    () => pendingReminders.filter((r) => new Date(r.dueAt).getTime() < Date.now()),
-    [pendingReminders]
+    () => pendingReminders.filter((r) => new Date(r.dueAt).getTime() < nowTimestamp),
+    [pendingReminders, nowTimestamp]
   );
   const visibleReminders = useMemo(
     () => reminders.filter((r) => reminderFilter === "all" || r.status === reminderFilter),
@@ -275,8 +329,8 @@ export function App(): JSX.Element {
     haSetupState === "ready"
       ? hasHaToken && !haToken.trim()
         ? "Saved token detected. Add a new token only when rotating credentials."
-        : "Save to persist changes, then test or refresh entities."
-      : "Complete URL and token to enable connection controls.";
+        : "Save any changes, then run Test connection and Refresh entities."
+      : "Complete URL and token, then click Save setup.";
   const remindersByDate = useMemo(() => {
     const byDate = new Map<string, Reminder[]>();
     for (const reminder of reminders) {
@@ -292,20 +346,25 @@ export function App(): JSX.Element {
     return byDate;
   }, [reminders]);
   const monthCells = useMemo(() => buildCalendarCells(calendarCursor, remindersByDate), [calendarCursor, remindersByDate]);
+  const selectedDateIndex = useMemo(
+    () => monthCells.findIndex((cell) => cell.dateKey === selectedDateKey),
+    [monthCells, selectedDateKey]
+  );
   const todayKey = toLocalDateKey(new Date());
+  const remindersSortedByDueAt = useMemo(() => {
+    const sorted = reminders.slice();
+    sorted.sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+    return sorted;
+  }, [reminders]);
   const selectedDayReminders = useMemo(
     () =>
-      reminders
-        .filter((r) => toLocalDateKey(new Date(r.dueAt)) === selectedDateKey)
-        .sort((a, b) => a.dueAt.localeCompare(b.dueAt)),
-    [reminders, selectedDateKey]
+      remindersSortedByDueAt.filter((r) => toLocalDateKey(new Date(r.dueAt)) === selectedDateKey),
+    [remindersSortedByDueAt, selectedDateKey]
   );
   const todayAgenda = useMemo(
     () =>
-      reminders
-        .filter((r) => r.status === "pending" && toLocalDateKey(new Date(r.dueAt)) === todayKey)
-        .sort((a, b) => a.dueAt.localeCompare(b.dueAt)),
-    [reminders, todayKey]
+      remindersSortedByDueAt.filter((r) => r.status === "pending" && toLocalDateKey(new Date(r.dueAt)) === todayKey),
+    [remindersSortedByDueAt, todayKey]
   );
   const recentNotes = useMemo(() => notes.slice(0, 5), [notes]);
   const visibleNotesSlice = useMemo(() => notes.slice(0, notesVisible), [notes, notesVisible]);
@@ -321,40 +380,8 @@ export function App(): JSX.Element {
     () => calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" }),
     [calendarCursor]
   );
-  const commandHelpMessage = useMemo(
-    () =>
-      [
-        "Commands:",
-        "new note <text>",
-        "remind <text> in <number><m|h>",
-        "remind <text> at HH:MM",
-        "search <term>",
-        "list reminders | show all reminders | show overdue",
-        "toggle <device> | refresh | refresh devices"
-      ].join("  "),
-    []
-  );
-  const parseCommand = useCallback((rawInput: string): ParsedCommand => {
-    const normalizedInput = normalizeCommandAlias(rawInput).replace(/\s+/g, " ").trim();
-    const lower = normalizedInput.toLowerCase();
-    if (lower === "help") return { intent: "help", normalizedInput };
-    if (lower === "list reminders") return { intent: "listPendingReminders", normalizedInput };
-    if (lower === "show all reminders") return { intent: "showAllReminders", normalizedInput };
-    if (lower === "show overdue") return { intent: "showOverdue", normalizedInput };
-    if (lower === "clear search") return { intent: "clearSearch", normalizedInput };
-    if (lower === "refresh" || lower === "sync now") return { intent: "refreshAll", normalizedInput };
-    if (lower === "refresh devices") return { intent: "refreshDevices", normalizedInput };
-    if (lower === "new note" || lower === "note") throw new Error("Write note text after 'new note'. Example: new note buy coffee.");
-    if (lower === "remind") throw new Error("Use a reminder command like: remind call mom in 15m");
-    if (lower === "search") throw new Error("Write a search term after 'search'.");
-    if (lower === "toggle") throw new Error("Specify what to toggle. Example: toggle kitchen light.");
-    if (lower.startsWith("search ")) return { intent: "searchNotes", args: normalizedInput.slice(7).trim(), normalizedInput };
-    if (lower.startsWith("new note ")) return { intent: "createNote", args: normalizedInput.slice(9).trim(), normalizedInput };
-    if (lower.startsWith("note ")) return { intent: "createNote", args: normalizedInput.slice(5).trim(), normalizedInput };
-    if (lower.startsWith("remind ")) return { intent: "createReminder", args: normalizedInput.slice(7).trim(), normalizedInput };
-    if (lower.startsWith("toggle ")) return { intent: "toggleDevice", args: normalizedInput.slice(7).trim(), normalizedInput };
-    return { intent: "unknown", normalizedInput };
-  }, []);
+  const commandHelpMessage = useMemo(() => buildCommandHelpMessage(), []);
+  const parseCommand = useCallback((rawInput: string): ParsedCommand => parseCommandInput(rawInput), []);
 
   function runPresetCommand(command: string): void {
     setCommandInput(command);
@@ -374,26 +401,32 @@ export function App(): JSX.Element {
           setStatus(commandHelpMessage);
           break;
         case "listPendingReminders":
+          setActiveSection("productivity");
           setReminderFilterWithVisibilityReset("pending");
           setStatus("Showing pending reminders.");
           break;
         case "showAllReminders":
+          setActiveSection("productivity");
           setReminderFilterWithVisibilityReset("all");
           setStatus("Showing all reminders.");
           break;
         case "showOverdue":
+          setActiveSection("productivity");
           setReminderFilterWithVisibilityReset("pending");
           setStatus("Showing pending reminders. Overdue items are marked.");
           break;
         case "searchNotes":
+          setActiveSection("productivity");
           setQueryWithVisibilityReset(parsed.args ?? "");
           setStatus(`Searching notes for "${parsed.args ?? ""}".`);
           break;
         case "clearSearch":
+          setActiveSection("productivity");
           setQueryWithVisibilityReset("");
           setStatus("Cleared note search.");
           break;
         case "createNote": {
+          setActiveSection("productivity");
           const text = parsed.args ?? "";
           await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
           await refreshNotes(queryRef.current);
@@ -401,6 +434,7 @@ export function App(): JSX.Element {
           break;
         }
         case "createReminder": {
+          setActiveSection("productivity");
           const reminder = parseReminderCommand(parsed.args ?? "");
           await window.assistantApi.createReminder({ text: reminder.text, dueAt: reminder.dueAt, recurrence: "none" });
           await refreshReminders();
@@ -408,6 +442,7 @@ export function App(): JSX.Element {
           break;
         }
         case "toggleDevice": {
+          setActiveSection("integrations");
           if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
           const target = (parsed.args ?? "").toLowerCase();
           const matches = devices.filter((d) =>
@@ -442,6 +477,7 @@ export function App(): JSX.Element {
           setStatus("Assistant data refreshed.");
           break;
         case "refreshDevices":
+          setActiveSection("integrations");
           if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
           await window.assistantApi.refreshHomeAssistantEntities();
           await refreshDevices();
@@ -465,9 +501,8 @@ export function App(): JSX.Element {
     <main className="container">
       <header className="hero">
         <div className="heroLead">
-          <p className="eyebrow">Assistant workspace</p>
           <h1>Personal Assistant</h1>
-          <p className="subtitle">Windows tray companion for notes, reminders, and Home Assistant automations.</p>
+          <p className="subtitle">Task-first workspace for reminders and notes.</p>
         </div>
         <div className="heroStats">
           <span className="stat statPrimary">Pending reminders: {pendingReminders.length}</span>
@@ -479,9 +514,6 @@ export function App(): JSX.Element {
           >
             {theme === "light" ? "Dark theme" : "Light theme"}
           </button>
-          <span className="stat">Notes: {notes.length}</span>
-          <span className="stat">Devices: {devices.length}</span>
-          <span className="stat">HA: {haReady ? "Ready" : "Setup needed"}</span>
         </div>
       </header>
       <nav className="topNav" aria-label="Workspace sections" role="tablist">
@@ -551,6 +583,13 @@ export function App(): JSX.Element {
               placeholder="Type a command and press Enter..."
               value={commandInput}
               aria-label="Assistant command input"
+              aria-keyshortcuts="Control+K Meta+K Escape"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setCommandInput("");
+                }
+              }}
               onChange={(e) => setCommandInput(e.target.value)}
             />
             <button type="submit" className="commandAction" disabled={isRunningCommand}>
@@ -562,6 +601,7 @@ export function App(): JSX.Element {
               <button type="button" key={hint} className="pillButton" onClick={() => setCommandInput(hint)}>{hint}</button>
             )) : <span className="muted">No matching command hints.</span>}
           </div>
+          <p className="muted assistantTip">Shortcut: Ctrl/Cmd+K focuses command input. Press Escape to clear.</p>
         </section>
 
         <section className="panel compactPanel">
@@ -628,9 +668,9 @@ export function App(): JSX.Element {
             </div>
           </div>
           <p className="muted">{selectedMonthLabel}</p>
-          <div className="calendarGrid">
+          <div className="calendarGrid" role="grid" aria-label={`Reminders calendar for ${selectedMonthLabel}`} onKeyDown={handleCalendarGridKeyDown}>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className="calendarHeader">{d}</div>
+              <div key={d} className="calendarHeader" role="columnheader">{d}</div>
             ))}
             {monthCells.map((cell, idx) => (
               <button
@@ -638,10 +678,17 @@ export function App(): JSX.Element {
                 key={`${cell.dateKey}-${idx}`}
                 className={`calendarCell calendarCellButton ${cell.isCurrentMonth ? "" : "calendarCellMuted"} ${cell.dateKey === todayKey ? "calendarCellToday" : ""} ${cell.dateKey === selectedDateKey ? "calendarCellSelected" : ""}`}
                 onClick={() => setSelectedDateKey(cell.dateKey)}
+                onFocus={() => {
+                  if (cell.dateKey !== selectedDateKey) {
+                    setSelectedDateKey(cell.dateKey);
+                  }
+                }}
                 aria-label={`${
                   formatDateLabel(cell.dateKey)
                 } in ${selectedMonthLabel}${cell.count ? `, ${cell.count} pending reminder${cell.count === 1 ? "" : "s"}` : ", no pending reminders"}`}
                 aria-pressed={cell.dateKey === selectedDateKey}
+                aria-current={cell.dateKey === todayKey ? "date" : undefined}
+                tabIndex={idx === selectedDateIndex || (selectedDateIndex === -1 && idx === 0) ? 0 : -1}
               >
                 <div className="calendarCellTop">
                   <span>{cell.dayNumber}</span>
@@ -657,26 +704,38 @@ export function App(): JSX.Element {
             </div>
           </div>
           {selectedDayReminders.some((r) => r.status === "pending") ? (
-            <details className="collapsibleGroup">
-              <summary className="collapsibleSummary muted">Day options</summary>
-              <div className="miniActions">
-                <button
-                  className="ghostButton"
-                  onClick={async () => {
-                    const pendingIds = selectedDayReminders.filter((r) => r.status === "pending").map((r) => r.id);
-                    try {
-                      await Promise.all(pendingIds.map((id) => window.assistantApi.snoozeReminder(id, 60)));
-                      setStatus(`Snoozed ${pendingIds.length} reminder(s) by 1 hour.`);
-                      await refreshAll();
-                    } catch (err) {
-                      setError(getErrorMessage(err));
-                    }
-                  }}
-                >
-                  Snooze all pending 1h
-                </button>
-              </div>
-            </details>
+            <div className="miniActions dayBatchActions">
+              <button
+                className="ghostButton"
+                onClick={async () => {
+                  const pendingIds = selectedDayReminders.filter((r) => r.status === "pending").map((r) => r.id);
+                  try {
+                    await Promise.all(pendingIds.map((id) => window.assistantApi.snoozeReminder(id, 60)));
+                    setStatus(`Snoozed ${pendingIds.length} reminder(s) by 1 hour.`);
+                    await refreshAll();
+                  } catch (err) {
+                    setError(getErrorMessage(err));
+                  }
+                }}
+              >
+                Snooze all pending 1h
+              </button>
+              <button
+                className="ghostButton"
+                onClick={async () => {
+                  const pendingIds = selectedDayReminders.filter((r) => r.status === "pending").map((r) => r.id);
+                  try {
+                    await Promise.all(pendingIds.map((id) => window.assistantApi.completeReminder(id)));
+                    setStatus(`Marked ${pendingIds.length} reminder(s) as done.`);
+                    await refreshAll();
+                  } catch (err) {
+                    setError(getErrorMessage(err));
+                  }
+                }}
+              >
+                Mark all done
+              </button>
+            </div>
           ) : null}
           <ul className="list">
             {selectedDayReminders.length ? selectedDayReminders.map((r) => (
@@ -703,6 +762,35 @@ export function App(): JSX.Element {
                     >
                       Mark done
                     </button>
+                    <button
+                      className="ghostButton"
+                      onClick={async () => {
+                        try {
+                          await window.assistantApi.snoozeReminder(r.id, 60);
+                          setStatus("Reminder snoozed by 1 hour.");
+                          await refreshAll();
+                        } catch (err) {
+                          setError(getErrorMessage(err));
+                        }
+                      }}
+                    >
+                      Snooze 1h
+                    </button>
+                    <button
+                      className="dangerButton"
+                      onClick={async () => {
+                        if (!window.confirm("Delete this reminder?")) return;
+                        try {
+                          await window.assistantApi.deleteReminder(r.id);
+                          setStatus("Reminder deleted.");
+                          await refreshAll();
+                        } catch (err) {
+                          setError(getErrorMessage(err));
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 ) : null}
               </li>
@@ -728,7 +816,7 @@ export function App(): JSX.Element {
           <QuickNoteForm
             titleInputRef={quickNoteTitleRef}
             onDone={refreshAll}
-            onError={(message) => setError(message)}
+            onError={handleFormError}
           />
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading notes...</li> : notes.length ? visibleNotesSlice.map((n) => (
@@ -764,25 +852,33 @@ export function App(): JSX.Element {
             <h2>Reminders</h2>
             <span className="pill graphitePill">Showing: {reminderFilter}</span>
           </div>
-          <p className="muted sectionIntro">Schedule quickly and focus on pending by default. Expand options only when needed.</p>
-          <details className="collapsibleGroup">
-            <summary className="collapsibleSummary muted">View options</summary>
-            <div className="row">
-              <label className="srOnly" htmlFor="reminder-filter-select">Reminder filter</label>
-              <select
-                id="reminder-filter-select"
-                value={reminderFilter}
-                onChange={(e) => setReminderFilterWithVisibilityReset(e.target.value as "all" | "pending" | "done")}
-              >
-                <option value="pending">Pending</option>
-                <option value="all">All</option>
-                <option value="done">Done</option>
-              </select>
-            </div>
-          </details>
+          <p className="muted sectionIntro">Schedule quickly and switch views in one click.</p>
+          <div className="row reminderFilterRow">
+            <button
+              type="button"
+              className={`ghostButton ${reminderFilter === "pending" ? "filterButtonActive" : ""}`}
+              onClick={() => setReminderFilterWithVisibilityReset("pending")}
+            >
+              Pending ({reminders.filter((r) => r.status === "pending").length})
+            </button>
+            <button
+              type="button"
+              className={`ghostButton ${reminderFilter === "all" ? "filterButtonActive" : ""}`}
+              onClick={() => setReminderFilterWithVisibilityReset("all")}
+            >
+              All ({reminders.length})
+            </button>
+            <button
+              type="button"
+              className={`ghostButton ${reminderFilter === "done" ? "filterButtonActive" : ""}`}
+              onClick={() => setReminderFilterWithVisibilityReset("done")}
+            >
+              Done ({reminders.filter((r) => r.status === "done").length})
+            </button>
+          </div>
           <ReminderForm
             onDone={refreshAll}
-            onError={(message) => setError(message)}
+            onError={handleFormError}
           />
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading reminders...</li> : visibleReminders.length ? visibleRemindersSlice.map((r) => (
@@ -810,40 +906,35 @@ export function App(): JSX.Element {
                     >
                       Mark done
                     </button>
-                    <details className="collapsibleGroup">
-                      <summary className="collapsibleSummary muted">More</summary>
-                      <div className="miniActions">
-                        <button
-                          className="ghostButton"
-                          onClick={async () => {
-                            try {
-                              await window.assistantApi.snoozeReminder(r.id, 60);
-                              setStatus("Reminder snoozed by 1 hour.");
-                              await refreshAll();
-                            } catch (err) {
-                              setError(getErrorMessage(err));
-                            }
-                          }}
-                        >
-                          Snooze 1h
-                        </button>
-                        <button
-                          className="dangerButton"
-                          onClick={async () => {
-                            if (!window.confirm("Delete this reminder?")) return;
-                            try {
-                              await window.assistantApi.deleteReminder(r.id);
-                              setStatus("Reminder deleted.");
-                              await refreshAll();
-                            } catch (err) {
-                              setError(getErrorMessage(err));
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </details>
+                    <button
+                      className="ghostButton"
+                      onClick={async () => {
+                        try {
+                          await window.assistantApi.snoozeReminder(r.id, 60);
+                          setStatus("Reminder snoozed by 1 hour.");
+                          await refreshAll();
+                        } catch (err) {
+                          setError(getErrorMessage(err));
+                        }
+                      }}
+                    >
+                      Snooze 1h
+                    </button>
+                    <button
+                      className="dangerButton"
+                      onClick={async () => {
+                        if (!window.confirm("Delete this reminder?")) return;
+                        try {
+                          await window.assistantApi.deleteReminder(r.id);
+                          setStatus("Reminder deleted.");
+                          await refreshAll();
+                        } catch (err) {
+                          setError(getErrorMessage(err));
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 ) : null}
               </li>
@@ -893,7 +984,7 @@ export function App(): JSX.Element {
                 const config = await window.assistantApi.getHomeAssistantConfig();
                 setHasHaToken(config.hasToken);
                 setHaToken("");
-                setStatus("Home Assistant config saved.");
+                setStatus("Home Assistant setup saved. Next: Test connection, then Refresh entities.");
               } catch (err) {
                 setError(getHaErrorMessage(err, "saving setup"));
               } finally {
@@ -908,11 +999,12 @@ export function App(): JSX.Element {
             onClick={async () => {
               try {
                 setError("");
-                setStatus(
-                  (await window.assistantApi.testHomeAssistant())
-                    ? "Home Assistant connected."
-                    : "Home Assistant test failed. Confirm URL, token, and API access."
-                );
+                const connected = await window.assistantApi.testHomeAssistant();
+                if (connected) {
+                  setStatus("Home Assistant connected. Next: Refresh entities to sync devices.");
+                } else {
+                  setError("Connection test failed. Confirm URL, token, and API access, then try again.");
+                }
               } catch (err) {
                 setError(getHaErrorMessage(err, "testing connection"));
               }
@@ -927,8 +1019,8 @@ export function App(): JSX.Element {
                 setError("");
                 setIsRefreshingHa(true);
                 await window.assistantApi.refreshHomeAssistantEntities();
-                setStatus("Entities refreshed.");
                 await refreshDevices();
+                setStatus("Entities refreshed. Device list is now up to date.");
               } catch (err) {
                 setError(getHaErrorMessage(err, "refreshing entities"));
               } finally {
@@ -939,7 +1031,16 @@ export function App(): JSX.Element {
             {isRefreshingHa ? "Refreshing..." : "Refresh entities"}
           </button>
         </div>
-        {!canSaveHaConfig ? <p className="muted">Enter both URL and token to finish setup.</p> : null}
+        {!canSaveHaConfig ? <p className="muted">Enter URL and token, then click Save setup.</p> : null}
+        <details className="collapsibleGroup">
+          <summary className="collapsibleSummary muted">Connection troubleshooting</summary>
+          <ul className="list compactList">
+            <li>Use full URL format, for example `http://homeassistant.local:8123`.</li>
+            <li>Create a long-lived access token in Home Assistant profile settings.</li>
+            <li>401/403 errors usually mean token issue or missing token permissions.</li>
+            <li>If connection passes but devices are empty, run Refresh entities.</li>
+          </ul>
+        </details>
         <details className="collapsibleGroup">
           <summary className="collapsibleSummary muted">Devices ({devices.length})</summary>
           <ul className="list">
@@ -986,12 +1087,12 @@ export function App(): JSX.Element {
             nameInputRef={ruleNameInputRef}
             devices={devices}
             onDone={refreshAll}
-            onError={(message) => setError(message)}
+            onError={handleFormError}
           />
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading rules...</li> : rules.length ? visibleRulesSlice.map((r) => (
               <li key={r.id}>
-                <strong>{r.triggerConfig.at}</strong> - {formatAutomationActionLabel(r.actionType, r.actionConfig)}
+                <strong>{r.name}</strong> - {r.triggerConfig.at} - {formatAutomationActionLabel(r.actionType, r.actionConfig)}
               </li>
             )) : <li className="muted">No rules yet.</li>}
           </ul>
@@ -1010,7 +1111,7 @@ export function App(): JSX.Element {
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading logs...</li> : logs.length ? visibleLogsSlice.map((l) => (
               <li key={l.id}>
-                <strong>{l.status === "success" ? "Success" : "Failed"}</strong> - {new Date(l.startedAt).toLocaleString()} ({formatElapsedLabel(l.startedAt, l.endedAt)}) - {l.actionLabel}
+                <strong>{l.status === "success" ? "Success" : "Failed"}</strong> - {l.ruleName} - {l.actionLabel} - {new Date(l.startedAt).toLocaleString()} ({formatElapsedLabel(l.startedAt, l.endedAt)}, {getAutomationLogConfidenceLabel(l.status, l.error)} confidence)
                 {l.error ? ` - ${l.error}` : ""}
               </li>
             )) : <li className="muted">No execution logs yet.</li>}
@@ -1066,6 +1167,14 @@ function formatElapsedLabel(startedAt: string, endedAt: string): string {
   return seconds > 0 ? `${seconds}s` : "<1s";
 }
 
+function getAutomationLogConfidenceLabel(status: string, error?: string): "high" | "medium" | "low" {
+  if (status !== "success") return "low";
+  if (!error) return "high";
+  const lower = error.toLowerCase();
+  if (lower.includes("retry") || lower.includes("timeout")) return "medium";
+  return "high";
+}
+
 function parseReminderCommand(bodyRaw: string): { text: string; dueAt: string } {
   const body = bodyRaw.trim();
   if (!body) {
@@ -1073,43 +1182,41 @@ function parseReminderCommand(bodyRaw: string): { text: string; dueAt: string } 
       "Use: remind <text> in <number><m|h>, remind <text> at HH:MM, or remind <text> tomorrow at HH:MM."
     );
   }
-  const tomorrowMatch = body.match(/^(.*)\s+tomorrow\s+at\s+(\d{1,2}):(\d{2})$/i);
+  const tomorrowMatch = body.match(/^(.*)\s+tomorrow\s+at\s+(.+)$/i);
   if (tomorrowMatch) {
     const text = tomorrowMatch[1].trim();
-    const hours = Number(tomorrowMatch[2]);
-    const minutes = Number(tomorrowMatch[3]);
+    const parsedTime = parseClockTime(tomorrowMatch[2]);
     if (!text) throw new Error("Reminder text is required.");
-    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    if (!parsedTime) {
       throw new Error("Use a valid time in 24h format, for example: remind check backup tomorrow at 09:00");
     }
     const due = new Date();
     due.setDate(due.getDate() + 1);
-    due.setHours(hours, minutes, 0, 0);
+    due.setHours(parsedTime.hours, parsedTime.minutes, 0, 0);
     return { text, dueAt: due.toISOString() };
   }
 
-  const match = body.match(/^(.*)\s+in\s+(\d+)\s*([mh])$/i);
+  const match = body.match(/^(.*)\s+in\s+(\d+)\s*(m|mins?|minutes?|h|hrs?|hours?)$/i);
   if (match) {
     const text = match[1].trim();
     const amount = Number(match[2]);
     const unit = match[3].toLowerCase();
-    const minutes = unit === "h" ? amount * 60 : amount;
+    const minutes = unit.startsWith("h") ? amount * 60 : amount;
     if (!text) throw new Error("Reminder text is required.");
     if (!Number.isFinite(minutes) || minutes <= 0) throw new Error("Reminder time must be positive.");
     return { text, dueAt: new Date(Date.now() + minutes * 60_000).toISOString() };
   }
 
-  const atMatch = body.match(/^(.*)\s+at\s+(\d{1,2}):(\d{2})$/i);
+  const atMatch = body.match(/^(.*)\s+at\s+(.+)$/i);
   if (atMatch) {
     const text = atMatch[1].trim();
-    const hours = Number(atMatch[2]);
-    const minutes = Number(atMatch[3]);
+    const parsedTime = parseClockTime(atMatch[2]);
     if (!text) throw new Error("Reminder text is required.");
-    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    if (!parsedTime) {
       throw new Error("Use a valid time in 24h format, for example: remind send report at 16:30");
     }
     const due = new Date();
-    due.setHours(hours, minutes, 0, 0);
+    due.setHours(parsedTime.hours, parsedTime.minutes, 0, 0);
     if (due.getTime() <= Date.now()) {
       due.setDate(due.getDate() + 1);
     }
@@ -1122,22 +1229,29 @@ function parseReminderCommand(bodyRaw: string): { text: string; dueAt: string } 
 }
 
 function normalizeCommandAlias(input: string): string {
-  const lower = input.trim().toLowerCase();
+  const normalized = input
+    .trim()
+    .replace(/^(hey|hi)\s+assistant[:,]?\s*/i, "")
+    .replace(/^assistant[:,]?\s*/i, "")
+    .replace(/[.!?]+$/g, "");
+  const lower = normalized.toLowerCase();
   if (lower === "today" || lower === "what's next" || lower === "whats next") {
     return "list reminders";
   }
   if (lower === "commands" || lower === "?" || lower === "what can you do") return "help";
   if (lower === "all reminders") return "show all reminders";
+  if (lower === "show reminders" || lower === "show pending reminders") return "list reminders";
   if (lower === "overdue") return "show overdue";
   if (lower === "sync") return "refresh";
-  return input.trim();
+  if (lower === "sync devices") return "refresh devices";
+  return normalized;
 }
 
 function parseCommandInput(rawInput: string): ParsedCommand {
   const normalizedInput = normalizeCommandAlias(rawInput).replace(/\s+/g, " ").trim();
   const lower = normalizedInput.toLowerCase();
   if (lower === "help") return { intent: "help", normalizedInput };
-  if (lower === "list reminders") return { intent: "listPendingReminders", normalizedInput };
+  if (lower === "list reminders" || lower === "list reminder") return { intent: "listPendingReminders", normalizedInput };
   if (lower === "show all reminders") return { intent: "showAllReminders", normalizedInput };
   if (lower === "show overdue") return { intent: "showOverdue", normalizedInput };
   if (lower === "clear search") return { intent: "clearSearch", normalizedInput };
@@ -1167,12 +1281,34 @@ function buildCommandHelpMessage(): string {
   return [
     "Commands:",
     "new note <text>",
-    "remind <text> in <number><m|h>",
-    "remind <text> at HH:MM",
+    "remind <text> in <number><m|h|min|hr>",
+    "remind <text> at HH:MM or H:MMam/pm",
     "search <term>",
     "list reminders | show all reminders | show overdue",
     "toggle <device> | refresh | refresh devices"
   ].join("  ");
+}
+
+function parseClockTime(rawTime: string): { hours: number; minutes: number } | null {
+  const match = rawTime.trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const meridiem = match[3]?.toLowerCase();
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || minutes < 0 || minutes > 59) {
+    return null;
+  }
+  if (meridiem) {
+    if (hours < 1 || hours > 12) return null;
+    if (meridiem === "am") {
+      if (hours === 12) hours = 0;
+    } else if (hours !== 12) {
+      hours += 12;
+    }
+  } else if (hours < 0 || hours > 23) {
+    return null;
+  }
+  return { hours, minutes };
 }
 
 function toLocalDateKey(date: Date): string {
@@ -1180,6 +1316,18 @@ function toLocalDateKey(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function parseDateKey(dateKey: string): Date | null {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  const parsed = new Date(year, month - 1, day);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 }
 
 function buildCalendarCells(monthDate: Date, remindersByDate: Map<string, Reminder[]>): Array<{ dateKey: string; dayNumber: number; isCurrentMonth: boolean; count: number }> {
@@ -1213,7 +1361,7 @@ function buildCalendarCells(monthDate: Date, remindersByDate: Map<string, Remind
   return cells;
 }
 
-function RuleForm({
+const RuleForm = memo(function RuleForm({
   nameInputRef,
   devices,
   onDone,
@@ -1285,9 +1433,9 @@ function RuleForm({
       </button>
     </form>
   );
-}
+});
 
-function QuickNoteForm({
+const QuickNoteForm = memo(function QuickNoteForm({
   titleInputRef,
   onDone,
   onError
@@ -1324,9 +1472,15 @@ function QuickNoteForm({
       </button>
     </form>
   );
-}
+});
 
-function ReminderForm({ onDone, onError }: { onDone: () => Promise<void>; onError: (message: string) => void }): JSX.Element {
+const ReminderForm = memo(function ReminderForm({
+  onDone,
+  onError
+}: {
+  onDone: () => Promise<void>;
+  onError: (message: string) => void;
+}): JSX.Element {
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1365,7 +1519,7 @@ function ReminderForm({ onDone, onError }: { onDone: () => Promise<void>; onErro
       </button>
     </form>
   );
-}
+});
 
 function toLocalDateTimeInputValue(date: Date): string {
   const copy = new Date(date);

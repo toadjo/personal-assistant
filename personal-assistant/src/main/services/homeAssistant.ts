@@ -31,19 +31,30 @@ export async function getHomeAssistantConfig(): Promise<{ url: string; hasToken:
 async function authedFetch(path: string, init?: RequestInit): Promise<Response> {
   const token = await getHaToken();
   const url = getConfiguredBaseUrl();
-  if (!token || !url) throw new Error("Home Assistant not configured");
+  if (!token || !url) throw new Error("Home Assistant not configured.");
   if (!path.startsWith("/")) throw new Error("Home Assistant request path must start with '/'.");
+  const timeoutMs = 10_000;
+  const controller = new AbortController();
+  const timeoutRef = setTimeout(() => controller.abort(), timeoutMs);
+  timeoutRef.unref();
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  headers.set("Authorization", `Bearer ${token}`);
   try {
     return await fetch(`${url}${path}`, {
       ...init,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(init?.headers || {})
-      }
+      headers,
+      signal: controller.signal
     });
   } catch (error) {
-    throw new Error(`Home Assistant request failed: ${error instanceof Error ? error.message : String(error)}`);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Home Assistant request timed out after ${timeoutMs}ms.`);
+    }
+    throw new Error(`Home Assistant request failed: ${toErrorMessage(error)}`);
+  } finally {
+    clearTimeout(timeoutRef);
   }
 }
 
@@ -162,4 +173,8 @@ function normalizeUrl(url: string): string {
   } catch {
     return "";
   }
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
