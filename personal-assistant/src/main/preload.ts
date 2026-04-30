@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld("assistantApi", {
   refreshHomeAssistantEntities: () => ipcRenderer.invoke("ha:refresh"),
   listDevices: () => ipcRenderer.invoke("ha:listDevices"),
   toggleDevice: (entityId: string) => ipcRenderer.invoke("ha:toggle", entityId),
+  getAssistantSettings: () => ipcRenderer.invoke("settings:getAssistant"),
+  setAssistantName: (name: string) => ipcRenderer.invoke("settings:setAssistantName", name),
   listExecutionLogs: () => ipcRenderer.invoke("automation:logs"),
   listRules: () => ipcRenderer.invoke("automation:rules:list"),
   createRule: (payload: {

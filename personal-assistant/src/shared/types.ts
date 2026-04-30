@@ -47,3 +47,8 @@ export type ExecutionLog = {
   attemptCount: number;
   retryCount: number;
 };
+
+export type AssistantSettings = {
+  name: string;
+  isConfigured: boolean;
+};

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { Note, Reminder } from "../shared/types";
+import type { AssistantSettings, Note, Reminder } from "../shared/types";
 
 declare global {
   interface Window {
@@ -19,6 +19,8 @@ declare global {
       refreshHomeAssistantEntities: () => Promise<void>;
       listDevices: () => Promise<Array<{ entityId: string; friendlyName: string; state: string }>>;
       toggleDevice: (entityId: string) => Promise<void>;
+      getAssistantSettings: () => Promise<AssistantSettings>;
+      setAssistantName: (name: string) => Promise<AssistantSettings>;
       listExecutionLogs: () => Promise<Array<{
         id: string;
         ruleId: string;

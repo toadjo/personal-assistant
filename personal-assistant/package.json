@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "description": "Windows tray personal assistant MVP",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -51,7 +51,12 @@
     ],
     "win": {
       "target": "nsis",
+      "icon": "assets/app-icon.png",
       "signAndEditExecutable": false
+    },
+    "nsis": {
+      "installerIcon": "assets/app-icon.png",
+      "uninstallerIcon": "assets/app-icon.png"
     }
   }
 }

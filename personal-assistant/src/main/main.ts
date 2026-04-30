@@ -6,6 +6,7 @@ import { createNote, deleteNote, listNotes } from "./services/notes";
 import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, startReminderScheduler } from "./services/reminders";
 import { configureHomeAssistant, getHomeAssistantConfig, refreshEntities, testConnection, toggleEntity } from "./services/homeAssistant";
 import { createTimeRule, listRules, runAutomationCycle } from "./services/automation";
+import { getAssistantSettings, saveAssistantName } from "./services/settings";
 
 let win: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -36,6 +37,7 @@ const uuidSchema = z.string().uuid();
 const optionalQuerySchema = z.string().optional();
 const positiveIntegerSchema = z.number().int().positive();
 const haEntityIdSchema = z.string().trim().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id");
+const assistantNameSchema = z.string().trim().min(1).max(60);
 
 const ruleCreateSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -164,6 +166,14 @@ function registerIpc(): void {
   ipcMain.handle("ha:listDevices", (event) => {
     assertTrustedIpcSender(event);
     return getDb().prepare("SELECT * FROM devices_cache ORDER BY friendlyName ASC").all();
+  });
+  ipcMain.handle("settings:getAssistant", (event) => {
+    assertTrustedIpcSender(event);
+    return getAssistantSettings();
+  });
+  ipcMain.handle("settings:setAssistantName", (event, name) => {
+    assertTrustedIpcSender(event);
+    return saveAssistantName(assistantNameSchema.parse(name));
   });
   ipcMain.handle("automation:logs", (event) => {
     assertTrustedIpcSender(event);

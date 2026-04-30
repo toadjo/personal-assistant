@@ -28,6 +28,62 @@ function Invoke-CheckedCommand([string]$FileName, [string[]]$Arguments) {
     }
 }
 
+function Test-IsLockLikeError([System.Exception]$Error) {
+    if ($null -eq $Error) {
+        return $false
+    }
+
+    $message = $Error.ToString()
+    return (
+        $message -match 'being used by another process' -or
+        $message -match 'The process cannot access the file' -or
+        $message -match 'because it is being used by another process' -or
+        $message -match 'Access to the path .* is denied'
+    )
+}
+
+function Invoke-WithRetry(
+    [scriptblock]$Action,
+    [string]$Description,
+    [int]$MaxAttempts = 6,
+    [int]$InitialDelayMs = 300
+) {
+    if ($MaxAttempts -lt 1) {
+        throw "Invoke-WithRetry requires MaxAttempts >= 1."
+    }
+
+    $attempt = 1
+    $delayMs = $InitialDelayMs
+
+    while ($true) {
+        try {
+            & $Action
+            return
+        } catch {
+            $isLastAttempt = ($attempt -ge $MaxAttempts)
+            $lockLike = Test-IsLockLikeError $_.Exception
+            if ($isLastAttempt -or (-not $lockLike)) {
+                if ($lockLike) {
+                    $guidance = @(
+                        "Lock-related failure while $Description after $attempt attempt(s).",
+                        "Close Explorer windows, antivirus scans, and any running app that may hold files in release/dist.",
+                        "Then rerun: npm run release:clean -IncludeDist",
+                        "After cleanup succeeds, rerun: npm run release:build"
+                    ) -join " "
+                    throw "$guidance Original error: $($_.Exception.Message)"
+                }
+
+                throw
+            }
+
+            Write-Host "Retrying $Description (attempt $($attempt + 1)/$MaxAttempts) after $delayMs ms due to file lock..." -ForegroundColor DarkYellow
+            Start-Sleep -Milliseconds $delayMs
+            $delayMs = [Math]::Min($delayMs * 2, 4000)
+            $attempt++
+        }
+    }
+}
+
 function Test-IsGitRepo {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         return $false
@@ -50,7 +106,9 @@ function Assert-CleanGitTree {
 
 function Remove-IfExists([string]$Path) {
     if (Test-Path -LiteralPath $Path) {
-        Remove-Item -LiteralPath $Path -Recurse -Force
+        Invoke-WithRetry -Description "removing $Path" -Action {
+            Remove-Item -LiteralPath $Path -Recurse -Force
+        }
         Write-Host "Removed: $Path"
     }
 }
@@ -134,7 +192,11 @@ if (-not (Test-Path -LiteralPath $stagingOutput)) {
 
 New-Item -ItemType Directory -Path $versionedOutput -Force | Out-Null
 Get-ChildItem -Path $stagingOutput -Force | ForEach-Object {
-    Move-Item -Path $_.FullName -Destination $versionedOutput -Force
+    $sourcePath = $_.FullName
+    $targetName = $_.Name
+    Invoke-WithRetry -Description "moving $targetName to release output" -Action {
+        Move-Item -Path $sourcePath -Destination $versionedOutput -Force
+    }
 }
 Remove-IfExists $stagingOutput
 
@@ -142,7 +204,11 @@ New-Item -ItemType Directory -Path $installerHistoryVersion -Force | Out-Null
 $copiedArtifacts = @(Get-ChildItem -Path $versionedOutput -File | Where-Object {
     $_.Name -match '\.(exe|blockmap|yml)$'
 } | ForEach-Object {
-    Copy-Item -Path $_.FullName -Destination (Join-Path $installerHistoryVersion $_.Name) -Force
+    $artifactPath = $_.FullName
+    $artifactDestination = Join-Path $installerHistoryVersion $_.Name
+    Invoke-WithRetry -Description "copying $($_.Name) to installer history" -Action {
+        Copy-Item -Path $artifactPath -Destination $artifactDestination -Force
+    }
     $_.Name
 })
 

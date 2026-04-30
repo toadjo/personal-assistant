@@ -13,12 +13,70 @@ function Write-Step([string]$Message) {
     Write-Host "==> $Message" -ForegroundColor Yellow
 }
 
+function Test-IsLockLikeError([System.Exception]$Error) {
+    if ($null -eq $Error) {
+        return $false
+    }
+
+    $message = $Error.ToString()
+    return (
+        $message -match 'being used by another process' -or
+        $message -match 'The process cannot access the file' -or
+        $message -match 'because it is being used by another process' -or
+        $message -match 'Access to the path .* is denied'
+    )
+}
+
+function Invoke-WithRetry(
+    [scriptblock]$Action,
+    [string]$Description,
+    [int]$MaxAttempts = 6,
+    [int]$InitialDelayMs = 300
+) {
+    if ($MaxAttempts -lt 1) {
+        throw "Invoke-WithRetry requires MaxAttempts >= 1."
+    }
+
+    $attempt = 1
+    $delayMs = $InitialDelayMs
+
+    while ($true) {
+        try {
+            & $Action
+            return
+        } catch {
+            $isLastAttempt = ($attempt -ge $MaxAttempts)
+            $lockLike = Test-IsLockLikeError $_.Exception
+            if ($isLastAttempt -or (-not $lockLike)) {
+                if ($lockLike) {
+                    $guidance = @(
+                        "Cleanup failed while $Description after $attempt attempt(s) due to a lock-like error.",
+                        "Close running app instances, Explorer windows in release folders, and antivirus scans touching this repo.",
+                        "Then retry cleanup: npm run release:clean",
+                        "If needed for a full reset: npm run release:clean -- -All -ConfirmAll -IncludeDist"
+                    ) -join " "
+                    throw "$guidance Original error: $($_.Exception.Message)"
+                }
+
+                throw
+            }
+
+            Write-Host "Retrying $Description (attempt $($attempt + 1)/$MaxAttempts) after $delayMs ms due to file lock..." -ForegroundColor DarkYellow
+            Start-Sleep -Milliseconds $delayMs
+            $delayMs = [Math]::Min($delayMs * 2, 4000)
+            $attempt++
+        }
+    }
+}
+
 function Remove-IfExists([string]$Path) {
     if (Test-Path -LiteralPath $Path) {
         if ($DryRun) {
             Write-Host "Would remove: $Path"
         } else {
-            Remove-Item -LiteralPath $Path -Recurse -Force
+            Invoke-WithRetry -Description "removing $Path" -Action {
+                Remove-Item -LiteralPath $Path -Recurse -Force
+            }
             Write-Host "Removed: $Path"
         }
     }
@@ -44,7 +102,10 @@ function Prune-OlderDirectories([string]$RootPath, [int]$KeepCount) {
         if ($DryRun) {
             Write-Host "Would remove: $($_.FullName)"
         } else {
-            Remove-Item -LiteralPath $_.FullName -Recurse -Force
+            $dirToRemove = $_.FullName
+            Invoke-WithRetry -Description "pruning $dirToRemove" -Action {
+                Remove-Item -LiteralPath $dirToRemove -Recurse -Force
+            }
             Write-Host "Removed: $($_.FullName)"
         }
     }

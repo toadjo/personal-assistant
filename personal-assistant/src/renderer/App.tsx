@@ -1,8 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import type { Note, Reminder } from "../shared/types";
+import appLogo from "./assets/app-logo.png";
 
-type ThemeMode = "light" | "dark";
+type ThemeMode = "light" | "graphite" | "midnight";
 type CommandIntent =
   | "help"
   | "listPendingReminders"
@@ -19,6 +20,13 @@ type CommandIntent =
 type ParsedCommand = { intent: CommandIntent; args?: string; normalizedInput: string };
 type HaSetupState = "missingUrl" | "missingToken" | "ready";
 type HaRecoveryContext = "saving setup" | "testing connection" | "refreshing entities" | "toggling device";
+type CommandContextSnapshot = {
+  pendingCount: number;
+  overdueCount: number;
+  todayCount: number;
+  hasHaReady: boolean;
+  deviceCount: number;
+};
 
 const INITIAL_VISIBLE_ITEMS = 12;
 const VISIBLE_ITEMS_STEP = 20;
@@ -51,7 +59,6 @@ const DEFAULT_COMMAND_HINTS = [
   "refresh",
   "toggle kitchen light"
 ] as const;
-const COMMAND_EXAMPLES_WITH_LOWER = COMMAND_EXAMPLES.map((sample) => ({ sample, lower: sample.toLowerCase() }));
 const SECTION_ORDER: WorkspaceSection[] = ["productivity", "dashboard", "integrations", "automation"];
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -66,6 +73,8 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function App(): JSX.Element {
+  const [assistantNameDraft, setAssistantNameDraft] = useState("");
+  const [assistantName, setAssistantName] = useState(() => window.localStorage.getItem("assistant-name")?.trim() ?? "");
   const [query, setQuery] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -114,7 +123,7 @@ export function App(): JSX.Element {
   const [selectedDateKey, setSelectedDateKey] = useState(() => toLocalDateKey(new Date()));
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = window.localStorage.getItem("assistant-theme");
-    return saved === "dark" || saved === "light" ? saved : "light";
+    return saved === "light" || saved === "graphite" || saved === "midnight" ? saved : "light";
   });
   const [activeSection, setActiveSection] = useState<WorkspaceSection>("dashboard");
   const commandInputRef = useRef<HTMLInputElement>(null);
@@ -124,10 +133,7 @@ export function App(): JSX.Element {
   const latestRefreshRef = useRef(0);
   const queryRef = useRef(query);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(() => !window.localStorage.getItem("assistant-onboarded"));
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  }, []);
-
+  const [isEditingAssistantName, setIsEditingAssistantName] = useState(false);
   const setQueryWithVisibilityReset = useCallback((nextQuery: string) => {
     setQuery((previousQuery) => {
       if (previousQuery === nextQuery) return previousQuery;
@@ -350,19 +356,12 @@ export function App(): JSX.Element {
     window.localStorage.setItem("assistant-theme", theme);
   }, [theme]);
 
-  const commandHints = useMemo(() => {
-    const term = commandInput.trim().toLowerCase();
-    if (!term) return [...DEFAULT_COMMAND_HINTS];
-    const ranked = COMMAND_EXAMPLES_WITH_LOWER
-      .map(({ sample, lower }) => {
-        const rank = lower.startsWith(term) ? 0 : lower.includes(term) ? 1 : 3;
-        return { sample, rank };
-      })
-      .filter((entry) => entry.rank < 3)
-      .sort((a, b) => a.rank - b.rank || a.sample.length - b.sample.length)
-      .map((entry) => entry.sample);
-    return ranked.slice(0, 5);
-  }, [commandInput]);
+  useEffect(() => {
+    if (assistantName.trim() && !assistantNameDraft.trim()) {
+      setAssistantNameDraft(assistantName);
+    }
+  }, [assistantName, assistantNameDraft]);
+
   const reminderStats = useMemo(() => {
     const nowTimestamp = Date.now();
     const pending: Reminder[] = [];
@@ -471,8 +470,38 @@ export function App(): JSX.Element {
     () => calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" }),
     [calendarCursor]
   );
+  const commandContext = useMemo<CommandContextSnapshot>(
+    () => ({
+      pendingCount: reminderStats.pending.length,
+      overdueCount: reminderStats.overduePending.length,
+      todayCount: todayFocusReminders.length,
+      hasHaReady: haReady,
+      deviceCount: devices.length
+    }),
+    [devices.length, haReady, reminderStats.overduePending.length, reminderStats.pending.length, todayFocusReminders.length]
+  );
+  const commandHints = useMemo(() => buildContextAwareCommandHints(commandInput, commandContext), [commandContext, commandInput]);
+  const proactiveGuidance = useMemo(() => buildProactiveGuidanceText(commandContext), [commandContext]);
   const commandHelpMessage = useMemo(() => buildCommandHelpMessage(), []);
+  const assistantDisplayName = useMemo(() => (assistantName.trim() ? assistantName.trim() : "Assistant"), [assistantName]);
+  const requiresNameOnboarding = assistantName.trim().length === 0;
   const parseCommand = useCallback((rawInput: string): ParsedCommand => parseCommandInput(rawInput), []);
+  const saveAssistantName = useCallback(() => {
+    const nextName = assistantNameDraft.trim().replace(/\s+/g, " ");
+    if (!nextName) {
+      setError("Please choose a name for your assistant.");
+      return false;
+    }
+    setAssistantName(nextName);
+    window.localStorage.setItem("assistant-name", nextName);
+    setAssistantNameDraft(nextName);
+    setShowOnboarding(false);
+    setIsEditingAssistantName(false);
+    window.localStorage.setItem("assistant-onboarded", "1");
+    setError("");
+    setStatus(`Nice to meet you. I'll go by ${nextName}.`);
+    return true;
+  }, [assistantNameDraft]);
   const createQuickReminder = useCallback(async (minutesFromNow: number): Promise<void> => {
     const text = quickReminderText.trim();
     if (!text) {
@@ -512,26 +541,26 @@ export function App(): JSX.Element {
     try {
       setError("");
       setIsRunningCommand(true);
-      const parsed = parseCommand(raw);
+      const parsed = resolveCommandWithFallback(parseCommand(raw), commandContext);
       let clearInputAfterRun = true;
       switch (parsed.intent) {
         case "help":
-          setStatus(commandHelpMessage);
+          setStatus(`Here are the best commands to try: ${commandHelpMessage}`);
           break;
         case "listPendingReminders":
           setActiveSection("productivity");
           setReminderFilterWithVisibilityReset("pending");
-          setStatus("Showing pending reminders.");
+          setStatus("Got it - showing your pending reminders.");
           break;
         case "showAllReminders":
           setActiveSection("productivity");
           setReminderFilterWithVisibilityReset("all");
-          setStatus("Showing all reminders.");
+          setStatus("Done - showing all reminders.");
           break;
         case "showOverdue":
           setActiveSection("productivity");
           setReminderFilterWithVisibilityReset("pending");
-          setStatus("Showing pending reminders. Overdue items are marked.");
+          setStatus("On it - showing pending reminders with overdue items highlighted.");
           break;
         case "searchNotes":
           setActiveSection("productivity");
@@ -541,14 +570,14 @@ export function App(): JSX.Element {
         case "clearSearch":
           setActiveSection("productivity");
           setQueryWithVisibilityReset("");
-          setStatus("Cleared note search.");
+          setStatus("Cleared note search. You're back to the full notes list.");
           break;
         case "createNote": {
           setActiveSection("productivity");
           const text = parsed.args ?? "";
           await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
           await refreshNotes(queryRef.current);
-          setStatus("Note created from command.");
+          setStatus("Done - your note has been saved.");
           break;
         }
         case "createReminder": {
@@ -556,7 +585,7 @@ export function App(): JSX.Element {
           const reminder = parseReminderCommand(parsed.args ?? "");
           await window.assistantApi.createReminder({ text: reminder.text, dueAt: reminder.dueAt, recurrence: "none" });
           await refreshReminders();
-          setStatus(`Reminder scheduled for ${new Date(reminder.dueAt).toLocaleString()}.`);
+          setStatus(`All set - reminder scheduled for ${new Date(reminder.dueAt).toLocaleString()}.`);
           break;
         }
         case "toggleDevice": {
@@ -587,19 +616,19 @@ export function App(): JSX.Element {
           const [device] = matches;
           await window.assistantApi.toggleDevice(device.entityId);
           await refreshDevices();
-          setStatus(`Toggled ${device.friendlyName}.`);
+          setStatus(`Done - toggled ${device.friendlyName}.`);
           break;
         }
         case "refreshAll":
           await refreshAll();
-          setStatus("Assistant data refreshed.");
+          setStatus("Fresh data loaded.");
           break;
         case "refreshDevices":
           setActiveSection("integrations");
           if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
           await window.assistantApi.refreshHomeAssistantEntities();
           await refreshDevices();
-          setStatus("Home Assistant devices refreshed.");
+          setStatus("Home Assistant devices are up to date.");
           break;
         default:
           clearInputAfterRun = false;
@@ -639,19 +668,32 @@ export function App(): JSX.Element {
     <main className="container">
       <header className="hero">
         <div className="heroLead">
-          <h1>Personal Assistant</h1>
-          <p className="subtitle">Task-first workspace for reminders and notes.</p>
+          <div className="brandRow">
+            <img className="brandLogo" src={appLogo} alt="Personal Assistant logo" />
+            <h1>{assistantDisplayName}</h1>
+          </div>
+          <p className="subtitle">
+            {requiresNameOnboarding
+              ? "Let's start by choosing what to call your assistant."
+              : "Task-first workspace for reminders and notes."}
+          </p>
         </div>
         <div className="heroStats">
           <span className="stat statPrimary">Pending reminders: {reminderStats.pending.length}</span>
           <span className="stat">Overdue: {reminderStats.overduePending.length}</span>
-          <button
-            className="themeToggle"
-            onClick={toggleTheme}
-            aria-label="Toggle light and dark theme"
-          >
-            {theme === "light" ? "Dark theme" : "Light theme"}
-          </button>
+          <label className="themeSelectWrap">
+            <span className="srOnly">Select theme</span>
+            <select
+              className="themeSelect"
+              aria-label="Theme"
+              value={theme}
+              onChange={(event) => setTheme(event.target.value as ThemeMode)}
+            >
+              <option value="light">Light</option>
+              <option value="graphite">Graphite</option>
+              <option value="midnight">Midnight</option>
+            </select>
+          </label>
         </div>
       </header>
       <nav className="topNav" aria-label="Workspace sections" role="tablist" aria-orientation="horizontal">
@@ -674,7 +716,35 @@ export function App(): JSX.Element {
       {status ? <p className="status" role="status" aria-live="polite" aria-atomic="true">Success: {status}</p> : null}
       {error ? <p className="error" role="alert" aria-live="assertive" aria-atomic="true">Error: {error}</p> : null}
 
-      {activeSection === "dashboard" && showOnboarding ? (
+      {activeSection === "dashboard" && requiresNameOnboarding ? (
+        <section className="panel onboardingNamePanel">
+          <div className="titleRow">
+            <h2>Name your assistant</h2>
+            <span className="pill">First startup</span>
+          </div>
+          <p className="muted sectionIntro">Pick a short name now. You can change it later in Settings.</p>
+          <form
+            className="row"
+            onSubmit={(event) => {
+              event.preventDefault();
+              saveAssistantName();
+            }}
+          >
+            <label className="srOnly" htmlFor="assistant-name-input">Assistant name</label>
+            <input
+              id="assistant-name-input"
+              className="fullWidth"
+              placeholder="e.g. Nova"
+              value={assistantNameDraft}
+              onChange={(event) => setAssistantNameDraft(event.target.value)}
+              autoFocus
+            />
+            <button type="submit">Save name</button>
+          </form>
+        </section>
+      ) : null}
+
+      {activeSection === "dashboard" && showOnboarding && !requiresNameOnboarding ? (
         <details className="panel onboarding collapsibleGroup">
           <summary className="titleRow collapsibleSummary">
             <h2>Quick Start</h2>
@@ -699,7 +769,7 @@ export function App(): JSX.Element {
         </details>
       ) : null}
 
-      {activeSection === "dashboard" ? <div className="grid" id={getSectionPanelId("dashboard")} role="tabpanel" aria-labelledby={getSectionButtonId("dashboard")}>
+      {activeSection === "dashboard" ? <div className="grid" id={getSectionPanelId("dashboard")} role="tabpanel" aria-labelledby={getSectionButtonId("dashboard")} tabIndex={0}>
         <section className="panel commandPanel">
           <div className="titleRow">
             <h2>Command Prompt</h2>
@@ -718,7 +788,7 @@ export function App(): JSX.Element {
               id="assistant-command-input"
               ref={commandInputRef}
               className="fullWidth"
-              placeholder="Type a command and press Enter..."
+              placeholder={`Type a command for ${assistantDisplayName}...`}
               value={commandInput}
               aria-label="Assistant command input"
               aria-keyshortcuts="Control+K Meta+K Escape"
@@ -739,6 +809,7 @@ export function App(): JSX.Element {
               <button type="button" key={hint} className="pillButton" onClick={() => runPresetCommand(hint)}>{hint}</button>
             )) : <span className="muted">No matching command hints.</span>}
           </div>
+          <p className="muted assistantTip">{proactiveGuidance}</p>
           <p className="muted assistantTip">Shortcuts: Ctrl/Cmd+K focuses command input, Alt+1..4 switches sections, Escape clears.</p>
         </section>
 
@@ -785,10 +856,53 @@ export function App(): JSX.Element {
             </button>
           </div>
           <p className="muted sectionIntro">Pick one action, then press Enter in Command Prompt.</p>
+          <details className="collapsibleGroup assistantSettings">
+            <summary className="collapsibleSummary muted">Settings</summary>
+            <p className="muted settingsHint">Assistant name: <strong>{assistantDisplayName}</strong></p>
+            {isEditingAssistantName ? (
+              <form
+                className="row"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  saveAssistantName();
+                }}
+              >
+                <label className="srOnly" htmlFor="assistant-name-edit-input">Edit assistant name</label>
+                <input
+                  id="assistant-name-edit-input"
+                  value={assistantNameDraft}
+                  onChange={(event) => setAssistantNameDraft(event.target.value)}
+                  placeholder="Assistant name"
+                />
+                <button type="submit">Save</button>
+                <button
+                  type="button"
+                  className="ghostButton"
+                  onClick={() => {
+                    setAssistantNameDraft(assistantDisplayName);
+                    setIsEditingAssistantName(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={() => {
+                  setAssistantNameDraft(assistantDisplayName);
+                  setIsEditingAssistantName(true);
+                }}
+              >
+                Edit assistant name
+              </button>
+            )}
+          </details>
         </section>
       </div> : null}
 
-      {activeSection === "productivity" ? <details className="panel collapsibleGroup" id={getSectionPanelId("productivity")} role="tabpanel" aria-labelledby={getSectionButtonId("productivity")}>
+      {activeSection === "productivity" ? <details className="panel collapsibleGroup" id={getSectionPanelId("productivity")} role="tabpanel" aria-labelledby={getSectionButtonId("productivity")} tabIndex={0}>
         <summary className="titleRow collapsibleSummary">
           <h2>Calendar Overview</h2>
           <span className="pill graphitePill">Overview</span>
@@ -866,6 +980,7 @@ export function App(): JSX.Element {
                 <div className="miniActions">
                   <button
                     className="ghostButton"
+                    aria-label={`Mark reminder "${r.text}" as done`}
                     onClick={async () => {
                       try {
                         await completeReminderWithFeedback(r.id, { quiet: true });
@@ -878,6 +993,7 @@ export function App(): JSX.Element {
                   </button>
                   <button
                     className="ghostButton"
+                    aria-label={`Snooze reminder "${r.text}" by 30 minutes`}
                     onClick={async () => {
                       try {
                         await snoozeReminderWithFeedback(r.id, 30, { quiet: true });
@@ -903,6 +1019,7 @@ export function App(): JSX.Element {
                 <div className="miniActions">
                   <button
                     className="ghostButton"
+                    aria-label={`Mark overdue reminder "${r.text}" as done`}
                     onClick={async () => {
                       try {
                         await completeReminderWithFeedback(r.id, { quiet: true });
@@ -915,6 +1032,7 @@ export function App(): JSX.Element {
                   </button>
                   <button
                     className="ghostButton"
+                    aria-label={`Snooze overdue reminder "${r.text}" by 1 hour`}
                     onClick={async () => {
                       try {
                         await snoozeReminderWithFeedback(r.id, 60, { quiet: true });
@@ -1030,6 +1148,7 @@ export function App(): JSX.Element {
                   <div className="miniActions">
                     <button
                       className="ghostButton"
+                      aria-label={`Mark reminder "${r.text}" as done`}
                       onClick={async () => {
                         try {
                           await completeReminderWithFeedback(r.id, { quiet: true });
@@ -1042,6 +1161,7 @@ export function App(): JSX.Element {
                     </button>
                     <button
                       className="ghostButton"
+                      aria-label={`Snooze reminder "${r.text}" by 1 hour`}
                       onClick={async () => {
                         try {
                           await snoozeReminderWithFeedback(r.id, 60, { quiet: true });
@@ -1054,6 +1174,7 @@ export function App(): JSX.Element {
                     </button>
                     <button
                       className="dangerButton"
+                      aria-label={`Delete reminder "${r.text}"`}
                       onClick={async () => {
                         if (!window.confirm("Delete this reminder?")) return;
                         try {
@@ -1098,6 +1219,7 @@ export function App(): JSX.Element {
                 <span>{n.title} - {n.content}</span>
                 <button
                   className="dangerButton"
+                  aria-label={`Delete note "${n.title}"`}
                   onClick={async () => {
                     if (!window.confirm(`Delete note "${n.title}"?`)) return;
                     try {
@@ -1168,6 +1290,7 @@ export function App(): JSX.Element {
                   <div className="miniActions">
                     <button
                       className="ghostButton"
+                      aria-label={`Mark reminder "${r.text}" as done`}
                       onClick={async () => {
                         try {
                           await completeReminderWithFeedback(r.id, { quiet: true });
@@ -1180,6 +1303,7 @@ export function App(): JSX.Element {
                     </button>
                     <button
                       className="ghostButton"
+                      aria-label={`Snooze reminder "${r.text}" by 15 minutes`}
                       onClick={async () => {
                         try {
                           await snoozeReminderWithFeedback(r.id, 15, { quiet: true });
@@ -1192,6 +1316,7 @@ export function App(): JSX.Element {
                     </button>
                     <button
                       className="ghostButton"
+                      aria-label={`Snooze reminder "${r.text}" by 1 hour`}
                       onClick={async () => {
                         try {
                           await snoozeReminderWithFeedback(r.id, 60, { quiet: true });
@@ -1204,6 +1329,7 @@ export function App(): JSX.Element {
                     </button>
                     <button
                       className="dangerButton"
+                      aria-label={`Delete reminder "${r.text}"`}
                       onClick={async () => {
                         if (!window.confirm("Delete this reminder?")) return;
                         try {
@@ -1349,6 +1475,7 @@ export function App(): JSX.Element {
               <span>{d.friendlyName} ({d.state})</span>
               <button
                 className="ghostButton"
+                aria-label={`Toggle device "${d.friendlyName}"`}
                 onClick={async () => {
                   try {
                     setError("");
@@ -1377,7 +1504,7 @@ export function App(): JSX.Element {
         </details>
       </section> : null}
 
-      {activeSection === "automation" ? <div className="grid" id={getSectionPanelId("automation")} role="tabpanel" aria-labelledby={getSectionButtonId("automation")}>
+      {activeSection === "automation" ? <div className="grid" id={getSectionPanelId("automation")} role="tabpanel" aria-labelledby={getSectionButtonId("automation")} tabIndex={0}>
         <section className="panel">
           <div className="titleRow">
             <h2>Rules</h2>
@@ -1688,6 +1815,76 @@ function parseCommandInput(rawInput: string): ParsedCommand {
     return { intent: "toggleDevice", args: body, normalizedInput };
   }
   return { intent: "unknown", normalizedInput };
+}
+
+function buildContextAwareCommandHints(input: string, context: CommandContextSnapshot): string[] {
+  const term = input.trim().toLowerCase();
+  const contextBoosts: string[] = [];
+  if (context.overdueCount > 0) contextBoosts.push("show overdue");
+  if (context.todayCount > 0) contextBoosts.push("list reminders");
+  if (context.pendingCount === 0) contextBoosts.push("remind Plan tomorrow at 09:00");
+  if (context.hasHaReady && context.deviceCount > 0) contextBoosts.push("toggle kitchen light");
+  if (context.hasHaReady && context.deviceCount === 0) contextBoosts.push("refresh devices");
+  if (!context.hasHaReady) contextBoosts.push("refresh");
+
+  const pool = Array.from(new Set([...contextBoosts, ...DEFAULT_COMMAND_HINTS, ...COMMAND_EXAMPLES]));
+  if (!term) return pool.slice(0, 5);
+
+  return pool
+    .map((sample) => {
+      const lower = sample.toLowerCase();
+      const rank = lower.startsWith(term) ? 0 : lower.includes(term) ? 1 : 3;
+      return { sample, rank };
+    })
+    .filter((entry) => entry.rank < 3)
+    .sort((a, b) => a.rank - b.rank || a.sample.length - b.sample.length)
+    .map((entry) => entry.sample)
+    .slice(0, 5);
+}
+
+function buildProactiveGuidanceText(context: CommandContextSnapshot): string {
+  if (context.overdueCount > 0) {
+    return `${context.overdueCount} overdue reminder${context.overdueCount === 1 ? "" : "s"} pending. Try "show overdue" to triage quickly.`;
+  }
+  if (context.todayCount > 0) {
+    return `${context.todayCount} item${context.todayCount === 1 ? "" : "s"} due today. Try "list reminders" to stay on track.`;
+  }
+  if (context.pendingCount === 0) {
+    return "No pending reminders. Try \"remind Plan tomorrow at 09:00\" to set your next focus.";
+  }
+  if (context.hasHaReady && context.deviceCount === 0) {
+    return "Home Assistant is connected but no devices are synced. Try \"refresh devices\".";
+  }
+  if (!context.hasHaReady) {
+    return "Home Assistant is not ready yet. You can still use notes and reminders from commands.";
+  }
+  return "Everything looks healthy. Try a command or type \"help\" for ideas.";
+}
+
+function resolveCommandWithFallback(parsed: ParsedCommand, context: CommandContextSnapshot): ParsedCommand {
+  if (parsed.intent !== "unknown") return parsed;
+  const lowered = parsed.normalizedInput.toLowerCase();
+  if (!lowered) return parsed;
+  if (/(overdue|late|missed)/.test(lowered)) return { ...parsed, intent: "showOverdue" };
+  if (/(today|agenda|what.*next|next.*up)/.test(lowered)) return { ...parsed, intent: "listPendingReminders" };
+  if (/(all reminders?|history reminders?)/.test(lowered)) return { ...parsed, intent: "showAllReminders" };
+  if (/(refresh|reload|sync)( everything| data| now)?/.test(lowered)) return { ...parsed, intent: "refreshAll" };
+  if ((/devices?|lights?|switches?/.test(lowered) && /refresh|sync|reload/.test(lowered)) || lowered === "sync home") {
+    return { ...parsed, intent: "refreshDevices" };
+  }
+  if (context.hasHaReady && context.deviceCount > 0 && /(turn|switch|toggle)/.test(lowered)) {
+    const target = lowered
+      .replace(/^(please\s+)?(can you\s+)?/i, "")
+      .replace(/\b(turn|switch|toggle)\b/gi, "")
+      .replace(/\b(on|off|the|a|an|my)\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (target) return { ...parsed, intent: "toggleDevice", args: target };
+  }
+  if (/^note\b/.test(lowered) && lowered.length > 5) {
+    return { ...parsed, intent: "createNote", args: parsed.normalizedInput.slice(5).trim() };
+  }
+  return parsed;
 }
 
 function buildCommandHelpMessage(): string {
