@@ -7,9 +7,12 @@ declare global {
     assistantApi: {
       listNotes: (query?: string) => Promise<Note[]>;
       createNote: (payload: { title: string; content: string; tags: string[]; pinned: boolean }) => Promise<Note>;
+      deleteNote: (id: string) => Promise<void>;
       listReminders: () => Promise<Reminder[]>;
       createReminder: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) => Promise<Reminder>;
       completeReminder: (id: string) => Promise<void>;
+      deleteReminder: (id: string) => Promise<void>;
+      snoozeReminder: (id: string, minutes: number) => Promise<void>;
       configureHomeAssistant: (payload: { url: string; token: string }) => Promise<void>;
       getHomeAssistantConfig: () => Promise<{ url: string; hasToken: boolean }>;
       testHomeAssistant: () => Promise<boolean>;

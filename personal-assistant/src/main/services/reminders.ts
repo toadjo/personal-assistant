@@ -21,6 +21,29 @@ export function completeReminder(id: string): void {
   getDb().prepare("UPDATE reminders SET status='done' WHERE id=@id").run({ id });
 }
 
+export function deleteReminder(id: string): void {
+  getDb().prepare("DELETE FROM reminders WHERE id=@id").run({ id });
+}
+
+export function snoozeReminder(id: string, minutes: number): void {
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    throw new Error("Snooze time must be a positive number of minutes.");
+  }
+  const reminder = getDb()
+    .prepare("SELECT * FROM reminders WHERE id=@id")
+    .get({ id }) as Reminder | undefined;
+  if (!reminder) {
+    throw new Error("Reminder not found.");
+  }
+  if (reminder.status !== "pending") {
+    throw new Error("Only pending reminders can be snoozed.");
+  }
+  const baseTime = new Date(reminder.dueAt).getTime();
+  const now = Date.now();
+  const nextDueAt = new Date(Math.max(baseTime, now) + minutes * 60_000).toISOString();
+  getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id, dueAt: nextDueAt });
+}
+
 export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeout {
   return setInterval(() => {
     const now = new Date().toISOString();
@@ -37,6 +60,8 @@ export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeou
         completeReminder(item.id);
       }
     }
-    mainWindow.webContents.send("reminders:updated");
+    if (!mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send("reminders:updated");
+    }
   }, 30_000);
 }

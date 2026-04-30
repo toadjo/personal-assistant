@@ -4,10 +4,13 @@ contextBridge.exposeInMainWorld("assistantApi", {
   listNotes: (query?: string) => ipcRenderer.invoke("notes:list", query),
   createNote: (payload: { title: string; content: string; tags: string[]; pinned: boolean }) =>
     ipcRenderer.invoke("notes:create", payload),
+  deleteNote: (id: string) => ipcRenderer.invoke("notes:delete", id),
   listReminders: () => ipcRenderer.invoke("reminders:list"),
   createReminder: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) =>
     ipcRenderer.invoke("reminders:create", payload),
   completeReminder: (id: string) => ipcRenderer.invoke("reminders:complete", id),
+  deleteReminder: (id: string) => ipcRenderer.invoke("reminders:delete", id),
+  snoozeReminder: (id: string, minutes: number) => ipcRenderer.invoke("reminders:snooze", id, minutes),
   configureHomeAssistant: (payload: { url: string; token: string }) => ipcRenderer.invoke("ha:configure", payload),
   getHomeAssistantConfig: () => ipcRenderer.invoke("ha:getConfig"),
   testHomeAssistant: () => ipcRenderer.invoke("ha:test"),

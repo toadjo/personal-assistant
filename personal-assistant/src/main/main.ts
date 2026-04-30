@@ -1,8 +1,8 @@
 import path from "node:path";
 import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } from "electron";
 import { getDb } from "./db";
-import { createNote, listNotes } from "./services/notes";
-import { completeReminder, createReminder, listReminders, startReminderScheduler } from "./services/reminders";
+import { createNote, deleteNote, listNotes } from "./services/notes";
+import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, startReminderScheduler } from "./services/reminders";
 import { configureHomeAssistant, getHomeAssistantConfig, refreshEntities, testConnection, toggleEntity } from "./services/homeAssistant";
 import { createTimeRule, listRules, runAutomationCycle } from "./services/automation";
 
@@ -58,9 +58,12 @@ function createTray(window: BrowserWindow): void {
 function registerIpc(): void {
   ipcMain.handle("notes:list", (_, query) => listNotes(query));
   ipcMain.handle("notes:create", (_, payload) => createNote(payload));
+  ipcMain.handle("notes:delete", (_, id) => deleteNote(id));
   ipcMain.handle("reminders:list", () => listReminders());
   ipcMain.handle("reminders:create", (_, payload) => createReminder(payload));
   ipcMain.handle("reminders:complete", (_, id) => completeReminder(id));
+  ipcMain.handle("reminders:delete", (_, id) => deleteReminder(id));
+  ipcMain.handle("reminders:snooze", (_, id, minutes) => snoozeReminder(id, minutes));
 
   ipcMain.handle("ha:configure", (_, payload) => configureHomeAssistant(payload.url, payload.token));
   ipcMain.handle("ha:getConfig", () => getHomeAssistantConfig());
