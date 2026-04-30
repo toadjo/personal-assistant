@@ -29,7 +29,7 @@ $installerHistoryRoot = Join-Path $projectRoot "installer-history"
 Set-Location $projectRoot
 
 if ($All) {
-    Write-Step "Removing all release artifacts"
+    Write-Step "Removing all release/history artifacts"
     Remove-IfExists $releaseRoot
     Remove-IfExists $installerHistoryRoot
 
@@ -41,7 +41,7 @@ if ($All) {
     exit 0
 }
 
-Write-Step "Pruning versioned release folders (keeping newest $Keep)"
+Write-Step "Pruning release folders (keep newest $Keep)"
 if (Test-Path $releaseRoot) {
     $releaseDirs = Get-ChildItem -Path $releaseRoot -Directory | Sort-Object LastWriteTime -Descending
     if ($releaseDirs.Count -gt $Keep) {
@@ -52,7 +52,7 @@ if (Test-Path $releaseRoot) {
     }
 }
 
-Write-Step "Pruning installer history folders (keeping newest $Keep)"
+Write-Step "Pruning installer-history folders (keep newest $Keep)"
 if (Test-Path $installerHistoryRoot) {
     $historyDirs = Get-ChildItem -Path $installerHistoryRoot -Directory | Sort-Object LastWriteTime -Descending
     if ($historyDirs.Count -gt $Keep) {
@@ -70,3 +70,4 @@ if ($IncludeDist) {
 
 Write-Host ""
 Write-Host "Cleanup complete."
+Write-Host "Tip: run npm run release:build for next release."
