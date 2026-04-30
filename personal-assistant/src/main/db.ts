@@ -60,6 +60,18 @@ function migrations(database: Database.Database): void {
       updatedAt TEXT NOT NULL
     );
   `);
+  ensureExecutionLogObservabilityColumns(database);
+}
+
+function ensureExecutionLogObservabilityColumns(database: Database.Database): void {
+  const columns = database.prepare("PRAGMA table_info(execution_logs)").all() as Array<{ name: string }>;
+  const columnNames = new Set(columns.map((column) => column.name));
+  if (!columnNames.has("attemptCount")) {
+    database.exec("ALTER TABLE execution_logs ADD COLUMN attemptCount INTEGER NOT NULL DEFAULT 1;");
+  }
+  if (!columnNames.has("retryCount")) {
+    database.exec("ALTER TABLE execution_logs ADD COLUMN retryCount INTEGER NOT NULL DEFAULT 0;");
+  }
 }
 
 export function getDb(): Database.Database {

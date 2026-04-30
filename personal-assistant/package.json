@@ -14,7 +14,7 @@
     "dist": "npm run build && electron-builder",
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
-    "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All",
+    "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
     "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
     "test:smoke": "node scripts/smoke-check.mjs"
   },

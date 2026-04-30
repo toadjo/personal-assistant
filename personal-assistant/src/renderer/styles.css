@@ -457,6 +457,27 @@ button:disabled {
   margin: 0;
 }
 
+.plannerTitleRow {
+  margin-top: 4px;
+}
+
+.plannerHeading {
+  margin: 0;
+}
+
+.quickCaptureRow {
+  align-items: center;
+}
+
+.quickCaptureRow input {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.quickCaptureActions {
+  gap: 8px;
+}
+
 .snapshotGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -591,6 +612,62 @@ button:disabled {
 .listRow:last-child {
   border-bottom: 0;
   padding-bottom: 0;
+}
+
+.logRow {
+  border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 70%, transparent);
+  padding: 8px 0 10px;
+}
+
+.logRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.logHeadline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.logMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.logError {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-text);
+}
+
+.confidenceBadge {
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.confidenceHigh {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+}
+
+.confidenceMedium {
+  background: color-mix(in srgb, #f59e0b 14%, transparent);
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
+  color: color-mix(in srgb, #f59e0b 70%, var(--title) 30%);
+}
+
+.confidenceLow {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
 }
 
 .status {

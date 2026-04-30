@@ -1,6 +1,7 @@
 param(
     [int]$Keep = 3,
     [switch]$All,
+    [switch]$ConfirmAll,
     [switch]$IncludeDist,
     [switch]$DryRun
 )
@@ -60,6 +61,10 @@ $installerHistoryRoot = Join-Path $projectRoot "installer-history"
 Set-Location $projectRoot
 
 if ($All) {
+    if (-not $ConfirmAll) {
+        throw "Refusing to run -All without -ConfirmAll. This protects against accidental full cleanup."
+    }
+
     Write-Step "Removing all release/history artifacts"
     Remove-IfExists $releaseRoot
     Remove-IfExists $installerHistoryRoot

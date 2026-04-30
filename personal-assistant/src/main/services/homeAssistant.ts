@@ -5,6 +5,9 @@ import { getHaToken, saveHaToken } from "./secrets";
 let baseUrl = "";
 const HA_BASE_URL_KEY = "ha.baseUrl";
 const HA_REQUEST_TIMEOUT_MS = 10_000;
+const HA_RETRY_DELAY_MS = 450;
+const HA_MAX_IDEMPOTENT_RETRIES = 1;
+const HA_RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
 export async function configureHomeAssistant(url: string, token: string): Promise<void> {
   baseUrl = normalizeUrl(url);
@@ -29,41 +32,74 @@ export async function getHomeAssistantConfig(): Promise<{ url: string; hasToken:
   return { url, hasToken: Boolean(token) };
 }
 
-async function authedFetch(path: string, init?: RequestInit): Promise<Response> {
+type HaFetchOptions = {
+  allowRetry?: boolean;
+};
+
+async function authedFetch(path: string, init?: RequestInit, options?: HaFetchOptions): Promise<Response> {
   const token = await getHaToken();
   const url = getConfiguredBaseUrl();
   if (!token || !url) throw new Error("Home Assistant not configured.");
   if (!path.startsWith("/")) throw new Error("Home Assistant request path must start with '/'.");
-  const controller = new AbortController();
-  const timeoutRef = setTimeout(() => controller.abort(), HA_REQUEST_TIMEOUT_MS);
-  timeoutRef.unref();
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   headers.set("Authorization", `Bearer ${token}`);
-  try {
-    return await fetch(`${url}${path}`, {
-      ...init,
-      headers,
-      signal: controller.signal
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Home Assistant request timed out after ${HA_REQUEST_TIMEOUT_MS}ms.`);
+
+  const method = (init?.method || "GET").toUpperCase();
+  const isIdempotentMethod = method === "GET" || method === "HEAD";
+  const canRetry = (options?.allowRetry ?? true) && isIdempotentMethod;
+  const maxAttempts = canRetry ? HA_MAX_IDEMPOTENT_RETRIES + 1 : 1;
+  let lastError: unknown = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutRef = setTimeout(() => controller.abort(), HA_REQUEST_TIMEOUT_MS);
+    timeoutRef.unref();
+    try {
+      const res = await fetch(`${url}${path}`, {
+        ...init,
+        method,
+        headers,
+        signal: controller.signal
+      });
+      if (attempt < maxAttempts && HA_RETRYABLE_STATUS_CODES.has(res.status)) {
+        await sleep(HA_RETRY_DELAY_MS);
+        continue;
+      }
+      return res;
+    } catch (error) {
+      lastError = error;
+      const isAbortError = error instanceof Error && error.name === "AbortError";
+      if (!isAbortError && attempt < maxAttempts) {
+        await sleep(HA_RETRY_DELAY_MS);
+        continue;
+      }
+      if (isAbortError) {
+        throw new Error(`Home Assistant request timed out after ${HA_REQUEST_TIMEOUT_MS}ms.`);
+      }
+      throw new Error(`Home Assistant request failed: ${toErrorMessage(error)}`);
+    } finally {
+      clearTimeout(timeoutRef);
     }
-    throw new Error(`Home Assistant request failed: ${toErrorMessage(error)}`);
-  } finally {
-    clearTimeout(timeoutRef);
   }
+  throw new Error(`Home Assistant request failed: ${toErrorMessage(lastError)}`);
 }
 
 export async function testConnection(): Promise<boolean> {
-  const res = await authedFetch("/api/");
-  if (!res.ok) {
-    throw new Error(await formatHaHttpError("connection failed", res, "Check URL/token."));
+  const apiRootResponse = await authedFetch("/api/");
+  if (apiRootResponse.ok) {
+    return true;
   }
-  return true;
+  if (apiRootResponse.status === 404) {
+    const configResponse = await authedFetch("/api/config");
+    if (configResponse.ok) {
+      return true;
+    }
+    throw new Error(await formatHaHttpError("connection failed", configResponse, "Check URL/token."));
+  }
+  throw new Error(await formatHaHttpError("connection failed", apiRootResponse, "Check URL/token."));
 }
 
 export async function refreshEntities(): Promise<void> {
@@ -129,7 +165,7 @@ export async function toggleEntity(entityId: string): Promise<void> {
   const res = await authedFetch(`/api/services/${domain}/toggle`, {
     method: "POST",
     body: JSON.stringify({ entity_id: normalizedEntityId })
-  });
+  }, { allowRetry: false });
   if (!res.ok) {
     throw new Error(await formatHaHttpError("device toggle failed", res, "Verify entity availability and token scope."));
   }
@@ -169,8 +205,9 @@ function getConfiguredBaseUrl(): string {
 function normalizeUrl(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return "";
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`;
   try {
-    const parsed = new URL(trimmed);
+    const parsed = new URL(withProtocol);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
     return parsed.toString().replace(/\/$/, "");
   } catch {
@@ -180,4 +217,8 @@ function normalizeUrl(url: string): string {
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

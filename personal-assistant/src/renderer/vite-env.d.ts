@@ -26,6 +26,8 @@ declare global {
         startedAt: string;
         endedAt: string;
         error?: string;
+        attemptCount: number;
+        retryCount: number;
         ruleName: string;
         actionLabel: string;
       }>>;

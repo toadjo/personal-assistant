@@ -29,7 +29,7 @@ const reminderCreateSchema = z.object({
 });
 
 const haConfigSchema = z.object({
-  url: z.string().trim().url().max(2_048),
+  url: z.string().trim().min(1).max(2_048),
   token: z.string().trim().max(4_096)
 });
 const uuidSchema = z.string().uuid();
@@ -176,6 +176,8 @@ function registerIpc(): void {
           l.startedAt,
           l.endedAt,
           l.error,
+          l.attemptCount,
+          l.retryCount,
           r.name AS ruleName,
           r.actionType,
           r.actionConfig
@@ -191,6 +193,8 @@ function registerIpc(): void {
       startedAt: string;
       endedAt: string;
       error: string | null;
+      attemptCount: number | null;
+      retryCount: number | null;
       ruleName: string | null;
       actionType: string | null;
       actionConfig: string | null;
@@ -202,6 +206,8 @@ function registerIpc(): void {
       startedAt: row.startedAt,
       endedAt: row.endedAt,
       error: row.error ?? undefined,
+      attemptCount: row.attemptCount ?? 1,
+      retryCount: row.retryCount ?? 0,
       ruleName: row.ruleName ?? "Unknown rule",
       actionLabel: formatAutomationActionLabel(row.actionType, row.actionConfig)
     }));
@@ -252,26 +258,36 @@ function showMainWindow(window: BrowserWindow): void {
 
 function startAutomationScheduler(): () => void {
   if (automationTimer) {
-    clearInterval(automationTimer);
+    clearTimeout(automationTimer);
     automationTimer = null;
   }
+  let isStopped = false;
   let isRunningCycle = false;
-  automationTimer = setInterval(() => {
-    if (isRunningCycle) return;
-    isRunningCycle = true;
-    void runAutomationCycle()
-      .catch((error) => {
-        console.error("Automation cycle failed", toErrorMessage(error));
-      })
-      .finally(() => {
-        isRunningCycle = false;
-      });
-  }, AUTOMATION_CYCLE_INTERVAL_MS);
-  automationTimer.unref();
+  const scheduleNext = () => {
+    if (isStopped) return;
+    automationTimer = setTimeout(() => {
+      if (isRunningCycle) {
+        scheduleNext();
+        return;
+      }
+      isRunningCycle = true;
+      void runAutomationCycle()
+        .catch((error) => {
+          console.error("Automation cycle failed", toErrorMessage(error));
+        })
+        .finally(() => {
+          isRunningCycle = false;
+          scheduleNext();
+        });
+    }, AUTOMATION_CYCLE_INTERVAL_MS);
+    automationTimer.unref();
+  };
+  scheduleNext();
 
   return () => {
+    isStopped = true;
     if (automationTimer) {
-      clearInterval(automationTimer);
+      clearTimeout(automationTimer);
       automationTimer = null;
     }
   };

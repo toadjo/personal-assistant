@@ -7,6 +7,7 @@ import { AutomationRule } from "../../shared/types";
 const AUTOMATION_ACTION_TIMEOUT_MS = 10_000;
 const AUTOMATION_RETRY_ATTEMPTS = 3;
 const AUTOMATION_RETRY_DELAY_MS = 250;
+type RetryMeta = { attemptsUsed: number; retryCount: number };
 
 export function listRules(): AutomationRule[] {
   return getDb()
@@ -58,11 +59,18 @@ export async function runAutomationCycle(): Promise<void> {
       if (trigger.at !== hhmm) continue;
       const actionType = validateActionType(rule.actionType);
       const actionConfig = validateActionConfig(safeParseObject(rule.actionConfig, "automation actionConfig"));
-      await withRetry(() => executeAutomationAction(actionType, actionConfig), AUTOMATION_RETRY_ATTEMPTS);
-      writeLog(rule.id, "success", startedAt, new Date().toISOString());
+      const retryMeta = await withRetry(() => executeAutomationAction(actionType, actionConfig), AUTOMATION_RETRY_ATTEMPTS);
+      writeLog(rule.id, "success", startedAt, new Date().toISOString(), undefined, retryMeta);
     } catch (error) {
       const ruleLabel = rule.name?.trim() || rule.id;
-      writeLog(rule.id, "failed", startedAt, new Date().toISOString(), `[${ruleLabel}] ${formatErrorMessage(error)}`);
+      writeLog(
+        rule.id,
+        "failed",
+        startedAt,
+        new Date().toISOString(),
+        `[${ruleLabel}] ${formatErrorMessage(error)}`,
+        { attemptsUsed: AUTOMATION_RETRY_ATTEMPTS, retryCount: Math.max(0, AUTOMATION_RETRY_ATTEMPTS - 1) }
+      );
     }
   }
 }
@@ -81,13 +89,16 @@ async function executeAutomationAction(
   await toggleEntity(actionConfig.entityId);
 }
 
-async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<void> {
+async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<RetryMeta> {
   const safeAttempts = Number.isInteger(attempts) && attempts > 0 ? attempts : 1;
   let lastError: unknown;
   for (let i = 0; i < safeAttempts; i += 1) {
     try {
       await withTimeout(Promise.resolve(fn()), AUTOMATION_ACTION_TIMEOUT_MS);
-      return;
+      return {
+        attemptsUsed: i + 1,
+        retryCount: i
+      };
     } catch (error) {
       lastError = error;
       if (i < safeAttempts - 1) {
@@ -116,12 +127,30 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   }
 }
 
-function writeLog(ruleId: string, status: "success" | "failed", startedAt: string, endedAt: string, error?: string): void {
+function writeLog(
+  ruleId: string,
+  status: "success" | "failed",
+  startedAt: string,
+  endedAt: string,
+  error?: string,
+  retryMeta?: RetryMeta
+): void {
+  const safeAttemptCount = retryMeta?.attemptsUsed && retryMeta.attemptsUsed > 0 ? retryMeta.attemptsUsed : 1;
+  const safeRetryCount = retryMeta?.retryCount && retryMeta.retryCount > 0 ? retryMeta.retryCount : 0;
   getDb()
     .prepare(
-      "INSERT INTO execution_logs (id, ruleId, status, startedAt, endedAt, error) VALUES (@id,@ruleId,@status,@startedAt,@endedAt,@error)"
+      "INSERT INTO execution_logs (id, ruleId, status, startedAt, endedAt, error, attemptCount, retryCount) VALUES (@id,@ruleId,@status,@startedAt,@endedAt,@error,@attemptCount,@retryCount)"
     )
-    .run({ id: randomUUID(), ruleId, status, startedAt, endedAt, error: error || null });
+    .run({
+      id: randomUUID(),
+      ruleId,
+      status,
+      startedAt,
+      endedAt,
+      error: error || null,
+      attemptCount: safeAttemptCount,
+      retryCount: safeRetryCount
+    });
 }
 
 function formatErrorMessage(error: unknown): string {

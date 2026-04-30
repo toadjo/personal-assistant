@@ -143,12 +143,23 @@ function toErrorMessage(error: unknown): string {
 function mapReminder(row: any): Reminder {
   const normalizedStatus = row?.status === "done" ? "done" : "pending";
   const normalizedRecurrence = row?.recurrence === "daily" ? "daily" : "none";
+  const fallbackDueAt = new Date().toISOString();
+  const safeDueAt = normalizeIsoDateOrFallback(row?.dueAt, "Reminder dueAt", fallbackDueAt);
+  const safeText = typeof row?.text === "string" ? row.text.trim() : "";
   return {
-    id: typeof row?.id === "string" ? row.id : "",
-    text: typeof row?.text === "string" ? row.text : "",
-    dueAt: normalizeIsoDate(row?.dueAt, "Reminder dueAt"),
+    id: typeof row?.id === "string" && row.id.trim() ? row.id : randomUUID(),
+    text: safeText || "(empty reminder)",
+    dueAt: safeDueAt,
     recurrence: normalizedRecurrence,
     status: normalizedStatus,
     notifyChannel: "desktop"
   };
+}
+
+function normalizeIsoDateOrFallback(value: unknown, fieldName: string, fallbackIso: string): string {
+  try {
+    return normalizeIsoDate(value, fieldName);
+  } catch {
+    return fallbackIso;
+  }
 }

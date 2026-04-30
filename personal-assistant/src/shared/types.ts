@@ -44,4 +44,6 @@ export type ExecutionLog = {
   startedAt: string;
   endedAt: string;
   error?: string;
+  attemptCount: number;
+  retryCount: number;
 };

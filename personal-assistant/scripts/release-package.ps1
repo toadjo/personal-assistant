@@ -3,7 +3,8 @@ param(
 
     [switch]$SkipVersionBump,
     [switch]$SkipSmoke,
-    [switch]$ReplaceExisting
+    [switch]$ReplaceExisting,
+    [switch]$AllowDirtyGit
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,6 +25,26 @@ function Invoke-CheckedCommand([string]$FileName, [string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) {
         $joinedArgs = $Arguments -join " "
         throw "Command failed ($LASTEXITCODE): $FileName $joinedArgs"
+    }
+}
+
+function Test-IsGitRepo {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        return $false
+    }
+
+    & git rev-parse --is-inside-work-tree 2>$null | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Assert-CleanGitTree {
+    $statusOutput = & git status --porcelain --untracked-files=normal
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to determine git status. Re-run with -AllowDirtyGit to bypass this check."
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace(($statusOutput -join "`n"))) {
+        throw "Git working tree is not clean. Commit/stash changes or pass -AllowDirtyGit to continue."
     }
 }
 
@@ -65,13 +86,6 @@ $installerHistoryVersion = Join-Path $installerHistoryRoot $releaseTag
 
 Write-Step "Starting release packaging for $releaseTag"
 
-if (-not $SkipVersionBump) {
-    Write-Step "Updating package.json to $normalizedVersion"
-    Invoke-CheckedCommand "npm" @("version", $normalizedVersion, "--no-git-tag-version")
-} else {
-    Write-Step "Skipping package.json version update"
-}
-
 if ((Test-Path -LiteralPath $versionedOutput) -or (Test-Path -LiteralPath $installerHistoryVersion)) {
     if (-not $ReplaceExisting) {
         throw "Release artifacts already exist for $releaseTag. Use -ReplaceExisting, pick a new version, or clean old artifacts first."
@@ -80,6 +94,20 @@ if ((Test-Path -LiteralPath $versionedOutput) -or (Test-Path -LiteralPath $insta
     Write-Step "Replacing existing artifacts for $releaseTag"
     Remove-IfExists $versionedOutput
     Remove-IfExists $installerHistoryVersion
+}
+
+if (-not $AllowDirtyGit -and (Test-IsGitRepo)) {
+    Write-Step "Validating clean git working tree"
+    Assert-CleanGitTree
+} elseif ($AllowDirtyGit) {
+    Write-Step "Skipping clean git validation (-AllowDirtyGit)"
+}
+
+if (-not $SkipVersionBump) {
+    Write-Step "Updating package.json to $normalizedVersion"
+    Invoke-CheckedCommand "npm" @("version", $normalizedVersion, "--no-git-tag-version")
+} else {
+    Write-Step "Skipping package.json version update"
 }
 
 Remove-IfExists $stagingOutput

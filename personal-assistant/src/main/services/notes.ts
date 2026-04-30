@@ -42,14 +42,17 @@ function mapNote(row: any): Note {
   } catch {
     tags = [];
   }
+  const nowIso = new Date().toISOString();
+  const safeTitle = normalizeOptionalText(row?.title, "Untitled note");
+  const safeContent = normalizeOptionalText(row?.content, "");
   return {
-    id: row.id,
-    title: row.title,
-    content: row.content,
+    id: typeof row?.id === "string" && row.id.trim() ? row.id : randomUUID(),
+    title: safeTitle,
+    content: safeContent,
     tags,
     pinned: Boolean(row.pinned),
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt
+    createdAt: normalizeIsoDateOrFallback(row?.createdAt, nowIso),
+    updatedAt: normalizeIsoDateOrFallback(row?.updatedAt, nowIso)
   };
 }
 
@@ -71,4 +74,16 @@ function normalizeTags(value: unknown): string[] {
     .map((tag) => tag.trim())
     .filter(Boolean)
     .slice(0, 50);
+}
+
+function normalizeOptionalText(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  return value.trim() || fallback;
+}
+
+function normalizeIsoDateOrFallback(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return fallback;
+  return date.toISOString();
 }
