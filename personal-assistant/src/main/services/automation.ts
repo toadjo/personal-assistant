@@ -61,16 +61,27 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
   let lastError: unknown;
   for (let i = 0; i < attempts; i += 1) {
     try {
-      await Promise.race([
-        Promise.resolve(fn()),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Action timeout")), 10_000))
-      ]);
+      await withTimeout(Promise.resolve(fn()), 10_000);
       return;
     } catch (error) {
       lastError = error;
     }
   }
   throw lastError;
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutRef: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutRef = setTimeout(() => reject(new Error("Action timeout")), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeoutRef) clearTimeout(timeoutRef);
+  }
 }
 
 function writeLog(ruleId: string, status: "success" | "failed", startedAt: string, endedAt: string, error?: string): void {

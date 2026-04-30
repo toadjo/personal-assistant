@@ -46,29 +46,38 @@ export function snoozeReminder(id: string, minutes: number): void {
 }
 
 export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeout {
+  let isTickRunning = false;
   return setInterval(() => {
-    const now = new Date().toISOString();
-    const due = getDb()
-      .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC")
-      .all({ now }) as Reminder[];
-    for (const item of due) {
-      try {
-        new Notification({ title: "Reminder", body: item.text }).show();
-        if (item.recurrence === "daily") {
-          const sourceDue = new Date(item.dueAt);
-          const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
-          next.setDate(next.getDate() + 1);
-          getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id: item.id, dueAt: next.toISOString() });
-        } else {
-          completeReminder(item.id);
+    if (isTickRunning) return;
+    isTickRunning = true;
+    try {
+      const now = new Date().toISOString();
+      const due = getDb()
+        .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC")
+        .all({ now }) as Reminder[];
+      let hasReminderChanges = false;
+      for (const item of due) {
+        try {
+          new Notification({ title: "Reminder", body: item.text }).show();
+          if (item.recurrence === "daily") {
+            const sourceDue = new Date(item.dueAt);
+            const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
+            next.setDate(next.getDate() + 1);
+            getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id: item.id, dueAt: next.toISOString() });
+          } else {
+            completeReminder(item.id);
+          }
+          hasReminderChanges = true;
+        } catch (error) {
+          // Keep scheduler alive even if notifications are unavailable on this host.
+          console.error("Reminder scheduler failed for item", item.id, error);
         }
-      } catch (error) {
-        // Keep scheduler alive even if notifications are unavailable on this host.
-        console.error("Reminder scheduler failed for item", item.id, error);
       }
-    }
-    if (!mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
-      mainWindow.webContents.send("reminders:updated");
+      if (hasReminderChanges && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.send("reminders:updated");
+      }
+    } finally {
+      isTickRunning = false;
     }
   }, 30_000);
 }

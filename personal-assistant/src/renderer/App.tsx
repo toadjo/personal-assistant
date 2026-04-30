@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Note, Reminder } from "../shared/types";
 
 type ThemeMode = "light" | "dark";
+
+const INITIAL_VISIBLE_ITEMS = 30;
+const VISIBLE_ITEMS_STEP = 30;
+type WorkspaceSection = "dashboard" | "productivity" | "integrations" | "automation";
 
 export function App(): JSX.Element {
   const [query, setQuery] = useState("");
@@ -19,7 +23,12 @@ export function App(): JSX.Element {
   const [isRefreshingHa, setIsRefreshingHa] = useState(false);
   const [isSavingHa, setIsSavingHa] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(true);
-  const [reminderFilter, setReminderFilter] = useState<"all" | "pending" | "done">("all");
+  const [notesVisible, setNotesVisible] = useState(INITIAL_VISIBLE_ITEMS);
+  const [remindersVisible, setRemindersVisible] = useState(INITIAL_VISIBLE_ITEMS);
+  const [devicesVisible, setDevicesVisible] = useState(INITIAL_VISIBLE_ITEMS);
+  const [logsVisible, setLogsVisible] = useState(INITIAL_VISIBLE_ITEMS);
+  const [rulesVisible, setRulesVisible] = useState(INITIAL_VISIBLE_ITEMS);
+  const [reminderFilter, setReminderFilter] = useState<"all" | "pending" | "done">("pending");
   const [isRunningCommand, setIsRunningCommand] = useState(false);
   const [calendarCursor, setCalendarCursor] = useState(() => {
     const now = new Date();
@@ -29,22 +38,37 @@ export function App(): JSX.Element {
     const saved = window.localStorage.getItem("assistant-theme");
     return saved === "dark" || saved === "light" ? saved : "light";
   });
+  const [activeSection, setActiveSection] = useState<WorkspaceSection>("dashboard");
   const commandInputRef = useRef<HTMLInputElement | null>(null);
   const latestRefreshRef = useRef(0);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(() => !window.localStorage.getItem("assistant-onboarded"));
 
-  async function refreshAll(): Promise<void> {
+  const refreshNotes = useCallback(async (searchTerm = query): Promise<void> => {
+    const nextNotes = await window.assistantApi.listNotes(searchTerm);
+    setNotes(nextNotes);
+  }, [query]);
+
+  const refreshReminders = useCallback(async (): Promise<void> => {
+    const nextReminders = await window.assistantApi.listReminders();
+    setReminders(nextReminders);
+  }, []);
+
+  const refreshDevices = useCallback(async (): Promise<void> => {
+    const nextDevices = await window.assistantApi.listDevices();
+    setDevices(nextDevices);
+  }, []);
+
+  const refreshAll = useCallback(async (): Promise<void> => {
     const refreshId = Date.now();
     latestRefreshRef.current = refreshId;
     try {
       setError("");
       setIsRefreshing(true);
-      const [nextNotes, nextReminders, nextDevices, nextLogs, nextRules] = await Promise.all([
+      const [nextNotes, nextReminders, nextDevices, [nextLogs, nextRules]] = await Promise.all([
         window.assistantApi.listNotes(query),
         window.assistantApi.listReminders(),
         window.assistantApi.listDevices(),
-        window.assistantApi.listExecutionLogs(),
-        window.assistantApi.listRules()
+        Promise.all([window.assistantApi.listExecutionLogs(), window.assistantApi.listRules()])
       ]);
       if (latestRefreshRef.current !== refreshId) return;
       setNotes(nextNotes);
@@ -59,13 +83,13 @@ export function App(): JSX.Element {
         setIsRefreshing(false);
       }
     }
-  }
+  }, [query]);
 
   useEffect(() => {
     void refreshAll();
-    const off = window.assistantApi.onRemindersUpdated(() => void refreshAll());
+    const off = window.assistantApi.onRemindersUpdated(() => void refreshReminders());
     return off;
-  }, []);
+  }, [refreshAll, refreshReminders]);
 
   useEffect(() => {
     void (async () => {
@@ -81,9 +105,9 @@ export function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    const id = setTimeout(() => void refreshAll(), 150);
+    const id = setTimeout(() => void refreshNotes(query), 150);
     return () => clearTimeout(id);
-  }, [query]);
+  }, [query, refreshNotes]);
 
   useEffect(() => {
     const off = window.assistantApi.onCommand((_, command) => {
@@ -93,6 +117,20 @@ export function App(): JSX.Element {
     });
     return off;
   }, []);
+
+  useEffect(() => {
+    if (activeSection === "dashboard") {
+      commandInputRef.current?.focus();
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    setNotesVisible(INITIAL_VISIBLE_ITEMS);
+  }, [query]);
+
+  useEffect(() => {
+    setRemindersVisible(INITIAL_VISIBLE_ITEMS);
+  }, [reminderFilter]);
 
   useEffect(() => {
     if (!status && !error) return;
@@ -115,12 +153,20 @@ export function App(): JSX.Element {
       "search groceries",
       "list reminders",
       "toggle kitchen light"
-    ].filter((c) => c.includes(commandInput.toLowerCase())),
+    ]
+      .filter((c) => c.toLowerCase().includes(commandInput.toLowerCase()))
+      .slice(0, 3),
     [commandInput]
   );
-  const pendingReminders = reminders.filter((r) => r.status === "pending");
-  const overdueReminders = pendingReminders.filter((r) => new Date(r.dueAt).getTime() < Date.now());
-  const visibleReminders = reminders.filter((r) => reminderFilter === "all" || r.status === reminderFilter);
+  const pendingReminders = useMemo(() => reminders.filter((r) => r.status === "pending"), [reminders]);
+  const overdueReminders = useMemo(
+    () => pendingReminders.filter((r) => new Date(r.dueAt).getTime() < Date.now()),
+    [pendingReminders]
+  );
+  const visibleReminders = useMemo(
+    () => reminders.filter((r) => reminderFilter === "all" || r.status === reminderFilter),
+    [reminders, reminderFilter]
+  );
   const haReady = Boolean(haUrl.trim() && (hasHaToken || haToken.trim()));
   const canSaveHaConfig = Boolean(haUrl.trim() && (hasHaToken || haToken.trim()));
   const remindersByDate = useMemo(() => {
@@ -141,6 +187,14 @@ export function App(): JSX.Element {
     [reminders, todayKey]
   );
   const recentNotes = useMemo(() => notes.slice(0, 5), [notes]);
+  const visibleNotesSlice = useMemo(() => notes.slice(0, notesVisible), [notes, notesVisible]);
+  const visibleRemindersSlice = useMemo(
+    () => visibleReminders.slice(0, remindersVisible),
+    [visibleReminders, remindersVisible]
+  );
+  const visibleDevicesSlice = useMemo(() => devices.slice(0, devicesVisible), [devices, devicesVisible]);
+  const visibleRulesSlice = useMemo(() => rules.slice(0, rulesVisible), [rules, rulesVisible]);
+  const visibleLogsSlice = useMemo(() => logs.slice(0, logsVisible), [logs, logsVisible]);
 
   function runPresetCommand(command: string): void {
     setCommandInput(command);
@@ -191,6 +245,9 @@ export function App(): JSX.Element {
       } else if (lower.startsWith("toggle ")) {
         if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
         const target = normalized.slice(7).trim().toLowerCase();
+        if (!target) {
+          throw new Error("Specify what to toggle. Example: toggle kitchen light.");
+        }
         const device = devices.find((d) =>
           d.friendlyName.toLowerCase().includes(target) || d.entityId.toLowerCase().includes(target)
         );
@@ -213,6 +270,7 @@ export function App(): JSX.Element {
       } else if (lower === "refresh devices") {
         if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
         await window.assistantApi.refreshHomeAssistantEntities();
+        await refreshDevices();
         setStatus("Home Assistant devices refreshed.");
       } else {
         throw new Error("Unknown command. Type 'help' to see supported commands.");
@@ -250,24 +308,50 @@ export function App(): JSX.Element {
           <span className="stat">HA: {haReady ? "Ready" : "Setup needed"}</span>
         </div>
       </header>
+      <nav className="topNav" aria-label="Workspace sections">
+        <button
+          className={`topNavButton ${activeSection === "dashboard" ? "topNavButtonActive" : ""}`}
+          onClick={() => setActiveSection("dashboard")}
+        >
+          Dashboard
+        </button>
+        <button
+          className={`topNavButton ${activeSection === "productivity" ? "topNavButtonActive" : ""}`}
+          onClick={() => setActiveSection("productivity")}
+        >
+          Productivity
+        </button>
+        <button
+          className={`topNavButton ${activeSection === "integrations" ? "topNavButtonActive" : ""}`}
+          onClick={() => setActiveSection("integrations")}
+        >
+          Integrations
+        </button>
+        <button
+          className={`topNavButton ${activeSection === "automation" ? "topNavButtonActive" : ""}`}
+          onClick={() => setActiveSection("automation")}
+        >
+          Automation
+        </button>
+      </nav>
+      <p className="muted sectionLabel">
+        {activeSection === "dashboard"
+          ? "Run commands and handle next actions."
+          : activeSection === "productivity"
+            ? "Review notes, reminders, and your agenda."
+            : activeSection === "integrations"
+              ? "Manage Home Assistant connection and devices."
+              : "Create and monitor automations."}
+      </p>
 
       {status ? <p className="status" role="status">Success: {status}</p> : null}
       {error ? <p className="error" role="alert">Error: {error}</p> : null}
 
-      {showOnboarding ? (
-        <section className="panel onboarding">
-          <div className="titleRow">
+      {activeSection === "dashboard" && showOnboarding ? (
+        <details className="panel onboarding collapsibleGroup" open>
+          <summary className="titleRow collapsibleSummary">
             <h2>Quick Start</h2>
-            <button
-              className="ghostButton"
-              onClick={() => {
-                setShowOnboarding(false);
-                window.localStorage.setItem("assistant-onboarded", "1");
-              }}
-            >
-              Got it
-            </button>
-          </div>
+          </summary>
           <p className="muted">1) Add your Home Assistant URL + token, then click <strong>Refresh Entities</strong>.</p>
           <p className="muted">2) Use the command prompt for fast actions in plain English.</p>
           <p className="muted">3) Closing the window keeps the app running in the Windows tray.</p>
@@ -275,11 +359,20 @@ export function App(): JSX.Element {
             <button className="ghostButton" onClick={() => runPresetCommand("new note check water filter")}>Create sample note</button>
             <button className="ghostButton" onClick={() => runPresetCommand("remind stretch in 10m")}>Create sample reminder</button>
             <button className="ghostButton" onClick={() => runPresetCommand("list reminders")}>Show reminders</button>
+            <button
+              className="ghostButton"
+              onClick={() => {
+                setShowOnboarding(false);
+                window.localStorage.setItem("assistant-onboarded", "1");
+              }}
+            >
+              Dismiss onboarding
+            </button>
           </div>
-        </section>
+        </details>
       ) : null}
 
-      <section className="panel commandPanel">
+      {activeSection === "dashboard" ? <section className="panel commandPanel">
         <div className="titleRow">
           <h2>Command Prompt</h2>
           <div className="assistantMeta">
@@ -329,9 +422,9 @@ export function App(): JSX.Element {
           <button className="ghostButton" onClick={() => setQuery("")}>Clear note search</button>
         </div>
         <p className="muted assistantTip">Tip: use <code>list reminders</code> after creating reminders to immediately focus on pending items.</p>
-      </section>
+      </section> : null}
 
-      <section className="panel">
+      {activeSection === "dashboard" ? <section className="panel">
         <div className="titleRow">
           <h2>Action Center</h2>
           <span className="pill graphitePill">Next best actions</span>
@@ -357,9 +450,9 @@ export function App(): JSX.Element {
             {isRefreshing ? "Refreshing..." : "Refresh assistant data"}
           </button>
         </div>
-      </section>
+      </section> : null}
 
-      <div className="grid">
+      {activeSection === "productivity" ? <div className="grid">
         <section className="panel">
           <div className="titleRow">
             <h2>Productivity Snapshot</h2>
@@ -417,9 +510,9 @@ export function App(): JSX.Element {
             )) : <li className="muted">No pending reminders today.</li>}
           </ul>
         </section>
-      </div>
+      </div> : null}
 
-      <div className="grid">
+      {activeSection === "productivity" ? <div className="grid">
         <section className="panel">
           <div className="titleRow">
             <h2>Quick Note</h2>
@@ -431,7 +524,7 @@ export function App(): JSX.Element {
             onError={(message) => setError(message)}
           />
           <ul className="list">
-            {isRefreshing ? <li className="muted">Loading notes...</li> : notes.length ? notes.map((n) => (
+            {isRefreshing ? <li className="muted">Loading notes...</li> : notes.length ? visibleNotesSlice.map((n) => (
               <li key={n.id} className="listRow">
                 <span>{n.title} - {n.content}</span>
                 <button
@@ -452,6 +545,11 @@ export function App(): JSX.Element {
               </li>
             )) : <li className="muted">No notes yet.</li>}
           </ul>
+          {notes.length > notesVisible ? (
+            <button className="ghostButton" onClick={() => setNotesVisible((current) => current + VISIBLE_ITEMS_STEP)}>
+              Show more notes
+            </button>
+          ) : null}
         </section>
 
         <section className="panel">
@@ -469,7 +567,7 @@ export function App(): JSX.Element {
             onError={(message) => setError(message)}
           />
           <ul className="list">
-            {isRefreshing ? <li className="muted">Loading reminders...</li> : visibleReminders.length ? visibleReminders.map((r) => (
+            {isRefreshing ? <li className="muted">Loading reminders...</li> : visibleReminders.length ? visibleRemindersSlice.map((r) => (
               <li key={r.id} className="listRow">
                 <span>
                   {r.text} ({r.status}) - {new Date(r.dueAt).toLocaleString()}
@@ -539,10 +637,15 @@ export function App(): JSX.Element {
               </li>
             )) : <li className="muted">No reminders for this filter.</li>}
           </ul>
+          {visibleReminders.length > remindersVisible ? (
+            <button className="ghostButton" onClick={() => setRemindersVisible((current) => current + VISIBLE_ITEMS_STEP)}>
+              Show more reminders
+            </button>
+          ) : null}
         </section>
-      </div>
+      </div> : null}
 
-      <section className="panel">
+      {activeSection === "integrations" ? <section className="panel">
         <div className="titleRow">
           <h2>Home Assistant</h2>
           <span className="pill graphitePill">Smart home</span>
@@ -611,7 +714,7 @@ export function App(): JSX.Element {
                 setIsRefreshingHa(true);
                 await window.assistantApi.refreshHomeAssistantEntities();
                 setStatus("Entities refreshed.");
-                await refreshAll();
+                await refreshDevices();
               } catch (err) {
                 setError(getErrorMessage(err));
               } finally {
@@ -623,7 +726,7 @@ export function App(): JSX.Element {
           </button>
         </div>
         <ul className="list">
-          {isRefreshing ? <li className="muted">Loading devices...</li> : devices.length ? devices.map((d) => (
+          {isRefreshing ? <li className="muted">Loading devices...</li> : devices.length ? visibleDevicesSlice.map((d) => (
             <li key={d.entityId} className="listRow">
               <span>{d.friendlyName} ({d.state})</span>
               <button
@@ -632,7 +735,7 @@ export function App(): JSX.Element {
                   try {
                     setError("");
                     await window.assistantApi.toggleDevice(d.entityId);
-                    await refreshAll();
+                    await refreshDevices();
                   } catch (err) {
                     setError(getErrorMessage(err));
                   }
@@ -643,9 +746,14 @@ export function App(): JSX.Element {
             </li>
           )) : <li className="muted">No synced devices yet. Save credentials and refresh entities.</li>}
         </ul>
-      </section>
+        {devices.length > devicesVisible ? (
+          <button className="ghostButton" onClick={() => setDevicesVisible((current) => current + VISIBLE_ITEMS_STEP)}>
+            Show more devices
+          </button>
+        ) : null}
+      </section> : null}
 
-      <div className="grid">
+      {activeSection === "automation" ? <div className="grid">
         <section className="panel">
           <div className="titleRow">
             <h2>Automation Rules</h2>
@@ -658,12 +766,17 @@ export function App(): JSX.Element {
             onError={(message) => setError(message)}
           />
           <ul className="list">
-            {isRefreshing ? <li className="muted">Loading rules...</li> : rules.length ? rules.map((r) => (
+            {isRefreshing ? <li className="muted">Loading rules...</li> : rules.length ? visibleRulesSlice.map((r) => (
               <li key={r.id}>
                 {r.name} at {r.triggerConfig.at} {"->"} {r.actionType === "haToggle" ? "Toggle Home Assistant entity" : "Create local reminder"}
               </li>
             )) : <li className="muted">No rules yet.</li>}
           </ul>
+          {rules.length > rulesVisible ? (
+            <button className="ghostButton" onClick={() => setRulesVisible((current) => current + VISIBLE_ITEMS_STEP)}>
+              Show more rules
+            </button>
+          ) : null}
         </section>
 
         <section className="panel">
@@ -672,14 +785,19 @@ export function App(): JSX.Element {
             <span className="pill graphitePill">History</span>
           </div>
           <ul className="list">
-            {isRefreshing ? <li className="muted">Loading logs...</li> : logs.length ? logs.map((l) => (
+            {isRefreshing ? <li className="muted">Loading logs...</li> : logs.length ? visibleLogsSlice.map((l) => (
               <li key={l.id}>
                 <strong>{l.status.toUpperCase()}</strong> - {new Date(l.startedAt).toLocaleString()} {l.error ? `- ${l.error}` : ""}
               </li>
             )) : <li className="muted">No execution logs yet.</li>}
           </ul>
+          {logs.length > logsVisible ? (
+            <button className="ghostButton" onClick={() => setLogsVisible((current) => current + VISIBLE_ITEMS_STEP)}>
+              Show more logs
+            </button>
+          ) : null}
         </section>
-      </div>
+      </div> : null}
     </main>
   );
 }
@@ -691,6 +809,21 @@ function getErrorMessage(err: unknown): string {
 
 function parseReminderCommand(raw: string): { text: string; dueAt: string } {
   const body = raw.replace(/^remind\s+/i, "").trim();
+  const tomorrowMatch = body.match(/^(.*)\s+tomorrow\s+at\s+(\d{1,2}):(\d{2})$/i);
+  if (tomorrowMatch) {
+    const text = tomorrowMatch[1].trim();
+    const hours = Number(tomorrowMatch[2]);
+    const minutes = Number(tomorrowMatch[3]);
+    if (!text) throw new Error("Reminder text is required.");
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      throw new Error("Use a valid time in 24h format, for example: remind check backup tomorrow at 09:00");
+    }
+    const due = new Date();
+    due.setDate(due.getDate() + 1);
+    due.setHours(hours, minutes, 0, 0);
+    return { text, dueAt: due.toISOString() };
+  }
+
   const match = body.match(/^(.*)\s+in\s+(\d+)\s*([mh])$/i);
   if (match) {
     const text = match[1].trim();
@@ -716,21 +849,6 @@ function parseReminderCommand(raw: string): { text: string; dueAt: string } {
     if (due.getTime() <= Date.now()) {
       due.setDate(due.getDate() + 1);
     }
-    return { text, dueAt: due.toISOString() };
-  }
-
-  const tomorrowMatch = body.match(/^(.*)\s+tomorrow\s+at\s+(\d{1,2}):(\d{2})$/i);
-  if (tomorrowMatch) {
-    const text = tomorrowMatch[1].trim();
-    const hours = Number(tomorrowMatch[2]);
-    const minutes = Number(tomorrowMatch[3]);
-    if (!text) throw new Error("Reminder text is required.");
-    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-      throw new Error("Use a valid time in 24h format, for example: remind check backup tomorrow at 09:00");
-    }
-    const due = new Date();
-    due.setDate(due.getDate() + 1);
-    due.setHours(hours, minutes, 0, 0);
     return { text, dueAt: due.toISOString() };
   }
 

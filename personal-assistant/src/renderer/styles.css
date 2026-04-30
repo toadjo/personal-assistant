@@ -109,7 +109,7 @@ h1 {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .heroStats {
@@ -164,13 +164,53 @@ h1 {
 
 .panel {
   margin-top: 16px;
-  padding: 18px;
+  padding: 16px;
   border-radius: 20px;
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(14px);
   transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.topNav {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel-bg) 90%, transparent);
+  margin: 0 0 8px;
+}
+
+.topNavButton {
+  border-radius: 999px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+  transform: none;
+}
+
+.topNavButton:hover {
+  box-shadow: none;
+  transform: none;
+  color: var(--title);
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+}
+
+.topNavButtonActive {
+  background: color-mix(in srgb, var(--primary-soft) 62%, var(--panel-bg) 38%);
+  color: var(--title);
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--panel-border) 76%);
+}
+
+.sectionLabel {
+  margin: 0 0 10px;
+  font-size: 13px;
 }
 
 .panel:hover {
@@ -180,6 +220,20 @@ h1 {
 
 .onboarding p {
   margin: 8px 0;
+}
+
+.collapsibleGroup {
+  padding-top: 10px;
+}
+
+.collapsibleSummary {
+  list-style: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.collapsibleSummary::-webkit-details-marker {
+  display: none;
 }
 
 .presetRow {
@@ -202,18 +256,18 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .row {
   display: flex;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 
 .sectionIntro {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .assistantLead {
@@ -438,7 +492,7 @@ button:disabled {
 }
 
 .list li {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: var(--list-text);
 }
 
@@ -493,7 +547,7 @@ button:disabled {
 }
 
 .commandHintsRow {
-  margin-top: 8px;
+  margin-top: 6px;
   align-items: center;
 }
 
@@ -518,7 +572,7 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 4px 0 10px;
+  margin: 2px 0 8px;
 }
 
 .assistantTip {
@@ -536,6 +590,16 @@ button:disabled {
 
   .hero {
     flex-direction: column;
+  }
+
+  .topNav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .topNavButton {
+    width: 100%;
   }
 
   .snapshotGrid {

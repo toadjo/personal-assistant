@@ -1,5 +1,5 @@
 import path from "node:path";
-import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } from "electron";
+import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, type IpcMainInvokeEvent } from "electron";
 import { z } from "zod";
 import { getDb } from "./db";
 import { createNote, deleteNote, listNotes } from "./services/notes";
@@ -12,6 +12,7 @@ let tray: Tray | null = null;
 let reminderTimer: NodeJS.Timeout | null = null;
 let automationTimer: NodeJS.Timeout | null = null;
 let isQuitting = false;
+let isAutomationCycleRunning = false;
 
 const noteCreateSchema = z.object({
   title: z.string().trim().min(1).max(160),
@@ -86,7 +87,7 @@ function createTray(window: BrowserWindow): void {
     {
       label: "Quick Note",
       click: () => {
-        window.show();
+        showMainWindow(window);
         window.webContents.send("command", "new note");
       }
     },
@@ -101,33 +102,76 @@ function createTray(window: BrowserWindow): void {
 }
 
 function registerIpc(): void {
-  ipcMain.handle("notes:list", (_, query) => listNotes(z.string().optional().parse(query)));
-  ipcMain.handle("notes:create", (_, payload) => createNote(noteCreateSchema.parse(payload)));
-  ipcMain.handle("notes:delete", (_, id) => deleteNote(z.string().uuid().parse(id)));
-  ipcMain.handle("reminders:list", () => listReminders());
-  ipcMain.handle("reminders:create", (_, payload) => createReminder(reminderCreateSchema.parse(payload)));
-  ipcMain.handle("reminders:complete", (_, id) => completeReminder(z.string().uuid().parse(id)));
-  ipcMain.handle("reminders:delete", (_, id) => deleteReminder(z.string().uuid().parse(id)));
-  ipcMain.handle("reminders:snooze", (_, id, minutes) => snoozeReminder(z.string().uuid().parse(id), z.number().int().positive().parse(minutes)));
+  ipcMain.handle("notes:list", (event, query) => {
+    assertTrustedIpcSender(event);
+    return listNotes(z.string().optional().parse(query));
+  });
+  ipcMain.handle("notes:create", (event, payload) => {
+    assertTrustedIpcSender(event);
+    return createNote(noteCreateSchema.parse(payload));
+  });
+  ipcMain.handle("notes:delete", (event, id) => {
+    assertTrustedIpcSender(event);
+    return deleteNote(z.string().uuid().parse(id));
+  });
+  ipcMain.handle("reminders:list", (event) => {
+    assertTrustedIpcSender(event);
+    return listReminders();
+  });
+  ipcMain.handle("reminders:create", (event, payload) => {
+    assertTrustedIpcSender(event);
+    return createReminder(reminderCreateSchema.parse(payload));
+  });
+  ipcMain.handle("reminders:complete", (event, id) => {
+    assertTrustedIpcSender(event);
+    return completeReminder(z.string().uuid().parse(id));
+  });
+  ipcMain.handle("reminders:delete", (event, id) => {
+    assertTrustedIpcSender(event);
+    return deleteReminder(z.string().uuid().parse(id));
+  });
+  ipcMain.handle("reminders:snooze", (event, id, minutes) => {
+    assertTrustedIpcSender(event);
+    return snoozeReminder(z.string().uuid().parse(id), z.number().int().positive().parse(minutes));
+  });
 
-  ipcMain.handle("ha:configure", (_, payload) => {
+  ipcMain.handle("ha:configure", (event, payload) => {
+    assertTrustedIpcSender(event);
     const parsed = haConfigSchema.parse(payload);
     return configureHomeAssistant(parsed.url, parsed.token);
   });
-  ipcMain.handle("ha:getConfig", () => getHomeAssistantConfig());
-  ipcMain.handle("ha:test", () => testConnection());
-  ipcMain.handle("ha:refresh", () => refreshEntities());
-  ipcMain.handle("ha:toggle", (_, entityId) =>
-    toggleEntity(z.string().trim().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id").parse(entityId))
-  );
-  ipcMain.handle("ha:listDevices", () =>
-    getDb().prepare("SELECT * FROM devices_cache ORDER BY friendlyName ASC").all()
-  );
-  ipcMain.handle("automation:logs", () =>
-    getDb().prepare("SELECT * FROM execution_logs ORDER BY startedAt DESC LIMIT 100").all()
-  );
-  ipcMain.handle("automation:rules:list", () => listRules());
-  ipcMain.handle("automation:rules:create", (_, payload) => createTimeRule(ruleCreateSchema.parse(payload)));
+  ipcMain.handle("ha:getConfig", (event) => {
+    assertTrustedIpcSender(event);
+    return getHomeAssistantConfig();
+  });
+  ipcMain.handle("ha:test", (event) => {
+    assertTrustedIpcSender(event);
+    return testConnection();
+  });
+  ipcMain.handle("ha:refresh", (event) => {
+    assertTrustedIpcSender(event);
+    return refreshEntities();
+  });
+  ipcMain.handle("ha:toggle", (event, entityId) => {
+    assertTrustedIpcSender(event);
+    return toggleEntity(z.string().trim().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id").parse(entityId));
+  });
+  ipcMain.handle("ha:listDevices", (event) => {
+    assertTrustedIpcSender(event);
+    return getDb().prepare("SELECT * FROM devices_cache ORDER BY friendlyName ASC").all();
+  });
+  ipcMain.handle("automation:logs", (event) => {
+    assertTrustedIpcSender(event);
+    return getDb().prepare("SELECT * FROM execution_logs ORDER BY startedAt DESC LIMIT 100").all();
+  });
+  ipcMain.handle("automation:rules:list", (event) => {
+    assertTrustedIpcSender(event);
+    return listRules();
+  });
+  ipcMain.handle("automation:rules:create", (event, payload) => {
+    assertTrustedIpcSender(event);
+    return createTimeRule(ruleCreateSchema.parse(payload));
+  });
 }
 
 app.whenReady().then(() => {
@@ -144,7 +188,15 @@ app.whenReady().then(() => {
   createTray(win);
   reminderTimer = startReminderScheduler(win);
   automationTimer = setInterval(() => {
-    void runAutomationCycle();
+    if (isAutomationCycleRunning) return;
+    isAutomationCycleRunning = true;
+    void runAutomationCycle()
+      .catch((error) => {
+        console.error("Automation cycle failed", error);
+      })
+      .finally(() => {
+        isAutomationCycleRunning = false;
+      });
   }, 60_000);
 });
 
@@ -173,4 +225,13 @@ function createTrayIcon() {
     </svg>
   `.trim();
   return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
+}
+
+function assertTrustedIpcSender(event: IpcMainInvokeEvent): void {
+  const senderUrl = event.senderFrame?.url ?? "";
+  const isFileUrl = senderUrl.startsWith("file://");
+  const isDevUrl = !app.isPackaged && (senderUrl.startsWith("http://localhost:5173") || senderUrl.startsWith("http://127.0.0.1:5173"));
+  if (!isFileUrl && !isDevUrl) {
+    throw new Error("Blocked IPC request from untrusted origin.");
+  }
 }
