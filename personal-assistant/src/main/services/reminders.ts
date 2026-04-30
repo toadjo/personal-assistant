@@ -42,7 +42,7 @@ export function deleteReminder(id: string): void {
 
 export function snoozeReminder(id: string, minutes: number): void {
   validateId(id, "Reminder");
-  if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 60 * 24 * 30) {
+  if (!Number.isFinite(minutes) || !Number.isInteger(minutes) || minutes <= 0 || minutes > 60 * 24 * 30) {
     throw new Error("Snooze time must be between 1 and 43,200 minutes.");
   }
   const reminder = getDb()
@@ -129,7 +129,11 @@ function normalizeIsoDate(value: unknown, fieldName: string): string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string.`);
   }
-  const date = new Date(value);
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw new Error(`${fieldName} must be a valid ISO date.`);
+  }
+  const date = new Date(trimmed);
   if (!Number.isFinite(date.getTime())) {
     throw new Error(`${fieldName} must be a valid ISO date.`);
   }
@@ -143,7 +147,7 @@ function toErrorMessage(error: unknown): string {
 function mapReminder(row: any): Reminder {
   const normalizedStatus = row?.status === "done" ? "done" : "pending";
   const normalizedRecurrence = row?.recurrence === "daily" ? "daily" : "none";
-  const fallbackDueAt = new Date().toISOString();
+  const fallbackDueAt = new Date(Date.now() + 5 * 60_000).toISOString();
   const safeDueAt = normalizeIsoDateOrFallback(row?.dueAt, "Reminder dueAt", fallbackDueAt);
   const safeText = typeof row?.text === "string" ? row.text.trim() : "";
   return {

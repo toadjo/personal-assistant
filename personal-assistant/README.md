@@ -43,6 +43,7 @@ Notes:
 - Validates required commands (`npm`, `npx`) and stops immediately if any release command fails.
 - Uses a staging output directory first, then moves artifacts into `release/v<version>` only after a successful build.
 - Validates that installer artifacts exist and fails if no `.exe` was produced.
+- Attempts to prepare `assets/app-icon.ico` before packaging (auto-generates from `assets/app-icon.png` when possible, otherwise continues with PNG icon paths and prints guidance).
 
 Usage:
 
@@ -104,6 +105,13 @@ Notes:
 ```bash
 npm run dist
 ```
+
+## Icon Packaging Notes (Windows)
+
+- Project-local icon sources live in `assets/`.
+- Installer/exe icon paths are explicitly set to project-local `assets/app-icon.png` so builds do not depend on global machine assets.
+- `npm run dist` and `npm run release:build` both run `npm run icons:prepare` to generate `.ico` from `assets/app-icon.png` when needed.
+- Remaining gap: auto-generated `.ico` uses one source PNG, so quality can be weaker at very small sizes (16x16/24x24). Practical workaround: replace `assets/app-icon.ico` with a designer-exported multi-size `.ico` (16/24/32/48/64/128/256) and keep the same filename.
 
 ## Smoke Validation
 

@@ -1,5 +1,7 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, type IpcMainInvokeEvent } from "electron";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { getDb } from "./db";
 import { createNote, deleteNote, listNotes } from "./services/notes";
@@ -15,6 +17,7 @@ let automationTimer: NodeJS.Timeout | null = null;
 let stopAutomationScheduler: (() => void) | null = null;
 let isQuitting = false;
 const AUTOMATION_CYCLE_INTERVAL_MS = 60_000;
+const DEFAULT_DEV_SERVER_URL = "http://localhost:5173";
 
 const noteCreateSchema = z.object({
   title: z.string().trim().min(1).max(160),
@@ -66,17 +69,29 @@ const ruleCreateSchema = z.object({
 });
 
 function createWindow(): BrowserWindow {
+  const appIconPath = resolveAppIconPath();
   const window = new BrowserWindow({
     width: 980,
     height: 720,
     show: false,
+    icon: appIconPath,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      webviewTag: false
     }
   });
 
-  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  window.webContents.on("will-navigate", (event, targetUrl) => {
+    if (!isTrustedNavigationTarget(targetUrl)) {
+      event.preventDefault();
+    }
+  });
+
+  const devUrl = getConfiguredDevServerUrl();
   if (!app.isPackaged) {
     window.loadURL(devUrl);
   } else {
@@ -308,6 +323,14 @@ function toErrorMessage(error: unknown): string {
 }
 
 function createTrayIcon() {
+  const appIconPath = resolveAppIconPath();
+  if (appIconPath) {
+    const icon = nativeImage.createFromPath(appIconPath);
+    if (!icon.isEmpty()) {
+      return icon;
+    }
+  }
+
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
       <rect x="1" y="1" width="14" height="14" rx="4" fill="#1d4ed8"/>
@@ -317,12 +340,71 @@ function createTrayIcon() {
   return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
 }
 
+function resolveAppIconPath(): string | undefined {
+  const assetRoot = app.isPackaged
+    ? path.join(app.getAppPath(), "assets")
+    : path.join(process.cwd(), "assets");
+  const candidates = [
+    path.join(assetRoot, "app-icon.png"),
+    path.join(assetRoot, "app-icon.ico")
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
 function assertTrustedIpcSender(event: IpcMainInvokeEvent): void {
+  if (!win || event.sender.id !== win.webContents.id) {
+    throw new Error("Blocked IPC request from unknown sender.");
+  }
   const senderUrl = event.senderFrame?.url ?? "";
-  const isFileUrl = senderUrl.startsWith("file://");
-  const isDevUrl = !app.isPackaged && (senderUrl.startsWith("http://localhost:5173") || senderUrl.startsWith("http://127.0.0.1:5173"));
+  const isFileUrl = isTrustedFileUrl(senderUrl);
+  const isDevUrl = !app.isPackaged && isDevServerUrl(senderUrl);
   if (!isFileUrl && !isDevUrl) {
     throw new Error("Blocked IPC request from untrusted origin.");
+  }
+}
+
+function isTrustedNavigationTarget(targetUrl: string): boolean {
+  if (isTrustedFileUrl(targetUrl)) return true;
+  return !app.isPackaged && isDevServerUrl(targetUrl);
+}
+
+function isDevServerUrl(targetUrl: string): boolean {
+  const trustedOrigins = getTrustedDevOrigins();
+  const targetOrigin = safeGetOrigin(targetUrl);
+  return !!targetOrigin && trustedOrigins.has(targetOrigin);
+}
+
+function getConfiguredDevServerUrl(): string {
+  const configured = process.env.VITE_DEV_SERVER_URL?.trim();
+  return configured && safeGetOrigin(configured) ? configured : DEFAULT_DEV_SERVER_URL;
+}
+
+function getTrustedDevOrigins(): Set<string> {
+  const configuredOrigin = safeGetOrigin(getConfiguredDevServerUrl());
+  const trustedOrigins = new Set<string>();
+  if (configuredOrigin) trustedOrigins.add(configuredOrigin);
+  trustedOrigins.add("http://localhost:5173");
+  trustedOrigins.add("http://127.0.0.1:5173");
+  return trustedOrigins;
+}
+
+function safeGetOrigin(targetUrl: string): string | null {
+  try {
+    return new URL(targetUrl).origin;
+  } catch {
+    return null;
+  }
+}
+
+function isTrustedFileUrl(targetUrl: string): boolean {
+  if (!targetUrl.startsWith("file://")) return false;
+  if (!app.isPackaged) return true;
+  try {
+    const normalizedTargetPath = path.resolve(fileURLToPath(targetUrl));
+    const trustedRoot = path.resolve(path.join(app.getAppPath(), "dist", "renderer"));
+    return normalizedTargetPath === trustedRoot || normalizedTargetPath.startsWith(`${trustedRoot}${path.sep}`);
+  } catch {
+    return false;
   }
 }
 

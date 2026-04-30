@@ -162,13 +162,60 @@ export async function toggleEntity(entityId: string): Promise<void> {
   if (!["switch", "light"].includes(domain)) {
     throw new Error(`Unsupported device domain "${domain}" for toggle.`);
   }
-  const res = await authedFetch(`/api/services/${domain}/toggle`, {
+  // Prefer Home Assistant's native toggle to reduce stale-state race windows.
+  const toggleResponse = await authedFetch(`/api/services/${domain}/toggle`, {
     method: "POST",
     body: JSON.stringify({ entity_id: normalizedEntityId })
   }, { allowRetry: false });
-  if (!res.ok) {
-    throw new Error(await formatHaHttpError("device toggle failed", res, "Verify entity availability and token scope."));
+  if (toggleResponse.ok) {
+    return;
   }
+
+  const shouldFallbackToStatefulToggle = toggleResponse.status === 404 || toggleResponse.status === 405;
+  if (!shouldFallbackToStatefulToggle) {
+    throw new Error(await formatHaHttpError("device toggle failed", toggleResponse, "Verify entity availability and token scope."));
+  }
+
+  const currentState = await getEntityState(normalizedEntityId);
+  const service = resolveToggleService(currentState);
+  const fallbackResponse = await authedFetch(`/api/services/${domain}/${service}`, {
+    method: "POST",
+    body: JSON.stringify({ entity_id: normalizedEntityId })
+  }, { allowRetry: false });
+  if (!fallbackResponse.ok) {
+    throw new Error(await formatHaHttpError("device toggle fallback failed", fallbackResponse, "Verify entity availability and token scope."));
+  }
+}
+
+async function getEntityState(entityId: string): Promise<string> {
+  const res = await authedFetch(`/api/states/${entityId}`);
+  if (!res.ok) {
+    throw new Error(await formatHaHttpError("device lookup failed", res, "Verify entity availability and token scope."));
+  }
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    throw new Error("Home Assistant device lookup failed: invalid JSON response.");
+  }
+  const state = (body as { state?: unknown } | null)?.state;
+  if (typeof state !== "string" || !state.trim()) {
+    throw new Error("Home Assistant device lookup failed: missing entity state.");
+  }
+  return state.trim().toLowerCase();
+}
+
+function resolveToggleService(currentState: string): "turn_on" | "turn_off" {
+  if (currentState === "on") return "turn_off";
+  if (currentState === "off") return "turn_on";
+  if (currentState === "turning_on" || currentState === "turning_off") {
+    throw new Error(`Home Assistant device is transitioning (${currentState}). Retry in a moment.`);
+  }
+  if (currentState === "unavailable" || currentState === "unknown") {
+    throw new Error(`Home Assistant device is currently ${currentState}. Refresh entities and retry.`);
+  }
+  // Keep toggle resilient for uncommon but valid HA states.
+  return "turn_on";
 }
 
 async function formatHaHttpError(prefix: string, res: Response, fallback: string): Promise<string> {

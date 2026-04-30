@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Windows tray personal assistant MVP",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -11,7 +11,8 @@
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
-    "dist": "npm run build && electron-builder",
+    "icons:prepare": "node scripts/ensure-win-icon.mjs",
+    "dist": "npm run build && npm run icons:prepare && electron-builder",
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
@@ -34,6 +35,7 @@
     "concurrently": "^9.1.2",
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
     "wait-on": "^8.0.1"
@@ -46,17 +48,18 @@
     },
     "files": [
       "dist/**/*",
+      "assets/**/*",
       "node_modules/**/*",
       "package.json"
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/app-icon.png",
+      "icon": "assets/app-icon.ico",
       "signAndEditExecutable": false
     },
     "nsis": {
-      "installerIcon": "assets/app-icon.png",
-      "uninstallerIcon": "assets/app-icon.png"
+      "installerIcon": "assets/app-icon.ico",
+      "uninstallerIcon": "assets/app-icon.ico"
     }
   }
 }

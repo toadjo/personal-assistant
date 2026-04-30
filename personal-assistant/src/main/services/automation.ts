@@ -8,6 +8,14 @@ const AUTOMATION_ACTION_TIMEOUT_MS = 10_000;
 const AUTOMATION_RETRY_ATTEMPTS = 3;
 const AUTOMATION_RETRY_DELAY_MS = 250;
 type RetryMeta = { attemptsUsed: number; retryCount: number };
+class AutomationRetryError extends Error {
+  retryMeta: RetryMeta;
+  constructor(message: string, retryMeta: RetryMeta) {
+    super(message);
+    this.name = "AutomationRetryError";
+    this.retryMeta = retryMeta;
+  }
+}
 
 export function listRules(): AutomationRule[] {
   return getDb()
@@ -63,13 +71,14 @@ export async function runAutomationCycle(): Promise<void> {
       writeLog(rule.id, "success", startedAt, new Date().toISOString(), undefined, retryMeta);
     } catch (error) {
       const ruleLabel = rule.name?.trim() || rule.id;
+      const retryMeta = getRetryMetaFromError(error);
       writeLog(
         rule.id,
         "failed",
         startedAt,
         new Date().toISOString(),
         `[${ruleLabel}] ${formatErrorMessage(error)}`,
-        { attemptsUsed: AUTOMATION_RETRY_ATTEMPTS, retryCount: Math.max(0, AUTOMATION_RETRY_ATTEMPTS - 1) }
+        retryMeta
       );
     }
   }
@@ -106,7 +115,12 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
       }
     }
   }
-  throw new Error(`Automation failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`);
+  const attemptsUsed = safeAttempts;
+  const retryCount = Math.max(0, attemptsUsed - 1);
+  throw new AutomationRetryError(
+    `Automation failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`,
+    { attemptsUsed, retryCount }
+  );
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -156,6 +170,19 @@ function writeLog(
 function formatErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+function getRetryMetaFromError(error: unknown): RetryMeta {
+  if (error instanceof AutomationRetryError) {
+    return sanitizeRetryMeta(error.retryMeta);
+  }
+  return { attemptsUsed: 1, retryCount: 0 };
+}
+
+function sanitizeRetryMeta(meta: RetryMeta): RetryMeta {
+  const attemptsUsed = Number.isInteger(meta.attemptsUsed) && meta.attemptsUsed > 0 ? meta.attemptsUsed : 1;
+  const retryCount = Number.isInteger(meta.retryCount) && meta.retryCount >= 0 ? Math.min(meta.retryCount, attemptsUsed - 1) : 0;
+  return { attemptsUsed, retryCount };
 }
 
 function safeParseObject(raw: unknown, fieldName: string): Record<string, unknown> {
