@@ -11,8 +11,9 @@ let win: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let reminderTimer: NodeJS.Timeout | null = null;
 let automationTimer: NodeJS.Timeout | null = null;
+let stopAutomationScheduler: (() => void) | null = null;
 let isQuitting = false;
-let isAutomationCycleRunning = false;
+const AUTOMATION_CYCLE_INTERVAL_MS = 60_000;
 
 const noteCreateSchema = z.object({
   title: z.string().trim().min(1).max(160),
@@ -162,7 +163,44 @@ function registerIpc(): void {
   });
   ipcMain.handle("automation:logs", (event) => {
     assertTrustedIpcSender(event);
-    return getDb().prepare("SELECT * FROM execution_logs ORDER BY startedAt DESC LIMIT 100").all();
+    const rows = getDb()
+      .prepare(
+        `SELECT
+          l.id,
+          l.ruleId,
+          l.status,
+          l.startedAt,
+          l.endedAt,
+          l.error,
+          r.name AS ruleName,
+          r.actionType,
+          r.actionConfig
+        FROM execution_logs l
+        LEFT JOIN automation_rules r ON r.id = l.ruleId
+        ORDER BY l.startedAt DESC
+        LIMIT 100`
+      )
+      .all() as Array<{
+      id: string;
+      ruleId: string;
+      status: string;
+      startedAt: string;
+      endedAt: string;
+      error: string | null;
+      ruleName: string | null;
+      actionType: string | null;
+      actionConfig: string | null;
+    }>;
+    return rows.map((row) => ({
+      id: row.id,
+      ruleId: row.ruleId,
+      status: row.status,
+      startedAt: row.startedAt,
+      endedAt: row.endedAt,
+      error: row.error ?? undefined,
+      ruleName: row.ruleName ?? "Unknown rule",
+      actionLabel: formatAutomationActionLabel(row.actionType, row.actionConfig)
+    }));
   });
   ipcMain.handle("automation:rules:list", (event) => {
     assertTrustedIpcSender(event);
@@ -187,23 +225,14 @@ app.whenReady().then(() => {
   showMainWindow(win);
   createTray(win);
   reminderTimer = startReminderScheduler(win);
-  automationTimer = setInterval(() => {
-    if (isAutomationCycleRunning) return;
-    isAutomationCycleRunning = true;
-    void runAutomationCycle()
-      .catch((error) => {
-        console.error("Automation cycle failed", error);
-      })
-      .finally(() => {
-        isAutomationCycleRunning = false;
-      });
-  }, 60_000);
+  stopAutomationScheduler = startAutomationScheduler();
 });
 
 app.on("before-quit", () => {
   isQuitting = true;
   if (reminderTimer) clearInterval(reminderTimer);
-  if (automationTimer) clearInterval(automationTimer);
+  stopAutomationScheduler?.();
+  stopAutomationScheduler = null;
 });
 
 app.on("activate", () => {
@@ -215,6 +244,33 @@ function showMainWindow(window: BrowserWindow): void {
   if (!window.isVisible()) window.show();
   if (window.isMinimized()) window.restore();
   window.focus();
+}
+
+function startAutomationScheduler(): () => void {
+  let stopped = false;
+
+  const scheduleNext = (): void => {
+    automationTimer = setTimeout(() => {
+      void runAutomationCycle()
+        .catch((error) => {
+          console.error("Automation cycle failed", error);
+        })
+        .finally(() => {
+          if (!stopped) {
+            scheduleNext();
+          }
+        });
+    }, AUTOMATION_CYCLE_INTERVAL_MS);
+  };
+
+  scheduleNext();
+  return () => {
+    stopped = true;
+    if (automationTimer) {
+      clearTimeout(automationTimer);
+      automationTimer = null;
+    }
+  };
 }
 
 function createTrayIcon() {
@@ -234,4 +290,22 @@ function assertTrustedIpcSender(event: IpcMainInvokeEvent): void {
   if (!isFileUrl && !isDevUrl) {
     throw new Error("Blocked IPC request from untrusted origin.");
   }
+}
+
+function formatAutomationActionLabel(actionType: string | null, actionConfigRaw: string | null): string {
+  let actionConfig: Record<string, string> = {};
+  if (actionConfigRaw) {
+    try {
+      actionConfig = JSON.parse(actionConfigRaw) as Record<string, string>;
+    } catch {
+      // Keep API resilient if config parsing fails for legacy rows.
+    }
+  }
+  if (actionType === "localReminder") {
+    return `Create reminder${actionConfig.text ? `: ${actionConfig.text}` : ""}`;
+  }
+  if (actionType === "haToggle") {
+    return `Toggle device${actionConfig.entityId ? `: ${actionConfig.entityId}` : ""}`;
+  }
+  return "Run automation action";
 }

@@ -23,14 +23,18 @@ function getKeytar() {
 }
 
 export async function saveHaToken(token: string): Promise<void> {
+  const normalizedToken = typeof token === "string" ? token.trim() : "";
+  if (!normalizedToken) {
+    throw new Error("Home Assistant token is required.");
+  }
   const keytar = getKeytar();
   if (keytar) {
-    await keytar.setPassword(SERVICE, ACCOUNT, token);
+    await keytar.setPassword(SERVICE, ACCOUNT, normalizedToken);
     return;
   }
   getDb()
     .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updatedAt=excluded.updatedAt")
-    .run(FALLBACK_KEY, token, new Date().toISOString());
+    .run(FALLBACK_KEY, normalizedToken, new Date().toISOString());
 }
 
 export async function getHaToken(): Promise<string | null> {

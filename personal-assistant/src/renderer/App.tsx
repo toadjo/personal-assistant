@@ -1,11 +1,43 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import type { Note, Reminder } from "../shared/types";
 
 type ThemeMode = "light" | "dark";
+type CommandIntent =
+  | "help"
+  | "listPendingReminders"
+  | "showAllReminders"
+  | "showOverdue"
+  | "searchNotes"
+  | "clearSearch"
+  | "createNote"
+  | "createReminder"
+  | "toggleDevice"
+  | "refreshAll"
+  | "refreshDevices"
+  | "unknown";
+type ParsedCommand = { intent: CommandIntent; args?: string; normalizedInput: string };
+type HaSetupState = "missingUrl" | "missingToken" | "ready";
 
 const INITIAL_VISIBLE_ITEMS = 30;
 const VISIBLE_ITEMS_STEP = 30;
 type WorkspaceSection = "dashboard" | "productivity" | "integrations" | "automation";
+const COMMAND_EXAMPLES = [
+  "help",
+  "new note Buy milk",
+  "note Draft release checklist",
+  "remind Call mom in 15m",
+  "remind Send report at 16:30",
+  "search groceries",
+  "clear search",
+  "list reminders",
+  "show all reminders",
+  "show overdue",
+  "toggle kitchen light",
+  "refresh",
+  "refresh devices"
+] as const;
+const SECTION_ORDER: WorkspaceSection[] = ["dashboard", "productivity", "integrations", "automation"];
 
 export function App(): JSX.Element {
   const [query, setQuery] = useState("");
@@ -15,8 +47,23 @@ export function App(): JSX.Element {
   const [haToken, setHaToken] = useState("");
   const [hasHaToken, setHasHaToken] = useState(false);
   const [devices, setDevices] = useState<Array<{ entityId: string; friendlyName: string; state: string }>>([]);
-  const [logs, setLogs] = useState<Array<{ id: string; status: string; startedAt: string; error?: string }>>([]);
-  const [rules, setRules] = useState<Array<{ id: string; name: string; triggerConfig: { at: string }; actionType: string }>>([]);
+  const [logs, setLogs] = useState<Array<{
+    id: string;
+    ruleId: string;
+    status: string;
+    startedAt: string;
+    endedAt: string;
+    error?: string;
+    ruleName: string;
+    actionLabel: string;
+  }>>([]);
+  const [rules, setRules] = useState<Array<{
+    id: string;
+    name: string;
+    triggerConfig: { at: string };
+    actionType: "localReminder" | "haToggle";
+    actionConfig: Record<string, string>;
+  }>>([]);
   const [commandInput, setCommandInput] = useState("");
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -34,19 +81,55 @@ export function App(): JSX.Element {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [selectedDateKey, setSelectedDateKey] = useState(() => toLocalDateKey(new Date()));
   const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = window.localStorage.getItem("assistant-theme");
     return saved === "dark" || saved === "light" ? saved : "light";
   });
   const [activeSection, setActiveSection] = useState<WorkspaceSection>("dashboard");
-  const commandInputRef = useRef<HTMLInputElement | null>(null);
+  const commandInputRef = useRef<HTMLInputElement>(null);
+  const quickNoteTitleRef = useRef<HTMLInputElement>(null);
+  const haUrlInputRef = useRef<HTMLInputElement>(null);
+  const ruleNameInputRef = useRef<HTMLInputElement>(null);
   const latestRefreshRef = useRef(0);
+  const queryRef = useRef(query);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(() => !window.localStorage.getItem("assistant-onboarded"));
 
-  const refreshNotes = useCallback(async (searchTerm = query): Promise<void> => {
+  const sectionLabelMap: Record<WorkspaceSection, string> = {
+    dashboard: "Dashboard",
+    productivity: "Productivity",
+    integrations: "Integrations",
+    automation: "Automation"
+  };
+
+  const getSectionButtonId = useCallback((section: WorkspaceSection) => `section-tab-${section}`, []);
+  const getSectionPanelId = useCallback((section: WorkspaceSection) => `section-panel-${section}`, []);
+
+  const handleTopNavKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, section: WorkspaceSection) => {
+    const currentIndex = SECTION_ORDER.indexOf(section);
+    if (currentIndex === -1) return;
+    let targetSection: WorkspaceSection | null = null;
+    if (event.key === "ArrowRight") {
+      targetSection = SECTION_ORDER[(currentIndex + 1) % SECTION_ORDER.length];
+    } else if (event.key === "ArrowLeft") {
+      targetSection = SECTION_ORDER[(currentIndex - 1 + SECTION_ORDER.length) % SECTION_ORDER.length];
+    } else if (event.key === "Home") {
+      targetSection = SECTION_ORDER[0];
+    } else if (event.key === "End") {
+      targetSection = SECTION_ORDER[SECTION_ORDER.length - 1];
+    }
+    if (!targetSection) return;
+    event.preventDefault();
+    setActiveSection(targetSection);
+    requestAnimationFrame(() => {
+      document.getElementById(getSectionButtonId(targetSection as WorkspaceSection))?.focus();
+    });
+  }, [getSectionButtonId]);
+
+  const refreshNotes = useCallback(async (searchTerm: string): Promise<void> => {
     const nextNotes = await window.assistantApi.listNotes(searchTerm);
     setNotes(nextNotes);
-  }, [query]);
+  }, []);
 
   const refreshReminders = useCallback(async (): Promise<void> => {
     const nextReminders = await window.assistantApi.listReminders();
@@ -65,7 +148,7 @@ export function App(): JSX.Element {
       setError("");
       setIsRefreshing(true);
       const [nextNotes, nextReminders, nextDevices, [nextLogs, nextRules]] = await Promise.all([
-        window.assistantApi.listNotes(query),
+        window.assistantApi.listNotes(queryRef.current),
         window.assistantApi.listReminders(),
         window.assistantApi.listDevices(),
         Promise.all([window.assistantApi.listExecutionLogs(), window.assistantApi.listRules()])
@@ -83,6 +166,10 @@ export function App(): JSX.Element {
         setIsRefreshing(false);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    queryRef.current = query;
   }, [query]);
 
   useEffect(() => {
@@ -119,9 +206,13 @@ export function App(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (activeSection === "dashboard") {
-      commandInputRef.current?.focus();
-    }
+    const id = window.setTimeout(() => {
+      if (activeSection === "dashboard") commandInputRef.current?.focus();
+      if (activeSection === "productivity") quickNoteTitleRef.current?.focus();
+      if (activeSection === "integrations") haUrlInputRef.current?.focus();
+      if (activeSection === "automation") ruleNameInputRef.current?.focus();
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [activeSection]);
 
   useEffect(() => {
@@ -146,18 +237,19 @@ export function App(): JSX.Element {
     window.localStorage.setItem("assistant-theme", theme);
   }, [theme]);
 
-  const commandHints = useMemo(
-    () => [
-      "new note Buy milk",
-      "remind Call mom in 15m",
-      "search groceries",
-      "list reminders",
-      "toggle kitchen light"
-    ]
-      .filter((c) => c.toLowerCase().includes(commandInput.toLowerCase()))
-      .slice(0, 3),
-    [commandInput]
-  );
+  const commandHints = useMemo(() => {
+    const term = commandInput.trim().toLowerCase();
+    const ranked = COMMAND_EXAMPLES
+      .map((sample) => {
+        const lower = sample.toLowerCase();
+        const rank = !term ? 2 : lower.startsWith(term) ? 0 : lower.includes(term) ? 1 : 3;
+        return { sample, rank };
+      })
+      .filter((entry) => entry.rank < 3)
+      .sort((a, b) => a.rank - b.rank || a.sample.length - b.sample.length)
+      .map((entry) => entry.sample);
+    return ranked.slice(0, 5);
+  }, [commandInput]);
   const pendingReminders = useMemo(() => reminders.filter((r) => r.status === "pending"), [reminders]);
   const overdueReminders = useMemo(
     () => pendingReminders.filter((r) => new Date(r.dueAt).getTime() < Date.now()),
@@ -169,9 +261,19 @@ export function App(): JSX.Element {
   );
   const haReady = Boolean(haUrl.trim() && (hasHaToken || haToken.trim()));
   const canSaveHaConfig = Boolean(haUrl.trim() && (hasHaToken || haToken.trim()));
+  const haSetupState: HaSetupState = !haUrl.trim() ? "missingUrl" : (hasHaToken || haToken.trim()) ? "ready" : "missingToken";
+  const haSetupMessage =
+    haSetupState === "missingUrl"
+      ? "Add your Home Assistant URL to begin setup."
+      : haSetupState === "missingToken"
+        ? "Add a long-lived access token to complete setup."
+        : hasHaToken && !haToken.trim()
+          ? "Connection details are saved. Add a new token only if you want to rotate credentials."
+          : "Ready to save and control devices.";
   const remindersByDate = useMemo(() => {
     const byDate = new Map<string, Reminder[]>();
     for (const reminder of reminders) {
+      if (reminder.status !== "pending") continue;
       const key = toLocalDateKey(new Date(reminder.dueAt));
       byDate.set(key, [...(byDate.get(key) || []), reminder]);
     }
@@ -179,6 +281,13 @@ export function App(): JSX.Element {
   }, [reminders]);
   const monthCells = useMemo(() => buildCalendarCells(calendarCursor, remindersByDate), [calendarCursor, remindersByDate]);
   const todayKey = toLocalDateKey(new Date());
+  const selectedDayReminders = useMemo(
+    () =>
+      reminders
+        .filter((r) => toLocalDateKey(new Date(r.dueAt)) === selectedDateKey)
+        .sort((a, b) => a.dueAt.localeCompare(b.dueAt)),
+    [reminders, selectedDateKey]
+  );
   const todayAgenda = useMemo(
     () =>
       reminders
@@ -195,6 +304,41 @@ export function App(): JSX.Element {
   const visibleDevicesSlice = useMemo(() => devices.slice(0, devicesVisible), [devices, devicesVisible]);
   const visibleRulesSlice = useMemo(() => rules.slice(0, rulesVisible), [rules, rulesVisible]);
   const visibleLogsSlice = useMemo(() => logs.slice(0, logsVisible), [logs, logsVisible]);
+  const selectedDateLabel = useMemo(() => formatDateLabel(selectedDateKey), [selectedDateKey]);
+  const commandHelpMessage = useMemo(
+    () =>
+      [
+        "Commands:",
+        "new note <text>",
+        "remind <text> in <number><m|h>",
+        "remind <text> at HH:MM",
+        "search <term>",
+        "list reminders | show all reminders | show overdue",
+        "toggle <device> | refresh | refresh devices"
+      ].join("  "),
+    []
+  );
+  const parseCommand = useCallback((rawInput: string): ParsedCommand => {
+    const normalizedInput = normalizeCommandAlias(rawInput).replace(/\s+/g, " ").trim();
+    const lower = normalizedInput.toLowerCase();
+    if (lower === "help") return { intent: "help", normalizedInput };
+    if (lower === "list reminders") return { intent: "listPendingReminders", normalizedInput };
+    if (lower === "show all reminders") return { intent: "showAllReminders", normalizedInput };
+    if (lower === "show overdue") return { intent: "showOverdue", normalizedInput };
+    if (lower === "clear search") return { intent: "clearSearch", normalizedInput };
+    if (lower === "refresh" || lower === "sync now") return { intent: "refreshAll", normalizedInput };
+    if (lower === "refresh devices") return { intent: "refreshDevices", normalizedInput };
+    if (lower === "new note" || lower === "note") throw new Error("Write note text after 'new note'. Example: new note buy coffee.");
+    if (lower === "remind") throw new Error("Use a reminder command like: remind call mom in 15m");
+    if (lower === "search") throw new Error("Write a search term after 'search'.");
+    if (lower === "toggle") throw new Error("Specify what to toggle. Example: toggle kitchen light.");
+    if (lower.startsWith("search ")) return { intent: "searchNotes", args: normalizedInput.slice(7).trim(), normalizedInput };
+    if (lower.startsWith("new note ")) return { intent: "createNote", args: normalizedInput.slice(9).trim(), normalizedInput };
+    if (lower.startsWith("note ")) return { intent: "createNote", args: normalizedInput.slice(5).trim(), normalizedInput };
+    if (lower.startsWith("remind ")) return { intent: "createReminder", args: normalizedInput.slice(7).trim(), normalizedInput };
+    if (lower.startsWith("toggle ")) return { intent: "toggleDevice", args: normalizedInput.slice(7).trim(), normalizedInput };
+    return { intent: "unknown", normalizedInput };
+  }, []);
 
   function runPresetCommand(command: string): void {
     setCommandInput(command);
@@ -207,77 +351,93 @@ export function App(): JSX.Element {
     try {
       setError("");
       setIsRunningCommand(true);
-      const normalized = normalizeCommandAlias(raw);
-      const lower = normalized.toLowerCase();
-
-      if (lower === "help") {
-        setStatus("Try: new note <text>, remind <text> in 15m, search <term>, list reminders, toggle <device>, refresh devices.");
-      } else if (lower === "list reminders") {
-        setReminderFilter("pending");
-        setStatus("Showing pending reminders.");
-      } else if (lower === "show all reminders") {
-        setReminderFilter("all");
-        setStatus("Showing all reminders.");
-      } else if (lower === "show overdue") {
-        setReminderFilter("pending");
-        setStatus("Showing pending reminders. Overdue items are marked.");
-      } else if (lower.startsWith("search ")) {
-        const term = normalized.slice(7).trim();
-        if (!term) throw new Error("Write a search term after 'search'.");
-        setQuery(term);
-        setStatus(`Searching notes for "${term}".`);
-      } else if (lower === "clear search") {
-        setQuery("");
-        setStatus("Cleared note search.");
-      } else if (lower.startsWith("new note ") || lower.startsWith("note ")) {
-        const text = normalized.replace(/^new note\s+/i, "").replace(/^note\s+/i, "").trim();
-        if (!text) throw new Error("Write note text after 'new note'.");
-        await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
-        setStatus("Note created from command.");
-      } else if (lower === "new note" || lower === "note") {
-        throw new Error("Write note text after 'new note'. Example: new note buy coffee.");
-      } else if (lower.startsWith("remind ")) {
-        const parsed = parseReminderCommand(normalized);
-        await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
-        setStatus(`Reminder scheduled for ${new Date(parsed.dueAt).toLocaleString()}.`);
-      } else if (lower === "remind") {
-        throw new Error("Use a reminder command like: remind call mom in 15m");
-      } else if (lower.startsWith("toggle ")) {
-        if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
-        const target = normalized.slice(7).trim().toLowerCase();
-        if (!target) {
-          throw new Error("Specify what to toggle. Example: toggle kitchen light.");
+      const parsed = parseCommand(raw);
+      let clearInputAfterRun = true;
+      switch (parsed.intent) {
+        case "help":
+          setStatus(commandHelpMessage);
+          break;
+        case "listPendingReminders":
+          setReminderFilter("pending");
+          setStatus("Showing pending reminders.");
+          break;
+        case "showAllReminders":
+          setReminderFilter("all");
+          setStatus("Showing all reminders.");
+          break;
+        case "showOverdue":
+          setReminderFilter("pending");
+          setStatus("Showing pending reminders. Overdue items are marked.");
+          break;
+        case "searchNotes":
+          setQuery(parsed.args ?? "");
+          setStatus(`Searching notes for "${parsed.args ?? ""}".`);
+          break;
+        case "clearSearch":
+          setQuery("");
+          setStatus("Cleared note search.");
+          break;
+        case "createNote": {
+          const text = parsed.args ?? "";
+          await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
+          await refreshNotes(queryRef.current);
+          setStatus("Note created from command.");
+          break;
         }
-        const device = devices.find((d) =>
-          d.friendlyName.toLowerCase().includes(target) || d.entityId.toLowerCase().includes(target)
-        );
-        if (!device) {
-          const suggestions = devices
-            .slice(0, 3)
-            .map((d) => d.friendlyName)
-            .join(", ");
-          throw new Error(
-            suggestions
-              ? `No device matches "${target}". Try: ${suggestions}.`
-              : "No synced devices available. Refresh entities first."
+        case "createReminder": {
+          const reminder = parseReminderCommand(parsed.args ?? "");
+          await window.assistantApi.createReminder({ text: reminder.text, dueAt: reminder.dueAt, recurrence: "none" });
+          await refreshReminders();
+          setStatus(`Reminder scheduled for ${new Date(reminder.dueAt).toLocaleString()}.`);
+          break;
+        }
+        case "toggleDevice": {
+          if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
+          const target = (parsed.args ?? "").toLowerCase();
+          const matches = devices.filter((d) =>
+            d.friendlyName.toLowerCase().includes(target) || d.entityId.toLowerCase().includes(target)
           );
+          if (!matches.length) {
+            const suggestions = devices
+              .slice(0, 3)
+              .map((d) => d.friendlyName)
+              .join(", ");
+            throw new Error(
+              suggestions
+                ? `No device matches "${target}". Try: ${suggestions}.`
+                : "No synced devices available. Refresh entities first."
+            );
+          }
+          if (matches.length > 1) {
+            const options = matches
+              .slice(0, 3)
+              .map((d) => `${d.friendlyName} (${d.entityId})`)
+              .join(", ");
+            throw new Error(`"${target}" matches multiple devices. Be more specific: ${options}.`);
+          }
+          const [device] = matches;
+          await window.assistantApi.toggleDevice(device.entityId);
+          await refreshDevices();
+          setStatus(`Toggled ${device.friendlyName}.`);
+          break;
         }
-        await window.assistantApi.toggleDevice(device.entityId);
-        setStatus(`Toggled ${device.friendlyName}.`);
-      } else if (lower === "refresh" || lower === "sync now") {
-        await refreshAll();
-        setStatus("Assistant data refreshed.");
-      } else if (lower === "refresh devices") {
-        if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
-        await window.assistantApi.refreshHomeAssistantEntities();
-        await refreshDevices();
-        setStatus("Home Assistant devices refreshed.");
-      } else {
-        throw new Error("Unknown command. Type 'help' to see supported commands.");
+        case "refreshAll":
+          await refreshAll();
+          setStatus("Assistant data refreshed.");
+          break;
+        case "refreshDevices":
+          if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
+          await window.assistantApi.refreshHomeAssistantEntities();
+          await refreshDevices();
+          setStatus("Home Assistant devices refreshed.");
+          break;
+        default:
+          clearInputAfterRun = false;
+          throw new Error(`Unknown command: "${parsed.normalizedInput}". Type "help" to see supported commands.`);
       }
-
-      setCommandInput("");
-      await refreshAll();
+      if (clearInputAfterRun) {
+        setCommandInput("");
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -308,44 +468,71 @@ export function App(): JSX.Element {
           <span className="stat">HA: {haReady ? "Ready" : "Setup needed"}</span>
         </div>
       </header>
-      <nav className="topNav" aria-label="Workspace sections">
-        <button
-          className={`topNavButton ${activeSection === "dashboard" ? "topNavButtonActive" : ""}`}
-          onClick={() => setActiveSection("dashboard")}
-        >
-          Dashboard
-        </button>
-        <button
-          className={`topNavButton ${activeSection === "productivity" ? "topNavButtonActive" : ""}`}
-          onClick={() => setActiveSection("productivity")}
-        >
-          Productivity
-        </button>
-        <button
-          className={`topNavButton ${activeSection === "integrations" ? "topNavButtonActive" : ""}`}
-          onClick={() => setActiveSection("integrations")}
-        >
-          Integrations
-        </button>
-        <button
-          className={`topNavButton ${activeSection === "automation" ? "topNavButtonActive" : ""}`}
-          onClick={() => setActiveSection("automation")}
-        >
-          Automation
-        </button>
+      <nav className="topNav" aria-label="Workspace sections" role="tablist">
+        {SECTION_ORDER.map((section) => (
+          <button
+            key={section}
+            id={getSectionButtonId(section)}
+            role="tab"
+            aria-selected={activeSection === section}
+            aria-controls={getSectionPanelId(section)}
+            tabIndex={activeSection === section ? 0 : -1}
+            className={`topNavButton ${activeSection === section ? "topNavButtonActive" : ""}`}
+            onClick={() => setActiveSection(section)}
+            onKeyDown={(event) => handleTopNavKeyDown(event, section)}
+          >
+            {sectionLabelMap[section]}
+          </button>
+        ))}
       </nav>
-      <p className="muted sectionLabel">
-        {activeSection === "dashboard"
-          ? "Run commands and handle next actions."
-          : activeSection === "productivity"
-            ? "Review notes, reminders, and your agenda."
-            : activeSection === "integrations"
-              ? "Manage Home Assistant connection and devices."
-              : "Create and monitor automations."}
-      </p>
+      <section className="sectionCards" aria-label="Section overview">
+        <button
+          className={`sectionCard ${activeSection === "dashboard" ? "sectionCardActive" : ""}`}
+          onClick={() => setActiveSection("dashboard")}
+          aria-pressed={activeSection === "dashboard"}
+        >
+          <strong>Dashboard</strong>
+          <span>Run commands and resolve next actions fast.</span>
+        </button>
+        <button
+          className={`sectionCard ${activeSection === "productivity" ? "sectionCardActive" : ""}`}
+          onClick={() => setActiveSection("productivity")}
+          aria-pressed={activeSection === "productivity"}
+        >
+          <strong>Productivity</strong>
+          <span>Capture notes, manage reminders, and review calendar.</span>
+        </button>
+        <button
+          className={`sectionCard ${activeSection === "integrations" ? "sectionCardActive" : ""}`}
+          onClick={() => setActiveSection("integrations")}
+          aria-pressed={activeSection === "integrations"}
+        >
+          <strong>Integrations</strong>
+          <span>Set up Home Assistant and control synced devices.</span>
+        </button>
+        <button
+          className={`sectionCard ${activeSection === "automation" ? "sectionCardActive" : ""}`}
+          onClick={() => setActiveSection("automation")}
+          aria-pressed={activeSection === "automation"}
+        >
+          <strong>Automation</strong>
+          <span>Create daily rules and inspect execution history.</span>
+        </button>
+      </section>
+      <div className="firstActionBar" role="toolbar" aria-label="Quick first actions">
+        <button className="ghostButton" onClick={() => setActiveSection("dashboard")}>Go to Command Prompt</button>
+        <button className="ghostButton" onClick={() => setActiveSection("productivity")}>Add note or reminder</button>
+        <button className="ghostButton" onClick={() => setActiveSection("integrations")}>
+          {haReady ? "Control devices" : "Complete HA setup"}
+        </button>
+        <button className="ghostButton" onClick={() => setActiveSection("automation")}>Create automation rule</button>
+        <button className="ghostButton" onClick={() => void refreshAll()} disabled={isRefreshing}>
+          {isRefreshing ? "Refreshing..." : "Refresh all"}
+        </button>
+      </div>
 
-      {status ? <p className="status" role="status">Success: {status}</p> : null}
-      {error ? <p className="error" role="alert">Error: {error}</p> : null}
+      {status ? <p className="status" role="status" aria-live="polite" aria-atomic="true">Success: {status}</p> : null}
+      {error ? <p className="error" role="alert" aria-live="assertive" aria-atomic="true">Error: {error}</p> : null}
 
       {activeSection === "dashboard" && showOnboarding ? (
         <details className="panel onboarding collapsibleGroup" open>
@@ -372,7 +559,7 @@ export function App(): JSX.Element {
         </details>
       ) : null}
 
-      {activeSection === "dashboard" ? <section className="panel commandPanel">
+      {activeSection === "dashboard" ? <section className="panel commandPanel" id={getSectionPanelId("dashboard")} role="tabpanel" aria-labelledby={getSectionButtonId("dashboard")}>
         <div className="titleRow">
           <h2>Command Prompt</h2>
           <div className="assistantMeta">
@@ -381,28 +568,33 @@ export function App(): JSX.Element {
           </div>
         </div>
         <p className="assistantLead">Run one clear action at a time in plain English.</p>
-        <p className="muted sectionIntro">Type a command, review suggestions, then press Enter to execute.</p>
+        <p className="muted sectionIntro">Type a command, review suggestions, then press Enter to execute. Run <code>help</code> anytime.</p>
         <div className="assistantContextRow">
           <span className="contextChip">Note search: {query || "none"}</span>
           <span className="contextChip">Reminder filter: {reminderFilter}</span>
           <span className="contextChip">HA: {haReady ? "connected" : "not connected"}</span>
         </div>
-        <div className="row commandRow">
+        <form
+          className="row commandRow"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!isRunningCommand) void runCommandInternal(commandInput);
+          }}
+        >
+          <label className="srOnly" htmlFor="assistant-command-input">Assistant command</label>
           <input
+            id="assistant-command-input"
             ref={commandInputRef}
             className="fullWidth"
             placeholder="Type a command and press Enter..."
             value={commandInput}
             aria-label="Assistant command input"
             onChange={(e) => setCommandInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isRunningCommand) void runCommandInternal(commandInput);
-            }}
           />
-          <button className="commandAction" onClick={() => void runCommandInternal(commandInput)} disabled={isRunningCommand}>
+          <button type="submit" className="commandAction" disabled={isRunningCommand}>
             {isRunningCommand ? "Running..." : "Run"}
           </button>
-        </div>
+        </form>
         <div className="row commandHintsRow">
           {commandHints.length ? commandHints.map((hint) => (
             <button key={hint} className="pillButton" onClick={() => setCommandInput(hint)}>{hint}</button>
@@ -410,7 +602,7 @@ export function App(): JSX.Element {
         </div>
         <div className="assistantShortcutRow">
           <button className="ghostButton" onClick={() => setCommandInput("new note ")}>+ Note command</button>
-          <button className="ghostButton" onClick={() => setCommandInput("remind  in 15m")}>+ Reminder command</button>
+          <button className="ghostButton" onClick={() => setCommandInput("remind call mom in 15m")}>+ Reminder command</button>
           <button className="ghostButton" onClick={() => setCommandInput("toggle ")}>+ Device command</button>
         </div>
         <p className="muted">
@@ -418,6 +610,7 @@ export function App(): JSX.Element {
         </p>
         <div className="row commandHintsRow">
           <button className="ghostButton" onClick={() => runPresetCommand("help")}>Show commands</button>
+          <button className="ghostButton" onClick={() => runPresetCommand("refresh")}>Refresh all data</button>
           <button className="ghostButton" onClick={() => runPresetCommand("list reminders")}>Show pending reminders</button>
           <button className="ghostButton" onClick={() => setQuery("")}>Clear note search</button>
         </div>
@@ -452,7 +645,13 @@ export function App(): JSX.Element {
         </div>
       </section> : null}
 
-      {activeSection === "productivity" ? <div className="grid">
+      {activeSection === "productivity" ? <details className="panel collapsibleGroup" id={getSectionPanelId("productivity")} role="tabpanel" aria-labelledby={getSectionButtonId("productivity")}>
+        <summary className="titleRow collapsibleSummary">
+          <h2>Productivity Snapshot</h2>
+          <span className="pill graphitePill">Overview</span>
+        </summary>
+        <p className="muted sectionIntro">Open for notes/reminders snapshot and monthly calendar context.</p>
+        <div className="grid compactGrid">
         <section className="panel">
           <div className="titleRow">
             <h2>Productivity Snapshot</h2>
@@ -495,14 +694,72 @@ export function App(): JSX.Element {
               <div key={d} className="calendarHeader">{d}</div>
             ))}
             {monthCells.map((cell, idx) => (
-              <div key={`${cell.dateKey}-${idx}`} className={`calendarCell ${cell.isCurrentMonth ? "" : "calendarCellMuted"} ${cell.dateKey === todayKey ? "calendarCellToday" : ""}`}>
+              <button
+                type="button"
+                key={`${cell.dateKey}-${idx}`}
+                className={`calendarCell calendarCellButton ${cell.isCurrentMonth ? "" : "calendarCellMuted"} ${cell.dateKey === todayKey ? "calendarCellToday" : ""} ${cell.dateKey === selectedDateKey ? "calendarCellSelected" : ""}`}
+                onClick={() => setSelectedDateKey(cell.dateKey)}
+              >
                 <div className="calendarCellTop">
                   <span>{cell.dayNumber}</span>
                   {cell.count ? <span className="calendarBadge">{cell.count}</span> : null}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
+          <div className="titleRow dayFocusTitle">
+            <h3 className="subheading">Day focus: {selectedDateLabel}</h3>
+            <div className="miniActions">
+              <button className="ghostButton" onClick={() => setSelectedDateKey(todayKey)}>Jump to today</button>
+              {selectedDayReminders.some((r) => r.status === "pending") ? (
+                <button
+                  className="ghostButton"
+                  onClick={async () => {
+                    const pendingIds = selectedDayReminders.filter((r) => r.status === "pending").map((r) => r.id);
+                    try {
+                      await Promise.all(pendingIds.map((id) => window.assistantApi.snoozeReminder(id, 60)));
+                      setStatus(`Snoozed ${pendingIds.length} reminder(s) by 1 hour.`);
+                      await refreshAll();
+                    } catch (err) {
+                      setError(getErrorMessage(err));
+                    }
+                  }}
+                >
+                  Snooze all pending 1h
+                </button>
+              ) : null}
+            </div>
+          </div>
+          <ul className="list">
+            {selectedDayReminders.length ? selectedDayReminders.map((r) => (
+              <li key={r.id} className="listRow">
+                <span>
+                  {new Date(r.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - {r.text} ({r.status})
+                  {r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? (
+                    <strong className="overdueBadge">Overdue {formatOverdueForHumans(r.dueAt)}</strong>
+                  ) : null}
+                </span>
+                {r.status === "pending" ? (
+                  <div className="miniActions">
+                    <button
+                      className="ghostButton"
+                      onClick={async () => {
+                        try {
+                          await window.assistantApi.completeReminder(r.id);
+                          setStatus("Reminder marked as done.");
+                          await refreshAll();
+                        } catch (err) {
+                          setError(getErrorMessage(err));
+                        }
+                      }}
+                    >
+                      Mark done
+                    </button>
+                  </div>
+                ) : null}
+              </li>
+            )) : <li className="muted">No reminders on this day.</li>}
+          </ul>
           <h3 className="subheading">Today agenda</h3>
           <ul className="list">
             {todayAgenda.length ? todayAgenda.map((r) => (
@@ -510,7 +767,8 @@ export function App(): JSX.Element {
             )) : <li className="muted">No pending reminders today.</li>}
           </ul>
         </section>
-      </div> : null}
+      </div>
+      </details> : null}
 
       {activeSection === "productivity" ? <div className="grid">
         <section className="panel">
@@ -520,6 +778,7 @@ export function App(): JSX.Element {
           </div>
           <p className="muted sectionIntro">Capture thoughts quickly and keep your recent notes in view.</p>
           <QuickNoteForm
+            titleInputRef={quickNoteTitleRef}
             onDone={refreshAll}
             onError={(message) => setError(message)}
           />
@@ -555,13 +814,14 @@ export function App(): JSX.Element {
         <section className="panel">
           <div className="titleRow">
             <h2>Reminders</h2>
-            <select value={reminderFilter} onChange={(e) => setReminderFilter(e.target.value as "all" | "pending" | "done")}>
+            <label className="srOnly" htmlFor="reminder-filter-select">Reminder filter</label>
+            <select id="reminder-filter-select" value={reminderFilter} onChange={(e) => setReminderFilter(e.target.value as "all" | "pending" | "done")}>
               <option value="all">All</option>
               <option value="pending">Pending</option>
               <option value="done">Done</option>
             </select>
           </div>
-          <p className="muted sectionIntro">Schedule tasks, then track pending and completed items.</p>
+          <p className="muted sectionIntro">Schedule tasks, focus pending by default, and keep overdue work explicit.</p>
           <ReminderForm
             onDone={refreshAll}
             onError={(message) => setError(message)}
@@ -570,25 +830,14 @@ export function App(): JSX.Element {
             {isRefreshing ? <li className="muted">Loading reminders...</li> : visibleReminders.length ? visibleRemindersSlice.map((r) => (
               <li key={r.id} className="listRow">
                 <span>
-                  {r.text} ({r.status}) - {new Date(r.dueAt).toLocaleString()}
-                  {r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? <strong className="overdueBadge">Overdue</strong> : null}
+                  {r.text} - {new Date(r.dueAt).toLocaleString()}
+                  {r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? (
+                    <strong className="overdueBadge">Overdue {formatOverdueForHumans(r.dueAt)}</strong>
+                  ) : null}
+                  {r.status === "done" ? <span className="muted"> (done)</span> : null}
                 </span>
                 {r.status === "pending" ? (
                   <div className="miniActions">
-                    <button
-                      className="ghostButton"
-                      onClick={async () => {
-                        try {
-                          await window.assistantApi.snoozeReminder(r.id, 10);
-                          setStatus("Reminder snoozed by 10 minutes.");
-                          await refreshAll();
-                        } catch (err) {
-                          setError(getErrorMessage(err));
-                        }
-                      }}
-                    >
-                      Snooze 10m
-                    </button>
                     <button
                       className="ghostButton"
                       onClick={async () => {
@@ -645,19 +894,24 @@ export function App(): JSX.Element {
         </section>
       </div> : null}
 
-      {activeSection === "integrations" ? <section className="panel">
+      {activeSection === "integrations" ? <section className="panel" id={getSectionPanelId("integrations")} role="tabpanel" aria-labelledby={getSectionButtonId("integrations")}>
         <div className="titleRow">
           <h2>Home Assistant</h2>
           <span className="pill graphitePill">Smart home</span>
         </div>
         <p className="muted sectionIntro">Connect your Home Assistant instance to control synced entities.</p>
         <div className="row">
+          <label className="srOnly" htmlFor="ha-url-input">Home Assistant URL</label>
           <input
+            id="ha-url-input"
+            ref={haUrlInputRef}
             placeholder="http://homeassistant.local:8123"
             value={haUrl}
             onChange={(e) => setHaUrl(e.target.value)}
           />
+          <label className="srOnly" htmlFor="ha-token-input">Home Assistant token</label>
           <input
+            id="ha-token-input"
             placeholder="Long-lived access token"
             type="password"
             autoComplete="new-password"
@@ -665,9 +919,9 @@ export function App(): JSX.Element {
             onChange={(e) => setHaToken(e.target.value)}
           />
         </div>
-        <p className="muted">Status: {haReady ? "Ready to test and control devices." : "Enter URL and token, then Save."}</p>
-        <p className="muted">If Save succeeds, you can leave token blank on future edits unless you want to replace it.</p>
-        {!canSaveHaConfig ? <p className="muted">Save is enabled after you enter a URL and token.</p> : null}
+        <p className="muted">Setup state: {haSetupState === "ready" ? "Ready" : haSetupState === "missingUrl" ? "URL needed" : "Token needed"}</p>
+        <p className="muted">{haSetupMessage}</p>
+        {!canSaveHaConfig ? <p className="muted">Save is enabled once URL and token are provided (or an existing token is already stored).</p> : null}
         <div className="row">
           <button
             disabled={isSavingHa || !canSaveHaConfig}
@@ -681,7 +935,7 @@ export function App(): JSX.Element {
                 setHaToken("");
                 setStatus("Home Assistant config saved.");
               } catch (err) {
-                setError(getErrorMessage(err));
+                setError(getHaErrorMessage(err, "saving setup"));
               } finally {
                 setIsSavingHa(false);
               }
@@ -700,7 +954,7 @@ export function App(): JSX.Element {
                     : "Home Assistant test failed. Confirm URL, token, and API access."
                 );
               } catch (err) {
-                setError(getErrorMessage(err));
+                setError(getHaErrorMessage(err, "testing connection"));
               }
             }}
           >
@@ -716,7 +970,7 @@ export function App(): JSX.Element {
                 setStatus("Entities refreshed.");
                 await refreshDevices();
               } catch (err) {
-                setError(getErrorMessage(err));
+                setError(getHaErrorMessage(err, "refreshing entities"));
               } finally {
                 setIsRefreshingHa(false);
               }
@@ -725,7 +979,9 @@ export function App(): JSX.Element {
             {isRefreshingHa ? "Refreshing..." : "Refresh Entities"}
           </button>
         </div>
-        <ul className="list">
+        <details className="collapsibleGroup">
+          <summary className="collapsibleSummary muted">Devices ({devices.length})</summary>
+          <ul className="list">
           {isRefreshing ? <li className="muted">Loading devices...</li> : devices.length ? visibleDevicesSlice.map((d) => (
             <li key={d.entityId} className="listRow">
               <span>{d.friendlyName} ({d.state})</span>
@@ -734,10 +990,15 @@ export function App(): JSX.Element {
                 onClick={async () => {
                   try {
                     setError("");
+                    const confirmed = window.confirm(
+                      `Toggle "${d.friendlyName}" (${d.entityId})? Current state: ${d.state}.`
+                    );
+                    if (!confirmed) return;
                     await window.assistantApi.toggleDevice(d.entityId);
+                    setStatus(`Toggled ${d.friendlyName}.`);
                     await refreshDevices();
                   } catch (err) {
-                    setError(getErrorMessage(err));
+                    setError(getHaErrorMessage(err, "toggling device"));
                   }
                 }}
               >
@@ -745,15 +1006,16 @@ export function App(): JSX.Element {
               </button>
             </li>
           )) : <li className="muted">No synced devices yet. Save credentials and refresh entities.</li>}
-        </ul>
-        {devices.length > devicesVisible ? (
-          <button className="ghostButton" onClick={() => setDevicesVisible((current) => current + VISIBLE_ITEMS_STEP)}>
-            Show more devices
-          </button>
-        ) : null}
+          </ul>
+          {devices.length > devicesVisible ? (
+            <button className="ghostButton" onClick={() => setDevicesVisible((current) => current + VISIBLE_ITEMS_STEP)}>
+              Show more devices
+            </button>
+          ) : null}
+        </details>
       </section> : null}
 
-      {activeSection === "automation" ? <div className="grid">
+      {activeSection === "automation" ? <div className="grid" id={getSectionPanelId("automation")} role="tabpanel" aria-labelledby={getSectionButtonId("automation")}>
         <section className="panel">
           <div className="titleRow">
             <h2>Automation Rules</h2>
@@ -761,6 +1023,7 @@ export function App(): JSX.Element {
           </div>
           <p className="muted sectionIntro">Set a daily time to create a reminder or toggle a Home Assistant device.</p>
           <RuleForm
+            nameInputRef={ruleNameInputRef}
             devices={devices}
             onDone={refreshAll}
             onError={(message) => setError(message)}
@@ -768,7 +1031,7 @@ export function App(): JSX.Element {
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading rules...</li> : rules.length ? visibleRulesSlice.map((r) => (
               <li key={r.id}>
-                {r.name} at {r.triggerConfig.at} {"->"} {r.actionType === "haToggle" ? "Toggle Home Assistant entity" : "Create local reminder"}
+                <strong>{r.name}</strong> at {r.triggerConfig.at} {"->"} {formatAutomationActionLabel(r.actionType, r.actionConfig)}
               </li>
             )) : <li className="muted">No rules yet.</li>}
           </ul>
@@ -779,15 +1042,17 @@ export function App(): JSX.Element {
           ) : null}
         </section>
 
-        <section className="panel">
-          <div className="titleRow">
+        <details className="panel collapsibleGroup">
+          <summary className="titleRow collapsibleSummary">
             <h2>Automation Logs</h2>
             <span className="pill graphitePill">History</span>
-          </div>
+          </summary>
+          <p className="muted sectionIntro">Expand to inspect automation run history and failures.</p>
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading logs...</li> : logs.length ? visibleLogsSlice.map((l) => (
               <li key={l.id}>
-                <strong>{l.status.toUpperCase()}</strong> - {new Date(l.startedAt).toLocaleString()} {l.error ? `- ${l.error}` : ""}
+                <strong>{l.status === "success" ? "Succeeded" : "Failed"}</strong> - {new Date(l.startedAt).toLocaleString()} ({formatElapsedLabel(l.startedAt, l.endedAt)}) - {l.ruleName} - {l.actionLabel}
+                {l.error ? ` - ${l.error}` : ""}
               </li>
             )) : <li className="muted">No execution logs yet.</li>}
           </ul>
@@ -796,7 +1061,7 @@ export function App(): JSX.Element {
               Show more logs
             </button>
           ) : null}
-        </section>
+        </details>
       </div> : null}
     </main>
   );
@@ -807,8 +1072,48 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
-function parseReminderCommand(raw: string): { text: string; dueAt: string } {
-  const body = raw.replace(/^remind\s+/i, "").trim();
+function getHaErrorMessage(err: unknown, operation: string): string {
+  const raw = getErrorMessage(err);
+  const lower = raw.toLowerCase();
+  if (lower.includes("401") || lower.includes("unauthorized")) {
+    return `Home Assistant ${operation} failed: token is invalid or expired.`;
+  }
+  if (lower.includes("403") || lower.includes("forbidden")) {
+    return `Home Assistant ${operation} failed: token lacks required permissions.`;
+  }
+  if (lower.includes("404")) {
+    return `Home Assistant ${operation} failed: URL or endpoint was not found.`;
+  }
+  if (lower.includes("not configured")) {
+    return "Home Assistant is not configured yet. Save URL and token first.";
+  }
+  if (lower.includes("request failed")) {
+    return `Home Assistant ${operation} failed: cannot reach server. Check URL and network connectivity.`;
+  }
+  return raw;
+}
+
+function formatAutomationActionLabel(actionType: "localReminder" | "haToggle", actionConfig: Record<string, string>): string {
+  if (actionType === "localReminder") {
+    return `Create reminder${actionConfig.text ? `: ${actionConfig.text}` : ""}`;
+  }
+  return `Toggle device${actionConfig.entityId ? `: ${actionConfig.entityId}` : ""}`;
+}
+
+function formatElapsedLabel(startedAt: string, endedAt: string): string {
+  const elapsedMs = new Date(endedAt).getTime() - new Date(startedAt).getTime();
+  if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return "<1s";
+  const seconds = Math.floor(elapsedMs / 1000);
+  return seconds > 0 ? `${seconds}s` : "<1s";
+}
+
+function parseReminderCommand(bodyRaw: string): { text: string; dueAt: string } {
+  const body = bodyRaw.trim();
+  if (!body) {
+    throw new Error(
+      "Use: remind <text> in <number><m|h>, remind <text> at HH:MM, or remind <text> tomorrow at HH:MM."
+    );
+  }
   const tomorrowMatch = body.match(/^(.*)\s+tomorrow\s+at\s+(\d{1,2}):(\d{2})$/i);
   if (tomorrowMatch) {
     const text = tomorrowMatch[1].trim();
@@ -862,8 +1167,53 @@ function normalizeCommandAlias(input: string): string {
   if (lower === "today" || lower === "what's next" || lower === "whats next") {
     return "list reminders";
   }
+  if (lower === "commands" || lower === "?" || lower === "what can you do") return "help";
+  if (lower === "all reminders") return "show all reminders";
+  if (lower === "overdue") return "show overdue";
   if (lower === "sync") return "refresh";
   return input.trim();
+}
+
+function parseCommandInput(rawInput: string): ParsedCommand {
+  const normalizedInput = normalizeCommandAlias(rawInput).replace(/\s+/g, " ").trim();
+  const lower = normalizedInput.toLowerCase();
+  if (lower === "help") return { intent: "help", normalizedInput };
+  if (lower === "list reminders") return { intent: "listPendingReminders", normalizedInput };
+  if (lower === "show all reminders") return { intent: "showAllReminders", normalizedInput };
+  if (lower === "show overdue") return { intent: "showOverdue", normalizedInput };
+  if (lower === "clear search") return { intent: "clearSearch", normalizedInput };
+  if (lower === "refresh" || lower === "sync now") return { intent: "refreshAll", normalizedInput };
+  if (lower === "refresh devices") return { intent: "refreshDevices", normalizedInput };
+  if (lower === "new note" || lower === "note") {
+    throw new Error("Write note text after 'new note'. Example: new note buy coffee.");
+  }
+  if (lower === "remind") {
+    throw new Error("Use a reminder command like: remind call mom in 15m");
+  }
+  if (lower === "search") {
+    throw new Error("Write a search term after 'search'.");
+  }
+  if (lower === "toggle") {
+    throw new Error("Specify what to toggle. Example: toggle kitchen light.");
+  }
+  if (lower.startsWith("search ")) return { intent: "searchNotes", args: normalizedInput.slice(7).trim(), normalizedInput };
+  if (lower.startsWith("new note ")) return { intent: "createNote", args: normalizedInput.slice(9).trim(), normalizedInput };
+  if (lower.startsWith("note ")) return { intent: "createNote", args: normalizedInput.slice(5).trim(), normalizedInput };
+  if (lower.startsWith("remind ")) return { intent: "createReminder", args: normalizedInput.slice(7).trim(), normalizedInput };
+  if (lower.startsWith("toggle ")) return { intent: "toggleDevice", args: normalizedInput.slice(7).trim(), normalizedInput };
+  return { intent: "unknown", normalizedInput };
+}
+
+function buildCommandHelpMessage(): string {
+  return [
+    "Commands:",
+    "new note <text>",
+    "remind <text> in <number><m|h>",
+    "remind <text> at HH:MM",
+    "search <term>",
+    "list reminders | show all reminders | show overdue",
+    "toggle <device> | refresh | refresh devices"
+  ].join("  ");
 }
 
 function toLocalDateKey(date: Date): string {
@@ -905,10 +1255,12 @@ function buildCalendarCells(monthDate: Date, remindersByDate: Map<string, Remind
 }
 
 function RuleForm({
+  nameInputRef,
   devices,
   onDone,
   onError
 }: {
+  nameInputRef?: React.RefObject<HTMLInputElement | null>;
   devices: Array<{ entityId: string; friendlyName: string; state: string }>;
   onDone: () => Promise<void>;
   onError: (message: string) => void;
@@ -919,84 +1271,99 @@ function RuleForm({
   const [text, setText] = useState("Check your agenda");
   const [entityId, setEntityId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  async function submitRule(): Promise<void> {
+    try {
+      setIsSubmitting(true);
+      if (!name.trim()) throw new Error("Rule name is required.");
+      if (!at) throw new Error("Choose a time for this rule.");
+      if (actionType === "localReminder" && !text.trim()) throw new Error("Reminder text is required for reminder actions.");
+      if (actionType === "haToggle" && !entityId) throw new Error("Select a device for haToggle actions.");
+      await window.assistantApi.createRule({
+        name: name.trim(),
+        triggerConfig: { at },
+        actionType,
+        actionConfig: actionType === "localReminder" ? { text: text.trim() } : { entityId },
+        enabled: true
+      });
+      setName("Morning check");
+      setAt("08:00");
+      setText("Check your agenda");
+      setEntityId("");
+      await onDone();
+    } catch (err) {
+      onError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
-    <div className="row">
-      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Rule name" />
-      <input type="time" value={at} onChange={(e) => setAt(e.target.value)} />
-      <select value={actionType} onChange={(e) => setActionType(e.target.value as "localReminder" | "haToggle")}>
+    <form className="row" onSubmit={(event) => { event.preventDefault(); if (!isSubmitting) void submitRule(); }}>
+      <label className="srOnly" htmlFor="rule-name-input">Rule name</label>
+      <input id="rule-name-input" ref={nameInputRef as React.Ref<HTMLInputElement>} value={name} onChange={(e) => setName(e.target.value)} placeholder="Rule name" />
+      <label className="srOnly" htmlFor="rule-time-input">Rule time</label>
+      <input id="rule-time-input" type="time" value={at} onChange={(e) => setAt(e.target.value)} />
+      <label className="srOnly" htmlFor="rule-action-type-select">Rule action type</label>
+      <select id="rule-action-type-select" value={actionType} onChange={(e) => setActionType(e.target.value as "localReminder" | "haToggle")}>
         <option value="localReminder">Create reminder</option>
         <option value="haToggle">Toggle device</option>
       </select>
       {actionType === "localReminder" ? (
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Reminder text to create" />
+        <>
+          <label className="srOnly" htmlFor="rule-reminder-text-input">Reminder text to create</label>
+          <input id="rule-reminder-text-input" value={text} onChange={(e) => setText(e.target.value)} placeholder="Reminder text to create" />
+        </>
       ) : (
-        <select value={entityId} onChange={(e) => setEntityId(e.target.value)}>
-          <option value="">Select device</option>
-          {devices.map((d) => <option key={d.entityId} value={d.entityId}>{d.friendlyName}</option>)}
-        </select>
+        <>
+          <label className="srOnly" htmlFor="rule-device-select">Device for toggle action</label>
+          <select id="rule-device-select" value={entityId} onChange={(e) => setEntityId(e.target.value)}>
+            <option value="">Select device</option>
+            {devices.map((d) => <option key={d.entityId} value={d.entityId}>{d.friendlyName}</option>)}
+          </select>
+        </>
       )}
-      <button
-        disabled={isSubmitting}
-        onClick={async () => {
-          try {
-            setIsSubmitting(true);
-            if (!name.trim()) throw new Error("Rule name is required.");
-            if (!at) throw new Error("Choose a time for this rule.");
-            if (actionType === "localReminder" && !text.trim()) throw new Error("Reminder text is required for reminder actions.");
-            if (actionType === "haToggle" && !entityId) throw new Error("Select a device for haToggle actions.");
-            await window.assistantApi.createRule({
-              name: name.trim(),
-              triggerConfig: { at },
-              actionType,
-              actionConfig: actionType === "localReminder" ? { text: text.trim() } : { entityId },
-              enabled: true
-            });
-            setName("Morning check");
-            setAt("08:00");
-            setText("Check your agenda");
-            setEntityId("");
-            await onDone();
-          } catch (err) {
-            onError(getErrorMessage(err));
-          } finally {
-            setIsSubmitting(false);
-          }
-        }}
-      >
+      <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Adding..." : "Add Rule"}
       </button>
-    </div>
+    </form>
   );
 }
 
-function QuickNoteForm({ onDone, onError }: { onDone: () => Promise<void>; onError: (message: string) => void }): JSX.Element {
+function QuickNoteForm({
+  titleInputRef,
+  onDone,
+  onError
+}: {
+  titleInputRef?: React.RefObject<HTMLInputElement | null>;
+  onDone: () => Promise<void>;
+  onError: (message: string) => void;
+}): JSX.Element {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  async function submitNote(): Promise<void> {
+    try {
+      setIsSubmitting(true);
+      if (!title.trim() && !content.trim()) throw new Error("Write a title or content before adding a note.");
+      await window.assistantApi.createNote({ title: title.trim() || "Untitled", content: content.trim(), tags: [], pinned: false });
+      setTitle("");
+      setContent("");
+      await onDone();
+    } catch (err) {
+      onError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
-    <div className="row">
-      <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <input placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} />
-      <button
-        disabled={isSubmitting}
-        onClick={async () => {
-          try {
-            setIsSubmitting(true);
-            if (!title.trim() && !content.trim()) throw new Error("Write a title or content before adding a note.");
-            await window.assistantApi.createNote({ title: title.trim() || "Untitled", content: content.trim(), tags: [], pinned: false });
-            setTitle("");
-            setContent("");
-            await onDone();
-          } catch (err) {
-            onError(getErrorMessage(err));
-          } finally {
-            setIsSubmitting(false);
-          }
-        }}
-      >
+    <form className="row" onSubmit={(event) => { event.preventDefault(); if (!isSubmitting) void submitNote(); }}>
+      <label className="srOnly" htmlFor="quick-note-title-input">Note title</label>
+      <input id="quick-note-title-input" ref={titleInputRef as React.Ref<HTMLInputElement>} placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <label className="srOnly" htmlFor="quick-note-content-input">Note content</label>
+      <input id="quick-note-content-input" placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} />
+      <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Adding..." : "Add"}
       </button>
-    </div>
+    </form>
   );
 }
 
@@ -1004,39 +1371,40 @@ function ReminderForm({ onDone, onError }: { onDone: () => Promise<void>; onErro
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  async function submitReminder(): Promise<void> {
+    try {
+      setIsSubmitting(true);
+      if (!text.trim()) throw new Error("Reminder text is required.");
+      const parsedDueAt = parseLocalDateTimeInput(dueAt);
+      if (new Date(parsedDueAt).getTime() <= Date.now()) {
+        throw new Error("Reminder time must be in the future.");
+      }
+      await window.assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
+      setText("");
+      setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
+      await onDone();
+    } catch (err) {
+      onError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
-    <div className="row">
-      <input placeholder="Reminder" value={text} onChange={(e) => setText(e.target.value)} />
+    <form className="row" onSubmit={(event) => { event.preventDefault(); if (!isSubmitting) void submitReminder(); }}>
+      <label className="srOnly" htmlFor="reminder-text-input">Reminder text</label>
+      <input id="reminder-text-input" placeholder="Reminder" value={text} onChange={(e) => setText(e.target.value)} />
+      <label className="srOnly" htmlFor="reminder-date-input">Reminder date and time</label>
       <input
+        id="reminder-date-input"
         type="datetime-local"
         value={dueAt}
         min={toLocalDateTimeInputValue(new Date())}
         onChange={(e) => setDueAt(e.target.value)}
       />
-      <button
-        disabled={isSubmitting}
-        onClick={async () => {
-          try {
-            setIsSubmitting(true);
-            if (!text.trim()) throw new Error("Reminder text is required.");
-            const parsedDueAt = parseLocalDateTimeInput(dueAt);
-            if (new Date(parsedDueAt).getTime() <= Date.now()) {
-              throw new Error("Reminder time must be in the future.");
-            }
-            await window.assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
-            setText("");
-            setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
-            await onDone();
-          } catch (err) {
-            onError(getErrorMessage(err));
-          } finally {
-            setIsSubmitting(false);
-          }
-        }}
-      >
+      <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Scheduling..." : "Schedule"}
       </button>
-    </div>
+    </form>
   );
 }
 
@@ -1052,4 +1420,24 @@ function parseLocalDateTimeInput(input: string): string {
     throw new Error("Pick a valid date and time for the reminder.");
   }
   return parsed.toISOString();
+}
+
+function formatOverdueForHumans(dueAtIso: string): string {
+  const dueAt = new Date(dueAtIso).getTime();
+  if (!Number.isFinite(dueAt)) return "";
+  const diffMs = Date.now() - dueAt;
+  if (diffMs <= 0) return "";
+  const diffMinutes = Math.floor(diffMs / 60_000);
+  if (diffMinutes < 60) return `${diffMinutes}m`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d`;
+}
+
+function formatDateLabel(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year, (month || 1) - 1, day || 1);
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }

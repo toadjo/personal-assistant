@@ -10,14 +10,22 @@ export function listRules(): AutomationRule[] {
     .all()
     .map((row: any) => ({
       ...row,
-      triggerConfig: JSON.parse(row.triggerConfig),
-      actionConfig: JSON.parse(row.actionConfig),
+      triggerConfig: validateTriggerConfig(safeParseObject(row.triggerConfig, "automation triggerConfig")),
+      actionConfig: validateActionConfig(safeParseObject(row.actionConfig, "automation actionConfig")),
       enabled: Boolean(row.enabled)
     })) as AutomationRule[];
 }
 
 export function createTimeRule(input: Omit<AutomationRule, "id" | "triggerType">): AutomationRule {
-  const rule: AutomationRule = { ...input, id: randomUUID(), triggerType: "time" };
+  const rule: AutomationRule = {
+    ...input,
+    id: randomUUID(),
+    triggerType: "time",
+    name: normalizeName(input.name),
+    triggerConfig: validateTriggerConfig(input.triggerConfig),
+    actionConfig: validateActionConfig(input.actionConfig),
+    enabled: Boolean(input.enabled)
+  };
   getDb()
     .prepare(
       "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (@id,@name,@triggerType,@triggerConfig,@actionType,@actionConfig,@enabled)"
@@ -40,19 +48,22 @@ export async function runAutomationCycle(): Promise<void> {
   for (const rule of rules) {
     const startedAt = new Date().toISOString();
     try {
-      const trigger = JSON.parse(rule.triggerConfig) as { at: string };
+      const trigger = validateTriggerConfig(safeParseObject(rule.triggerConfig, "automation triggerConfig"));
       if (trigger.at !== hhmm) continue;
-      const action = JSON.parse(rule.actionConfig) as Record<string, string>;
+      const action = validateActionConfig(safeParseObject(rule.actionConfig, "automation actionConfig"));
       await withRetry(async () => {
         if (rule.actionType === "localReminder") {
-          createReminder({ text: action.text || "Automation reminder", dueAt: new Date().toISOString(), recurrence: "none" });
+          if (!action.text) throw new Error("localReminder requires text");
+          createReminder({ text: action.text, dueAt: new Date().toISOString(), recurrence: "none" });
         } else if (rule.actionType === "haToggle" && action.entityId) {
           await toggleEntity(action.entityId);
+        } else {
+          throw new Error(`Unsupported action configuration for ${rule.actionType}`);
         }
       });
       writeLog(rule.id, "success", startedAt, new Date().toISOString());
     } catch (error) {
-      writeLog(rule.id, "failed", startedAt, new Date().toISOString(), String(error));
+      writeLog(rule.id, "failed", startedAt, new Date().toISOString(), formatErrorMessage(error));
     }
   }
 }
@@ -64,7 +75,7 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
       await withTimeout(Promise.resolve(fn()), 10_000);
       return;
     } catch (error) {
-      lastError = error;
+      lastError = new Error(`Attempt ${i + 1}/${attempts} failed: ${formatErrorMessage(error)}`);
     }
   }
   throw lastError;
@@ -90,4 +101,54 @@ function writeLog(ruleId: string, status: "success" | "failed", startedAt: strin
       "INSERT INTO execution_logs (id, ruleId, status, startedAt, endedAt, error) VALUES (@id,@ruleId,@status,@startedAt,@endedAt,@error)"
     )
     .run({ id: randomUUID(), ruleId, status, startedAt, endedAt, error: error || null });
+}
+
+function formatErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function safeParseObject(raw: unknown, fieldName: string): Record<string, unknown> {
+  if (typeof raw !== "string") {
+    throw new Error(`Invalid ${fieldName}: expected string payload.`);
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Invalid ${fieldName}: malformed JSON.`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`Invalid ${fieldName}: expected object payload.`);
+  }
+  return parsed as Record<string, unknown>;
+}
+
+function normalizeName(name: unknown): string {
+  if (typeof name !== "string") throw new Error("Automation rule name must be a string.");
+  const normalized = name.trim();
+  if (!normalized) throw new Error("Automation rule name is required.");
+  return normalized;
+}
+
+function validateTriggerConfig(triggerConfig: unknown): { at: string } {
+  const config = triggerConfig as { at?: unknown };
+  const at = typeof config?.at === "string" ? config.at.trim() : "";
+  if (!/^\d{2}:\d{2}$/.test(at)) {
+    throw new Error("Automation trigger time must use HH:MM format.");
+  }
+  return { at };
+}
+
+function validateActionConfig(actionConfig: unknown): Record<string, string> {
+  if (!actionConfig || typeof actionConfig !== "object" || Array.isArray(actionConfig)) {
+    throw new Error("Automation action config must be an object.");
+  }
+  const output: Record<string, string> = {};
+  for (const [key, value] of Object.entries(actionConfig)) {
+    if (typeof value === "string") {
+      output[key] = value.trim();
+    }
+  }
+  return output;
 }

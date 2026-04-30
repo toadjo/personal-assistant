@@ -19,8 +19,23 @@ declare global {
       refreshHomeAssistantEntities: () => Promise<void>;
       listDevices: () => Promise<Array<{ entityId: string; friendlyName: string; state: string }>>;
       toggleDevice: (entityId: string) => Promise<void>;
-      listExecutionLogs: () => Promise<Array<{ id: string; status: string; startedAt: string; error?: string }>>;
-      listRules: () => Promise<Array<{ id: string; name: string; triggerConfig: { at: string }; actionType: string }>>;
+      listExecutionLogs: () => Promise<Array<{
+        id: string;
+        ruleId: string;
+        status: string;
+        startedAt: string;
+        endedAt: string;
+        error?: string;
+        ruleName: string;
+        actionLabel: string;
+      }>>;
+      listRules: () => Promise<Array<{
+        id: string;
+        name: string;
+        triggerConfig: { at: string };
+        actionType: "localReminder" | "haToggle";
+        actionConfig: Record<string, string>;
+      }>>;
       createRule: (payload: {
         name: string;
         triggerConfig: { at: string };

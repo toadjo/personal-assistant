@@ -8,7 +8,14 @@ export function listReminders(): Reminder[] {
 }
 
 export function createReminder(input: Omit<Reminder, "id" | "status" | "notifyChannel">): Reminder {
-  const reminder: Reminder = { id: randomUUID(), status: "pending", notifyChannel: "desktop", ...input };
+  const reminder: Reminder = {
+    id: randomUUID(),
+    status: "pending",
+    notifyChannel: "desktop",
+    text: normalizeReminderText(input.text),
+    dueAt: normalizeIsoDate(input.dueAt, "Reminder dueAt"),
+    recurrence: input.recurrence === "daily" ? "daily" : "none"
+  };
   getDb()
     .prepare(
       "INSERT INTO reminders (id, text, dueAt, recurrence, status, notifyChannel) VALUES (@id,@text,@dueAt,@recurrence,@status,@notifyChannel)"
@@ -18,14 +25,17 @@ export function createReminder(input: Omit<Reminder, "id" | "status" | "notifyCh
 }
 
 export function completeReminder(id: string): void {
+  validateId(id, "Reminder");
   getDb().prepare("UPDATE reminders SET status='done' WHERE id=@id").run({ id });
 }
 
 export function deleteReminder(id: string): void {
+  validateId(id, "Reminder");
   getDb().prepare("DELETE FROM reminders WHERE id=@id").run({ id });
 }
 
 export function snoozeReminder(id: string, minutes: number): void {
+  validateId(id, "Reminder");
   if (!Number.isFinite(minutes) || minutes <= 0) {
     throw new Error("Snooze time must be a positive number of minutes.");
   }
@@ -47,7 +57,7 @@ export function snoozeReminder(id: string, minutes: number): void {
 
 export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeout {
   let isTickRunning = false;
-  return setInterval(() => {
+  const interval = setInterval(() => {
     if (isTickRunning) return;
     isTickRunning = true;
     try {
@@ -62,7 +72,11 @@ export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeou
           if (item.recurrence === "daily") {
             const sourceDue = new Date(item.dueAt);
             const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
-            next.setDate(next.getDate() + 1);
+            const nowTime = Date.now();
+            // If app was offline for multiple days, jump directly to the next future occurrence.
+            while (next.getTime() <= nowTime) {
+              next.setDate(next.getDate() + 1);
+            }
             getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id: item.id, dueAt: next.toISOString() });
           } else {
             completeReminder(item.id);
@@ -70,14 +84,52 @@ export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeou
           hasReminderChanges = true;
         } catch (error) {
           // Keep scheduler alive even if notifications are unavailable on this host.
-          console.error("Reminder scheduler failed for item", item.id, error);
+          console.error("Reminder scheduler failed for item", item.id, toErrorMessage(error));
         }
       }
-      if (hasReminderChanges && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
-        mainWindow.webContents.send("reminders:updated");
+      if (hasReminderChanges) {
+        try {
+          if (!mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+            mainWindow.webContents.send("reminders:updated");
+          }
+        } catch (error) {
+          console.error("Reminder scheduler failed to notify renderer", toErrorMessage(error));
+        }
       }
+    } catch (error) {
+      console.error("Reminder scheduler cycle failed", toErrorMessage(error));
     } finally {
       isTickRunning = false;
     }
   }, 30_000);
+  interval.unref();
+  return interval;
+}
+
+function validateId(id: string, resourceName: string): void {
+  if (typeof id !== "string" || !id.trim()) {
+    throw new Error(`${resourceName} ID is required.`);
+  }
+}
+
+function normalizeReminderText(text: unknown): string {
+  if (typeof text !== "string") throw new Error("Reminder text must be a string.");
+  const normalized = text.trim();
+  if (!normalized) throw new Error("Reminder text is required.");
+  return normalized;
+}
+
+function normalizeIsoDate(value: unknown, fieldName: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string.`);
+  }
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    throw new Error(`${fieldName} must be a valid ISO date.`);
+  }
+  return date.toISOString();
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

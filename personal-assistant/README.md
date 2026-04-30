@@ -17,7 +17,52 @@ npm install
 npm run dev
 ```
 
-## Build Installer
+## Release Packaging (Windows)
+
+Versioned installer outputs now live under:
+
+- `release/v<version>/` (full electron-builder output for that version)
+- `installer-history/v<version>/` (copied installer artifacts: `.exe`, `.blockmap`, `.yml`)
+
+### Build a versioned installer
+
+```powershell
+npm run release:build -- -Version 1.0.0
+```
+
+Notes:
+
+- Accepts `1.0.0` or `v1.0.0`.
+- Updates `package.json` version to match (unless you pass `-SkipVersionBump`).
+- Runs smoke checks by default (skip with `-SkipSmoke`).
+
+Examples:
+
+```powershell
+# Keep current package.json version, just package
+npm run release:build -- -Version 1.1.0 -SkipVersionBump
+
+# Package without smoke validation
+npm run release:build -- -Version 1.1.1 -SkipSmoke
+```
+
+### Cleanup old artifacts
+
+```powershell
+# Keep the newest 3 release/history versions (default behavior)
+npm run release:clean
+
+# Keep newest 5 versions
+npm run release:clean -- -Keep 5
+
+# Remove everything under release/ and installer-history/
+npm run release:clean:all
+
+# Also remove dist/ during cleanup
+npm run release:clean -- -IncludeDist
+```
+
+### Legacy one-off build
 
 ```bash
 npm run dist
