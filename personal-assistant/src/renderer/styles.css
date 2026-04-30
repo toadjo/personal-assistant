@@ -1,5 +1,5 @@
 :root {
-  --bg: radial-gradient(circle at top, #f8fafd 0%, #f1f5fb 50%, #eef2f8 100%);
+  --bg: radial-gradient(circle at top, #f7f9fc 0%, #f1f4f9 48%, #eceff5 100%);
   --text: #1e293b;
   --title: #0f172a;
   --subtitle: #5f6f86;
@@ -12,9 +12,9 @@
   --input-bg: #f8fbff;
   --input-border: #cdd9ea;
   --input-text: #0f172a;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-soft: rgba(37, 99, 235, 0.14);
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-soft: rgba(59, 130, 246, 0.14);
   --focus-ring: rgba(59, 130, 246, 0.23);
   --muted: #62748b;
   --list-text: #1f2d40;
@@ -30,28 +30,28 @@
 }
 
 html[data-theme="dark"] {
-  --bg: radial-gradient(circle at top, #1f2530 0%, #12151c 60%, #0f1117 100%);
-  --text: #e5e7eb;
-  --title: #f8fafc;
-  --subtitle: #9fadc1;
-  --panel-bg: rgba(22, 27, 36, 0.86);
-  --panel-border: #323d4f;
-  --surface-border-strong: #44546c;
-  --stat-bg: rgba(27, 33, 44, 0.95);
-  --stat-border: #3c4a5f;
-  --stat-text: #dbe4f5;
-  --input-bg: #1b2432;
-  --input-border: #3a4a62;
+  --bg: radial-gradient(circle at top, #2a2d33 0%, #1b1e24 58%, #16181d 100%);
+  --text: #e7e9ee;
+  --title: #f6f7fb;
+  --subtitle: #afb4c2;
+  --panel-bg: rgba(30, 33, 40, 0.86);
+  --panel-border: #454b57;
+  --surface-border-strong: #5f6775;
+  --stat-bg: rgba(42, 46, 56, 0.92);
+  --stat-border: #565e6f;
+  --stat-text: #e2e5ee;
+  --input-bg: #2a2f3a;
+  --input-border: #586276;
   --input-text: #f8fafc;
-  --primary: #5ca4ff;
-  --primary-hover: #80b7ff;
-  --primary-soft: rgba(96, 165, 250, 0.2);
-  --focus-ring: rgba(96, 165, 250, 0.3);
-  --muted: #9cacbf;
-  --list-text: #dce5f5;
-  --ghost-bg: rgba(35, 46, 63, 0.58);
-  --ghost-text: #d6e0f2;
-  --ghost-border: #4b5f7e;
+  --primary: #8ab4ff;
+  --primary-hover: #9abfff;
+  --primary-soft: rgba(147, 180, 255, 0.22);
+  --focus-ring: rgba(147, 180, 255, 0.28);
+  --muted: #adb4c4;
+  --list-text: #e6e9f2;
+  --ghost-bg: rgba(64, 70, 84, 0.58);
+  --ghost-text: #e0e4ef;
+  --ghost-border: #656f82;
   --success-bg: rgba(20, 83, 45, 0.4);
   --success-border: #4ade80;
   --success-text: #bbf7d0;
@@ -138,6 +138,12 @@ h1 {
   padding: 7px 11px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.assistantMeta {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .grid {
@@ -284,6 +290,12 @@ button:disabled {
   color: var(--primary);
   font-size: 12px;
   font-weight: 600;
+}
+
+.graphitePill {
+  color: color-mix(in srgb, var(--muted) 68%, var(--title) 32%);
+  border-color: color-mix(in srgb, var(--muted) 34%, transparent);
+  background: color-mix(in srgb, var(--panel-bg) 72%, transparent);
 }
 
 .pillButton {
@@ -464,6 +476,29 @@ button:disabled {
   align-items: center;
 }
 
+.assistantContextRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.contextChip {
+  border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+}
+
+.assistantShortcutRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
 @media (max-width: 900px) {
   .container {
     padding: 18px 16px 24px;
@@ -479,5 +514,9 @@ button:disabled {
 
   .snapshotGrid {
     grid-template-columns: 1fr;
+  }
+
+  .assistantMeta {
+    width: 100%;
   }
 }

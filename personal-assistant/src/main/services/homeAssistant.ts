@@ -8,7 +8,15 @@ const HA_BASE_URL_KEY = "ha.baseUrl";
 export async function configureHomeAssistant(url: string, token: string): Promise<void> {
   baseUrl = normalizeUrl(url);
   if (!baseUrl) throw new Error("Home Assistant URL is required");
-  await saveHaToken(token);
+  const trimmedToken = token.trim();
+  if (trimmedToken) {
+    await saveHaToken(trimmedToken);
+  } else {
+    const existingToken = await getHaToken();
+    if (!existingToken) {
+      throw new Error("Home Assistant token is required for initial setup");
+    }
+  }
   getDb()
     .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updatedAt=excluded.updatedAt")
     .run(HA_BASE_URL_KEY, baseUrl, new Date().toISOString());
@@ -24,14 +32,18 @@ async function authedFetch(path: string, init?: RequestInit): Promise<Response> 
   const token = await getHaToken();
   const url = getConfiguredBaseUrl();
   if (!token || !url) throw new Error("Home Assistant not configured");
-  return fetch(`${baseUrl}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(init?.headers || {})
-    }
-  });
+  try {
+    return await fetch(`${url}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(init?.headers || {})
+      }
+    });
+  } catch (error) {
+    throw new Error(`Home Assistant request failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 export async function testConnection(): Promise<boolean> {
@@ -41,7 +53,9 @@ export async function testConnection(): Promise<boolean> {
 
 export async function refreshEntities(): Promise<void> {
   const res = await authedFetch("/api/states");
-  if (!res.ok) throw new Error(`HA sync failed: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`Home Assistant sync failed (${res.status} ${res.statusText || "unknown"}). Check URL/token permissions.`);
+  }
   const entities = (await res.json()) as Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>;
   const db = getDb();
   const upsert = db.prepare(
@@ -67,12 +81,20 @@ export async function refreshEntities(): Promise<void> {
 }
 
 export async function toggleEntity(entityId: string): Promise<void> {
+  if (!entityId.includes(".")) {
+    throw new Error("Invalid Home Assistant entity ID.");
+  }
   const domain = entityId.split(".")[0];
+  if (!["switch", "light"].includes(domain)) {
+    throw new Error(`Unsupported device domain "${domain}" for toggle.`);
+  }
   const res = await authedFetch(`/api/services/${domain}/toggle`, {
     method: "POST",
     body: JSON.stringify({ entity_id: entityId })
   });
-  if (!res.ok) throw new Error(`Toggle failed: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`Device toggle failed (${res.status} ${res.statusText || "unknown"}). Verify entity availability and token scope.`);
+  }
 }
 
 function getConfiguredBaseUrl(): string {
@@ -83,5 +105,13 @@ function getConfiguredBaseUrl(): string {
 }
 
 function normalizeUrl(url: string): string {
-  return url.trim().replace(/\/$/, "");
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return "";
+  }
 }

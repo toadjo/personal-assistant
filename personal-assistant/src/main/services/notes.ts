@@ -25,12 +25,23 @@ export function createNote(input: Pick<Note, "title" | "content" | "tags" | "pin
   return note;
 }
 
+export function deleteNote(id: string): void {
+  getDb().prepare("DELETE FROM notes WHERE id=@id").run({ id });
+}
+
 function mapNote(row: any): Note {
+  let tags: string[] = [];
+  try {
+    const parsed = JSON.parse(row.tags);
+    if (Array.isArray(parsed)) tags = parsed.filter((tag) => typeof tag === "string");
+  } catch {
+    tags = [];
+  }
   return {
     id: row.id,
     title: row.title,
     content: row.content,
-    tags: JSON.parse(row.tags),
+    tags,
     pinned: Boolean(row.pinned),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt

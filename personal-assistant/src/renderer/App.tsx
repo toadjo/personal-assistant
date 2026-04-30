@@ -143,7 +143,7 @@ export function App(): JSX.Element {
       const lower = normalized.toLowerCase();
 
       if (lower === "help") {
-        setStatus("Try: new note, remind <text> in 15m, search <term>, list reminders, toggle <device>, refresh devices.");
+        setStatus("Try: new note <text>, remind <text> in 15m, search <term>, list reminders, toggle <device>, refresh devices.");
       } else if (lower === "list reminders") {
         setReminderFilter("pending");
         setStatus("Showing pending reminders.");
@@ -161,7 +161,7 @@ export function App(): JSX.Element {
       } else if (lower.startsWith("remind ")) {
         const parsed = parseReminderCommand(normalized);
         await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
-        setStatus(`Reminder scheduled for ${new Date(parsed.dueAt).toLocaleTimeString()}.`);
+        setStatus(`Reminder scheduled for ${new Date(parsed.dueAt).toLocaleString()}.`);
       } else if (lower === "remind") {
         throw new Error("Use a reminder command like: remind call mom in 15m");
       } else if (lower.startsWith("toggle ")) {
@@ -178,7 +178,7 @@ export function App(): JSX.Element {
         await window.assistantApi.refreshHomeAssistantEntities();
         setStatus("Home Assistant devices refreshed.");
       } else {
-        throw new Error("Unknown command. Try: new note, remind, search, list reminders, toggle, refresh devices.");
+        throw new Error("Unknown command. Type 'help' to see supported commands.");
       }
 
       setCommandInput("");
@@ -233,6 +233,7 @@ export function App(): JSX.Element {
           </div>
           <p className="muted">1) Add your Home Assistant URL + token, then click <strong>Refresh Entities</strong>.</p>
           <p className="muted">2) Use the command prompt for fast actions in plain English.</p>
+          <p className="muted">3) Closing the window keeps the app running in the Windows tray.</p>
           <div className="presetRow">
             <button className="ghostButton" onClick={() => runPresetCommand("new note check water filter")}>Create sample note</button>
             <button className="ghostButton" onClick={() => runPresetCommand("remind stretch in 10m")}>Create sample reminder</button>
@@ -244,9 +245,17 @@ export function App(): JSX.Element {
       <section className="panel commandPanel">
         <div className="titleRow">
           <h2>Command Prompt</h2>
-          <span className="pill">Natural language</span>
+          <div className="assistantMeta">
+            <span className="pill">Natural language</span>
+            <span className="pill graphitePill">Assistant-first</span>
+          </div>
         </div>
         <p className="muted sectionIntro">Run one assistant action at a time in plain English.</p>
+        <div className="assistantContextRow">
+          <span className="contextChip">Note search: {query || "none"}</span>
+          <span className="contextChip">Reminder filter: {reminderFilter}</span>
+          <span className="contextChip">HA: {haReady ? "connected" : "not connected"}</span>
+        </div>
         <div className="row commandRow">
           <input
             ref={commandInputRef}
@@ -265,15 +274,29 @@ export function App(): JSX.Element {
         <div className="row commandHintsRow">
           {commandHints.length ? commandHints.map((hint) => (
             <button key={hint} className="pillButton" onClick={() => setCommandInput(hint)}>{hint}</button>
-          )) : <span className="muted">No matching command hints.</span>}
+          )) : <span className="muted">No matching command hints. Type <code>help</code> to see all commands.</span>}
+        </div>
+        <div className="assistantShortcutRow">
+          <button className="ghostButton" onClick={() => setCommandInput("new note ")}>+ Note command</button>
+          <button className="ghostButton" onClick={() => setCommandInput("remind  in 15m")}>+ Reminder command</button>
+          <button className="ghostButton" onClick={() => setCommandInput("toggle ")}>+ Device command</button>
         </div>
         <p className="muted">Examples: <code>new note buy coffee</code>, <code>remind stand up in 10m</code>, <code>toggle bedroom</code>.</p>
+        <div className="row commandHintsRow">
+          <button className="ghostButton" onClick={() => runPresetCommand("help")}>Show commands</button>
+          <button className="ghostButton" onClick={() => runPresetCommand("list reminders")}>Show pending reminders</button>
+          <button className="ghostButton" onClick={() => setQuery("")}>Clear note search</button>
+        </div>
         <p className="muted">Tip: type one action at a time in plain English and press Enter.</p>
+        <p className="muted">Tip: use <code>list reminders</code> after adding reminders to quickly review pending items.</p>
       </section>
 
       <div className="grid">
         <section className="panel">
-          <h2>Productivity Snapshot</h2>
+          <div className="titleRow">
+            <h2>Productivity Snapshot</h2>
+            <span className="pill graphitePill">At a glance</span>
+          </div>
           <div className="snapshotGrid">
             <div className="snapshotCard">
               <p className="snapshotLabel">Total notes</p>
@@ -330,7 +353,10 @@ export function App(): JSX.Element {
 
       <div className="grid">
         <section className="panel">
-          <h2>Quick Note</h2>
+          <div className="titleRow">
+            <h2>Quick Note</h2>
+            <span className="pill graphitePill">Capture</span>
+          </div>
           <p className="muted sectionIntro">Capture thoughts quickly and keep your recent notes in view.</p>
           <QuickNoteForm
             onDone={refreshAll}
@@ -449,7 +475,10 @@ export function App(): JSX.Element {
       </div>
 
       <section className="panel">
-        <h2>Home Assistant</h2>
+        <div className="titleRow">
+          <h2>Home Assistant</h2>
+          <span className="pill graphitePill">Smart home</span>
+        </div>
         <p className="muted sectionIntro">Connect your Home Assistant instance to control synced entities.</p>
         <div className="row">
           <input
@@ -459,11 +488,14 @@ export function App(): JSX.Element {
           />
           <input
             placeholder="Long-lived access token"
+            type="password"
+            autoComplete="new-password"
             value={haToken}
             onChange={(e) => setHaToken(e.target.value)}
           />
         </div>
         <p className="muted">Status: {haReady ? "Ready to test and control devices." : "Enter URL and token, then Save."}</p>
+        <p className="muted">If Save succeeds, you can leave token blank on future edits unless you want to replace it.</p>
         <div className="row">
           <button
             disabled={isSavingHa}
@@ -490,7 +522,11 @@ export function App(): JSX.Element {
             onClick={async () => {
               try {
                 setError("");
-                setStatus((await window.assistantApi.testHomeAssistant()) ? "Home Assistant connected." : "Home Assistant test failed.");
+                setStatus(
+                  (await window.assistantApi.testHomeAssistant())
+                    ? "Home Assistant connected."
+                    : "Home Assistant test failed. Confirm URL, token, and API access."
+                );
               } catch (err) {
                 setError(getErrorMessage(err));
               }
@@ -542,7 +578,11 @@ export function App(): JSX.Element {
 
       <div className="grid">
         <section className="panel">
-          <h2>Automation Rules</h2>
+          <div className="titleRow">
+            <h2>Automation Rules</h2>
+            <span className="pill graphitePill">Automate</span>
+          </div>
+          <p className="muted sectionIntro">Set a daily time to create a reminder or toggle a Home Assistant device.</p>
           <RuleForm
             devices={devices}
             onDone={refreshAll}
@@ -558,7 +598,10 @@ export function App(): JSX.Element {
         </section>
 
         <section className="panel">
-          <h2>Automation Logs</h2>
+          <div className="titleRow">
+            <h2>Automation Logs</h2>
+            <span className="pill graphitePill">History</span>
+          </div>
           <ul className="list">
             {isRefreshing ? <li className="muted">Loading logs...</li> : logs.length ? logs.map((l) => (
               <li key={l.id}>
@@ -581,7 +624,7 @@ function parseReminderCommand(raw: string): { text: string; dueAt: string } {
   const body = raw.replace(/^remind\s+/i, "").trim();
   const match = body.match(/^(.*)\s+in\s+(\d+)\s*([mh])$/i);
   if (!match) {
-    throw new Error("Use reminder command like: remind call mom in 15m");
+    throw new Error("Use: remind <text> in <number><m|h>. Example: remind call mom in 15m");
   }
   const text = match[1].trim();
   const amount = Number(match[2]);
@@ -652,16 +695,17 @@ function RuleForm({
   const [actionType, setActionType] = useState<"localReminder" | "haToggle">("localReminder");
   const [text, setText] = useState("Check your agenda");
   const [entityId, setEntityId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   return (
     <div className="row">
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Rule name" />
       <input type="time" value={at} onChange={(e) => setAt(e.target.value)} />
       <select value={actionType} onChange={(e) => setActionType(e.target.value as "localReminder" | "haToggle")}>
-        <option value="localReminder">localReminder</option>
-        <option value="haToggle">haToggle</option>
+        <option value="localReminder">Create reminder</option>
+        <option value="haToggle">Toggle device</option>
       </select>
       {actionType === "localReminder" ? (
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Reminder text" />
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Reminder text to create" />
       ) : (
         <select value={entityId} onChange={(e) => setEntityId(e.target.value)}>
           <option value="">Select device</option>
@@ -669,24 +713,34 @@ function RuleForm({
         </select>
       )}
       <button
+        disabled={isSubmitting}
         onClick={async () => {
           try {
+            setIsSubmitting(true);
             if (!name.trim()) throw new Error("Rule name is required.");
+            if (!at) throw new Error("Choose a time for this rule.");
+            if (actionType === "localReminder" && !text.trim()) throw new Error("Reminder text is required for reminder actions.");
             if (actionType === "haToggle" && !entityId) throw new Error("Select a device for haToggle actions.");
             await window.assistantApi.createRule({
-              name,
+              name: name.trim(),
               triggerConfig: { at },
               actionType,
-              actionConfig: actionType === "localReminder" ? { text } : { entityId },
+              actionConfig: actionType === "localReminder" ? { text: text.trim() } : { entityId },
               enabled: true
             });
+            setName("Morning check");
+            setAt("08:00");
+            setText("Check your agenda");
+            setEntityId("");
             await onDone();
           } catch (err) {
             onError(getErrorMessage(err));
+          } finally {
+            setIsSubmitting(false);
           }
         }}
       >
-        Add Rule
+        {isSubmitting ? "Adding..." : "Add Rule"}
       </button>
     </div>
   );
@@ -721,24 +775,38 @@ function QuickNoteForm({ onDone, onError }: { onDone: () => Promise<void>; onErr
 function ReminderForm({ onDone, onError }: { onDone: () => Promise<void>; onError: (message: string) => void }): JSX.Element {
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
+  const [isSubmitting, setIsSubmitting] = useState(false);
   return (
     <div className="row">
       <input placeholder="Reminder" value={text} onChange={(e) => setText(e.target.value)} />
-      <input type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+      <input
+        type="datetime-local"
+        value={dueAt}
+        min={toLocalDateTimeInputValue(new Date())}
+        onChange={(e) => setDueAt(e.target.value)}
+      />
       <button
+        disabled={isSubmitting}
         onClick={async () => {
           try {
+            setIsSubmitting(true);
             if (!text.trim()) throw new Error("Reminder text is required.");
             const parsedDueAt = parseLocalDateTimeInput(dueAt);
+            if (new Date(parsedDueAt).getTime() <= Date.now()) {
+              throw new Error("Reminder time must be in the future.");
+            }
             await window.assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
             setText("");
+            setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
             await onDone();
           } catch (err) {
             onError(getErrorMessage(err));
+          } finally {
+            setIsSubmitting(false);
           }
         }}
       >
-        Schedule
+        {isSubmitting ? "Scheduling..." : "Schedule"}
       </button>
     </div>
   );
