@@ -2,11 +2,12 @@
   "name": "personal-assistant",
   "version": "0.1.0",
   "description": "Windows tray personal assistant MVP",
-  "main": "dist/main/main.js",
+  "main": "dist/main/main/main.js",
   "author": "toadjo",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 && electron .\"",
+    "postinstall": "electron-builder install-app-deps",
+    "dev": "concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 file:dist/main/main/main.js file:dist/main/main/preload.js && electron .\"",
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
@@ -37,13 +38,17 @@
   "build": {
     "appId": "com.toadjo.personalassistant",
     "productName": "PersonalAssistant",
+    "directories": {
+      "output": "release"
+    },
     "files": [
       "dist/**/*",
       "node_modules/**/*",
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "signAndEditExecutable": false
     }
   }
 }

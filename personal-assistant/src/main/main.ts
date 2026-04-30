@@ -3,13 +3,14 @@ import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } from "electron";
 import { getDb } from "./db";
 import { createNote, listNotes } from "./services/notes";
 import { completeReminder, createReminder, listReminders, startReminderScheduler } from "./services/reminders";
-import { configureHomeAssistant, refreshEntities, testConnection, toggleEntity } from "./services/homeAssistant";
+import { configureHomeAssistant, getHomeAssistantConfig, refreshEntities, testConnection, toggleEntity } from "./services/homeAssistant";
 import { createTimeRule, listRules, runAutomationCycle } from "./services/automation";
 
 let win: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let reminderTimer: NodeJS.Timeout | null = null;
 let automationTimer: NodeJS.Timeout | null = null;
+let isQuitting = false;
 
 function createWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -22,17 +23,20 @@ function createWindow(): BrowserWindow {
     }
   });
 
-  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://127.0.0.1:5173";
-  if (!app.isPackaged) window.loadURL(devUrl);
-  else window.loadFile(path.join(__dirname, "../renderer/index.html"));
+  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+  if (!app.isPackaged) {
+    window.loadURL(devUrl);
+  } else {
+    window.loadFile(path.join(app.getAppPath(), "dist", "renderer", "index.html"));
+  }
 
   return window;
 }
 
 function createTray(window: BrowserWindow): void {
-  tray = new Tray(nativeImage.createEmpty());
+  tray = new Tray(createTrayIcon());
   const menu = Menu.buildFromTemplate([
-    { label: "Open Assistant", click: () => window.show() },
+    { label: "Open Assistant", click: () => showMainWindow(window) },
     { type: "separator" },
     {
       label: "Quick Note",
@@ -41,11 +45,14 @@ function createTray(window: BrowserWindow): void {
         window.webContents.send("command", "new note");
       }
     },
-    { label: "Quit", click: () => app.quit() }
+    { label: "Quit", click: () => {
+      isQuitting = true;
+      app.quit();
+    } }
   ]);
   tray.setContextMenu(menu);
   tray.setToolTip("Personal Assistant");
-  tray.on("click", () => window.isVisible() ? window.hide() : window.show());
+  tray.on("click", () => window.isVisible() ? window.hide() : showMainWindow(window));
 }
 
 function registerIpc(): void {
@@ -56,6 +63,7 @@ function registerIpc(): void {
   ipcMain.handle("reminders:complete", (_, id) => completeReminder(id));
 
   ipcMain.handle("ha:configure", (_, payload) => configureHomeAssistant(payload.url, payload.token));
+  ipcMain.handle("ha:getConfig", () => getHomeAssistantConfig());
   ipcMain.handle("ha:test", () => testConnection());
   ipcMain.handle("ha:refresh", () => refreshEntities());
   ipcMain.handle("ha:toggle", (_, entityId) => toggleEntity(entityId));
@@ -73,6 +81,13 @@ app.whenReady().then(() => {
   getDb();
   registerIpc();
   win = createWindow();
+  win.on("close", (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      win?.hide();
+    }
+  });
+  showMainWindow(win);
   createTray(win);
   reminderTimer = startReminderScheduler(win);
   automationTimer = setInterval(() => {
@@ -81,6 +96,28 @@ app.whenReady().then(() => {
 });
 
 app.on("before-quit", () => {
+  isQuitting = true;
   if (reminderTimer) clearInterval(reminderTimer);
   if (automationTimer) clearInterval(automationTimer);
 });
+
+app.on("activate", () => {
+  if (!win) return;
+  showMainWindow(win);
+});
+
+function showMainWindow(window: BrowserWindow): void {
+  if (!window.isVisible()) window.show();
+  if (window.isMinimized()) window.restore();
+  window.focus();
+}
+
+function createTrayIcon() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <rect x="1" y="1" width="14" height="14" rx="4" fill="#1d4ed8"/>
+      <path d="M4 8h8M8 4v8" stroke="#dbeafe" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  `.trim();
+  return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
+}

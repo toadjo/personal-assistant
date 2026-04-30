@@ -14,6 +14,12 @@ export async function configureHomeAssistant(url: string, token: string): Promis
     .run(HA_BASE_URL_KEY, baseUrl, new Date().toISOString());
 }
 
+export async function getHomeAssistantConfig(): Promise<{ url: string; hasToken: boolean }> {
+  const url = getConfiguredBaseUrl();
+  const token = await getHaToken();
+  return { url, hasToken: Boolean(token) };
+}
+
 async function authedFetch(path: string, init?: RequestInit): Promise<Response> {
   const token = await getHaToken();
   const url = getConfiguredBaseUrl();

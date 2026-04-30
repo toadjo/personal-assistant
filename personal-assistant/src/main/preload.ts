@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
     ipcRenderer.invoke("reminders:create", payload),
   completeReminder: (id: string) => ipcRenderer.invoke("reminders:complete", id),
   configureHomeAssistant: (payload: { url: string; token: string }) => ipcRenderer.invoke("ha:configure", payload),
+  getHomeAssistantConfig: () => ipcRenderer.invoke("ha:getConfig"),
   testHomeAssistant: () => ipcRenderer.invoke("ha:test"),
   refreshHomeAssistantEntities: () => ipcRenderer.invoke("ha:refresh"),
   listDevices: () => ipcRenderer.invoke("ha:listDevices"),
@@ -25,5 +26,9 @@ contextBridge.exposeInMainWorld("assistantApi", {
   onRemindersUpdated: (cb: () => void) => {
     ipcRenderer.on("reminders:updated", cb);
     return () => ipcRenderer.removeListener("reminders:updated", cb);
+  },
+  onCommand: (cb: (_: unknown, command: string) => void) => {
+    ipcRenderer.on("command", cb);
+    return () => ipcRenderer.removeListener("command", cb);
   }
 });

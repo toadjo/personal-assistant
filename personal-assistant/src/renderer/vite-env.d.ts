@@ -11,6 +11,7 @@ declare global {
       createReminder: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) => Promise<Reminder>;
       completeReminder: (id: string) => Promise<void>;
       configureHomeAssistant: (payload: { url: string; token: string }) => Promise<void>;
+      getHomeAssistantConfig: () => Promise<{ url: string; hasToken: boolean }>;
       testHomeAssistant: () => Promise<boolean>;
       refreshHomeAssistantEntities: () => Promise<void>;
       listDevices: () => Promise<Array<{ entityId: string; friendlyName: string; state: string }>>;
@@ -25,6 +26,7 @@ declare global {
         enabled: boolean;
       }) => Promise<void>;
       onRemindersUpdated: (cb: () => void) => () => void;
+      onCommand: (cb: (_: unknown, command: string) => void) => () => void;
     };
   }
 }
