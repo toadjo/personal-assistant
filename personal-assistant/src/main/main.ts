@@ -1,5 +1,6 @@
 import path from "node:path";
 import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } from "electron";
+import { z } from "zod";
 import { getDb } from "./db";
 import { createNote, deleteNote, listNotes } from "./services/notes";
 import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, startReminderScheduler } from "./services/reminders";
@@ -11,6 +12,50 @@ let tray: Tray | null = null;
 let reminderTimer: NodeJS.Timeout | null = null;
 let automationTimer: NodeJS.Timeout | null = null;
 let isQuitting = false;
+
+const noteCreateSchema = z.object({
+  title: z.string().trim().min(1).max(160),
+  content: z.string().max(10_000),
+  tags: z.array(z.string().trim().min(1).max(40)).max(25),
+  pinned: z.boolean()
+});
+
+const reminderCreateSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+  dueAt: z.string().datetime({ offset: true }),
+  recurrence: z.enum(["none", "daily"])
+});
+
+const haConfigSchema = z.object({
+  url: z.string().trim().url().max(2_048),
+  token: z.string().trim().max(4_096)
+});
+
+const ruleCreateSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  triggerConfig: z.object({ at: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid HH:MM time") }),
+  actionType: z.enum(["localReminder", "haToggle"]),
+  actionConfig: z.object({
+    text: z.string().trim().min(1).max(500).optional(),
+    entityId: z.string().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id").optional()
+  }).refine((value) => Object.keys(value).length > 0, "Rule action config is required"),
+  enabled: z.boolean()
+}).superRefine((value, ctx) => {
+  if (value.actionType === "localReminder" && !value.actionConfig.text) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Reminder text is required for localReminder actions",
+      path: ["actionConfig", "text"]
+    });
+  }
+  if (value.actionType === "haToggle" && !value.actionConfig.entityId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Entity ID is required for haToggle actions",
+      path: ["actionConfig", "entityId"]
+    });
+  }
+});
 
 function createWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -56,20 +101,25 @@ function createTray(window: BrowserWindow): void {
 }
 
 function registerIpc(): void {
-  ipcMain.handle("notes:list", (_, query) => listNotes(query));
-  ipcMain.handle("notes:create", (_, payload) => createNote(payload));
-  ipcMain.handle("notes:delete", (_, id) => deleteNote(id));
+  ipcMain.handle("notes:list", (_, query) => listNotes(z.string().optional().parse(query)));
+  ipcMain.handle("notes:create", (_, payload) => createNote(noteCreateSchema.parse(payload)));
+  ipcMain.handle("notes:delete", (_, id) => deleteNote(z.string().uuid().parse(id)));
   ipcMain.handle("reminders:list", () => listReminders());
-  ipcMain.handle("reminders:create", (_, payload) => createReminder(payload));
-  ipcMain.handle("reminders:complete", (_, id) => completeReminder(id));
-  ipcMain.handle("reminders:delete", (_, id) => deleteReminder(id));
-  ipcMain.handle("reminders:snooze", (_, id, minutes) => snoozeReminder(id, minutes));
+  ipcMain.handle("reminders:create", (_, payload) => createReminder(reminderCreateSchema.parse(payload)));
+  ipcMain.handle("reminders:complete", (_, id) => completeReminder(z.string().uuid().parse(id)));
+  ipcMain.handle("reminders:delete", (_, id) => deleteReminder(z.string().uuid().parse(id)));
+  ipcMain.handle("reminders:snooze", (_, id, minutes) => snoozeReminder(z.string().uuid().parse(id), z.number().int().positive().parse(minutes)));
 
-  ipcMain.handle("ha:configure", (_, payload) => configureHomeAssistant(payload.url, payload.token));
+  ipcMain.handle("ha:configure", (_, payload) => {
+    const parsed = haConfigSchema.parse(payload);
+    return configureHomeAssistant(parsed.url, parsed.token);
+  });
   ipcMain.handle("ha:getConfig", () => getHomeAssistantConfig());
   ipcMain.handle("ha:test", () => testConnection());
   ipcMain.handle("ha:refresh", () => refreshEntities());
-  ipcMain.handle("ha:toggle", (_, entityId) => toggleEntity(entityId));
+  ipcMain.handle("ha:toggle", (_, entityId) =>
+    toggleEntity(z.string().trim().regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id").parse(entityId))
+  );
   ipcMain.handle("ha:listDevices", () =>
     getDb().prepare("SELECT * FROM devices_cache ORDER BY friendlyName ASC").all()
   );
@@ -77,7 +127,7 @@ function registerIpc(): void {
     getDb().prepare("SELECT * FROM execution_logs ORDER BY startedAt DESC LIMIT 100").all()
   );
   ipcMain.handle("automation:rules:list", () => listRules());
-  ipcMain.handle("automation:rules:create", (_, payload) => createTimeRule(payload));
+  ipcMain.handle("automation:rules:create", (_, payload) => createTimeRule(ruleCreateSchema.parse(payload)));
 }
 
 app.whenReady().then(() => {

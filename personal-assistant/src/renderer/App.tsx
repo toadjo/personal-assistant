@@ -30,21 +30,34 @@ export function App(): JSX.Element {
     return saved === "dark" || saved === "light" ? saved : "light";
   });
   const commandInputRef = useRef<HTMLInputElement | null>(null);
+  const latestRefreshRef = useRef(0);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(() => !window.localStorage.getItem("assistant-onboarded"));
 
   async function refreshAll(): Promise<void> {
+    const refreshId = Date.now();
+    latestRefreshRef.current = refreshId;
     try {
       setError("");
       setIsRefreshing(true);
-      setNotes(await window.assistantApi.listNotes(query));
-      setReminders(await window.assistantApi.listReminders());
-      setDevices(await window.assistantApi.listDevices());
-      setLogs(await window.assistantApi.listExecutionLogs());
-      setRules(await window.assistantApi.listRules());
+      const [nextNotes, nextReminders, nextDevices, nextLogs, nextRules] = await Promise.all([
+        window.assistantApi.listNotes(query),
+        window.assistantApi.listReminders(),
+        window.assistantApi.listDevices(),
+        window.assistantApi.listExecutionLogs(),
+        window.assistantApi.listRules()
+      ]);
+      if (latestRefreshRef.current !== refreshId) return;
+      setNotes(nextNotes);
+      setReminders(nextReminders);
+      setDevices(nextDevices);
+      setLogs(nextLogs);
+      setRules(nextRules);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
-      setIsRefreshing(false);
+      if (latestRefreshRef.current === refreshId) {
+        setIsRefreshing(false);
+      }
     }
   }
 
@@ -109,6 +122,7 @@ export function App(): JSX.Element {
   const overdueReminders = pendingReminders.filter((r) => new Date(r.dueAt).getTime() < Date.now());
   const visibleReminders = reminders.filter((r) => reminderFilter === "all" || r.status === reminderFilter);
   const haReady = Boolean(haUrl.trim() && (hasHaToken || haToken.trim()));
+  const canSaveHaConfig = Boolean(haUrl.trim() && (hasHaToken || haToken.trim()));
   const remindersByDate = useMemo(() => {
     const byDate = new Map<string, Reminder[]>();
     for (const reminder of reminders) {
@@ -135,7 +149,7 @@ export function App(): JSX.Element {
 
   async function runCommandInternal(rawInput: string): Promise<void> {
     const raw = rawInput.trim();
-    if (!raw) return;
+    if (!raw || isRunningCommand) return;
     try {
       setError("");
       setIsRunningCommand(true);
@@ -147,10 +161,20 @@ export function App(): JSX.Element {
       } else if (lower === "list reminders") {
         setReminderFilter("pending");
         setStatus("Showing pending reminders.");
+      } else if (lower === "show all reminders") {
+        setReminderFilter("all");
+        setStatus("Showing all reminders.");
+      } else if (lower === "show overdue") {
+        setReminderFilter("pending");
+        setStatus("Showing pending reminders. Overdue items are marked.");
       } else if (lower.startsWith("search ")) {
         const term = normalized.slice(7).trim();
+        if (!term) throw new Error("Write a search term after 'search'.");
         setQuery(term);
         setStatus(`Searching notes for "${term}".`);
+      } else if (lower === "clear search") {
+        setQuery("");
+        setStatus("Cleared note search.");
       } else if (lower.startsWith("new note ") || lower.startsWith("note ")) {
         const text = normalized.replace(/^new note\s+/i, "").replace(/^note\s+/i, "").trim();
         if (!text) throw new Error("Write note text after 'new note'.");
@@ -166,13 +190,26 @@ export function App(): JSX.Element {
         throw new Error("Use a reminder command like: remind call mom in 15m");
       } else if (lower.startsWith("toggle ")) {
         if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
-        const target = raw.slice(7).trim().toLowerCase();
+        const target = normalized.slice(7).trim().toLowerCase();
         const device = devices.find((d) =>
           d.friendlyName.toLowerCase().includes(target) || d.entityId.toLowerCase().includes(target)
         );
-        if (!device) throw new Error(`No device matches "${target}".`);
+        if (!device) {
+          const suggestions = devices
+            .slice(0, 3)
+            .map((d) => d.friendlyName)
+            .join(", ");
+          throw new Error(
+            suggestions
+              ? `No device matches "${target}". Try: ${suggestions}.`
+              : "No synced devices available. Refresh entities first."
+          );
+        }
         await window.assistantApi.toggleDevice(device.entityId);
         setStatus(`Toggled ${device.friendlyName}.`);
+      } else if (lower === "refresh" || lower === "sync now") {
+        await refreshAll();
+        setStatus("Assistant data refreshed.");
       } else if (lower === "refresh devices") {
         if (!haReady) throw new Error("Home Assistant is not configured yet. Add URL and token in Home Assistant section.");
         await window.assistantApi.refreshHomeAssistantEntities();
@@ -199,6 +236,8 @@ export function App(): JSX.Element {
           <p className="subtitle">Windows tray companion for notes, reminders, and Home Assistant automations.</p>
         </div>
         <div className="heroStats">
+          <span className="stat statPrimary">Pending reminders: {pendingReminders.length}</span>
+          <span className="stat">Overdue: {overdueReminders.length}</span>
           <button
             className="themeToggle"
             onClick={() => setTheme((prev) => (prev === "light" ? "dark" : "light"))}
@@ -207,8 +246,6 @@ export function App(): JSX.Element {
             {theme === "light" ? "Dark theme" : "Light theme"}
           </button>
           <span className="stat">Notes: {notes.length}</span>
-          <span className="stat">Pending reminders: {pendingReminders.length}</span>
-          <span className="stat">Overdue: {overdueReminders.length}</span>
           <span className="stat">Devices: {devices.length}</span>
           <span className="stat">HA: {haReady ? "Ready" : "Setup needed"}</span>
         </div>
@@ -250,7 +287,8 @@ export function App(): JSX.Element {
             <span className="pill graphitePill">Assistant-first</span>
           </div>
         </div>
-        <p className="muted sectionIntro">Run one assistant action at a time in plain English.</p>
+        <p className="assistantLead">Run one clear action at a time in plain English.</p>
+        <p className="muted sectionIntro">Type a command, review suggestions, then press Enter to execute.</p>
         <div className="assistantContextRow">
           <span className="contextChip">Note search: {query || "none"}</span>
           <span className="contextChip">Reminder filter: {reminderFilter}</span>
@@ -262,9 +300,10 @@ export function App(): JSX.Element {
             className="fullWidth"
             placeholder="Type a command and press Enter..."
             value={commandInput}
+            aria-label="Assistant command input"
             onChange={(e) => setCommandInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") void runCommandInternal(commandInput);
+              if (e.key === "Enter" && !isRunningCommand) void runCommandInternal(commandInput);
             }}
           />
           <button className="commandAction" onClick={() => void runCommandInternal(commandInput)} disabled={isRunningCommand}>
@@ -281,14 +320,43 @@ export function App(): JSX.Element {
           <button className="ghostButton" onClick={() => setCommandInput("remind  in 15m")}>+ Reminder command</button>
           <button className="ghostButton" onClick={() => setCommandInput("toggle ")}>+ Device command</button>
         </div>
-        <p className="muted">Examples: <code>new note buy coffee</code>, <code>remind stand up in 10m</code>, <code>toggle bedroom</code>.</p>
+        <p className="muted">
+          Examples: <code>new note buy coffee</code>, <code>remind stand up in 10m</code>, <code>remind send report at 16:30</code>, <code>toggle bedroom</code>.
+        </p>
         <div className="row commandHintsRow">
           <button className="ghostButton" onClick={() => runPresetCommand("help")}>Show commands</button>
           <button className="ghostButton" onClick={() => runPresetCommand("list reminders")}>Show pending reminders</button>
           <button className="ghostButton" onClick={() => setQuery("")}>Clear note search</button>
         </div>
-        <p className="muted">Tip: type one action at a time in plain English and press Enter.</p>
-        <p className="muted">Tip: use <code>list reminders</code> after adding reminders to quickly review pending items.</p>
+        <p className="muted assistantTip">Tip: use <code>list reminders</code> after creating reminders to immediately focus on pending items.</p>
+      </section>
+
+      <section className="panel">
+        <div className="titleRow">
+          <h2>Action Center</h2>
+          <span className="pill graphitePill">Next best actions</span>
+        </div>
+        <p className="muted sectionIntro">Resolve blockers quickly with guided actions based on current assistant state.</p>
+        <div className="assistantShortcutRow">
+          {!haReady ? (
+            <button className="ghostButton" onClick={() => setStatus("Add Home Assistant URL + token, then click Save and Refresh Entities.")}>
+              Complete Home Assistant setup
+            </button>
+          ) : null}
+          {overdueReminders.length ? (
+            <button className="ghostButton" onClick={() => setReminderFilter("pending")}>
+              Review overdue reminders ({overdueReminders.length})
+            </button>
+          ) : null}
+          {!notes.length ? (
+            <button className="ghostButton" onClick={() => runPresetCommand("new note plan tomorrow priorities")}>
+              Create your first note
+            </button>
+          ) : null}
+          <button className="ghostButton" onClick={() => void refreshAll()} disabled={isRefreshing}>
+            {isRefreshing ? "Refreshing..." : "Refresh assistant data"}
+          </button>
+        </div>
       </section>
 
       <div className="grid">
@@ -496,9 +564,10 @@ export function App(): JSX.Element {
         </div>
         <p className="muted">Status: {haReady ? "Ready to test and control devices." : "Enter URL and token, then Save."}</p>
         <p className="muted">If Save succeeds, you can leave token blank on future edits unless you want to replace it.</p>
+        {!canSaveHaConfig ? <p className="muted">Save is enabled after you enter a URL and token.</p> : null}
         <div className="row">
           <button
-            disabled={isSavingHa}
+            disabled={isSavingHa || !canSaveHaConfig}
             onClick={async () => {
               try {
                 setError("");
@@ -623,16 +692,51 @@ function getErrorMessage(err: unknown): string {
 function parseReminderCommand(raw: string): { text: string; dueAt: string } {
   const body = raw.replace(/^remind\s+/i, "").trim();
   const match = body.match(/^(.*)\s+in\s+(\d+)\s*([mh])$/i);
-  if (!match) {
-    throw new Error("Use: remind <text> in <number><m|h>. Example: remind call mom in 15m");
+  if (match) {
+    const text = match[1].trim();
+    const amount = Number(match[2]);
+    const unit = match[3].toLowerCase();
+    const minutes = unit === "h" ? amount * 60 : amount;
+    if (!text) throw new Error("Reminder text is required.");
+    if (!Number.isFinite(minutes) || minutes <= 0) throw new Error("Reminder time must be positive.");
+    return { text, dueAt: new Date(Date.now() + minutes * 60_000).toISOString() };
   }
-  const text = match[1].trim();
-  const amount = Number(match[2]);
-  const unit = match[3].toLowerCase();
-  const minutes = unit === "h" ? amount * 60 : amount;
-  if (!text) throw new Error("Reminder text is required.");
-  if (!Number.isFinite(minutes) || minutes <= 0) throw new Error("Reminder time must be positive.");
-  return { text, dueAt: new Date(Date.now() + minutes * 60_000).toISOString() };
+
+  const atMatch = body.match(/^(.*)\s+at\s+(\d{1,2}):(\d{2})$/i);
+  if (atMatch) {
+    const text = atMatch[1].trim();
+    const hours = Number(atMatch[2]);
+    const minutes = Number(atMatch[3]);
+    if (!text) throw new Error("Reminder text is required.");
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      throw new Error("Use a valid time in 24h format, for example: remind send report at 16:30");
+    }
+    const due = new Date();
+    due.setHours(hours, minutes, 0, 0);
+    if (due.getTime() <= Date.now()) {
+      due.setDate(due.getDate() + 1);
+    }
+    return { text, dueAt: due.toISOString() };
+  }
+
+  const tomorrowMatch = body.match(/^(.*)\s+tomorrow\s+at\s+(\d{1,2}):(\d{2})$/i);
+  if (tomorrowMatch) {
+    const text = tomorrowMatch[1].trim();
+    const hours = Number(tomorrowMatch[2]);
+    const minutes = Number(tomorrowMatch[3]);
+    if (!text) throw new Error("Reminder text is required.");
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      throw new Error("Use a valid time in 24h format, for example: remind check backup tomorrow at 09:00");
+    }
+    const due = new Date();
+    due.setDate(due.getDate() + 1);
+    due.setHours(hours, minutes, 0, 0);
+    return { text, dueAt: due.toISOString() };
+  }
+
+  throw new Error(
+    "Use: remind <text> in <number><m|h>, remind <text> at HH:MM, or remind <text> tomorrow at HH:MM."
+  );
 }
 
 function normalizeCommandAlias(input: string): string {
@@ -640,6 +744,7 @@ function normalizeCommandAlias(input: string): string {
   if (lower === "today" || lower === "what's next" || lower === "whats next") {
     return "list reminders";
   }
+  if (lower === "sync") return "refresh";
   return input.trim();
 }
 
@@ -749,13 +854,16 @@ function RuleForm({
 function QuickNoteForm({ onDone, onError }: { onDone: () => Promise<void>; onError: (message: string) => void }): JSX.Element {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   return (
     <div className="row">
       <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <input placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} />
       <button
+        disabled={isSubmitting}
         onClick={async () => {
           try {
+            setIsSubmitting(true);
             if (!title.trim() && !content.trim()) throw new Error("Write a title or content before adding a note.");
             await window.assistantApi.createNote({ title: title.trim() || "Untitled", content: content.trim(), tags: [], pinned: false });
             setTitle("");
@@ -763,10 +871,12 @@ function QuickNoteForm({ onDone, onError }: { onDone: () => Promise<void>; onErr
             await onDone();
           } catch (err) {
             onError(getErrorMessage(err));
+          } finally {
+            setIsSubmitting(false);
           }
         }}
       >
-        Add
+        {isSubmitting ? "Adding..." : "Add"}
       </button>
     </div>
   );

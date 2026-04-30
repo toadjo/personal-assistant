@@ -48,7 +48,10 @@ async function authedFetch(path: string, init?: RequestInit): Promise<Response> 
 
 export async function testConnection(): Promise<boolean> {
   const res = await authedFetch("/api/");
-  return res.ok;
+  if (!res.ok) {
+    throw new Error(`Home Assistant connection failed (${res.status} ${res.statusText || "unknown"}). Check URL/token.`);
+  }
+  return true;
 }
 
 export async function refreshEntities(): Promise<void> {
@@ -56,7 +59,11 @@ export async function refreshEntities(): Promise<void> {
   if (!res.ok) {
     throw new Error(`Home Assistant sync failed (${res.status} ${res.statusText || "unknown"}). Check URL/token permissions.`);
   }
-  const entities = (await res.json()) as Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>;
+  const body = await res.json();
+  if (!Array.isArray(body)) {
+    throw new Error("Home Assistant sync failed: unexpected response payload.");
+  }
+  const entities = body as Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>;
   const db = getDb();
   const upsert = db.prepare(
     "INSERT INTO devices_cache (id, entityId, friendlyName, domain, state, attributes, lastSeenAt) VALUES (@id,@entityId,@friendlyName,@domain,@state,@attributes,@lastSeenAt) ON CONFLICT(entityId) DO UPDATE SET friendlyName=excluded.friendlyName, domain=excluded.domain, state=excluded.state, attributes=excluded.attributes, lastSeenAt=excluded.lastSeenAt"
@@ -81,16 +88,17 @@ export async function refreshEntities(): Promise<void> {
 }
 
 export async function toggleEntity(entityId: string): Promise<void> {
-  if (!entityId.includes(".")) {
+  const normalizedEntityId = entityId.trim().toLowerCase();
+  if (!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(normalizedEntityId)) {
     throw new Error("Invalid Home Assistant entity ID.");
   }
-  const domain = entityId.split(".")[0];
+  const domain = normalizedEntityId.split(".")[0];
   if (!["switch", "light"].includes(domain)) {
     throw new Error(`Unsupported device domain "${domain}" for toggle.`);
   }
   const res = await authedFetch(`/api/services/${domain}/toggle`, {
     method: "POST",
-    body: JSON.stringify({ entity_id: entityId })
+    body: JSON.stringify({ entity_id: normalizedEntityId })
   });
   if (!res.ok) {
     throw new Error(`Device toggle failed (${res.status} ${res.statusText || "unknown"}). Verify entity availability and token scope.`);

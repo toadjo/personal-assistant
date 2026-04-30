@@ -40,7 +40,8 @@ export function snoozeReminder(id: string, minutes: number): void {
   }
   const baseTime = new Date(reminder.dueAt).getTime();
   const now = Date.now();
-  const nextDueAt = new Date(Math.max(baseTime, now) + minutes * 60_000).toISOString();
+  const safeBaseTime = Number.isFinite(baseTime) ? baseTime : now;
+  const nextDueAt = new Date(Math.max(safeBaseTime, now) + minutes * 60_000).toISOString();
   getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id, dueAt: nextDueAt });
 }
 
@@ -51,13 +52,19 @@ export function startReminderScheduler(mainWindow: BrowserWindow): NodeJS.Timeou
       .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC")
       .all({ now }) as Reminder[];
     for (const item of due) {
-      new Notification({ title: "Reminder", body: item.text }).show();
-      if (item.recurrence === "daily") {
-        const next = new Date(item.dueAt);
-        next.setDate(next.getDate() + 1);
-        getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id: item.id, dueAt: next.toISOString() });
-      } else {
-        completeReminder(item.id);
+      try {
+        new Notification({ title: "Reminder", body: item.text }).show();
+        if (item.recurrence === "daily") {
+          const sourceDue = new Date(item.dueAt);
+          const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
+          next.setDate(next.getDate() + 1);
+          getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id: item.id, dueAt: next.toISOString() });
+        } else {
+          completeReminder(item.id);
+        }
+      } catch (error) {
+        // Keep scheduler alive even if notifications are unavailable on this host.
+        console.error("Reminder scheduler failed for item", item.id, error);
       }
     }
     if (!mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {

@@ -1,10 +1,10 @@
 :root {
-  --bg: radial-gradient(circle at top, #f7f9fc 0%, #f1f4f9 48%, #eceff5 100%);
+  --bg: radial-gradient(circle at top, #f8fafd 0%, #f2f5fa 48%, #eceff5 100%);
   --text: #1e293b;
   --title: #0f172a;
   --subtitle: #5f6f86;
-  --panel-bg: rgba(255, 255, 255, 0.76);
-  --panel-border: rgba(198, 210, 228, 0.78);
+  --panel-bg: rgba(255, 255, 255, 0.8);
+  --panel-border: rgba(198, 210, 228, 0.72);
   --surface-border-strong: #c2d2e8;
   --stat-bg: rgba(255, 255, 255, 0.72);
   --stat-border: #d5e0ef;
@@ -30,12 +30,12 @@
 }
 
 html[data-theme="dark"] {
-  --bg: radial-gradient(circle at top, #2a2d33 0%, #1b1e24 58%, #16181d 100%);
+  --bg: radial-gradient(circle at top, #2f3239 0%, #21242b 58%, #181b21 100%);
   --text: #e7e9ee;
   --title: #f6f7fb;
   --subtitle: #afb4c2;
-  --panel-bg: rgba(30, 33, 40, 0.86);
-  --panel-border: #454b57;
+  --panel-bg: rgba(31, 34, 41, 0.9);
+  --panel-border: #4b5260;
   --surface-border-strong: #5f6775;
   --stat-bg: rgba(42, 46, 56, 0.92);
   --stat-border: #565e6f;
@@ -65,7 +65,7 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--bg);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .container {
@@ -109,7 +109,7 @@ h1 {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .heroStats {
@@ -117,6 +117,7 @@ h1 {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .stat {
@@ -128,6 +129,13 @@ h1 {
   font-size: 13px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+
+.statPrimary {
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--stat-border) 74%);
+  background: color-mix(in srgb, var(--primary-soft) 58%, var(--stat-bg) 42%);
+  color: color-mix(in srgb, var(--title) 74%, var(--primary) 26%);
 }
 
 .themeToggle {
@@ -138,6 +146,7 @@ h1 {
   padding: 7px 11px;
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .assistantMeta {
@@ -161,6 +170,12 @@ h1 {
   background: var(--panel-bg);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(14px);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.panel:hover {
+  border-color: color-mix(in srgb, var(--surface-border-strong) 58%, var(--panel-border) 42%);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
 }
 
 .onboarding p {
@@ -199,6 +214,12 @@ h2 {
 
 .sectionIntro {
   margin: 0 0 12px;
+}
+
+.assistantLead {
+  margin: 0 0 6px;
+  color: var(--title);
+  font-weight: 560;
 }
 
 input, button, select {
@@ -490,6 +511,7 @@ button:disabled {
   font-size: 12px;
   color: var(--muted);
   background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+  white-space: nowrap;
 }
 
 .assistantShortcutRow {
@@ -497,6 +519,10 @@ button:disabled {
   flex-wrap: wrap;
   gap: 8px;
   margin: 4px 0 10px;
+}
+
+.assistantTip {
+  margin-top: 8px;
 }
 
 @media (max-width: 900px) {
