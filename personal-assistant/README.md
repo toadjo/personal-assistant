@@ -11,9 +11,11 @@ Windows-first tray personal assistant MVP built with Electron + React + TypeScri
 
 ### First-time setup
 
+The Git repository root contains the Electron app under a nested `personal-assistant/` directory (historical layout).
+
 ```bash
 git clone https://github.com/toadjo/personal-assistant.git
-cd personal-assistant
+cd personal-assistant/personal-assistant
 npm install
 ```
 
