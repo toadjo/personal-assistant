@@ -23,6 +23,12 @@ Native modules (`better-sqlite3`, `keytar`) are rebuilt in `postinstall` for you
 
 ### Run in development
 
+**Windows (easiest):** from the repository root (the folder that contains this `personal-assistant` directory), double-click **`dev.bat`**. It checks for Node/npm, runs `npm install` on first use if needed, then `npm run dev`.
+
+If you are already inside this app folder (`personal-assistant/personal-assistant` on disk), double-click the **`dev.bat`** next to `package.json` instead.
+
+**Any OS / manual:**
+
 ```bash
 npm run dev
 ```
