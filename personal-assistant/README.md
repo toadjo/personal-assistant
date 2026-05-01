@@ -2,6 +2,69 @@
 
 Windows-first tray personal assistant MVP built with Electron + React + TypeScript.
 
+## Working on the app
+
+### Prerequisites
+
+- **Node.js** 20+ (LTS recommended) and **npm**
+- **Windows** (tray behavior and build targets are Windows-first)
+
+### First-time setup
+
+```bash
+git clone https://github.com/toadjo/personal-assistant.git
+cd personal-assistant
+npm install
+```
+
+Native modules (`better-sqlite3`, `keytar`) are rebuilt in `postinstall` for your platform.
+
+### Run in development
+
+```bash
+npm run dev
+```
+
+This runs the Vite dev server for the React UI, compiles the Electron **main** and **preload** TypeScript in watch mode, and launches Electron when outputs are ready. The window loads `http://localhost:5173` in development; closing the window keeps the app in the system tray.
+
+### Quality checks (run before you push)
+
+```bash
+npm run typecheck
+npm run test
+```
+
+- **typecheck** — `tsc` for the main and renderer TypeScript projects
+- **test** — Vitest unit tests (command parsing, calendar/reminder helpers, IPC-free `executeAssistantCommand` with mocked `window.assistantApi`)
+
+Optional: `npm run test:smoke` validates build artifacts and packaging assumptions (see below).
+
+### Where the code lives
+
+| Area | Path | Purpose |
+| --- | --- | --- |
+| Electron main | `src/main/` | Window, tray, IPC registration, security checks, schedulers. IPC handlers are split under `src/main/ipc/handlers/`. |
+| Preload bridge | `src/main/preload.ts` | Exposes `window.assistantApi` to the renderer (context isolation). |
+| React UI | `src/renderer/` | `App.tsx` / `components/`, `hooks/`, `command/`, `lib/`, styles. |
+| Shared types | `src/shared/types.ts` | Types used by main and renderer. |
+| Unit tests | `src/**/*.test.ts` | Colocated with source; run via `npm run test`. |
+
+**Typical tasks**
+
+- **UI or command behavior** — `src/renderer/` (start with `hooks/useAssistantWorkspace.ts` and `command/executeAssistantCommand.ts`).
+- **New IPC or validation** — extend Zod schemas in `src/main/ipc/schemas.ts`, add handlers in `src/main/ipc/handlers/`, mirror calls in `preload.ts`.
+- **SQLite / domain logic** — `src/main/services/` and `src/main/db.ts`.
+
+### Production-like local build
+
+```bash
+npm run build
+```
+
+Outputs renderer assets to `dist/renderer/` and compiles main/preload to `dist/main/`.
+
+---
+
 ## Features
 
 - System tray app with command launcher hints

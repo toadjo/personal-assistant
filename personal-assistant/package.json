@@ -17,6 +17,8 @@
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
     "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:smoke": "node scripts/smoke-check.mjs"
   },
   "dependencies": {
@@ -38,6 +40,7 @@
     "png-to-ico": "^3.0.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
+    "vitest": "^3.2.4",
     "wait-on": "^8.0.1"
   },
   "build": {

@@ -1,0 +1,2 @@
+export const FEEDBACK_AUTO_CLEAR_MS = 4500;
+export const QUERY_REFRESH_DEBOUNCE_MS = 150;
