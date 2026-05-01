@@ -65,6 +65,8 @@ export function CommandPanel({
           className="fullWidth"
           placeholder="Type a command and press Enter..."
           aria-label="Assistant command input"
+          autoComplete="off"
+          spellCheck={false}
           value={commandInput}
           onChange={(e) => setCommandInput(e.target.value)}
           onKeyDown={(e) => {

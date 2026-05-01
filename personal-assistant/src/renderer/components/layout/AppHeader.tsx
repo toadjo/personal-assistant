@@ -36,7 +36,7 @@ export function AppHeader({
         </button>
         <span className="stat">Notes: {notesCount}</span>
         <span className="stat">Pending reminders: {pendingRemindersCount}</span>
-        <span className="stat">Overdue: {overdueRemindersCount}</span>
+        <span className={overdueRemindersCount > 0 ? "stat statAttention" : "stat"}>Overdue: {overdueRemindersCount}</span>
         <span className="stat">Devices: {devicesCount}</span>
         <span className="stat">HA: {haReady ? "Ready" : "Setup needed"}</span>
       </div>
