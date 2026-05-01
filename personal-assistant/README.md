@@ -53,7 +53,7 @@ Optional: `npm run test:smoke` validates build artifacts and packaging assumptio
 | --- | --- | --- |
 | Electron main | `src/main/` | Window, tray, IPC registration, security checks, schedulers. IPC handlers are split under `src/main/ipc/handlers/`. |
 | Preload bridge | `src/main/preload.ts` | Exposes `window.assistantApi` to the renderer (context isolation). |
-| React UI | `src/renderer/` | `App.tsx` / `components/`, `hooks/`, `command/`, `lib/`, styles. |
+| React UI | `src/renderer/` | `App.tsx` / `components/`, `hooks/`, `command/`, `lib/`, styles. Layout is intentionally minimal—one clear “Ask” line, then tools. |
 | Shared types | `src/shared/types.ts` | Types used by main and renderer. |
 | Unit tests | `src/**/*.test.ts` | Colocated with source; run via `npm run test`. |
 

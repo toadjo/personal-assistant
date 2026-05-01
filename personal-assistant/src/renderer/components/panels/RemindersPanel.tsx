@@ -37,30 +37,29 @@ export function RemindersPanel({
           <option value="done">Done</option>
         </select>
       </div>
-      <p className="muted sectionIntro">Schedule tasks, then track pending and completed items.</p>
       <ReminderForm onDone={onRefresh} onError={onError} />
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading reminders...</li>
+          <li className="muted">Loading…</li>
         ) : visibleReminders.length ? (
           visibleReminders.map((r) => (
             <li key={r.id} className="listRow">
               <span>
-                {r.text} ({r.status}) - {new Date(r.dueAt).toLocaleString()}
+                {r.text} ({r.status}) — {new Date(r.dueAt).toLocaleString()}
                 {r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? <strong className="overdueBadge">Overdue</strong> : null}
               </span>
               {r.status === "pending" ? (
                 <div className="miniActions">
-                  <button className="ghostButton" onClick={() => void onSnooze10(r.id)}>
-                    Snooze 10m
+                  <button type="button" className="ghostButton" onClick={() => void onSnooze10(r.id)}>
+                    +10m
                   </button>
-                  <button className="ghostButton" onClick={() => void onSnooze60(r.id)}>
-                    Snooze 1h
+                  <button type="button" className="ghostButton" onClick={() => void onSnooze60(r.id)}>
+                    +1h
                   </button>
-                  <button className="ghostButton" onClick={() => void onComplete(r.id)}>
-                    Mark done
+                  <button type="button" className="ghostButton" onClick={() => void onComplete(r.id)}>
+                    Done
                   </button>
-                  <button className="dangerButton" onClick={() => void onDelete(r.id)}>
+                  <button type="button" className="dangerButton" onClick={() => void onDelete(r.id)}>
                     Delete
                   </button>
                 </div>
@@ -68,7 +67,7 @@ export function RemindersPanel({
             </li>
           ))
         ) : (
-          <li className="muted">No reminders for this filter.</li>
+          <li className="muted">Nothing for this filter.</li>
         )}
       </ul>
     </section>

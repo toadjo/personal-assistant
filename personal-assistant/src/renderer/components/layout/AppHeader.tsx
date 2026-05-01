@@ -6,7 +6,6 @@ type Props = {
   notesCount: number;
   pendingRemindersCount: number;
   overdueRemindersCount: number;
-  devicesCount: number;
   haReady: boolean;
 };
 
@@ -16,29 +15,28 @@ export function AppHeader({
   notesCount,
   pendingRemindersCount,
   overdueRemindersCount,
-  devicesCount,
   haReady
 }: Props): JSX.Element {
   return (
     <header className="hero">
       <div className="heroLead">
-        <p className="eyebrow">Assistant workspace</p>
+        <p className="eyebrow">Private secretary</p>
         <h1>Personal Assistant</h1>
-        <p className="subtitle">Windows tray companion for notes, reminders, and Home Assistant automations.</p>
+        <p className="subtitle">Notes, reminders, and home—tell me what you need below.</p>
       </div>
       <div className="heroStats">
         <button
           className="themeToggle"
+          type="button"
           onClick={onToggleTheme}
           aria-label="Toggle light and dark theme"
         >
-          {theme === "light" ? "Dark theme" : "Light theme"}
+          {theme === "light" ? "Dark" : "Light"}
         </button>
-        <span className="stat">Notes: {notesCount}</span>
-        <span className="stat">Pending reminders: {pendingRemindersCount}</span>
-        <span className={overdueRemindersCount > 0 ? "stat statAttention" : "stat"}>Overdue: {overdueRemindersCount}</span>
-        <span className="stat">Devices: {devicesCount}</span>
-        <span className="stat">HA: {haReady ? "Ready" : "Setup needed"}</span>
+        <span className="stat">Notes {notesCount}</span>
+        <span className="stat">Pending {pendingRemindersCount}</span>
+        <span className={overdueRemindersCount > 0 ? "stat statAttention" : "stat"}>Overdue {overdueRemindersCount}</span>
+        <span className="stat">HA {haReady ? "on" : "off"}</span>
       </div>
     </header>
   );

@@ -13,7 +13,7 @@ export function CalendarPanel({ calendarCursor, setCalendarCursor, monthCells, t
   return (
     <section className="panel">
       <div className="titleRow">
-        <h2>Calendar</h2>
+        <h2>Month</h2>
         <div className="miniActions">
           <button type="button" className="ghostButton" onClick={() => setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1))}>
             Prev
@@ -27,7 +27,6 @@ export function CalendarPanel({ calendarCursor, setCalendarCursor, monthCells, t
         </div>
       </div>
       <p className="muted">{calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</p>
-      <p className="muted sectionIntro">See upcoming load quickly with day badges and today focus.</p>
       <div className="calendarGrid">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div key={d} className="calendarHeader">
@@ -46,16 +45,16 @@ export function CalendarPanel({ calendarCursor, setCalendarCursor, monthCells, t
           </div>
         ))}
       </div>
-      <h3 className="subheading">Today agenda</h3>
+      <h3 className="subheading">Today</h3>
       <ul className="list">
         {todayAgenda.length ? (
           todayAgenda.map((r) => (
             <li key={r.id}>
-              {new Date(r.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - {r.text}
+              {new Date(r.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} — {r.text}
             </li>
           ))
         ) : (
-          <li className="muted">No pending reminders today.</li>
+          <li className="muted">Nothing today.</li>
         )}
       </ul>
     </section>

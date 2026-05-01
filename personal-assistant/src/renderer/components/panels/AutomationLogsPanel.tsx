@@ -10,21 +10,20 @@ export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element 
   return (
     <section className="panel">
       <div className="titleRow">
-        <h2>Automation Logs</h2>
-        <span className="pill graphitePill">History</span>
+        <h2>Rule runs</h2>
       </div>
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading logs...</li>
+          <li className="muted">Loading…</li>
         ) : logs.length ? (
           logs.map((l) => (
             <li key={l.id}>
-              <strong>{l.status.toUpperCase()}</strong> - {new Date(l.startedAt).toLocaleString()} - {formatRetrySummary(l.attemptCount, l.retryCount)}{" "}
-              {l.error ? `- ${l.error}` : ""}
+              <strong>{l.status.toUpperCase()}</strong> · {new Date(l.startedAt).toLocaleString()} · {formatRetrySummary(l.attemptCount, l.retryCount)}
+              {l.error ? ` — ${l.error}` : ""}
             </li>
           ))
         ) : (
-          <li className="muted">No execution logs yet.</li>
+          <li className="muted">No runs yet.</li>
         )}
       </ul>
     </section>

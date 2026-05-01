@@ -13,21 +13,19 @@ export function NotesPanel({ isRefreshing, notes, onRefresh, onError, onDeleteNo
   return (
     <section className="panel">
       <div className="titleRow">
-        <h2>Quick Note</h2>
-        <span className="pill graphitePill">Capture</span>
+        <h2>Notes</h2>
       </div>
-      <p className="muted sectionIntro">Capture thoughts quickly and keep your recent notes in view.</p>
       <QuickNoteForm onDone={onRefresh} onError={onError} />
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading notes...</li>
+          <li className="muted">Loading…</li>
         ) : notes.length ? (
           notes.map((n) => (
             <li key={n.id} className="listRow">
               <span>
-                {n.title} - {n.content}
+                {n.title} — {n.content}
               </span>
-              <button className="dangerButton" onClick={() => void onDeleteNote(n.id, n.title)}>
+              <button type="button" className="dangerButton" onClick={() => void onDeleteNote(n.id, n.title)}>
                 Delete
               </button>
             </li>

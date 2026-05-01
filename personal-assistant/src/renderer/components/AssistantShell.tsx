@@ -3,7 +3,6 @@ import { AppHeader } from "./layout/AppHeader";
 import { StatusBanner } from "./layout/StatusBanner";
 import { OnboardingPanel } from "./panels/OnboardingPanel";
 import { CommandPanel } from "./panels/CommandPanel";
-import { ProductivitySnapshot } from "./panels/ProductivitySnapshot";
 import { CalendarPanel } from "./panels/CalendarPanel";
 import { NotesPanel } from "./panels/NotesPanel";
 import { RemindersPanel } from "./panels/RemindersPanel";
@@ -16,14 +15,13 @@ export function AssistantShell(): JSX.Element {
   const ws = useAssistantWorkspace();
 
   return (
-    <main className="container">
+    <main className="container secretaryLayout">
       <AppHeader
         theme={ws.theme}
         onToggleTheme={() => ws.setTheme((prev) => (prev === "light" ? "dark" : "light"))}
         notesCount={ws.notes.length}
         pendingRemindersCount={ws.pendingReminders.length}
         overdueRemindersCount={ws.overdueReminders.length}
-        devicesCount={ws.devices.length}
         haReady={ws.haReady}
       />
 
@@ -35,12 +33,12 @@ export function AssistantShell(): JSX.Element {
         commandHistoryLength={ws.commandHistory.length}
         onHideForNow={() => {
           ws.setShowOnboarding(false);
-          ws.setStatus("Onboarding hidden for now.");
+          ws.setStatus("Skipped intro.");
         }}
         onFinishSetup={() => {
           ws.setShowOnboarding(false);
           window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-          ws.setStatus("Onboarding completed.");
+          ws.setStatus("Intro complete.");
         }}
         onRunPreset={ws.runPresetCommand}
       />
@@ -57,29 +55,19 @@ export function AssistantShell(): JSX.Element {
         historyCursor={ws.historyCursor}
         setHistoryCursor={ws.setHistoryCursor}
         isRunningCommand={ws.isRunningCommand}
-        proactiveTip={ws.proactiveTip}
         onRunCommand={ws.runCommandInternal}
-        onFocusCommandInput={ws.focusCommandInput}
         onClearHistory={ws.clearCommandHistory}
         onClearNoteSearch={() => ws.setQuery("")}
         onPreset={ws.runPresetCommand}
       />
 
-      <div className="grid">
-        <ProductivitySnapshot
-          notesCount={ws.notes.length}
-          pendingRemindersCount={ws.pendingReminders.length}
-          todayAgendaCount={ws.todayAgenda.length}
-          recentNotes={ws.recentNotes}
-        />
-        <CalendarPanel
-          calendarCursor={ws.calendarCursor}
-          setCalendarCursor={ws.setCalendarCursor}
-          monthCells={ws.monthCells}
-          todayKey={ws.todayKey}
-          todayAgenda={ws.todayAgenda}
-        />
-      </div>
+      <CalendarPanel
+        calendarCursor={ws.calendarCursor}
+        setCalendarCursor={ws.setCalendarCursor}
+        monthCells={ws.monthCells}
+        todayKey={ws.todayKey}
+        todayAgenda={ws.todayAgenda}
+      />
 
       <div className="grid">
         <NotesPanel
@@ -96,8 +84,8 @@ export function AssistantShell(): JSX.Element {
           visibleReminders={ws.visibleReminders}
           onRefresh={ws.refreshAll}
           onError={ws.reportError}
-          onSnooze10={(id) => void ws.snoozeReminderMinutes(id, 10, "Reminder snoozed by 10 minutes.")}
-          onSnooze60={(id) => void ws.snoozeReminderMinutes(id, 60, "Reminder snoozed by 1 hour.")}
+          onSnooze10={(id) => void ws.snoozeReminderMinutes(id, 10, "Snoozed 10m.")}
+          onSnooze60={(id) => void ws.snoozeReminderMinutes(id, 60, "Snoozed 1h.")}
           onComplete={(id) => void ws.completeReminderById(id)}
           onDelete={(id) => void ws.deleteReminderById(id)}
         />
@@ -109,7 +97,6 @@ export function AssistantShell(): JSX.Element {
         haToken={ws.haToken}
         setHaToken={ws.setHaToken}
         hasHaUrl={ws.hasHaUrl}
-        hasHaToken={ws.hasHaToken}
         haStatusText={ws.haStatusText}
         haReady={ws.haReady}
         canSaveHa={ws.canSaveHa}

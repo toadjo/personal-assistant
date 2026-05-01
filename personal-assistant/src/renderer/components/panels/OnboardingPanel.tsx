@@ -19,42 +19,40 @@ export function OnboardingPanel({
   return (
     <section className="panel onboarding">
       <div className="titleRow">
-        <h2>Quick Start</h2>
+        <h2>First time here</h2>
         <div className="miniActions">
-          <button className="ghostButton" onClick={onHideForNow}>
-            Hide for now
+          <button type="button" className="ghostButton" onClick={onHideForNow}>
+            Skip
           </button>
-          <button className="ghostButton" disabled={!haReady || commandHistoryLength === 0} onClick={onFinishSetup}>
-            Finish setup
+          <button type="button" className="ghostButton" disabled={commandHistoryLength === 0} onClick={onFinishSetup}>
+            Done
           </button>
         </div>
       </div>
       <p className="muted">
-        1) Add your Home Assistant URL + token, then click <strong>Refresh Entities</strong>.
+        Connect Home Assistant below if you use it. The window can close—the app stays in the tray. Use <strong>Ask</strong> for everything else.
       </p>
-      <p className="muted">2) Use the command prompt for fast actions in plain English.</p>
-      <p className="muted">3) Closing the window keeps the app running in the Windows tray.</p>
       <ul className="onboardingChecklist">
         <li className="onboardingChecklistItem">
-          <span>Home Assistant connected</span>
-          <span className={`onboardingState ${haReady ? "onboardingStateDone" : "onboardingStatePending"}`}>{haReady ? "Done" : "Pending"}</span>
+          <span>Home Assistant</span>
+          <span className={`onboardingState ${haReady ? "onboardingStateDone" : "onboardingStatePending"}`}>{haReady ? "Ready" : "Optional"}</span>
         </li>
         <li className="onboardingChecklistItem">
-          <span>First command executed</span>
+          <span>First command</span>
           <span className={`onboardingState ${commandHistoryLength > 0 ? "onboardingStateDone" : "onboardingStatePending"}`}>
-            {commandHistoryLength > 0 ? "Done" : "Pending"}
+            {commandHistoryLength > 0 ? "Done" : "Try Ask"}
           </span>
         </li>
       </ul>
       <div className="presetRow">
         <button type="button" className="ghostButton" onClick={() => onRunPreset("new note check water filter")}>
-          Create sample note
+          Sample note
         </button>
         <button type="button" className="ghostButton" onClick={() => onRunPreset("remind stretch in 10m")}>
-          Create sample reminder
+          Sample reminder
         </button>
-        <button type="button" className="ghostButton" onClick={() => onRunPreset("list reminders")}>
-          Show reminders
+        <button type="button" className="ghostButton" onClick={() => onRunPreset("help")}>
+          Commands
         </button>
       </div>
     </section>

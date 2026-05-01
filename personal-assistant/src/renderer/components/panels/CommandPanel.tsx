@@ -13,9 +13,7 @@ type Props = {
   historyCursor: number;
   setHistoryCursor: (n: number) => void;
   isRunningCommand: boolean;
-  proactiveTip: string;
   onRunCommand: (raw: string) => void;
-  onFocusCommandInput: () => void;
   onClearHistory: () => void;
   onClearNoteSearch: () => void;
   onPreset: (command: string) => void;
@@ -33,38 +31,31 @@ export function CommandPanel({
   historyCursor,
   setHistoryCursor,
   isRunningCommand,
-  proactiveTip,
   onRunCommand,
-  onFocusCommandInput,
   onClearHistory,
   onClearNoteSearch,
   onPreset
 }: Props): JSX.Element {
+  const contextLine = [
+    query ? `Notes: "${query}"` : null,
+    reminderFilter !== "all" ? `Reminders: ${reminderFilter}` : null,
+    haReady ? null : "HA: not connected"
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <section className="panel commandPanel">
+    <section className="panel commandPanel secretaryAsk">
       <div className="titleRow">
-        <h2>Command Prompt</h2>
-        <div className="assistantMeta">
-          <span className="pill">Natural language</span>
-          <span className="pill graphitePill">Assistant-first</span>
-          <button type="button" className="ghostButton" onClick={onFocusCommandInput}>
-            Focus input
-          </button>
-        </div>
+        <h2>Ask</h2>
       </div>
-      <p className="muted sectionIntro">Run one assistant action at a time in plain English.</p>
-      <p className="muted commandFootnote">Shortcut: press Ctrl+K (or Cmd+K) to jump to command input.</p>
-      <div className="assistantContextRow">
-        <span className="contextChip">Note search: {query || "none"}</span>
-        <span className="contextChip">Reminder filter: {reminderFilter}</span>
-        <span className="contextChip">HA: {haReady ? "connected" : "not connected"}</span>
-      </div>
+      {contextLine ? <p className="muted secretaryContext">{contextLine}</p> : null}
       <div className="row commandRow">
         <input
           ref={commandInputRef}
           className="fullWidth"
-          placeholder="Type a command and press Enter..."
-          aria-label="Assistant command input"
+          placeholder="e.g. new note buy milk, list reminders, help"
+          aria-label="Tell the assistant what to do"
           autoComplete="off"
           spellCheck={false}
           value={commandInput}
@@ -100,9 +91,10 @@ export function CommandPanel({
           }}
         />
         <button type="button" className="commandAction" onClick={() => void onRunCommand(commandInput)} disabled={isRunningCommand}>
-          {isRunningCommand ? "Running..." : "Run"}
+          {isRunningCommand ? "…" : "Send"}
         </button>
       </div>
+      <p className="muted secretaryMeta">Enter to send · Esc to clear · ↑↓ history · Ctrl+K focus</p>
       <div className="row commandHintsRow">
         {commandHints.length ? (
           commandHints.map((hint) => (
@@ -111,26 +103,9 @@ export function CommandPanel({
             </button>
           ))
         ) : (
-          <span className="muted">
-            No matching command hints. Type <code>help</code> to see all commands.
-          </span>
+          <span className="muted">Type <code>help</code> for commands.</span>
         )}
       </div>
-      <div className="assistantShortcutRow">
-        <button type="button" className="ghostButton" onClick={() => setCommandInput("new note ")}>
-          + Note command
-        </button>
-        <button type="button" className="ghostButton" onClick={() => setCommandInput("remind call mom in 15m")}>
-          + Reminder command
-        </button>
-        <button type="button" className="ghostButton" onClick={() => setCommandInput("toggle ")}>
-          + Device command
-        </button>
-      </div>
-      <p className="muted">
-        Examples: <code>new note buy coffee</code>, <code>remind stand up in 10m</code>, <code>toggle bedroom</code>.
-      </p>
-      <p className="muted commandFootnote">Assistant tip: keep commands short and specific for the fastest response.</p>
       {commandHistory.length ? (
         <div className="row commandHintsRow">
           {commandHistory.map((item) => (
@@ -143,20 +118,17 @@ export function CommandPanel({
           </button>
         </div>
       ) : null}
-      <div className="row commandHintsRow">
+      <div className="row commandHintsRow secretaryActions">
         <button type="button" className="ghostButton" onClick={() => onPreset("help")}>
-          Show commands
+          Help
         </button>
         <button type="button" className="ghostButton" onClick={() => onPreset("list reminders")}>
-          Show pending reminders
+          Reminders
         </button>
         <button type="button" className="ghostButton" onClick={onClearNoteSearch}>
           Clear note search
         </button>
       </div>
-      <p className="muted">Tip: type one action at a time in plain English and press Enter.</p>
-      <p className="muted">Tip: use <code>list reminders</code> after adding reminders to quickly review pending items.</p>
-      <p className="muted assistantTip">{proactiveTip}</p>
     </section>
   );
 }

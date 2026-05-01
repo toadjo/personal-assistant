@@ -13,7 +13,6 @@ import {
   todayAgendaFor,
   visibleReminders as remindersVisible
 } from "../lib/derived/reminders";
-import { proactiveTipText } from "../lib/derived/proactiveTip";
 import { getErrorMessage } from "../lib/errors";
 import { persistCommandHistory, loadCommandHistory } from "../lib/storage/commandHistory";
 import { useAssistantData } from "./data/useAssistantData";
@@ -52,22 +51,10 @@ export function useAssistantWorkspace() {
   const monthCells = useMemo(() => buildCalendarCells(calendarCursor, remindersByDate), [calendarCursor, remindersByDate]);
   const todayKey = toLocalDateKey(new Date());
   const todayAgenda = useMemo(() => todayAgendaFor(reminders, todayKey), [reminders, todayKey]);
-  const recentNotes = useMemo(() => notes.slice(0, 5), [notes]);
 
   const commandHints = useMemo(
     () => COMMAND_HINT_SAMPLES.filter((c) => c.includes(commandInput.toLowerCase())),
     [commandInput]
-  );
-
-  const proactiveTip = useMemo(
-    () =>
-      proactiveTipText({
-        haReady: haUi.haReady,
-        overdueCount: overdueReminders.length,
-        todayAgendaCount: todayAgenda.length,
-        commandHistoryLength: commandHistory.length
-      }),
-    [haUi.haReady, overdueReminders.length, todayAgenda.length, commandHistory.length]
   );
 
   useEffect(() => {
@@ -96,11 +83,11 @@ export function useAssistantWorkspace() {
 
   useEffect(() => {
     if (!showOnboarding) return;
-    if (!haUi.haReady || commandHistory.length === 0) return;
+    if (commandHistory.length === 0) return;
     window.localStorage.setItem(STORAGE_ONBOARDED, "1");
     setShowOnboarding(false);
-    setStatus("Onboarding completed. You can reopen tips anytime by clearing local storage.");
-  }, [showOnboarding, haUi.haReady, commandHistory.length, setStatus]);
+    setStatus("Intro dismissed after first command.");
+  }, [showOnboarding, commandHistory.length, setStatus]);
 
   async function runCommandInternal(rawInput: string): Promise<void> {
     const trimmed = rawInput.trim();
@@ -136,11 +123,6 @@ export function useAssistantWorkspace() {
   function runPresetCommand(command: string): void {
     setCommandInput(command);
     void runCommandInternal(command);
-  }
-
-  function focusCommandInput(): void {
-    commandInputRef.current?.focus();
-    setStatus("Command input focused. Type an action and press Enter.");
   }
 
   async function deleteNote(id: string, title: string): Promise<void> {
@@ -228,7 +210,6 @@ export function useAssistantWorkspace() {
     setShowOnboarding,
     refreshAll,
     runPresetCommand,
-    focusCommandInput,
     runDeviceToggle,
     runCommandInternal,
     deleteNote,
@@ -251,8 +232,6 @@ export function useAssistantWorkspace() {
     haStatusText: haUi.haStatusText,
     monthCells,
     todayKey,
-    todayAgenda,
-    recentNotes,
-    proactiveTip
+    todayAgenda
   };
 }

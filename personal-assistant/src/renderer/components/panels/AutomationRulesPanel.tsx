@@ -13,18 +13,17 @@ export function AutomationRulesPanel({ isRefreshing, rules, devices, onRefresh, 
   return (
     <section className="panel">
       <div className="titleRow">
-        <h2>Automation Rules</h2>
-        <span className="pill graphitePill">Automate</span>
+        <h2>Daily rules</h2>
       </div>
-      <p className="muted sectionIntro">Set a daily time to create a reminder or toggle a Home Assistant device.</p>
+      <p className="muted sectionIntro">Same time each day: new reminder or toggle a device.</p>
       <RuleForm devices={devices} onDone={onRefresh} onError={onError} />
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading rules...</li>
+          <li className="muted">Loading…</li>
         ) : rules.length ? (
           rules.map((r) => (
             <li key={r.id}>
-              {r.name} at {r.triggerConfig.at} {"->"} {r.actionType === "haToggle" ? "Toggle Home Assistant entity" : "Create local reminder"}
+              {r.name} · {r.triggerConfig.at} → {r.actionType === "haToggle" ? "toggle device" : "reminder"}
             </li>
           ))
         ) : (

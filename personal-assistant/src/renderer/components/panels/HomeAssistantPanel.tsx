@@ -6,7 +6,6 @@ type Props = {
   haToken: string;
   setHaToken: (v: string) => void;
   hasHaUrl: boolean;
-  hasHaToken: boolean;
   haStatusText: string;
   haReady: boolean;
   canSaveHa: boolean;
@@ -28,7 +27,6 @@ export function HomeAssistantPanel({
   haToken,
   setHaToken,
   hasHaUrl,
-  hasHaToken,
   haStatusText,
   haReady,
   canSaveHa,
@@ -47,13 +45,12 @@ export function HomeAssistantPanel({
     <section className="panel">
       <div className="titleRow">
         <h2>Home Assistant</h2>
-        <span className="pill graphitePill">Smart home</span>
       </div>
-      <p className="muted sectionIntro">Connect your Home Assistant instance to control synced entities.</p>
+      <p className="muted sectionIntro">{haStatusText}</p>
       <div className="row">
         <input placeholder="http://homeassistant.local:8123" aria-label="Home Assistant URL" value={haUrl} onChange={(e) => setHaUrl(e.target.value)} />
         <input
-          placeholder="Long-lived access token"
+          placeholder="Long-lived token (if required)"
           aria-label="Home Assistant long-lived access token"
           type="password"
           autoComplete="new-password"
@@ -61,28 +58,23 @@ export function HomeAssistantPanel({
           onChange={(e) => setHaToken(e.target.value)}
         />
       </div>
-      <p className="muted">Status: {haStatusText}</p>
-      <p className="muted">If Save succeeds, you can leave token blank on future edits unless you want to replace it.</p>
       {!hasHaUrl ? (
-        <p className="muted">
-          Tip: include protocol in URL (for example: <code>http://homeassistant.local:8123</code>).
-        </p>
+        <p className="muted">Include <code>http://</code> or <code>https://</code> in the URL.</p>
       ) : null}
-      {!hasHaToken && !haToken.trim() ? <p className="muted">Add a long-lived token to finish first-time setup.</p> : null}
       <div className="row">
-        <button disabled={isSavingHa || !canSaveHa} onClick={() => void onSave()}>
-          {isSavingHa ? "Saving..." : "Save"}
+        <button type="button" disabled={isSavingHa || !canSaveHa} onClick={() => void onSave()}>
+          {isSavingHa ? "Saving…" : "Save"}
         </button>
-        <button disabled={!haReady} onClick={() => void onTest()}>
+        <button type="button" disabled={!haReady} onClick={() => void onTest()}>
           Test
         </button>
-        <button disabled={isRefreshingHa || !haReady} onClick={() => void onRefreshEntities()}>
-          {isRefreshingHa ? "Refreshing..." : "Refresh Entities"}
+        <button type="button" disabled={isRefreshingHa || !haReady} onClick={() => void onRefreshEntities()}>
+          {isRefreshingHa ? "…" : "Refresh devices"}
         </button>
       </div>
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading devices...</li>
+          <li className="muted">Loading…</li>
         ) : devices.length ? (
           devices.map((d) => (
             <li key={d.entityId} className="listRow">
@@ -90,6 +82,7 @@ export function HomeAssistantPanel({
                 {d.friendlyName} ({d.state})
               </span>
               <button
+                type="button"
                 className="ghostButton"
                 disabled={isEntityTogglePending(d.entityId)}
                 onClick={async () => {
@@ -100,12 +93,12 @@ export function HomeAssistantPanel({
                   }
                 }}
               >
-                {isEntityTogglePending(d.entityId) ? "Toggling..." : "Toggle"}
+                {isEntityTogglePending(d.entityId) ? "…" : "Toggle"}
               </button>
             </li>
           ))
         ) : (
-          <li className="muted">No synced devices yet. Save credentials and refresh entities.</li>
+          <li className="muted">No devices yet. Save, then refresh.</li>
         )}
       </ul>
     </section>

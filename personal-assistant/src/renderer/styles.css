@@ -132,6 +132,28 @@ body {
   margin: 0 auto;
 }
 
+.secretaryLayout .panel {
+  margin-top: var(--space-3);
+}
+
+.secretaryLayout .panel.commandPanel {
+  margin-top: var(--space-2);
+}
+
+.secretaryAsk .titleRow {
+  margin-bottom: var(--space-1);
+}
+
+.secretaryMeta,
+.secretaryContext {
+  font-size: 12px;
+  margin: 0 0 var(--space-2);
+}
+
+.secretaryActions {
+  margin-bottom: 0;
+}
+
 h1 {
   margin: 0;
   font-size: 30px;
