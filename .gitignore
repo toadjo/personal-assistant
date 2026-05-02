@@ -1,0 +1,25 @@
+node_modules/
+.vite/
+dist/
+release/
+installer-history/
+release-current-*/
+release-clean-*/
+release-fixed*/
+win-unpacked/
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local / IDE
+.env
+.env.*
+.idea/
+.vscode/
+
+# Rotated / extra log fragments
+*.log.*

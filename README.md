@@ -1,0 +1,199 @@
+# Personal Assistant
+
+Windows-first tray personal assistant MVP built with Electron + React + TypeScript.
+
+## Working on the app
+
+### Prerequisites
+
+- **Node.js** 20+ (LTS recommended) and **npm**
+- **Windows** (tray behavior and build targets are Windows-first)
+
+### First-time setup
+
+The Git repository root **is** the Electron app (same folder as `package.json`).
+
+```bash
+git clone https://github.com/toadjo/personal-assistant.git
+cd personal-assistant
+npm install
+```
+
+Native module **`better-sqlite3`** is rebuilt in `postinstall` for your platform. Home Assistant tokens are stored with Electron **`safeStorage`** when the OS supports it (otherwise a warning is logged and the token falls back to SQLite plaintext).
+
+### Run in development
+
+**Windows (easiest):** from the repository root (the folder that contains `package.json`), double-click **`dev.bat`**. It checks for Node/npm, runs `npm install` on first use if needed, then `npm run dev`.
+
+**Any OS / manual:**
+
+```bash
+npm run dev
+```
+
+This runs the Vite dev server for the React UI, compiles the Electron **main** and **preload** TypeScript in watch mode, and launches Electron when outputs are ready. The window loads `http://localhost:5173` in development; closing the window keeps the app in the system tray.
+
+### Quality checks (run before you push)
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+```
+
+- **lint** — ESLint for main/renderer TypeScript and React hooks
+- **typecheck** — `tsc` for the main and renderer TypeScript projects
+- **test** — Vitest unit tests (command parsing, calendar/reminder helpers, IPC-free `executeAssistantCommand` with mocked `window.assistantApi`)
+
+Pull requests and pushes to `main`/`master` run **lint, typecheck, tests, and production build** in GitHub Actions (see `.github/workflows/ci.yml`). The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
+
+**Release automation:** pushing a tag `vX.Y.Z` that matches `package.json` runs `.github/workflows/release.yml` (Windows NSIS via `npm run release:build`). You can also trigger the same job manually from the Actions tab (**workflow_dispatch**); the version input must match `package.json`. Artifacts are uploaded from the `release/` directory.
+
+**Dependabot** is enabled for npm (`.github/dependabot.yml`).
+
+**Pre-commit:** after `npm install`, [Husky](https://typicode.github.io/husky/) runs **`npm run typecheck`** and **lint-staged** (ESLint on staged `.ts/.tsx`, Prettier check on staged `.json/.css/.html/.md/.yml`) on each commit.
+
+Optional: `npm run test:smoke` validates build artifacts and packaging assumptions (see below).
+
+### Where the code lives
+
+| Area           | Path                  | Purpose                                                                                                                            |
+| -------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Electron main  | `src/main/`           | Window, tray, IPC registration, security checks, schedulers. IPC handlers are split under `src/main/ipc/handlers/`.                |
+| Preload bridge | `src/main/preload.ts` | Exposes `window.assistantApi` to the renderer (context isolation).                                                                 |
+| React UI       | `src/renderer/`       | `App.tsx` / `components/`, `hooks/`, `command/`, `lib/`, styles. Layout is intentionally minimal—one clear “Ask” line, then tools. |
+| Shared types   | `src/shared/types.ts` | Types used by main and renderer.                                                                                                   |
+| Unit tests     | `src/**/*.test.ts`    | Colocated with source; run via `npm run test`.                                                                                     |
+
+**Typical tasks**
+
+- **UI or command behavior** — `src/renderer/` (start with `hooks/useAssistantWorkspace.ts` and `command/executeAssistantCommand.ts`).
+- **New IPC or validation** — extend Zod schemas in `src/main/ipc/schemas.ts`, add handlers in `src/main/ipc/handlers/`, mirror calls in `preload.ts`.
+- **SQLite / domain logic** — `src/main/services/` and `src/main/db.ts`.
+
+### Production-like local build
+
+```bash
+npm run build
+```
+
+Outputs renderer assets to `dist/renderer/` and compiles main/preload to `dist/main/`.
+
+---
+
+## Features
+
+- System tray app with command launcher hints
+- Local notes and reminders stored in SQLite
+- Desktop notifications for due reminders
+- Home Assistant settings, connectivity test, entity sync, and toggle actions
+- Time-based automation rules with execution logs
+
+## Run
+
+```bash
+npm install
+npm run dev
+```
+
+## Release Packaging (Windows)
+
+Versioned installer outputs now live under:
+
+- `release/v<version>/` (full electron-builder output for that version)
+- `installer-history/v<version>/` (copied installer artifacts: `.exe`, `.blockmap`, `.yml`)
+
+These folders are ignored by git so local/repeatable installer builds stay out of normal source-control flow.
+
+### Build a versioned installer
+
+```powershell
+npm run release:build -- -Version 1.0.0
+```
+
+Notes:
+
+- Accepts `1.0.0` or `v1.0.0`.
+- Defaults to `package.json` version if `-Version` is omitted.
+- Updates `package.json` version to match (unless you pass `-SkipVersionBump`).
+- Runs smoke checks by default (skip with `-SkipSmoke`).
+- Refuses to overwrite an existing `release/v<version>` by default (opt in with `-ReplaceExisting`).
+- Validates clean git state by default (opt out with `-AllowDirtyGit` for local-only iterations).
+- Validates required commands (`npm`, `npx`) and stops immediately if any release command fails.
+- Uses a staging output directory first, then moves artifacts into `release/v<version>` only after a successful build.
+- Validates that installer artifacts exist and fails if no `.exe` was produced.
+- Attempts to prepare `assets/app-icon.ico` before packaging (auto-generates from `assets/app-icon.png` when possible, otherwise continues with PNG icon paths and prints guidance).
+
+Usage:
+
+```powershell
+npm run release:build -- [-Version <x.y.z|vx.y.z>] [-SkipVersionBump] [-SkipSmoke] [-ReplaceExisting] [-AllowDirtyGit]
+```
+
+Examples:
+
+```powershell
+# Use package.json version automatically
+npm run release:build
+
+# Keep current package.json version, just package
+npm run release:build -- -Version 1.1.0 -SkipVersionBump
+
+# Package without smoke validation
+npm run release:build -- -Version 1.1.1 -SkipSmoke
+
+# Rebuild the same version in place (replaces existing versioned output/history)
+npm run release:build -- -Version 1.1.1 -ReplaceExisting
+```
+
+### Cleanup old artifacts
+
+```powershell
+# Keep the newest 3 release/history versions (default behavior)
+npm run release:clean
+
+# Keep newest 5 versions
+npm run release:clean -- -Keep 5
+
+# Remove everything under release/ and installer-history/
+npm run release:clean:all
+
+# Full cleanup with explicit confirmation flag
+npm run release:clean -- -All -ConfirmAll
+
+# Also remove dist/ during cleanup
+npm run release:clean -- -IncludeDist
+```
+
+Usage:
+
+```powershell
+npm run release:clean -- [-Keep <n>] [-IncludeDist] [-All -ConfirmAll] [-DryRun]
+```
+
+Notes:
+
+- `-All` removes all content under `release/` and `installer-history/`, but now requires `-ConfirmAll`.
+- `-Keep` must be `0` or greater.
+- `-IncludeDist` can be combined with `-All` or prune mode.
+- Prune mode only deletes versioned folders that match `v<semver>` naming.
+- Use `-DryRun` to preview what cleanup would remove.
+
+### Legacy one-off build
+
+```bash
+npm run dist
+```
+
+## Icon Packaging Notes (Windows)
+
+- Project-local icon sources live in `assets/`.
+- Installer/exe icon paths are explicitly set to project-local `assets/app-icon.png` so builds do not depend on global machine assets.
+- `npm run dist` and `npm run release:build` both run `npm run icons:prepare` to generate `.ico` from `assets/app-icon.png` when needed.
+- Remaining gap: auto-generated `.ico` uses one source PNG, so quality can be weaker at very small sizes (16x16/24x24). Practical workaround: replace `assets/app-icon.ico` with a designer-exported multi-size `.ico` (16/24/32/48/64/128/256) and keep the same filename.
+
+## Smoke Validation
+
+```bash
+npm run test:smoke
+```
