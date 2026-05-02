@@ -1,8 +1,8 @@
-import type { Ref } from "react";
+import type { Ref, RefObject } from "react";
 import type { ReminderFilter } from "../../types";
 
 type Props = {
-  commandInputRef: Ref<HTMLInputElement>;
+  commandInputRef: RefObject<HTMLInputElement | null>;
   query: string;
   reminderFilter: ReminderFilter;
   haReady: boolean;
@@ -60,7 +60,7 @@ export function CommandPanel({
       ) : null}
       <div className="row commandRow">
         <input
-          ref={commandInputRef}
+          ref={commandInputRef as Ref<HTMLInputElement>}
           className="fullWidth"
           placeholder="Ask me anything—e.g. new note order ink, remind call in 20m, open household…"
           aria-label="Message the assistant"

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { Note } from "../../../shared/types";
+import { useShallow } from "zustand/react/shallow";
+import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { QuickNoteForm } from "../forms/QuickNoteForm";
 
 type UpdatePayload = {
@@ -11,9 +13,7 @@ type UpdatePayload = {
 };
 
 type Props = {
-  isRefreshing: boolean;
-  notes: Note[];
-  onRefresh: () => Promise<void>;
+  onFetchNotes: () => Promise<void>;
   onError: (message: string) => void;
   onDeleteNote: (id: string, title: string) => void;
   onUpdateNote: (payload: UpdatePayload) => void;
@@ -26,14 +26,13 @@ function parseTagsInput(raw: string): string[] {
     .filter(Boolean);
 }
 
-export function NotesPanel({
-  isRefreshing,
-  notes,
-  onRefresh,
-  onError,
-  onDeleteNote,
-  onUpdateNote
-}: Props): JSX.Element {
+export function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }: Props): JSX.Element {
+  const { notes, isRefreshing } = useWorkspaceStore(
+    useShallow((s) => ({
+      notes: s.notes,
+      isRefreshing: s.isRefreshing
+    }))
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");
@@ -74,7 +73,7 @@ export function NotesPanel({
       <div className="titleRow">
         <h2>Memos</h2>
       </div>
-      <QuickNoteForm onDone={onRefresh} onError={onError} />
+      <QuickNoteForm onDone={onFetchNotes} onError={onError} />
       <ul className="list">
         {isRefreshing ? (
           <li className="muted">Loading…</li>

@@ -21,5 +21,10 @@ Desktop.ini
 .idea/
 .vscode/
 
+# Tooling / caches
+coverage/
+.eslintcache
+*.tsbuildinfo
+
 # Rotated / extra log fragments
 *.log.*

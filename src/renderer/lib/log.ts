@@ -1,8 +1,6 @@
-/** Renderer-side diagnostic logging (visible in DevTools). */
+import { devConsoleWarn } from "./devConsole";
+
+/** Renderer-side diagnostics; no-op in production unless debug env is set (see devConsole.ts). */
 export function logRendererWarning(scope: string, message: string, error?: unknown): void {
-  if (error !== undefined) {
-    console.warn(`[assistant:${scope}] ${message}`, error);
-  } else {
-    console.warn(`[assistant:${scope}] ${message}`);
-  }
+  devConsoleWarn(scope, message, error);
 }

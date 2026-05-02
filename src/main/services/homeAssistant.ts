@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { getDb } from "../db";
 import { getHaToken, saveHaToken } from "./secrets";
 import { mainLog } from "../log";
+import { assertHomeAssistantBaseUrl } from "./haUrlPolicy";
 
 const HA_BASE_URL_KEY = "ha.baseUrl";
 const HA_REQUEST_TIMEOUT_MS = 10_000;
@@ -12,6 +13,7 @@ const HA_RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
 export async function configureHomeAssistant(url: string, token: string): Promise<void> {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl) throw new Error("Home Assistant URL is required");
+  assertHomeAssistantBaseUrl(new URL(normalizedUrl));
   const trimmedToken = typeof token === "string" ? token.trim() : "";
   if (trimmedToken) {
     await saveHaToken(trimmedToken);

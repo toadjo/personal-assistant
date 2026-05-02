@@ -1,48 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { invokeChannelMap as invoke, pushChannelMap as push } from "./preload-ipc-literals.generated";
 
 /**
- * Channel names are duplicated here on purpose: the preload script must only depend on
- * `electron`. Any `import` from the rest of the repo can fail at runtime (path/asar/CJS
- * resolution) and prevents `contextBridge.exposeInMainWorld` from running — leaving
- * `window.assistantApi` undefined.
- *
- * Keep in sync with `src/shared/ipc-channels.ts`.
+ * Preload must only import `electron` plus this generated literal map (no `src/shared` import).
+ * Channel strings are produced at build time from `src/shared/ipc-channels.ts` by
+ * `scripts/generate-preload-ipc.mjs` (`npm run build:main` / `npm test`). Drift is also
+ * asserted in `src/main/preload-channels.test.ts`.
  */
-const invoke = {
-  notesList: "notes:list",
-  notesCreate: "notes:create",
-  notesUpdate: "notes:update",
-  notesDelete: "notes:delete",
-  remindersList: "reminders:list",
-  remindersCreate: "reminders:create",
-  remindersComplete: "reminders:complete",
-  remindersDelete: "reminders:delete",
-  remindersSnooze: "reminders:snooze",
-  haConfigure: "ha:configure",
-  haGetConfig: "ha:getConfig",
-  haTest: "ha:test",
-  haRefresh: "ha:refresh",
-  haListDevices: "ha:listDevices",
-  haToggle: "ha:toggle",
-  settingsGetAssistant: "settings:getAssistant",
-  settingsSetAssistantName: "settings:setAssistantName",
-  settingsSetUserPreferredName: "settings:setUserPreferredName",
-  automationLogs: "automation:logs",
-  automationRulesList: "automation:rules:list",
-  automationRulesCreate: "automation:rules:create",
-  automationRulesDelete: "automation:rules:delete",
-  automationRulesSetEnabled: "automation:rules:setEnabled",
-  rendererLogError: "renderer:logError",
-  appOpenHouseholdWindow: "app:openHouseholdWindow",
-  appFocusDeskWindow: "app:focusDeskWindow",
-  appHideDeskWindow: "app:hideDeskWindow"
-} as const;
-
-const push = {
-  remindersUpdated: "reminders:updated",
-  command: "command"
-} as const;
-
 contextBridge.exposeInMainWorld("assistantApi", {
   listNotes: (query?: string) => ipcRenderer.invoke(invoke.notesList, query),
   createNote: (payload: { title: string; content: string; tags: string[]; pinned: boolean }) =>

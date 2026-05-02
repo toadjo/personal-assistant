@@ -60,8 +60,20 @@ jobs:
       - name: Package installer (no git bump in CI)
         run: npm run release:build -- -SkipVersionBump -AllowDirtyGit -ReplaceExisting
 
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: pwsh
+        run: |
+          $v = (Get-Content -Raw package.json | ConvertFrom-Json).version
+          $tag = "v$v"
+          $releaseDir = Join-Path "release" $tag
+          $historyDir = Join-Path "installer-history" $tag
+          if (-not (Test-Path -LiteralPath $releaseDir)) { throw "Missing $releaseDir — packaging may have failed." }
+          if (-not (Test-Path -LiteralPath $historyDir)) { throw "Missing $historyDir — packaging may have failed." }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "release_tag=$tag"
+
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: nsis-${{ github.run_id }}
-          path: release
+          path: installer-history/${{ steps.artifacts.outputs.release_tag }}/

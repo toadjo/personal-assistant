@@ -1,4 +1,5 @@
-import { app, type BrowserWindow, dialog, globalShortcut, Menu, powerMonitor } from "electron";
+import { app, crashReporter, type BrowserWindow, dialog, globalShortcut, Menu, powerMonitor } from "electron";
+import * as Sentry from "@sentry/electron/main";
 import { getDb } from "./db";
 import { startReminderScheduler } from "./services/reminders";
 import { createAssertSender, registerIpcHandlers } from "./ipc/register-handlers";
@@ -10,7 +11,7 @@ import { mainLog } from "./log";
 
 let deskWin: BrowserWindow | null = null;
 let householdWin: BrowserWindow | null = null;
-let reminderTimer: NodeJS.Timeout | null = null;
+let reminderSchedulerStop: (() => void) | null = null;
 let stopAutomationScheduler: (() => void) | null = null;
 let isQuitting = false;
 let trayOptions: TrayOptions | null = null;
@@ -94,7 +95,7 @@ function startAppAfterDbOpen(): void {
     createTray(trayOptions);
   }
 
-  reminderTimer = startReminderScheduler(getTrustedWindows);
+  reminderSchedulerStop = startReminderScheduler(getTrustedWindows).stop;
   stopAutomationScheduler = startAutomationScheduler();
 }
 
@@ -115,6 +116,21 @@ if (!app.requestSingleInstanceLock()) {
   }
 
   app.whenReady().then(() => {
+    if (process.env.SENTRY_DSN) {
+      Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: app.isPackaged ? "production" : "development"
+      });
+    }
+    const crashSubmitUrl = process.env.ELECTRON_CRASH_REPORT_URL?.trim();
+    if (app.isPackaged && crashSubmitUrl) {
+      crashReporter.start({
+        companyName: "Personal Assistant",
+        submitURL: crashSubmitUrl,
+        uploadToServer: true,
+        compress: true
+      });
+    }
     try {
       getDb();
     } catch (error) {
@@ -141,7 +157,13 @@ if (!app.requestSingleInstanceLock()) {
   app.on("before-quit", () => {
     isQuitting = true;
     globalShortcut.unregisterAll();
-    if (reminderTimer) clearInterval(reminderTimer);
+    if (process.env.SENTRY_DSN) {
+      void Sentry.close(2000).catch(() => {
+        /* ignore flush errors on exit */
+      });
+    }
+    reminderSchedulerStop?.();
+    reminderSchedulerStop = null;
     stopAutomationScheduler?.();
     stopAutomationScheduler = null;
   });

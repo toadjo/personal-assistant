@@ -28,11 +28,17 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Unit tests
-        run: npm run test
+      - name: Verify preload IPC codegen
+        run: npm run check:preload-ipc
+
+      - name: Unit tests with coverage
+        run: npm run test -- --coverage
 
       - name: Build (renderer + main)
         run: npm run build
+
+      - name: Electron preload smoke (real preload in BrowserWindow)
+        run: npm run test:preload-electron
 
       - name: npm audit (high+)
         run: npm audit --audit-level=high

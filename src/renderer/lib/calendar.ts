@@ -9,7 +9,16 @@ export function toLocalDateKey(date: Date): string {
 
 /** Parse a `YYYY-MM-DD` key in local calendar (no UTC shift). */
 export function parseLocalDateKey(dateKey: string): Date {
-  const [y, m, d] = dateKey.split("-").map((n) => Number(n));
+  const parts = dateKey.split("-").map((n) => Number(n));
+  if (parts.length !== 3) {
+    throw new Error(`Invalid date key (expected YYYY-MM-DD): ${dateKey}`);
+  }
+  const y = parts[0];
+  const m = parts[1];
+  const d = parts[2];
+  if (y === undefined || m === undefined || d === undefined || ![y, m, d].every((n) => Number.isFinite(n))) {
+    throw new Error(`Invalid date key (expected YYYY-MM-DD): ${dateKey}`);
+  }
   return new Date(y, m - 1, d);
 }
 

@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ReminderFilter } from "../types";
+import { useEffect, useMemo, useState, type Dispatch, type RefObject, type SetStateAction } from "react";
+import type { AutomationRule, Note, Reminder } from "../../shared/types";
+import type { ReminderFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
+import type { CalendarCell } from "../lib/calendar";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 import { homeAssistantUi } from "../lib/derived/homeAssistantUi";
 import {
@@ -19,12 +21,126 @@ import { useNoteActions } from "./workspace/useNoteActions";
 import { useReminderActions } from "./workspace/useReminderActions";
 import { useUserProfileSettings } from "./workspace/useUserProfileSettings";
 
-export function useAssistantWorkspace() {
+export type AssistantWorkspace = {
+  ui: {
+    theme: ThemeMode;
+    setTheme: Dispatch<SetStateAction<ThemeMode>>;
+    status: string;
+    setStatus: (value: string) => void;
+    error: string;
+    reportError: (err: unknown) => void;
+  };
+  data: {
+    query: string;
+    setQuery: (value: string) => void;
+    notes: Note[];
+    reminders: Reminder[];
+    devices: HaDeviceRow[];
+    logs: ExecutionLogRow[];
+    rules: AutomationRule[];
+    isRefreshing: boolean;
+    refreshAll: () => Promise<void>;
+    fetchNotesOnly: () => Promise<void>;
+    fetchRemindersOnly: () => Promise<void>;
+  };
+  ha: {
+    haUrl: string;
+    setHaUrl: (value: string) => void;
+    haToken: string;
+    setHaToken: (value: string) => void;
+    hasHaToken: boolean;
+    isRefreshingHa: boolean;
+    isSavingHa: boolean;
+    saveHomeAssistantConfig: () => Promise<void>;
+    testHomeAssistant: () => Promise<void>;
+    refreshHomeAssistantEntities: () => void;
+    haReady: boolean;
+    hasHaUrl: boolean;
+    canSaveHa: boolean;
+    haStatusText: string;
+    isEntityTogglePending: (entityId: string) => boolean;
+    runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
+  };
+  command: {
+    commandInput: string;
+    setCommandInput: (value: string) => void;
+    commandHistory: string[];
+    setCommandHistory: Dispatch<SetStateAction<string[]>>;
+    historyCursor: number;
+    setHistoryCursor: Dispatch<SetStateAction<number>>;
+    commandHints: string[];
+    isRunningCommand: boolean;
+    commandInputRef: RefObject<HTMLInputElement | null>;
+    runPresetCommand: (command: string) => void;
+    runCommandInternal: (rawInput: string) => Promise<void>;
+    clearCommandHistory: () => void;
+  };
+  calendar: {
+    calendarCursor: Date;
+    setCalendarCursor: Dispatch<SetStateAction<Date>>;
+    monthCells: CalendarCell[];
+    todayKey: string;
+    calendarSelectedKey: string;
+    setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
+    selectedDayAgenda: Reminder[];
+  };
+  reminders: {
+    filter: ReminderFilter;
+    setFilter: (value: ReminderFilter) => void;
+    pending: Reminder[];
+    overdue: Reminder[];
+    visible: Reminder[];
+    snoozeMinutes: (id: string, minutes: number, okMessage: string) => Promise<void>;
+    completeById: (id: string) => Promise<void>;
+    deleteById: (id: string) => Promise<void>;
+  };
+  automation: {
+    deleteRuleById: (id: string, name: string) => Promise<void>;
+    setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
+  };
+  memos: {
+    deleteNote: (id: string, title: string) => Promise<void>;
+    updateNote: (payload: {
+      id: string;
+      title?: string;
+      content?: string;
+      tags?: string[];
+      pinned?: boolean;
+    }) => Promise<void>;
+  };
+  profile: {
+    userPreferredName: string;
+    userPreferredNameIsSet: boolean;
+    persistUserPreferredName: (name: string) => Promise<void>;
+  };
+  onboarding: {
+    show: boolean;
+    setShow: (value: boolean) => void;
+  };
+  desk: {
+    hideWindow: () => void;
+  };
+};
+
+export function useAssistantWorkspace(): AssistantWorkspace {
   const { status, setStatus, error, setError, reportError } = useWorkspaceMessages();
   const { theme, setTheme } = useThemePreference();
 
-  const { query, setQuery, notes, reminders, devices, logs, rules, isRefreshing, refreshAll } =
-    useAssistantData(setError);
+  const {
+    query,
+    setQuery,
+    notes,
+    reminders,
+    devices,
+    logs,
+    rules,
+    isRefreshing,
+    refreshAll,
+    fetchNotesOnly,
+    fetchRemindersOnly,
+    mergeNote,
+    removeNoteById
+  } = useAssistantData(setError);
 
   const ha = useHomeAssistantCredentials({ setStatus, setError });
   const { isEntityTogglePending, runDeviceToggle } = useDeviceToggle(refreshAll, setStatus, setError);
@@ -48,12 +164,16 @@ export function useAssistantWorkspace() {
   });
 
   const calendar = useCalendarState(reminders);
-  const { deleteNote, updateNote } = useNoteActions(refreshAll, setStatus, setError);
+  const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
+    mergeNote,
+    removeNoteById,
+    fetchNotesOnly
+  });
   const { deleteRuleById, setRuleEnabledById } = useAutomationRuleActions(refreshAll, setStatus, setError);
   const { snoozeReminderMinutes, completeReminderById, deleteReminderById } = useReminderActions(
-    refreshAll,
     setStatus,
-    setError
+    setError,
+    fetchRemindersOnly
   );
   const profile = useUserProfileSettings(setError, setStatus);
 
@@ -75,75 +195,99 @@ export function useAssistantWorkspace() {
   }, [showOnboarding, command.commandHistory.length, setStatus]);
 
   return {
-    query,
-    setQuery,
-    notes,
-    reminders,
-    haUrl: ha.haUrl,
-    setHaUrl: ha.setHaUrl,
-    haToken: ha.haToken,
-    setHaToken: ha.setHaToken,
-    hasHaToken: ha.hasHaToken,
-    devices,
-    logs,
-    rules,
-    commandInput: command.commandInput,
-    setCommandInput: command.setCommandInput,
-    commandHistory: command.commandHistory,
-    setCommandHistory: command.setCommandHistory,
-    historyCursor: command.historyCursor,
-    setHistoryCursor: command.setHistoryCursor,
-    status,
-    setStatus,
-    error,
-    isRefreshingHa: ha.isRefreshingHa,
-    isSavingHa: ha.isSavingHa,
-    isRefreshing,
-    reminderFilter,
-    setReminderFilter: setReminderFilterState,
-    isRunningCommand: command.isRunningCommand,
-    calendarCursor: calendar.calendarCursor,
-    setCalendarCursor: calendar.setCalendarCursor,
-    theme,
-    setTheme,
-    commandInputRef: command.commandInputRef,
-    showOnboarding,
-    setShowOnboarding,
-    refreshAll,
-    runPresetCommand: command.runPresetCommand,
-    runDeviceToggle,
-    runCommandInternal: command.runCommandInternal,
-    deleteNote,
-    updateNote,
-    deleteRuleById,
-    setRuleEnabledById,
-    snoozeReminderMinutes,
-    completeReminderById,
-    deleteReminderById,
-    saveHomeAssistantConfig: ha.saveHomeAssistantConfig,
-    testHomeAssistant: ha.testHomeAssistant,
-    refreshHomeAssistantEntities: () => void ha.refreshHomeAssistantEntities(refreshAll),
-    clearCommandHistory: command.clearCommandHistory,
-    reportError,
-    commandHints: command.commandHints,
-    pendingReminders: pendingList,
-    overdueReminders,
-    visibleReminders,
-    haReady: haUi.haReady,
-    hasHaUrl: haUi.hasHaUrl,
-    canSaveHa: haUi.canSaveHa,
-    isEntityTogglePending,
-    haStatusText: haUi.haStatusText,
-    monthCells: calendar.monthCells,
-    todayKey: calendar.todayKey,
-    calendarSelectedKey: calendar.calendarSelectedKey,
-    setCalendarSelectedKey: calendar.setCalendarSelectedKey,
-    selectedDayAgenda: calendar.selectedDayAgenda,
-    userPreferredName: profile.userPreferredName,
-    userPreferredNameIsSet: profile.userPreferredNameIsSet,
-    persistUserPreferredName: profile.persistUserPreferredName,
-    hideDeskWindow: () => {
-      void window.assistantApi.hideDeskWindow();
+    ui: {
+      theme,
+      setTheme,
+      status,
+      setStatus,
+      error,
+      reportError
+    },
+    data: {
+      query,
+      setQuery,
+      notes,
+      reminders,
+      devices,
+      logs,
+      rules,
+      isRefreshing,
+      refreshAll,
+      fetchNotesOnly,
+      fetchRemindersOnly
+    },
+    ha: {
+      haUrl: ha.haUrl,
+      setHaUrl: ha.setHaUrl,
+      haToken: ha.haToken,
+      setHaToken: ha.setHaToken,
+      hasHaToken: ha.hasHaToken,
+      isRefreshingHa: ha.isRefreshingHa,
+      isSavingHa: ha.isSavingHa,
+      saveHomeAssistantConfig: ha.saveHomeAssistantConfig,
+      testHomeAssistant: ha.testHomeAssistant,
+      refreshHomeAssistantEntities: () => void ha.refreshHomeAssistantEntities(refreshAll),
+      haReady: haUi.haReady,
+      hasHaUrl: haUi.hasHaUrl,
+      canSaveHa: haUi.canSaveHa,
+      haStatusText: haUi.haStatusText,
+      isEntityTogglePending,
+      runDeviceToggle
+    },
+    command: {
+      commandInput: command.commandInput,
+      setCommandInput: command.setCommandInput,
+      commandHistory: command.commandHistory,
+      setCommandHistory: command.setCommandHistory,
+      historyCursor: command.historyCursor,
+      setHistoryCursor: command.setHistoryCursor,
+      commandHints: command.commandHints,
+      isRunningCommand: command.isRunningCommand,
+      commandInputRef: command.commandInputRef,
+      runPresetCommand: command.runPresetCommand,
+      runCommandInternal: command.runCommandInternal,
+      clearCommandHistory: command.clearCommandHistory
+    },
+    calendar: {
+      calendarCursor: calendar.calendarCursor,
+      setCalendarCursor: calendar.setCalendarCursor,
+      monthCells: calendar.monthCells,
+      todayKey: calendar.todayKey,
+      calendarSelectedKey: calendar.calendarSelectedKey,
+      setCalendarSelectedKey: calendar.setCalendarSelectedKey,
+      selectedDayAgenda: calendar.selectedDayAgenda
+    },
+    reminders: {
+      filter: reminderFilter,
+      setFilter: setReminderFilterState,
+      pending: pendingList,
+      overdue: overdueReminders,
+      visible: visibleReminders,
+      snoozeMinutes: snoozeReminderMinutes,
+      completeById: completeReminderById,
+      deleteById: deleteReminderById
+    },
+    automation: {
+      deleteRuleById,
+      setRuleEnabledById
+    },
+    memos: {
+      deleteNote,
+      updateNote
+    },
+    profile: {
+      userPreferredName: profile.userPreferredName,
+      userPreferredNameIsSet: profile.userPreferredNameIsSet,
+      persistUserPreferredName: profile.persistUserPreferredName
+    },
+    onboarding: {
+      show: showOnboarding,
+      setShow: setShowOnboarding
+    },
+    desk: {
+      hideWindow: () => {
+        void window.assistantApi.hideDeskWindow();
+      }
     }
   };
 }

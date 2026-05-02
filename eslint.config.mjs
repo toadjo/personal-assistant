@@ -13,6 +13,15 @@ export default tseslint.config(
     }
   },
   {
-    ignores: ["dist/**", "release/**", "node_modules/**", ".vite/**", "*.mjs", "scripts/**"]
+    // Lint eslint.config.mjs; only skip ad-hoc Node scripts (no TS project context).
+    ignores: [
+      "dist/**",
+      "release/**",
+      "node_modules/**",
+      ".vite/**",
+      "scripts/**/*.mjs",
+      "prettier.config.mjs",
+      "src/main/preload-ipc-literals.generated.ts"
+    ]
   }
 );

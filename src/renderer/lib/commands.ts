@@ -4,9 +4,9 @@ export function parseReminderCommand(raw: string): { text: string; dueAt: string
   if (!match) {
     throw new Error("Use: remind <text> in <number><m|h>. Example: remind call mom in 15m");
   }
-  const text = match[1].trim();
-  const amount = Number(match[2]);
-  const unit = match[3].toLowerCase();
+  const text = match[1]!.trim();
+  const amount = Number(match[2]!);
+  const unit = match[3]!.toLowerCase();
   const minutes = unit === "h" ? amount * 60 : amount;
   if (!text) throw new Error("Reminder text is required.");
   if (!Number.isFinite(minutes) || minutes <= 0) throw new Error("Reminder time must be positive.");

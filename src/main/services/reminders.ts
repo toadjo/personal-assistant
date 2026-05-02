@@ -8,7 +8,12 @@ import { safeWebContentsSend } from "../ipc-safe-send";
 import { mainLog } from "../log";
 import { Reminder } from "../../shared/types";
 
-const REMINDER_SCHEDULER_INTERVAL_MS = 30_000;
+/** Upper bound so a far-future reminder does not block the process for days. */
+const REMINDER_SCHEDULER_MAX_TIMER_MS = 6 * 60 * 60 * 1000;
+/** Small floor so we re-check quickly when due times are imminent. */
+const REMINDER_SCHEDULER_MIN_TIMER_MS = 500;
+/** Safety net if timers slip (laptop sleep, clock skew). */
+const REMINDER_SCHEDULER_SAFETY_INTERVAL_MS = 30 * 60 * 1000;
 const REMINDER_SCHEDULER_BATCH_LIMIT = 200;
 
 export function listReminders(): Reminder[] {
@@ -64,62 +69,109 @@ export function snoozeReminder(id: string, minutes: number): void {
   getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id, dueAt: nextDueAt });
 }
 
-export function startReminderScheduler(getWindows: () => readonly (BrowserWindow | null)[]): NodeJS.Timeout {
+function computeMsUntilNextReminderWake(): number {
+  const row = getDb().prepare("SELECT dueAt FROM reminders WHERE status='pending' ORDER BY dueAt ASC LIMIT 1").get() as
+    | { dueAt?: string }
+    | undefined;
+  if (!row?.dueAt) return REMINDER_SCHEDULER_SAFETY_INTERVAL_MS;
+  const dueMs = new Date(row.dueAt).getTime();
+  if (!Number.isFinite(dueMs)) return REMINDER_SCHEDULER_SAFETY_INTERVAL_MS;
+  const delta = dueMs - Date.now();
+  return Math.min(REMINDER_SCHEDULER_MAX_TIMER_MS, Math.max(REMINDER_SCHEDULER_MIN_TIMER_MS, delta + 25));
+}
+
+function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | null)[]): boolean {
+  const now = new Date().toISOString();
+  const due = getDb()
+    .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC LIMIT @limit")
+    .all({ now, limit: REMINDER_SCHEDULER_BATCH_LIMIT }) as Reminder[];
+  let hasReminderChanges = false;
+  for (const item of due) {
+    try {
+      const notification = new Notification({ title: "Reminder", body: item.text });
+      notification.on("click", () => {
+        for (const w of getWindows()) {
+          if (w && !w.isDestroyed()) {
+            showMainWindow(w);
+            break;
+          }
+        }
+      });
+      notification.show();
+      if (item.recurrence === "daily") {
+        const sourceDue = new Date(item.dueAt);
+        const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
+        const nowTime = Date.now();
+        while (next.getTime() <= nowTime) {
+          next.setDate(next.getDate() + 1);
+        }
+        getDb()
+          .prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id")
+          .run({ id: item.id, dueAt: next.toISOString() });
+      } else {
+        completeReminder(item.id);
+      }
+      hasReminderChanges = true;
+    } catch (error) {
+      mainLog.warn(`Reminder scheduler failed for item ${item.id}: ${toErrorMessage(error)}`);
+    }
+  }
+  if (hasReminderChanges) {
+    for (const w of getWindows()) {
+      if (!w || w.isDestroyed() || w.webContents.isDestroyed()) continue;
+      safeWebContentsSend(w.webContents, IpcRendererEvent.remindersUpdated);
+    }
+  }
+  return hasReminderChanges;
+}
+
+/**
+ * Wakes shortly before the next pending reminder (instead of a fixed 30s poll), with a
+ * long-interval safety net while nothing is scheduled.
+ */
+export function startReminderScheduler(getWindows: () => readonly (BrowserWindow | null)[]): {
+  stop: () => void;
+} {
   let isTickRunning = false;
-  const interval = setInterval(() => {
+  let wakeTimer: NodeJS.Timeout | undefined;
+
+  const scheduleNextWake = (): void => {
+    if (wakeTimer) clearTimeout(wakeTimer);
+    const delay = computeMsUntilNextReminderWake();
+    wakeTimer = setTimeout(() => {
+      runDueCycle();
+    }, delay);
+    wakeTimer.unref();
+  };
+
+  const runDueCycle = (): void => {
     if (isTickRunning) return;
     isTickRunning = true;
     try {
-      const now = new Date().toISOString();
-      const due = getDb()
-        .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC LIMIT @limit")
-        .all({ now, limit: REMINDER_SCHEDULER_BATCH_LIMIT }) as Reminder[];
-      let hasReminderChanges = false;
-      for (const item of due) {
-        try {
-          const notification = new Notification({ title: "Reminder", body: item.text });
-          notification.on("click", () => {
-            for (const w of getWindows()) {
-              if (w && !w.isDestroyed()) {
-                showMainWindow(w);
-                break;
-              }
-            }
-          });
-          notification.show();
-          if (item.recurrence === "daily") {
-            const sourceDue = new Date(item.dueAt);
-            const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
-            const nowTime = Date.now();
-            // If app was offline for multiple days, jump directly to the next future occurrence.
-            while (next.getTime() <= nowTime) {
-              next.setDate(next.getDate() + 1);
-            }
-            getDb()
-              .prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id")
-              .run({ id: item.id, dueAt: next.toISOString() });
-          } else {
-            completeReminder(item.id);
-          }
-          hasReminderChanges = true;
-        } catch (error) {
-          mainLog.warn(`Reminder scheduler failed for item ${item.id}: ${toErrorMessage(error)}`);
-        }
+      try {
+        runReminderSchedulerTick(getWindows);
+      } catch (error) {
+        mainLog.error(`Reminder scheduler cycle failed: ${toErrorMessage(error)}`);
       }
-      if (hasReminderChanges) {
-        for (const w of getWindows()) {
-          if (!w || w.isDestroyed() || w.webContents.isDestroyed()) continue;
-          safeWebContentsSend(w.webContents, IpcRendererEvent.remindersUpdated);
-        }
-      }
-    } catch (error) {
-      mainLog.error(`Reminder scheduler cycle failed: ${toErrorMessage(error)}`);
+      scheduleNextWake();
     } finally {
       isTickRunning = false;
     }
-  }, REMINDER_SCHEDULER_INTERVAL_MS);
-  interval.unref();
-  return interval;
+  };
+
+  runDueCycle();
+
+  const safety = setInterval(() => {
+    runDueCycle();
+  }, REMINDER_SCHEDULER_SAFETY_INTERVAL_MS);
+  safety.unref();
+
+  return {
+    stop: () => {
+      if (wakeTimer) clearTimeout(wakeTimer);
+      clearInterval(safety);
+    }
+  };
 }
 
 function validateId(id: string, resourceName: string): void {

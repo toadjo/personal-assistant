@@ -57,8 +57,21 @@ export function useCommandExecution(args: {
   }, [setStatus]);
 
   useEffect(() => {
+    function isEditableTarget(target: EventTarget | null): boolean {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+      return target.isContentEditable;
+    }
+
     function onKey(event: KeyboardEvent): void {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        commandInputRef.current?.focus();
+        return;
+      }
+      if (event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        if (isEditableTarget(event.target)) return;
         event.preventDefault();
         commandInputRef.current?.focus();
       }

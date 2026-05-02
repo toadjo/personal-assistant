@@ -9,98 +9,96 @@ import { RemindersPanel } from "./panels/RemindersPanel";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 
 export function AssistantShell(): JSX.Element {
-  const ws = useAssistantWorkspace();
+  const { ui, data, ha, command, calendar, reminders, memos, profile, onboarding, desk } = useAssistantWorkspace();
 
   return (
     <main className="container secretaryLayout">
       <AppHeader
-        theme={ws.theme}
-        onThemeChange={ws.setTheme}
-        userPreferredName={ws.userPreferredName}
-        userPreferredNameIsSet={ws.userPreferredNameIsSet}
-        onSaveUserPreferredName={ws.persistUserPreferredName}
-        notesCount={ws.notes.length}
-        pendingRemindersCount={ws.pendingReminders.length}
-        overdueRemindersCount={ws.overdueReminders.length}
-        haReady={ws.haReady}
+        theme={ui.theme}
+        onThemeChange={ui.setTheme}
+        userPreferredName={profile.userPreferredName}
+        userPreferredNameIsSet={profile.userPreferredNameIsSet}
+        onSaveUserPreferredName={profile.persistUserPreferredName}
+        notesCount={data.notes.length}
+        pendingRemindersCount={reminders.pending.length}
+        overdueRemindersCount={reminders.overdue.length}
+        haReady={ha.haReady}
       />
 
-      <StatusBanner status={ws.status} error={ws.error} />
+      <StatusBanner status={ui.status} error={ui.error} />
 
       <div className="secretaryDesk">
         <div
           className={
-            ws.showOnboarding ? "secretaryTriple secretaryTriple-withIntro" : "secretaryTriple secretaryTriple-compact"
+            onboarding.show ? "secretaryTriple secretaryTriple-withIntro" : "secretaryTriple secretaryTriple-compact"
           }
         >
           <OnboardingPanel
-            visible={ws.showOnboarding}
-            haReady={ws.haReady}
-            commandHistoryLength={ws.commandHistory.length}
+            visible={onboarding.show}
+            haReady={ha.haReady}
+            commandHistoryLength={command.commandHistory.length}
             onHideForNow={() => {
               window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
-              ws.setShowOnboarding(false);
-              ws.setStatus("Understood—we will skip the guided intro.");
+              onboarding.setShow(false);
+              ui.setStatus("Understood—we will skip the guided intro.");
             }}
             onFinishSetup={() => {
-              ws.setShowOnboarding(false);
+              onboarding.setShow(false);
               window.localStorage.setItem(STORAGE_ONBOARDED, "1");
               window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-              ws.setStatus("Welcome aboard—intro marked complete.");
+              ui.setStatus("Welcome aboard—intro marked complete.");
             }}
-            onRunPreset={ws.runPresetCommand}
+            onRunPreset={command.runPresetCommand}
           />
 
           <CommandPanel
-            commandInputRef={ws.commandInputRef}
-            query={ws.query}
-            reminderFilter={ws.reminderFilter}
-            haReady={ws.haReady}
-            commandInput={ws.commandInput}
-            setCommandInput={ws.setCommandInput}
-            commandHints={ws.commandHints}
-            commandHistory={ws.commandHistory}
-            historyCursor={ws.historyCursor}
-            setHistoryCursor={ws.setHistoryCursor}
-            isRunningCommand={ws.isRunningCommand}
-            onRunCommand={ws.runCommandInternal}
-            onClearHistory={ws.clearCommandHistory}
-            onClearNoteSearch={() => ws.setQuery("")}
-            onPreset={ws.runPresetCommand}
-            onHideDeskIfInputEmpty={ws.hideDeskWindow}
+            commandInputRef={command.commandInputRef}
+            query={data.query}
+            reminderFilter={reminders.filter}
+            haReady={ha.haReady}
+            commandInput={command.commandInput}
+            setCommandInput={command.setCommandInput}
+            commandHints={command.commandHints}
+            commandHistory={command.commandHistory}
+            historyCursor={command.historyCursor}
+            setHistoryCursor={command.setHistoryCursor}
+            isRunningCommand={command.isRunningCommand}
+            onRunCommand={command.runCommandInternal}
+            onClearHistory={command.clearCommandHistory}
+            onClearNoteSearch={() => data.setQuery("")}
+            onPreset={command.runPresetCommand}
+            onHideDeskIfInputEmpty={desk.hideWindow}
           />
 
           <CalendarPanel
-            calendarCursor={ws.calendarCursor}
-            setCalendarCursor={ws.setCalendarCursor}
-            monthCells={ws.monthCells}
-            todayKey={ws.todayKey}
-            selectedDateKey={ws.calendarSelectedKey}
-            onSelectDateKey={ws.setCalendarSelectedKey}
-            dayAgenda={ws.selectedDayAgenda}
+            calendarCursor={calendar.calendarCursor}
+            setCalendarCursor={calendar.setCalendarCursor}
+            monthCells={calendar.monthCells}
+            todayKey={calendar.todayKey}
+            selectedDateKey={calendar.calendarSelectedKey}
+            onSelectDateKey={calendar.setCalendarSelectedKey}
+            dayAgenda={calendar.selectedDayAgenda}
           />
         </div>
 
         <div className="grid secretaryMemosGrid">
           <NotesPanel
-            isRefreshing={ws.isRefreshing}
-            notes={ws.notes}
-            onRefresh={ws.refreshAll}
-            onError={ws.reportError}
-            onDeleteNote={(id, title) => void ws.deleteNote(id, title)}
-            onUpdateNote={(payload) => void ws.updateNote(payload)}
+            onFetchNotes={data.fetchNotesOnly}
+            onError={ui.reportError}
+            onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
+            onUpdateNote={(payload) => void memos.updateNote(payload)}
           />
           <RemindersPanel
-            isRefreshing={ws.isRefreshing}
-            reminderFilter={ws.reminderFilter}
-            setReminderFilter={ws.setReminderFilter}
-            visibleReminders={ws.visibleReminders}
-            onRefresh={ws.refreshAll}
-            onError={ws.reportError}
-            onSnooze10={(id) => void ws.snoozeReminderMinutes(id, 10, "Snoozed 10m.")}
-            onSnooze60={(id) => void ws.snoozeReminderMinutes(id, 60, "Snoozed 1h.")}
-            onComplete={(id) => void ws.completeReminderById(id)}
-            onDelete={(id) => void ws.deleteReminderById(id)}
+            isRefreshing={data.isRefreshing}
+            reminderFilter={reminders.filter}
+            setReminderFilter={reminders.setFilter}
+            visibleReminders={reminders.visible}
+            onRefresh={data.fetchRemindersOnly}
+            onError={ui.reportError}
+            onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+            onSnooze60={(id) => void reminders.snoozeMinutes(id, 60, "Snoozed 1h.")}
+            onComplete={(id) => void reminders.completeById(id)}
+            onDelete={(id) => void reminders.deleteById(id)}
           />
         </div>
       </div>

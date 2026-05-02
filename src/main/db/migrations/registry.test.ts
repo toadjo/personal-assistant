@@ -4,9 +4,15 @@ import { MIGRATIONS } from "./registry";
 describe("MIGRATIONS registry", () => {
   it("uses strictly increasing versions starting at 1", () => {
     expect(MIGRATIONS.length).toBeGreaterThan(0);
-    expect(MIGRATIONS[0].version).toBe(1);
+    const first = MIGRATIONS[0];
+    expect(first).toBeDefined();
+    expect(first!.version).toBe(1);
     for (let i = 1; i < MIGRATIONS.length; i += 1) {
-      expect(MIGRATIONS[i].version).toBeGreaterThan(MIGRATIONS[i - 1].version);
+      const cur = MIGRATIONS[i];
+      const prev = MIGRATIONS[i - 1];
+      expect(cur).toBeDefined();
+      expect(prev).toBeDefined();
+      expect(cur!.version).toBeGreaterThan(prev!.version);
     }
   });
 

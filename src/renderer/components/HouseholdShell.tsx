@@ -6,16 +6,16 @@ import { AutomationLogsPanel } from "./panels/AutomationLogsPanel";
 import { AutomationRulesPanel } from "./panels/AutomationRulesPanel";
 
 export function HouseholdShell(): JSX.Element {
-  const ws = useAssistantWorkspace();
+  const { ui, data, ha, automation, profile } = useAssistantWorkspace();
 
   return (
     <main className="container householdWindowLayout">
       <header className="householdWindowHeader">
         <div className="householdWindowLead">
           <WelcomeBar
-            userPreferredName={ws.userPreferredName}
-            userPreferredNameIsSet={ws.userPreferredNameIsSet}
-            onSaveUserPreferredName={ws.persistUserPreferredName}
+            userPreferredName={profile.userPreferredName}
+            userPreferredNameIsSet={profile.userPreferredNameIsSet}
+            onSaveUserPreferredName={profile.persistUserPreferredName}
             idPrefix="household"
           />
           <p className="addOnEyebrow">Nice to have</p>
@@ -25,7 +25,7 @@ export function HouseholdShell(): JSX.Element {
           </p>
         </div>
         <div className="householdWindowActions">
-          <ThemeSelect theme={ws.theme} onChange={ws.setTheme} selectId="theme-select-household" />
+          <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-household" />
           <button type="button" className="ghostButton" onClick={() => void window.assistantApi.focusDeskWindow()}>
             Desk window
           </button>
@@ -33,37 +33,37 @@ export function HouseholdShell(): JSX.Element {
       </header>
 
       <HomeAssistantPanel
-        haUrl={ws.haUrl}
-        setHaUrl={ws.setHaUrl}
-        haToken={ws.haToken}
-        setHaToken={ws.setHaToken}
-        hasHaUrl={ws.hasHaUrl}
-        haStatusText={ws.haStatusText}
-        haReady={ws.haReady}
-        canSaveHa={ws.canSaveHa}
-        isSavingHa={ws.isSavingHa}
-        isRefreshingHa={ws.isRefreshingHa}
-        isRefreshing={ws.isRefreshing}
-        devices={ws.devices}
-        isEntityTogglePending={ws.isEntityTogglePending}
-        onSave={() => void ws.saveHomeAssistantConfig()}
-        onTest={() => void ws.testHomeAssistant()}
-        onRefreshEntities={() => void ws.refreshHomeAssistantEntities()}
-        onToggleDevice={ws.runDeviceToggle}
-        onError={ws.reportError}
+        haUrl={ha.haUrl}
+        setHaUrl={ha.setHaUrl}
+        haToken={ha.haToken}
+        setHaToken={ha.setHaToken}
+        hasHaUrl={ha.hasHaUrl}
+        haStatusText={ha.haStatusText}
+        haReady={ha.haReady}
+        canSaveHa={ha.canSaveHa}
+        isSavingHa={ha.isSavingHa}
+        isRefreshingHa={ha.isRefreshingHa}
+        isRefreshing={data.isRefreshing}
+        devices={data.devices}
+        isEntityTogglePending={ha.isEntityTogglePending}
+        onSave={() => void ha.saveHomeAssistantConfig()}
+        onTest={() => void ha.testHomeAssistant()}
+        onRefreshEntities={() => void ha.refreshHomeAssistantEntities()}
+        onToggleDevice={ha.runDeviceToggle}
+        onError={ui.reportError}
       />
 
       <div className="grid householdAutomationGrid">
         <AutomationRulesPanel
-          isRefreshing={ws.isRefreshing}
-          rules={ws.rules}
-          devices={ws.devices}
-          onRefresh={ws.refreshAll}
-          onError={ws.reportError}
-          onDeleteRule={(id, name) => void ws.deleteRuleById(id, name)}
-          onSetRuleEnabled={(id, enabled) => void ws.setRuleEnabledById(id, enabled)}
+          isRefreshing={data.isRefreshing}
+          rules={data.rules}
+          devices={data.devices}
+          onRefresh={data.refreshAll}
+          onError={ui.reportError}
+          onDeleteRule={(id, name) => void automation.deleteRuleById(id, name)}
+          onSetRuleEnabled={(id, enabled) => void automation.setRuleEnabledById(id, enabled)}
         />
-        <AutomationLogsPanel isRefreshing={ws.isRefreshing} logs={ws.logs} />
+        <AutomationLogsPanel isRefreshing={data.isRefreshing} logs={data.logs} />
       </div>
     </main>
   );

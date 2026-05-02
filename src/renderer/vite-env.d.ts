@@ -1,5 +1,12 @@
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  /** When `"1"`, enables renderer `devConsole*` output in production builds (for field diagnostics). */
+  readonly VITE_RENDERER_DEBUG_CONSOLE?: string;
+  /** Optional Sentry DSN for renderer process (set at build time). */
+  readonly VITE_SENTRY_DSN?: string;
+}
+
 import type { AssistantSettings, AutomationRule, Note, Reminder } from "../shared/types";
 
 declare global {
