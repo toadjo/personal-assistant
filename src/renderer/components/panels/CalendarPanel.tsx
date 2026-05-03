@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Reminder } from "../../../shared/types";
 import type { CalendarCell } from "../../lib/calendar";
 import { parseLocalDateKey, toLocalDateKey } from "../../lib/calendar";
@@ -18,7 +19,7 @@ function selectedDayHeading(selectedKey: string, todayKey: string): string {
   return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 }
 
-export function CalendarPanel({
+export const CalendarPanel = memo(function CalendarPanel({
   calendarCursor,
   setCalendarCursor,
   monthCells,
@@ -28,13 +29,14 @@ export function CalendarPanel({
   dayAgenda
 }: Props): JSX.Element {
   return (
-    <section className="panel secretaryCalendar">
+    <section className="panel secretaryCalendar" aria-labelledby="calendar-panel-heading">
       <div className="titleRow">
-        <h2>Calendar</h2>
-        <div className="miniActions">
+        <h2 id="calendar-panel-heading">Calendar</h2>
+        <div className="miniActions" role="toolbar" aria-label="Calendar month navigation">
           <button
             type="button"
             className="ghostButton"
+            aria-label="Previous month"
             onClick={() => setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1))}
           >
             Prev
@@ -42,6 +44,7 @@ export function CalendarPanel({
           <button
             type="button"
             className="ghostButton"
+            aria-label="Go to today"
             onClick={() => {
               const now = new Date();
               setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), 1));
@@ -53,6 +56,7 @@ export function CalendarPanel({
           <button
             type="button"
             className="ghostButton"
+            aria-label="Next month"
             onClick={() => setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1))}
           >
             Next
@@ -97,7 +101,7 @@ export function CalendarPanel({
         <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
         <p className="muted plannerHeading">Pending reminders for this day.</p>
       </div>
-      <ul className="list">
+      <ul className="list" aria-label="Reminders for selected day">
         {dayAgenda.length ? (
           dayAgenda.map((r) => (
             <li key={r.id}>
@@ -110,4 +114,4 @@ export function CalendarPanel({
       </ul>
     </section>
   );
-}
+});

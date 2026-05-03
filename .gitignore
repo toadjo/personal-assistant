@@ -26,5 +26,10 @@ coverage/
 .eslintcache
 *.tsbuildinfo
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
 # Rotated / extra log fragments
 *.log.*

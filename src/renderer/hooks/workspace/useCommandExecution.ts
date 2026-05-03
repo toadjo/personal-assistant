@@ -48,7 +48,7 @@ export function useCommandExecution(args: {
     if (!api?.onCommand) {
       return;
     }
-    const off = api.onCommand((_, command) => {
+    const off = api.onCommand((_ipc: unknown, command: string) => {
       setCommandInput(command === "new note" ? "new note " : command);
       commandInputRef.current?.focus();
       setStatus(`From the tray: “${command}”—tell me if you want anything else.`);

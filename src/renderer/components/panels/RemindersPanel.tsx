@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Reminder } from "../../../shared/types";
 import type { ReminderFilter } from "../../types";
 import { ReminderForm } from "../forms/ReminderForm";
@@ -15,7 +16,7 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-export function RemindersPanel({
+export const RemindersPanel = memo(function RemindersPanel({
   isRefreshing,
   reminderFilter,
   setReminderFilter,
@@ -28,9 +29,9 @@ export function RemindersPanel({
   onDelete
 }: Props): JSX.Element {
   return (
-    <section className="panel">
+    <section className="panel" aria-labelledby="reminders-panel-heading">
       <div className="titleRow">
-        <h2>Follow-ups</h2>
+        <h2 id="reminders-panel-heading">Follow-ups</h2>
         <select
           aria-label="Filter reminders by status"
           value={reminderFilter}
@@ -42,7 +43,7 @@ export function RemindersPanel({
         </select>
       </div>
       <ReminderForm onDone={onRefresh} onError={onError} />
-      <ul className="list">
+      <ul className="list" aria-label="Reminders list">
         {isRefreshing ? (
           <li className="muted">Loading…</li>
         ) : visibleReminders.length ? (
@@ -56,16 +57,36 @@ export function RemindersPanel({
               </span>
               {r.status === "pending" ? (
                 <div className="miniActions">
-                  <button type="button" className="ghostButton" onClick={() => void onSnooze10(r.id)}>
+                  <button
+                    type="button"
+                    className="ghostButton"
+                    onClick={() => void onSnooze10(r.id)}
+                    aria-label={`Snooze reminder ten minutes: ${r.text}`}
+                  >
                     +10m
                   </button>
-                  <button type="button" className="ghostButton" onClick={() => void onSnooze60(r.id)}>
+                  <button
+                    type="button"
+                    className="ghostButton"
+                    onClick={() => void onSnooze60(r.id)}
+                    aria-label={`Snooze reminder one hour: ${r.text}`}
+                  >
                     +1h
                   </button>
-                  <button type="button" className="ghostButton" onClick={() => void onComplete(r.id)}>
+                  <button
+                    type="button"
+                    className="ghostButton"
+                    onClick={() => void onComplete(r.id)}
+                    aria-label={`Mark reminder done: ${r.text}`}
+                  >
                     Done
                   </button>
-                  <button type="button" className="dangerButton" onClick={() => void onDelete(r.id)}>
+                  <button
+                    type="button"
+                    className="dangerButton"
+                    onClick={() => void onDelete(r.id)}
+                    aria-label={`Delete reminder: ${r.text}`}
+                  >
                     Delete
                   </button>
                 </div>
@@ -78,4 +99,4 @@ export function RemindersPanel({
       </ul>
     </section>
   );
-}
+});

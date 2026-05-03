@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Windows tray personal assistant MVP",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -13,6 +13,7 @@
     "postinstall": "electron-builder install-app-deps",
     "dev": "npm run rebuild:electron && node scripts/generate-preload-ipc.mjs && concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 file:dist/main/main/main.js file:dist/main/main/preload.js && electron .\"",
     "build": "npm run build:renderer && npm run build:main",
+    "build:report": "vite build --mode report",
     "build:renderer": "vite build",
     "build:main": "node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json",
     "check:preload-ipc": "node scripts/generate-preload-ipc.mjs --check",
@@ -32,7 +33,8 @@
     "test:node": "npm test",
     "test:watch": "node scripts/run-vitest-for-node.mjs watch",
     "test:smoke": "node scripts/smoke-check.mjs",
-    "test:preload-electron": "electron scripts/electron-preload-smoke.mjs"
+    "test:preload-electron": "electron scripts/electron-preload-smoke.mjs",
+    "test:e2e": "playwright test"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",
@@ -50,6 +52,7 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
     "@eslint/js": "^9.18.0",
+    "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.13",
@@ -69,6 +72,7 @@
     "lint-staged": "^15.4.3",
     "png-to-ico": "^3.0.1",
     "prettier": "^3.4.2",
+    "rollup-plugin-visualizer": "^7.0.1",
     "sharp": "^0.34.5",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.20.0",

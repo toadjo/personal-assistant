@@ -10,6 +10,7 @@ type WindowActions = {
   hideDeskWindow: () => void;
 };
 
+/** Registers IPC handlers that focus, hide, or open auxiliary windows from the trusted renderer. */
 export function registerAppWindowHandlers(assertSender: AssertSender, actions: WindowActions): void {
   ipcMain.handle(IpcInvoke.appOpenHouseholdWindow, (event) => {
     assertSender(event);

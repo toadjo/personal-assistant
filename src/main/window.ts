@@ -1,9 +1,30 @@
 import path from "node:path";
 import { URL } from "node:url";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, session } from "electron";
 import { resolveAppIconPath } from "./icons";
 import { getConfiguredDevServerUrl } from "./config/dev-server";
 import { isTrustedNavigationTarget } from "./security";
+
+/** Tight CSP for packaged builds; dev relaxes script/connect so Vite HMR and the dev server keep working. */
+function installDefaultContentSecurityPolicy(): void {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...(details.responseHeaders ?? {}) };
+    const csp = app.isPackaged
+      ? "default-src 'self'"
+      : [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: blob:",
+          "font-src 'self' data:",
+          "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* wss://127.0.0.1:* wss://localhost:*"
+        ].join("; ");
+    responseHeaders["Content-Security-Policy"] = [csp];
+    callback({ responseHeaders });
+  });
+}
+
+installDefaultContentSecurityPolicy();
 
 export type AppWindowRole = "desk" | "household";
 

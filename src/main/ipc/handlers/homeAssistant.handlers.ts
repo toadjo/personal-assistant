@@ -13,6 +13,7 @@ import { haConfigSchema, haEntityIdSchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
+/** Registers IPC handlers for Home Assistant configuration, health checks, entity cache, and toggles. */
 export function registerHomeAssistantHandlers(assertSender: AssertSender): void {
   ipcMain.handle(IpcInvoke.haConfigure, (event, payload) => {
     assertSender(event);

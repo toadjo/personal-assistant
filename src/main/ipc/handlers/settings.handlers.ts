@@ -6,6 +6,7 @@ import { assistantNameSchema, userPreferredNameSchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
+/** Registers IPC handlers for assistant display name and user preferred name settings. */
 export function registerSettingsHandlers(assertSender: AssertSender): void {
   ipcMain.handle(IpcInvoke.settingsGetAssistant, (event) => {
     assertSender(event);

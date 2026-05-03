@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="error-boundary-fallback" role="alert">
+        <div className="error-boundary-fallback" role="alert" aria-live="assertive">
           <h1 className="error-boundary-fallback__title">The desk hit a snag</h1>
           <p className="error-boundary-fallback__body">{this.state.message}</p>
           <button

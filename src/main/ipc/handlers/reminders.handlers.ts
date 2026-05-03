@@ -12,6 +12,7 @@ import { positiveIntegerSchema, reminderCreateSchema, uuidSchema } from "../sche
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
+/** Registers IPC handlers for listing, creating, completing, snoozing, and deleting reminders. */
 export function registerRemindersHandlers(assertSender: AssertSender): void {
   ipcMain.handle(IpcInvoke.remindersList, (event) => {
     assertSender(event);

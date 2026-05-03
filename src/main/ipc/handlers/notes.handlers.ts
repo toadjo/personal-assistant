@@ -6,6 +6,7 @@ import { noteCreateSchema, noteUpdateSchema, optionalQuerySchema, uuidSchema } f
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
+/** Registers IPC handlers for listing, creating, updating, and deleting notes (trusted renderer only). */
 export function registerNotesHandlers(assertSender: AssertSender): void {
   ipcMain.handle(IpcInvoke.notesList, (event, query) => {
     assertSender(event);

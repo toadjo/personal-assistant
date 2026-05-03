@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { Note } from "../../../shared/types";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
@@ -26,7 +26,7 @@ function parseTagsInput(raw: string): string[] {
     .filter(Boolean);
 }
 
-export function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }: Props): JSX.Element {
+export const NotesPanel = memo(function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }: Props): JSX.Element {
   const { notes, isRefreshing } = useWorkspaceStore(
     useShallow((s) => ({
       notes: s.notes,
@@ -69,12 +69,12 @@ export function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }
   }
 
   return (
-    <section className="panel">
+    <section className="panel" aria-labelledby="notes-panel-heading">
       <div className="titleRow">
-        <h2>Memos</h2>
+        <h2 id="notes-panel-heading">Memos</h2>
       </div>
       <QuickNoteForm onDone={onFetchNotes} onError={onError} />
-      <ul className="list">
+      <ul className="list" aria-label="Saved memos">
         {isRefreshing ? (
           <li className="muted">Loading…</li>
         ) : notes.length ? (
@@ -102,15 +102,20 @@ export function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }
                     value={draftTags}
                     onChange={(e) => setDraftTags(e.target.value)}
                   />
-                  <label className="row" style={{ gap: "0.5rem" }}>
-                    <input type="checkbox" checked={draftPinned} onChange={(e) => setDraftPinned(e.target.checked)} />
+                  <label className="row" style={{ gap: "0.5rem" }} htmlFor={`memo-pinned-${n.id}`}>
+                    <input
+                      id={`memo-pinned-${n.id}`}
+                      type="checkbox"
+                      checked={draftPinned}
+                      onChange={(e) => setDraftPinned(e.target.checked)}
+                    />
                     Pinned
                   </label>
                   <div className="row" style={{ gap: "0.5rem" }}>
-                    <button type="button" className="commandAction" onClick={() => saveEdit(n.id)}>
+                    <button type="button" className="commandAction" onClick={() => saveEdit(n.id)} aria-label="Save memo changes">
                       Save
                     </button>
-                    <button type="button" className="ghostButton" onClick={cancelEdit}>
+                    <button type="button" className="ghostButton" onClick={cancelEdit} aria-label="Cancel memo edit">
                       Cancel
                     </button>
                   </div>
@@ -123,10 +128,15 @@ export function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }
                     {n.tags.length ? ` [${n.tags.join(", ")}]` : ""}
                   </span>
                   <div className="row" style={{ gap: "0.5rem", flexShrink: 0 }}>
-                    <button type="button" className="ghostButton" onClick={() => startEdit(n)}>
+                    <button type="button" className="ghostButton" onClick={() => startEdit(n)} aria-label={`Edit memo ${n.title}`}>
                       Edit
                     </button>
-                    <button type="button" className="dangerButton" onClick={() => void onDeleteNote(n.id, n.title)}>
+                    <button
+                      type="button"
+                      className="dangerButton"
+                      onClick={() => void onDeleteNote(n.id, n.title)}
+                      aria-label={`Delete memo ${n.title}`}
+                    >
                       Delete
                     </button>
                   </div>
@@ -140,4 +150,4 @@ export function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }
       </ul>
     </section>
   );
-}
+});

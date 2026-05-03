@@ -8,6 +8,7 @@ let db: Database.Database | null = null;
 const OPEN_RETRIES = 4;
 const OPEN_RETRY_BASE_MS = 40;
 
+/** Blocks the main thread for roughly `ms` milliseconds (used only around DB open retries). */
 function spinWait(ms: number): void {
   const until = Date.now() + ms;
   while (Date.now() < until) {
@@ -41,6 +42,11 @@ function describeDbSetupFailure(dbPath: string, err: unknown): string {
   return `Database opened at ${dbPath} but setup failed (migrations or pragmas): ${msg}`;
 }
 
+/**
+ * Returns the singleton SQLite handle (`assistant.db` under the app userData path).
+ * On first open: sets busy timeout, runs migrations, enables WAL, and retries briefly on lock/busy errors.
+ * @throws When the database file cannot be opened or setup fails after retries.
+ */
 export function getDb(): Database.Database {
   if (db) return db;
   const dbPath = path.join(app.getPath("userData"), "assistant.db");

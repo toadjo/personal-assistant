@@ -8,6 +8,7 @@ import { ruleCreateSchema, ruleEnabledPayloadSchema, uuidSchema } from "../schem
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
+/** Registers IPC handlers for automation rules, execution logs, and rule lifecycle mutations. */
 export function registerAutomationHandlers(assertSender: AssertSender): void {
   ipcMain.handle(IpcInvoke.automationLogs, (event) => {
     assertSender(event);

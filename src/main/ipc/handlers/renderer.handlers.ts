@@ -7,6 +7,7 @@ import { rendererLogPayloadSchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
+/** Registers IPC handlers for renderer-reported errors (structured log + optional persistence). */
 export function registerRendererHandlers(assertSender: AssertSender): void {
   ipcMain.handle(IpcInvoke.rendererLogError, (event, payload) => {
     assertSender(event);
