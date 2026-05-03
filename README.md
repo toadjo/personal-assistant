@@ -2,6 +2,13 @@
 
 Windows-first tray personal assistant MVP built with Electron + React + TypeScript.
 
+## Install the app (Windows, no Git/Node)
+
+1. Open **[Releases](https://github.com/toadjo/personal-assistant/releases)** and download the latest **`Setup` `.exe`** from the release assets.
+2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
+
+To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **20 or 22** and npm.
+
 ## Working on the app
 
 ### Prerequisites
@@ -50,7 +57,7 @@ npm run test
 
 Pull requests and pushes to `main`/`master` run **lint, typecheck, tests, and production build** in GitHub Actions (see `.github/workflows/ci.yml`). The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
 
-**Release automation:** pushing a tag `vX.Y.Z` that matches `package.json` runs `.github/workflows/release.yml` (Windows NSIS via `npm run release:build`). You can also trigger the same job manually from the Actions tab (**workflow_dispatch**); the version input must match `package.json`. Artifacts are uploaded from the `release/` directory.
+**Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` (Windows NSIS via `npm run release:build`), uploads workflow artifacts, and **publishes a [GitHub Release](https://github.com/toadjo/personal-assistant/releases)** with the installer files attached. You can also trigger the job from the Actions tab (**Run workflow**); the version input must match `package.json` (bump the version in a commit first, then run the workflow).
 
 **Dependabot** is enabled for npm (`.github/dependabot.yml`).
 
