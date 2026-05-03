@@ -230,9 +230,15 @@ try {
     }
 
     if (-not $SkipVersionBump) {
-        Write-Step "Updating package.json to $normalizedVersion"
-        Write-ReleaseState -StatePath $stateFile -Stage "version-bump" -ReleaseTag $releaseTag -StagingOutput $stagingOutput -VersionedOutput $versionedOutput -InstallerHistoryVersion $installerHistoryVersion
-        Invoke-CheckedCommand "npm" @("version", $normalizedVersion, "--no-git-tag-version")
+        $packageJsonPath = Join-Path $projectRoot "package.json"
+        $currentPackageVersion = (Get-Content $packageJsonPath -Raw | ConvertFrom-Json).version
+        if ($currentPackageVersion -eq $normalizedVersion) {
+            Write-Step "package.json already at $normalizedVersion"
+        } else {
+            Write-Step "Updating package.json to $normalizedVersion"
+            Write-ReleaseState -StatePath $stateFile -Stage "version-bump" -ReleaseTag $releaseTag -StagingOutput $stagingOutput -VersionedOutput $versionedOutput -InstallerHistoryVersion $installerHistoryVersion
+            Invoke-CheckedCommand "npm" @("version", $normalizedVersion, "--no-git-tag-version")
+        }
     } else {
         Write-Step "Skipping package.json version update"
     }
@@ -295,7 +301,12 @@ try {
         throw "Packaging produced no .exe installer in $versionedOutput"
     }
 
-    Remove-IfExists $stagingOutput
+    try {
+        Remove-IfExists $stagingOutput
+    } catch {
+        Write-Host "Warning: release artifacts are complete, but staging cleanup failed: $($_.Exception.Message)" -ForegroundColor DarkYellow
+        Write-Host "Cleanup later with: npm run release:clean -- -IncludeDist" -ForegroundColor DarkYellow
+    }
     Remove-IfExists $stateFile
 
     Write-Step "Release complete"
