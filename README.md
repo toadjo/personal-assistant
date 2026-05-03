@@ -195,11 +195,13 @@ Notes:
 npm run dist
 ```
 
+`npm run dist` runs **`npm run clean:release`** before **electron-builder**, which deletes **`release/`** so a previous **`win-unpacked`** tree cannot lock **`app.asar`**. If deletion fails, quit **PersonalAssistant** / **Electron** (and close Explorer inside **`release/`**), then retry.
+
 ## Icon Packaging Notes (Windows)
 
 - Project-local icon sources live in `assets/`.
 - Installer/exe icon paths are explicitly set to project-local `assets/app-icon.png` so builds do not depend on global machine assets.
-- `npm run dist` and `npm run release:build` both run `npm run icons:prepare` to generate `.ico` from `assets/app-icon.png` when needed.
+- `npm run dist` runs `npm run icons:prepare` (ICO from `assets/app-icon.png`) and `npm run clean:release` before packaging. `npm run release:build` runs `icons:prepare` as part of its script.
 - Remaining gap: auto-generated `.ico` uses one source PNG, so quality can be weaker at very small sizes (16x16/24x24). Practical workaround: replace `assets/app-icon.ico` with a designer-exported multi-size `.ico` (16/24/32/48/64/128/256) and keep the same filename.
 
 ## Smoke Validation
