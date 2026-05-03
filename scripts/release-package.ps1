@@ -255,7 +255,7 @@ try {
 
     Write-Step "Building Windows installer"
     Write-ReleaseState -StatePath $stateFile -Stage "building-installer" -ReleaseTag $releaseTag -StagingOutput $stagingOutput -VersionedOutput $versionedOutput -InstallerHistoryVersion $installerHistoryVersion
-    Invoke-CheckedCommand "npx" @("electron-builder", "--win", "nsis", "--config.directories.output=$stagingOutput")
+    Invoke-CheckedCommand "npx" @("electron-builder", "--win", "nsis", "--publish", "never", "--config.directories.output=$stagingOutput")
 
     if (-not $SkipSmoke) {
         Write-Step "Running smoke check"
