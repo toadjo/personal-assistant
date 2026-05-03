@@ -65,7 +65,7 @@
     "globals": "^15.15.0",
     "happy-dom": "^20.9.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3",
+    "lint-staged": "^16.4.0",
     "png-to-ico": "^3.0.1",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
