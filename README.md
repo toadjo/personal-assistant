@@ -132,7 +132,7 @@ Notes:
 - Validates required commands (`npm`, `npx`) and stops immediately if any release command fails.
 - Uses a staging output directory first, then moves artifacts into `release/v<version>` only after a successful build.
 - Validates that installer artifacts exist and fails if no `.exe` was produced.
-- Attempts to prepare `assets/app-icon.ico` before packaging (auto-generates from `assets/app-icon.png` when possible, otherwise continues with PNG icon paths and prints guidance).
+- Prepares `assets/app-icon.ico` before packaging (from `assets/app-icon.png`; JPEG bytes mislabeled as `.png` are converted via **sharp** so NSIS accepts the installer icon).
 
 Usage:
 

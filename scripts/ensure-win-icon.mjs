@@ -2,6 +2,7 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pngToIco from "png-to-ico";
+import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,19 +20,34 @@ async function fileExists(targetPath) {
   }
 }
 
+/** Normalize `assets/app-icon.png` to real PNG bytes (file may be JPEG with a .png name). */
+async function decodeRasterToPng(sourceBytes) {
+  const isPng =
+    sourceBytes.length >= 8 &&
+    sourceBytes[0] === 0x89 &&
+    sourceBytes[1] === 0x50 &&
+    sourceBytes[2] === 0x4e &&
+    sourceBytes[3] === 0x47;
+  if (isPng) return sourceBytes;
+
+  const isJpeg = sourceBytes[0] === 0xff && sourceBytes[1] === 0xd8;
+  if (isJpeg) {
+    return await sharp(sourceBytes).png().toBuffer();
+  }
+
+  throw new Error(
+    "assets/app-icon.png must contain PNG or JPEG image bytes (or replace with a valid ICO via the ICO branch)."
+  );
+}
+
 async function main() {
   const hasPng = await fileExists(pngPath);
   if (!hasPng) {
     throw new Error(`Missing required icon source: ${pngPath}`);
   }
 
-  const hasIco = await fileExists(icoPath);
-  if (hasIco) {
-    console.log(`Windows icon already present: ${path.relative(projectRoot, icoPath)}`);
-    return;
-  }
-
   await mkdir(path.dirname(icoPath), { recursive: true });
+  // Rebuild .ico for every run: NSIS requires a valid multi-size ICO; committed .ico files can be invalid.
   const sourceBytes = await readFile(pngPath);
   const isIcoFile =
     sourceBytes.length >= 4 &&
@@ -49,26 +65,17 @@ async function main() {
     return;
   }
 
-  try {
-    const iconBuffer = await pngToIco(sourceBytes);
-    await writeFile(icoPath, iconBuffer);
-    console.log(`Generated Windows icon: ${path.relative(projectRoot, icoPath)}`);
-    console.log(
-      "If the generated .ico is not visually correct, replace assets/app-icon.ico with a designer-provided multi-size icon."
-    );
-  } catch {
-    throw new Error(
-      "assets/app-icon.png is not a valid PNG source and could not be converted. " +
-        "Workaround: add a valid assets/app-icon.ico manually (preferred multi-size icon: 16/24/32/48/64/128/256) " +
-        "or replace assets/app-icon.png with a real PNG and rerun npm run icons:prepare."
-    );
-  }
+  const pngBytes = await decodeRasterToPng(sourceBytes);
+  const iconBuffer = await pngToIco(pngBytes);
+  await writeFile(icoPath, iconBuffer);
+  console.log(`Generated Windows icon: ${path.relative(projectRoot, icoPath)}`);
+  console.log(
+    "If the generated .ico is not visually correct, replace assets/app-icon.ico with a designer-provided multi-size icon."
+  );
 }
 
 main().catch((error) => {
-  console.warn("Could not auto-prepare Windows .ico icon.");
-  console.warn(error instanceof Error ? error.message : String(error));
-  console.warn(
-    "Packaging can continue with project-local PNG icon paths; add assets/app-icon.ico manually for best Windows icon fidelity."
-  );
+  console.error("Could not prepare Windows .ico icon.");
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
 });
