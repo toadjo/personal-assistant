@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@sentry/electron": "^7.13.0",
-    "better-sqlite3": "^11.8.1",
+    "better-sqlite3": "^12.9.0",
     "electron-log": "^5.2.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
