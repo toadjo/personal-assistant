@@ -3,6 +3,8 @@ import { getDb } from "../db";
 import { getHaToken, saveHaToken } from "./secrets";
 import { mainLog } from "../log";
 import { assertHomeAssistantBaseUrl } from "./haUrlPolicy";
+import { parseHaStatesResponse, type HaStateRow } from "./haStatesResponse";
+import { getSetting, setSetting } from "./settingsRepository";
 
 const HA_BASE_URL_KEY = "ha.baseUrl";
 const HA_REQUEST_TIMEOUT_MS = 10_000;
@@ -23,11 +25,7 @@ export async function configureHomeAssistant(url: string, token: string): Promis
       throw new Error("Home Assistant token is required for initial setup");
     }
   }
-  getDb()
-    .prepare(
-      "INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updatedAt=excluded.updatedAt"
-    )
-    .run(HA_BASE_URL_KEY, normalizedUrl, new Date().toISOString());
+  setSetting(HA_BASE_URL_KEY, normalizedUrl);
 }
 
 export async function getHomeAssistantConfig(): Promise<{ url: string; hasToken: boolean }> {
@@ -111,25 +109,32 @@ export async function refreshEntities(): Promise<void> {
   if (!statesResponse.ok) {
     throw new Error(await formatHaHttpError("states fetch failed", statesResponse, "Unable to read entity states."));
   }
-  const states = (await statesResponse.json()) as Array<{
-    entity_id: string;
-    state: string;
-    attributes?: { friendly_name?: string; device_class?: string };
-  }>;
+  let statesJson: unknown;
+  try {
+    statesJson = await statesResponse.json();
+  } catch {
+    throw new Error("Home Assistant states response was not valid JSON.");
+  }
+  const states = parseHaStatesResponse(statesJson);
   const syncMark = new Date().toISOString();
   const insert = getDb().prepare(
     "INSERT INTO devices_cache (id, entityId, friendlyName, domain, state, attributes, lastSeenAt) VALUES (@id, @entityId, @friendlyName, @domain, @state, @attributes, @lastSeenAt) ON CONFLICT(entityId) DO UPDATE SET friendlyName=excluded.friendlyName, domain=excluded.domain, state=excluded.state, attributes=excluded.attributes, lastSeenAt=excluded.lastSeenAt"
   );
-  const txn = getDb().transaction((rows: typeof states) => {
+  const txn = getDb().transaction((rows: HaStateRow[]) => {
     for (const row of rows) {
       const domain = row.entity_id.split(".")[0] || "unknown";
+      const attrs = row.attributes;
+      const friendly =
+        attrs && typeof attrs.friendly_name === "string" && attrs.friendly_name.trim()
+          ? attrs.friendly_name
+          : row.entity_id;
       insert.run({
         id: randomUUID(),
         entityId: row.entity_id,
-        friendlyName: row.attributes?.friendly_name || row.entity_id,
+        friendlyName: friendly,
         domain,
         state: row.state,
-        attributes: JSON.stringify(row.attributes || {}),
+        attributes: JSON.stringify(attrs ?? {}),
         lastSeenAt: syncMark
       });
     }
@@ -179,10 +184,7 @@ export async function toggleEntity(entityId: string): Promise<void> {
 }
 
 function getConfiguredBaseUrl(): string {
-  const row = getDb().prepare("SELECT value FROM app_settings WHERE key = ?").get(HA_BASE_URL_KEY) as
-    | { value?: string }
-    | undefined;
-  return normalizeUrl(row?.value || "");
+  return normalizeUrl(getSetting(HA_BASE_URL_KEY) || "");
 }
 
 function normalizeUrl(url: string): string {

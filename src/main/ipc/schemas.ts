@@ -62,10 +62,7 @@ export const ruleCreateSchema = z
     actionConfig: z
       .object({
         text: z.string().trim().min(1).max(500).optional(),
-        entityId: z
-          .string()
-          .regex(/^[a-z0-9_]+\.[a-z0-9_]+$/i, "Invalid Home Assistant entity id")
-          .optional()
+        entityId: haEntityIdSchema.optional()
       })
       .refine((value) => Object.keys(value).length > 0, "Rule action config is required"),
     enabled: z.boolean()

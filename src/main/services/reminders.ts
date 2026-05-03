@@ -86,6 +86,8 @@ function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | nu
     .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC LIMIT @limit")
     .all({ now, limit: REMINDER_SCHEDULER_BATCH_LIMIT }) as Reminder[];
   let hasReminderChanges = false;
+  let processedOk = 0;
+  let failed = 0;
   for (const item of due) {
     try {
       const notification = new Notification({ title: "Reminder", body: item.text });
@@ -112,9 +114,16 @@ function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | nu
         completeReminder(item.id);
       }
       hasReminderChanges = true;
+      processedOk += 1;
     } catch (error) {
+      failed += 1;
       mainLog.warn(`Reminder scheduler failed for item ${item.id}: ${toErrorMessage(error)}`);
     }
+  }
+  if (due.length > 0) {
+    mainLog.info(
+      `[scheduler:reminders] tick dueSelected=${due.length} processedOk=${processedOk} failed=${failed} notifyBroadcast=${hasReminderChanges ? 1 : 0}`
+    );
   }
   if (hasReminderChanges) {
     for (const w of getWindows()) {
@@ -132,6 +141,7 @@ function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | nu
 export function startReminderScheduler(getWindows: () => readonly (BrowserWindow | null)[]): {
   stop: () => void;
 } {
+  mainLog.info("[scheduler:reminders] started");
   let isTickRunning = false;
   let wakeTimer: NodeJS.Timeout | undefined;
 
@@ -170,6 +180,7 @@ export function startReminderScheduler(getWindows: () => readonly (BrowserWindow
     stop: () => {
       if (wakeTimer) clearTimeout(wakeTimer);
       clearInterval(safety);
+      mainLog.info("[scheduler:reminders] stopped");
     }
   };
 }

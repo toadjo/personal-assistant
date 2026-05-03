@@ -1,19 +1,13 @@
-import { getDb } from "../db";
 import type { AssistantSettings } from "../../shared/types";
+import { deleteSetting, getSetting, setSetting } from "./settingsRepository";
 
 const ASSISTANT_NAME_KEY = "assistant.name";
 const USER_PREFERRED_NAME_KEY = "user.preferredName";
 const DEFAULT_ASSISTANT_NAME = "Assistant";
 
 export function getAssistantSettings(): AssistantSettings {
-  const row = getDb().prepare("SELECT value FROM app_settings WHERE key = ?").get(ASSISTANT_NAME_KEY) as
-    | { value?: string }
-    | undefined;
-  const normalizedName = normalizeAssistantName(row?.value ?? "");
-  const userRow = getDb().prepare("SELECT value FROM app_settings WHERE key = ?").get(USER_PREFERRED_NAME_KEY) as
-    | { value?: string }
-    | undefined;
-  const userPreferredName = normalizeAssistantName(userRow?.value ?? "");
+  const normalizedName = normalizeAssistantName(getSetting(ASSISTANT_NAME_KEY) ?? "");
+  const userPreferredName = normalizeAssistantName(getSetting(USER_PREFERRED_NAME_KEY) ?? "");
   if (!normalizedName) {
     return {
       name: DEFAULT_ASSISTANT_NAME,
@@ -35,11 +29,7 @@ export function saveAssistantName(inputName: string): AssistantSettings {
   if (!normalizedName) {
     throw new Error("Assistant name is required.");
   }
-  getDb()
-    .prepare(
-      "INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updatedAt=excluded.updatedAt"
-    )
-    .run(ASSISTANT_NAME_KEY, normalizedName, new Date().toISOString());
+  setSetting(ASSISTANT_NAME_KEY, normalizedName);
   return getAssistantSettings();
 }
 
@@ -47,14 +37,10 @@ export function saveAssistantName(inputName: string): AssistantSettings {
 export function saveUserPreferredName(input: string): AssistantSettings {
   const normalized = normalizeAssistantName(input);
   if (!normalized) {
-    getDb().prepare("DELETE FROM app_settings WHERE key = ?").run(USER_PREFERRED_NAME_KEY);
+    deleteSetting(USER_PREFERRED_NAME_KEY);
     return getAssistantSettings();
   }
-  getDb()
-    .prepare(
-      "INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updatedAt=excluded.updatedAt"
-    )
-    .run(USER_PREFERRED_NAME_KEY, normalized, new Date().toISOString());
+  setSetting(USER_PREFERRED_NAME_KEY, normalized);
   return getAssistantSettings();
 }
 

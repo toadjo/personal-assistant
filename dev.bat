@@ -16,7 +16,7 @@ if not exist package.json (
 
 where npm >nul 2>nul
 if errorlevel 1 (
-  echo  npm was not found on PATH. Install Node.js LTS, then reopen this window.
+  echo  npm was not found on PATH. Install Node.js 20 or 22 LTS ^(see README^), then reopen this window.
   pause
   exit /b 1
 )

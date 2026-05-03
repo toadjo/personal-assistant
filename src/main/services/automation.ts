@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "../db";
+import { mainLog } from "../log";
 import { createReminder } from "./reminders";
 import { toggleEntity } from "./homeAssistant";
 import type { AutomationRule } from "../../shared/types";
@@ -58,25 +59,19 @@ export function createTimeRule(input: CreateTimeRulePayload): AutomationRule {
   const triggerConfig = validateTriggerConfig(input.triggerConfig);
   const enabled = Boolean(input.enabled);
   const id = randomUUID();
-
-  if (actionType === "localReminder") {
-    const actionConfig = validateLocalReminderConfig(input.actionConfig);
-    const rule: AutomationRule = { id, name, triggerType: "time", triggerConfig, actionType, actionConfig, enabled };
-    getDb()
-      .prepare(
-        "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (@id,@name,@triggerType,@triggerConfig,@actionType,@actionConfig,@enabled)"
-      )
-      .run({
-        ...rule,
-        triggerConfig: JSON.stringify(rule.triggerConfig),
-        actionConfig: JSON.stringify(rule.actionConfig),
-        enabled: rule.enabled ? 1 : 0
-      });
-    return rule;
-  }
-
-  const actionConfig = validateHaToggleConfig(input.actionConfig);
-  const rule: AutomationRule = { id, name, triggerType: "time", triggerConfig, actionType, actionConfig, enabled };
+  const actionConfig =
+    actionType === "localReminder"
+      ? validateLocalReminderConfig(input.actionConfig)
+      : validateHaToggleConfig(input.actionConfig);
+  const rule = {
+    id,
+    name,
+    triggerType: "time" as const,
+    triggerConfig,
+    actionType,
+    actionConfig,
+    enabled
+  } as AutomationRule;
   getDb()
     .prepare(
       "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (@id,@name,@triggerType,@triggerConfig,@actionType,@actionConfig,@enabled)"
@@ -123,11 +118,21 @@ export async function runAutomationCycle(): Promise<void> {
     lastFiredAt?: string | null;
   }>;
 
+  let rulesEvaluated = 0;
+  let skippedNotDue = 0;
+  let firedSuccess = 0;
+  let invalidStoredConfig = 0;
+  let actionOrUnknownFailure = 0;
+
   for (const rule of rules) {
+    rulesEvaluated += 1;
     const startedAt = new Date().toISOString();
     try {
       const trigger = validateTriggerConfig(safeParseObject(rule.triggerConfig, "automation triggerConfig"));
-      if (!shouldRunTimeRule(nowMs, trigger.at, rule.lastFiredAt)) continue;
+      if (!shouldRunTimeRule(nowMs, trigger.at, rule.lastFiredAt)) {
+        skippedNotDue += 1;
+        continue;
+      }
       const actionType = validateActionType(rule.actionType);
       const rawActionConfig = safeParseObject(rule.actionConfig, "automation actionConfig");
       const spec: AutomationActionPayload =
@@ -136,16 +141,28 @@ export async function runAutomationCycle(): Promise<void> {
           : { actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
       const retryMeta = await withRetry(() => executeAutomationAction(spec), AUTOMATION_RETRY_ATTEMPTS);
       const endedAt = new Date().toISOString();
+      firedSuccess += 1;
       writeLog(rule.id, "success", startedAt, endedAt, undefined, retryMeta);
       getDb().prepare("UPDATE automation_rules SET lastFiredAt = @at WHERE id = @id").run({ at: endedAt, id: rule.id });
     } catch (error) {
       const ruleLabel = rule.name?.trim() || rule.id;
       const retryMeta = getRetryMetaFromError(error);
       const endedAt = new Date().toISOString();
+      if (isInvalidAutomationStoredConfigError(error)) {
+        invalidStoredConfig += 1;
+      } else {
+        actionOrUnknownFailure += 1;
+      }
       writeLog(rule.id, "failed", startedAt, endedAt, `[${ruleLabel}] ${formatErrorMessage(error)}`, retryMeta);
       // Advance lastFiredAt on failure so we do not re-fire the same missed slot every scheduler tick (log/HA spam).
       getDb().prepare("UPDATE automation_rules SET lastFiredAt = @at WHERE id = @id").run({ at: endedAt, id: rule.id });
     }
+  }
+
+  if (rulesEvaluated > 0) {
+    mainLog.info(
+      `[scheduler:automation] cycle rulesEvaluated=${rulesEvaluated} skippedNotDue=${skippedNotDue} firedSuccess=${firedSuccess} invalidStoredConfig=${invalidStoredConfig} actionOrUnknownFailure=${actionOrUnknownFailure}`
+    );
   }
 }
 
@@ -266,6 +283,20 @@ function writeLog(
 function formatErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+/** True when the failure is from parsing/normalizing stored rule JSON or fields (not external HA/reminder execution). */
+function isInvalidAutomationStoredConfigError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const m = error.message;
+  return (
+    /^Invalid automation (triggerConfig|actionConfig):/.test(m) ||
+    /Automation trigger time must use HH:MM format\./.test(m) ||
+    /Automation action type must be 'localReminder' or 'haToggle'\./.test(m) ||
+    /Automation action config must be an object\./.test(m) ||
+    /localReminder action requires non-empty text\./.test(m) ||
+    /haToggle action requires a valid entityId\./.test(m)
+  );
 }
 
 function getRetryMetaFromError(error: unknown): RetryMeta {

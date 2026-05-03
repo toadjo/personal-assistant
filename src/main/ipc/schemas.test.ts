@@ -61,4 +61,15 @@ describe("IPC Zod schemas", () => {
       })
     ).toThrow();
   });
+
+  it("ruleCreateSchema trims haToggle entityId consistently with haEntityIdSchema", () => {
+    const ok = ruleCreateSchema.parse({
+      name: "Trim",
+      triggerConfig: { at: "10:00" },
+      actionType: "haToggle",
+      actionConfig: { entityId: "  switch.porch  " },
+      enabled: true
+    });
+    expect(ok.actionConfig.entityId).toBe("switch.porch");
+  });
 });

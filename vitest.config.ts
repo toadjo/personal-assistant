@@ -24,7 +24,14 @@ export default defineConfig({
         statements: 5,
         branches: 5,
         functions: 5,
-        lines: 5
+        lines: 5,
+        // Core main-process services: raise over time toward ~70%+ as IPC/integration tests grow.
+        "src/main/services/**/*.ts": {
+          statements: 40,
+          branches: 38,
+          functions: 40,
+          lines: 40
+        }
       }
     }
   }

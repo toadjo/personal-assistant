@@ -8,6 +8,7 @@ function toErrorMessage(error: unknown): string {
 }
 
 export function startAutomationScheduler(): () => void {
+  mainLog.info("[scheduler:automation] started");
   let automationTimer: NodeJS.Timeout | null = null;
   let isStopped = false;
   let isRunningCycle = false;
@@ -39,5 +40,6 @@ export function startAutomationScheduler(): () => void {
       clearTimeout(automationTimer);
       automationTimer = null;
     }
+    mainLog.info("[scheduler:automation] stopped");
   };
 }
