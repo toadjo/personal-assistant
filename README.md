@@ -7,13 +7,13 @@ Windows-first tray personal assistant MVP built with Electron + React + TypeScri
 1. Open **[Releases](https://github.com/toadjo/personal-assistant/releases)** and download the latest **`Setup` `.exe`** from the release assets.
 2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
 
-To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **20 or 22** and npm.
+To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
 
 ## Working on the app
 
 ### Prerequisites
 
-- **Node.js** **20.x or 22.x** LTS (**required:** `>=20` and `<24`, matching `package.json` `engines` and CI on **22.x**). **24+** is unsupported: `better-sqlite3` often has no prebuilt Windows binary yet, and `engine-strict` in `.npmrc` will block `npm install` outside that range.
+- **Node.js** **22.12+** LTS (**required:** `>=22.12.0` and `<26`, matching `package.json` `engines` and CI on **22.x**). **24+** is currently outside the documented support window for this project, and `engine-strict` in `.npmrc` will block `npm install` outside the declared range.
 - **npm**
 - **Windows** (tray behavior and build targets are Windows-first)
 
@@ -27,7 +27,7 @@ cd personal-assistant
 npm install
 ```
 
-Native module **`better-sqlite3`** is rebuilt in `postinstall` for Electron. **`npm test`** temporarily rebuilds it for Node (Vitest), then restores the Electron build. **`npm run dev`** starts with **`npm run rebuild:electron`** (**`electron-rebuild -f -w better-sqlite3`**) so `better-sqlite3` always matches **Electron’s** Node ABI (Vitest/`npm rebuild` leave a Node-target binary; `electron-builder install-app-deps` alone can skip a rebuild). **`dev.bat`** calls **`npm run dev`**, so it gets the same behavior. Home Assistant tokens are stored with Electron **`safeStorage`** when the OS supports it (otherwise a warning is logged and the token falls back to SQLite plaintext).
+Native module **`better-sqlite3`** is rebuilt in `postinstall` for Electron. **`npm test`** temporarily rebuilds it for Node (Vitest), then restores the Electron build. **`npm run dev`** starts with **`npm run rebuild:electron`** (**`electron-rebuild -f -w better-sqlite3`**) so `better-sqlite3` always matches **Electron's** Node ABI (Vitest/`npm rebuild` leave a Node-target binary; `electron-builder install-app-deps` alone can skip a rebuild). **`dev.bat`** calls **`npm run dev`**, so it gets the same behavior. Home Assistant tokens are stored with Electron **`safeStorage`** when the OS supports it (otherwise a warning is logged and the token falls back to SQLite plaintext).
 
 **Windows:** Prefer a clone path **without spaces** (e.g. not `...\project 430\...`); node-gyp can fail there. If **`npm rebuild better-sqlite3`** reports **EBUSY** / **EPERM**, quit the Electron app (and anything else using that `.node` file), then retry **`npm test`** or **`npm run rebuild:electron`**.
 
@@ -51,9 +51,9 @@ npm run typecheck
 npm run test
 ```
 
-- **lint** — ESLint for main/renderer TypeScript and React hooks
-- **typecheck** — `tsc` for the main and renderer TypeScript projects
-- **test** — Vitest (main + renderer). Uses a Node rebuild of **`better-sqlite3`**, then **`electron-builder install-app-deps`** so the next **`npm run dev`** / Electron launch still works. Run on **Node 20 or 22** (see prerequisites).
+- **lint** - ESLint for main/renderer TypeScript and React hooks
+- **typecheck** - `tsc` for the main and renderer TypeScript projects
+- **test** - Vitest (main + renderer). Uses a Node rebuild of **`better-sqlite3`**, then **`electron-builder install-app-deps`** so the next **`npm run dev`** / Electron launch still works. Run on **Node 22.12+** (see prerequisites).
 
 #### E2E test layers
 
@@ -62,17 +62,17 @@ npm run test:e2e
 npm run test:e2e:electron
 ```
 
-- **test:e2e** — Browser-stub Playwright suite with stubbed assistant API. Requires Playwright browsers installed locally: `npx playwright install --with-deps`. Fast UI coverage without Electron.
-- **test:e2e:electron** — Real Electron/preload/IPC Playwright suite. Runs actual Electron process with isolated user-data paths. Requires `ELECTRON_E2E_TEST_MODE=1` environment variable (set automatically in CI).
+- **test:e2e** - Browser-stub Playwright suite with stubbed assistant API. Requires Playwright browsers installed locally: `npx playwright install --with-deps`. Fast UI coverage without Electron.
+- **test:e2e:electron** - Real Electron/preload/IPC Playwright suite. Runs actual Electron process with isolated user-data paths. Requires `ELECTRON_E2E_TEST_MODE=1` environment variable (set automatically in CI).
 
 #### Verification order for debugging
 
 When debugging failures, follow this sequence to narrow the layer:
 
-1. **Unit tests** (`npm test`) — Main/renderer logic and service layer
-2. **Preload smoke** (`npm run test:preload-electron`) — Real preload in BrowserWindow
-3. **Browser E2E** (`npm run test:e2e`) — UI coverage with stubbed API
-4. **Electron E2E** (`npm run test:e2e:electron`) — Full Electron/preload/IPC integration
+1. **Unit tests** (`npm test`) - Main/renderer logic and service layer
+2. **Preload smoke** (`npm run test:preload-electron`) - Real preload in BrowserWindow
+3. **Browser E2E** (`npm run test:e2e`) - UI coverage with stubbed API
+4. **Electron E2E** (`npm run test:e2e:electron`) - Full Electron/preload/IPC integration
 
 Pull requests and pushes to `main`/`master` run the full verification sequence in GitHub Actions (see `.github/workflows/ci.yml`): lint, typecheck, unit tests with coverage, build, preload smoke, Playwright browser installation, browser E2E, and Electron E2E. The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
 
@@ -90,15 +90,15 @@ Optional: `npm run test:smoke` validates build artifacts and packaging assumptio
 | -------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Electron main  | `src/main/`           | Window, tray, IPC registration, security checks, schedulers. IPC handlers are split under `src/main/ipc/handlers/`.                |
 | Preload bridge | `src/main/preload.ts` | Exposes `window.assistantApi` to the renderer (context isolation).                                                                 |
-| React UI       | `src/renderer/`       | `App.tsx` / `components/`, `hooks/`, `command/`, `lib/`, styles. Layout is intentionally minimal—one clear “Ask” line, then tools. |
+| React UI       | `src/renderer/`       | `App.tsx` / `components/`, `hooks/`, `command/`, `lib/`, styles. Layout is intentionally minimal-one clear "Ask" line, then tools. |
 | Shared types   | `src/shared/types.ts` | Types used by main and renderer.                                                                                                   |
 | Unit tests     | `src/**/*.test.ts`    | Colocated with source; run via `npm run test`.                                                                                     |
 
 **Typical tasks**
 
-- **UI or command behavior** — `src/renderer/` (start with `hooks/useAssistantWorkspace.ts` and `command/executeAssistantCommand.ts`).
-- **New IPC or validation** — extend Zod schemas in `src/main/ipc/schemas.ts`, add handlers in `src/main/ipc/handlers/`, mirror calls in `preload.ts`.
-- **SQLite / domain logic** — `src/main/services/` and `src/main/db.ts`.
+- **UI or command behavior** - `src/renderer/` (start with `hooks/useAssistantWorkspace.ts` and `command/executeAssistantCommand.ts`).
+- **New IPC or validation** - extend Zod schemas in `src/main/ipc/schemas.ts`, add handlers in `src/main/ipc/handlers/`, mirror calls in `preload.ts`.
+- **SQLite / domain logic** - `src/main/services/` and `src/main/db.ts`.
 
 ### Production-like local build
 
