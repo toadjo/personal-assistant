@@ -89,11 +89,6 @@ type HaFetchOptions = {
 };
 
 async function authedFetch(path: string, init?: RequestInit, options?: HaFetchOptions): Promise<Response> {
-  // Test-only seam: use override if set (for E2E test deterministic failures)
-  if (testFetchOverride) {
-    return testFetchOverride(path, init);
-  }
-
   const token = await getHaToken();
   const url = getConfiguredBaseUrl();
   if (!token || !url) {
@@ -127,12 +122,14 @@ async function authedFetch(path: string, init?: RequestInit, options?: HaFetchOp
     const timeoutRef = setTimeout(() => controller.abort(), HA_REQUEST_TIMEOUT_MS);
     timeoutRef.unref();
     try {
-      const res = await fetch(`${url}${path}`, {
-        ...init,
-        method,
-        headers,
-        signal: controller.signal
-      });
+      const res = testFetchOverride
+        ? await testFetchOverride(path, { ...init, method, headers, signal: controller.signal })
+        : await fetch(`${url}${path}`, {
+            ...init,
+            method,
+            headers,
+            signal: controller.signal
+          });
       if (attempt < maxAttempts && HA_RETRYABLE_STATUS_CODES.has(res.status)) {
         await sleep(HA_RETRY_DELAY_MS);
         continue;

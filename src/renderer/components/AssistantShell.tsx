@@ -130,6 +130,7 @@ export function AssistantShell(): JSX.Element {
             onShowSuccess={ui.showSuccess}
             onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
             onUpdateNote={(payload) => void memos.updateNote(payload)}
+            onNoteCreated={() => onboarding.markNoteCreated()}
           />
           <RemindersPanel
             isRefreshing={data.isRefreshing}
@@ -142,7 +143,8 @@ export function AssistantShell(): JSX.Element {
             onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
             onSnooze60={(id) => void reminders.snoozeMinutes(id, 60, "Snoozed 1h.")}
             onComplete={(id) => void reminders.completeById(id)}
-            onDelete={(id) => void reminders.deleteById(id)}
+            onDelete={(id) => reminders.deleteById(id)}
+            onReminderCreated={() => onboarding.markReminderCreated()}
           />
         </div>
       </div>

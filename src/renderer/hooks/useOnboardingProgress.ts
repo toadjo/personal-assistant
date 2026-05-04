@@ -56,9 +56,11 @@ export function useOnboardingProgress() {
   }, []);
 
   const updateProgress = (updates: Partial<OnboardingProgress>): void => {
-    const newProgress = { ...progress, ...updates };
-    setProgressState(newProgress);
-    saveProgress(newProgress);
+    setProgressState((currentProgress) => {
+      const newProgress = { ...currentProgress, ...updates };
+      saveProgress(newProgress);
+      return newProgress;
+    });
   };
 
   const markNoteCreated = (): void => {

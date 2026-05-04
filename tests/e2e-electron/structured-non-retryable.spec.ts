@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "./electron-harness";
+import { test, expect } from "./electron-harness.js";
 
 test.describe("Structured Non-Retryable Failures", () => {
   test("delete missing rule shows automation-domain message", async ({ window }) => {

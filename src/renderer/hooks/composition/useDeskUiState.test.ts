@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { useDeskUiState } from "./useDeskUiState";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../../constants/storageKeys";
@@ -16,7 +16,7 @@ describe("useDeskUiState", () => {
   });
 
   it("returns stable public shape with theme, status, error, onboarding, and desk actions", () => {
-    const { result } = renderHook(() => useDeskUiState(0));
+    const { result } = renderHook(() => useDeskUiState());
 
     expect(result.current).toHaveProperty("theme");
     expect(result.current).toHaveProperty("setTheme");
@@ -31,38 +31,33 @@ describe("useDeskUiState", () => {
 
   it("shows onboarding when storage has no onboarding flags", () => {
     window.localStorage.clear();
-    const { result } = renderHook(() => useDeskUiState(0));
+    const { result } = renderHook(() => useDeskUiState());
 
     expect(result.current.onboarding.show).toBe(true);
   });
 
   it("hides onboarding when onboarding flag is set", () => {
     window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-    const { result } = renderHook(() => useDeskUiState(0));
+    const { result } = renderHook(() => useDeskUiState());
 
     expect(result.current.onboarding.show).toBe(false);
   });
 
   it("hides onboarding when deferred flag is set", () => {
     window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
-    const { result } = renderHook(() => useDeskUiState(0));
+    const { result } = renderHook(() => useDeskUiState());
 
     expect(result.current.onboarding.show).toBe(false);
   });
 
-  it("auto-dismisses onboarding after first command history entry", async () => {
+  it("does not auto-dismiss onboarding - that is handled by useAssistantWorkspace", () => {
     window.localStorage.clear();
-    // Start with commandHistoryLength > 0 to simulate first command already received
-    const { result } = renderHook(() => useDeskUiState(1));
+    // Render hook without commandHistoryLength parameter
+    const { result } = renderHook(() => useDeskUiState());
 
-    // Wait for useEffect to run and set localStorage
-    await waitFor(() => {
-      expect(window.localStorage.getItem(STORAGE_ONBOARDED)).toBe("1");
-      expect(window.localStorage.getItem(STORAGE_ONBOARDING_DEFERRED)).toBeNull();
-    });
-
-    // Onboarding should be hidden after effect runs
-    expect(result.current.onboarding.show).toBe(false);
+    // Onboarding should remain visible since dismissal is handled at workspace level
+    expect(result.current.onboarding.show).toBe(true);
+    expect(window.localStorage.getItem(STORAGE_ONBOARDED)).toBeNull();
   });
 
   it("desk hideWindow calls assistantApi.hideDeskWindow", () => {
@@ -71,7 +66,7 @@ describe("useDeskUiState", () => {
       hideDeskWindow: mockHideDeskWindow
     };
 
-    const { result } = renderHook(() => useDeskUiState(0));
+    const { result } = renderHook(() => useDeskUiState());
     result.current.desk.hideWindow();
 
     expect(mockHideDeskWindow).toHaveBeenCalledOnce();

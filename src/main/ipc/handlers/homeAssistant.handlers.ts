@@ -52,8 +52,9 @@ export function registerHomeAssistantHandlers(assertSender: AssertSender): void 
     const config = overrideConfig as { mode: "timeout" | "network_error" | "http_error"; status?: number };
     if (config.mode === "timeout") {
       setTestFetchOverride(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 15_000)); // Exceeds 10s timeout
-        throw new Error("Should not reach here");
+        const error = new Error("The operation was aborted.");
+        error.name = "AbortError";
+        throw error;
       });
     } else if (config.mode === "network_error") {
       setTestFetchOverride(async () => {

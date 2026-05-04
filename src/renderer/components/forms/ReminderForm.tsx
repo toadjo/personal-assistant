@@ -7,9 +7,10 @@ type Props = {
   onDone: () => Promise<void>;
   onError: (message: string) => void;
   onShowSuccess?: (message: string) => void;
+  onCreated?: () => void;
 };
 
-export function ReminderForm({ onDone, onError, onShowSuccess }: Props): JSX.Element {
+export function ReminderForm({ onDone, onError, onShowSuccess, onCreated }: Props): JSX.Element {
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,6 +30,7 @@ export function ReminderForm({ onDone, onError, onShowSuccess }: Props): JSX.Ele
       await onDone();
       // v1.2.7 persistent success feedback
       onShowSuccess?.("Reminder created");
+      onCreated?.();
     } catch (err) {
       onError(getAssistantInvokeErrorMessage(err));
     } finally {

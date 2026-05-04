@@ -20,11 +20,12 @@ export default tseslint.config(
       "**/node_modules/**",
       ".vite/**",
       "prettier.config.mjs",
-      "src/main/preload-ipc-literals.generated.ts"
+      "src/main/preload-ipc-literals.generated.ts",
+      "test-results/**"
     ]
   },
   {
-    files: ["scripts/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "tests/e2e-electron/**/*.js"],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",
@@ -35,6 +36,7 @@ export default tseslint.config(
       "react-hooks/exhaustive-deps": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-require-imports": "off",
+      "no-empty-pattern": "off",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }]
     }
   }

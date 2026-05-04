@@ -4,15 +4,16 @@
  * Ownership:
  * - Status/error messaging and auto-clear timing
  * - Theme preference
- * - Onboarding visibility and auto-dismiss logic (v1.2.7: guided first-run flow)
+ * - Onboarding visibility (v1.2.7: guided first-run flow)
  * - Desk window actions (hide)
  *
  * Dependencies:
- * - commandHistoryLength: for auto-dismissing onboarding after first command
+ * - None - this hook is self-contained UI state
  *
- * This hook is self-contained UI state and does not depend on other workspace state.
+ * Onboarding dismissal after first command is handled by useAssistantWorkspace
+ * to avoid circular dependencies with command state.
  */
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import type { ThemeMode } from "../../types";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
@@ -51,7 +52,7 @@ export type DeskUiState = {
   };
 };
 
-export function useDeskUiState(commandHistoryLength: number): DeskUiState {
+export function useDeskUiState(): DeskUiState {
   const { theme, setTheme } = useThemePreference();
   const { status, setStatus, error, setError, reportError, persistentSuccess } = useWorkspaceMessages();
 
@@ -61,17 +62,6 @@ export function useDeskUiState(commandHistoryLength: number): DeskUiState {
   const [showOnboarding, setShowOnboarding] = useState(
     () => !window.localStorage.getItem(STORAGE_ONBOARDED) && !window.localStorage.getItem(STORAGE_ONBOARDING_DEFERRED)
   );
-
-  // Auto-dismiss onboarding after first command
-  useEffect(() => {
-    if (!showOnboarding) return;
-    if (commandHistoryLength === 0) return;
-    window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-    window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-    setShowOnboarding(false);
-    setStatus("Nice—first command received. I will stay out of your way unless you need me.");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commandHistoryLength, setStatus]);
 
   return {
     theme,

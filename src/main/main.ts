@@ -65,13 +65,16 @@ function startAppAfterDbOpen(): void {
     hideDeskWindow
   });
 
-  const hideDeskShortcut = "CommandOrControl+Shift+H";
-  try {
-    globalShortcut.register(hideDeskShortcut, () => {
-      hideDeskWindow();
-    });
-  } catch (error) {
-    mainLog.warn(`Global shortcut registration failed (${hideDeskShortcut})`, error);
+  const isE2ETestMode = process.env.ELECTRON_E2E_TEST_MODE === "1";
+  if (!isE2ETestMode) {
+    const hideDeskShortcut = "CommandOrControl+Shift+H";
+    try {
+      globalShortcut.register(hideDeskShortcut, () => {
+        hideDeskWindow();
+      });
+    } catch (error) {
+      mainLog.warn(`Global shortcut registration failed (${hideDeskShortcut})`, error);
+    }
   }
 
   deskWin = createWindow("desk");
@@ -84,34 +87,48 @@ function startAppAfterDbOpen(): void {
 
   if (deskWin) {
     showMainWindow(deskWin);
-    trayOptions = {
-      getDeskWindow: () => deskWin,
-      openHouseholdWindow: openOrFocusHouseholdWindow,
-      onQuit: () => {
-        isQuitting = true;
-        app.quit();
-      }
-    };
-    createTray(trayOptions);
+
+    if (!isE2ETestMode) {
+      trayOptions = {
+        getDeskWindow: () => deskWin,
+        openHouseholdWindow: openOrFocusHouseholdWindow,
+        onQuit: () => {
+          isQuitting = true;
+          app.quit();
+        }
+      };
+      createTray(trayOptions);
+    }
   }
 
-  reminderSchedulerStop = startReminderScheduler(getTrustedWindows).stop;
-  stopAutomationScheduler = startAutomationScheduler();
+  if (!isE2ETestMode) {
+    reminderSchedulerStop = startReminderScheduler(getTrustedWindows).stop;
+    stopAutomationScheduler = startAutomationScheduler();
+  }
 }
 
-if (!app.requestSingleInstanceLock()) {
+const isE2ETestMode = process.env.ELECTRON_E2E_TEST_MODE === "1";
+if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
   app.quit();
 } else {
+  if (isE2ETestMode && process.env.ELECTRON_E2E_USER_DATA_DIR) {
+    app.setPath("userData", process.env.ELECTRON_E2E_USER_DATA_DIR);
+  }
+
   app.on("second-instance", () => {
     mainLog.info("Second instance: restoring tray if needed and focusing desk window.");
-    recreateTrayFromStoredOptions();
+    if (!isE2ETestMode) {
+      recreateTrayFromStoredOptions();
+    }
     focusDeskWindow();
   });
 
   if (process.platform === "win32") {
     powerMonitor.on("resume", () => {
       mainLog.info("System resumed; recreating tray icon in case the taskbar was reset.");
-      recreateTrayFromStoredOptions();
+      if (!isE2ETestMode) {
+        recreateTrayFromStoredOptions();
+      }
     });
   }
 

@@ -12,12 +12,14 @@
  * The public {@link AssistantWorkspace} shape is stable. Keep new cross-cutting
  * logic in a dedicated composition hook before adding it here.
  */
+import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { AutomationRule, Note, Reminder } from "../../shared/types";
 import type { ReminderFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
 import type { CalendarCell } from "../lib/calendar";
 import type { OnboardingState, OnboardingStep } from "../types/onboarding";
 import type { SuccessMessage } from "./ui/usePersistentSuccess";
+import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 import { useDeskUiState } from "./composition/useDeskUiState";
 import { useDeskDataState } from "./composition/useDeskDataState";
 import { useDeskHomeAssistantState } from "./composition/useDeskHomeAssistantState";
@@ -139,33 +141,22 @@ export type AssistantWorkspace = {
 };
 
 export function useAssistantWorkspace(): AssistantWorkspace {
-  // Data state - no dependencies on other workspace state
-  const data = useDeskDataState((_msg) => {
-    // Error setter for data fetch errors - will be wired to UI state below
-  });
+  // UI state - no dependencies, created first
+  const ui = useDeskUiState();
 
-  // HA state - depends on feedback setters and refreshAll from data
-  const ha = useDeskHomeAssistantState(
-    (_msg) => {
-      // setStatus - will be wired below
-    },
-    (_msg) => {
-      // setError - will be wired below
-    },
-    data.refreshAll
-  );
+  // Data state - depends on setError from UI
+  const data = useDeskDataState(ui.setError);
 
-  // Productivity state - depends on data slices and callbacks
+  // HA state - depends on setStatus/setError from UI and refreshAll from data
+  const ha = useDeskHomeAssistantState(ui.setStatus, ui.setError, data.refreshAll);
+
+  // Productivity state - depends on data slices and callbacks from UI and data
   const productivity = useDeskProductivityState({
     notes: data.notes,
     reminders: data.reminders,
     rules: data.rules,
-    setStatus: (_msg) => {
-      // setStatus - will be wired below
-    },
-    setError: (_msg) => {
-      // setError - will be wired below
-    },
+    setStatus: ui.setStatus,
+    setError: ui.setError,
     refreshAll: data.refreshAll,
     fetchNotesOnly: data.fetchNotesOnly,
     fetchRemindersOnly: data.fetchRemindersOnly,
@@ -173,66 +164,43 @@ export function useAssistantWorkspace(): AssistantWorkspace {
     removeNoteById: data.removeNoteById
   });
 
-  // Command state - depends on data, ha, and productivity
+  // Command state - depends on data, ha, productivity, and callbacks from UI
   const command = useDeskCommandState({
     devices: data.devices,
     haReady: ha.haReady,
     setQuery: data.setQuery,
     setReminderFilter: productivity.reminders.setFilter,
-    setStatus: (_msg) => {
-      // setStatus - will be wired below
-    },
-    setError: (_msg) => {
-      // setError - will be wired below
-    },
+    setStatus: ui.setStatus,
+    setError: ui.setError,
     refreshAll: data.refreshAll,
     runDeviceToggle: ha.runDeviceToggle
   });
 
-  // UI state - depends on command history for onboarding
-  const ui = useDeskUiState(command.commandHistory.length);
-
-  // Now wire the feedback setters by recreating hooks with proper callbacks
-  // This is necessary because of circular dependencies, but hooks are stable
-  // so recreating them with different callbacks is safe
-  const haWithFeedback = useDeskHomeAssistantState(ui.setStatus, ui.setError, data.refreshAll);
-  const productivityWithFeedback = useDeskProductivityState({
-    notes: data.notes,
-    reminders: data.reminders,
-    rules: data.rules,
-    setStatus: ui.setStatus,
-    setError: ui.setError,
-    refreshAll: data.refreshAll,
-    fetchNotesOnly: data.fetchNotesOnly,
-    fetchRemindersOnly: data.fetchRemindersOnly,
-    mergeNote: data.mergeNote,
-    removeNoteById: data.removeNoteById
-  });
-  const commandWithFeedback = useDeskCommandState({
-    devices: data.devices,
-    haReady: haWithFeedback.haReady,
-    setQuery: data.setQuery,
-    setReminderFilter: productivityWithFeedback.reminders.setFilter,
-    setStatus: ui.setStatus,
-    setError: ui.setError,
-    refreshAll: data.refreshAll,
-    runDeviceToggle: haWithFeedback.runDeviceToggle
-  });
-  const uiWithFeedback = useDeskUiState(commandWithFeedback.commandHistory.length);
+  // Effect to dismiss onboarding after first command
+  // This is the single place where onboarding dismissal is handled
+  useEffect(() => {
+    if (command.commandHistory.length > 0 && ui.onboarding.show) {
+      window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+      window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+      ui.onboarding.setShow(false);
+      ui.setStatus("Nice—first command received. I will stay out of your way unless you need me.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [command.commandHistory.length, ui.onboarding.show, ui.onboarding.setShow, ui.setStatus]);
 
   return {
     ui: {
-      theme: uiWithFeedback.theme,
-      setTheme: uiWithFeedback.setTheme,
-      status: uiWithFeedback.status,
-      setStatus: uiWithFeedback.setStatus,
-      error: uiWithFeedback.error,
-      reportError: uiWithFeedback.reportError,
+      theme: ui.theme,
+      setTheme: ui.setTheme,
+      status: ui.status,
+      setStatus: ui.setStatus,
+      error: ui.error,
+      reportError: ui.reportError,
       // v1.2.7 persistent success feedback
-      successes: uiWithFeedback.successes,
-      showSuccess: uiWithFeedback.showSuccess,
-      dismissSuccess: uiWithFeedback.dismissSuccess,
-      dismissAllSuccesses: uiWithFeedback.dismissAllSuccesses,
+      successes: ui.successes,
+      showSuccess: ui.showSuccess,
+      dismissSuccess: ui.dismissSuccess,
+      dismissAllSuccesses: ui.dismissAllSuccesses,
     },
     data: {
       query: data.query,
@@ -248,43 +216,43 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       fetchRemindersOnly: data.fetchRemindersOnly
     },
     ha: {
-      haUrl: haWithFeedback.haUrl,
-      setHaUrl: haWithFeedback.setHaUrl,
-      haToken: haWithFeedback.haToken,
-      setHaToken: haWithFeedback.setHaToken,
-      hasHaToken: haWithFeedback.hasHaToken,
-      isRefreshingHa: haWithFeedback.isRefreshingHa,
-      isSavingHa: haWithFeedback.isSavingHa,
-      saveHomeAssistantConfig: haWithFeedback.saveHomeAssistantConfig,
-      testHomeAssistant: haWithFeedback.testHomeAssistant,
-      refreshHomeAssistantEntities: haWithFeedback.refreshHomeAssistantEntities,
-      haReady: haWithFeedback.haReady,
-      hasHaUrl: haWithFeedback.hasHaUrl,
-      canSaveHa: haWithFeedback.canSaveHa,
-      haStatusText: haWithFeedback.haStatusText,
-      isEntityTogglePending: haWithFeedback.isEntityTogglePending,
-      runDeviceToggle: haWithFeedback.runDeviceToggle
+      haUrl: ha.haUrl,
+      setHaUrl: ha.setHaUrl,
+      haToken: ha.haToken,
+      setHaToken: ha.setHaToken,
+      hasHaToken: ha.hasHaToken,
+      isRefreshingHa: ha.isRefreshingHa,
+      isSavingHa: ha.isSavingHa,
+      saveHomeAssistantConfig: ha.saveHomeAssistantConfig,
+      testHomeAssistant: ha.testHomeAssistant,
+      refreshHomeAssistantEntities: ha.refreshHomeAssistantEntities,
+      haReady: ha.haReady,
+      hasHaUrl: ha.hasHaUrl,
+      canSaveHa: ha.canSaveHa,
+      haStatusText: ha.haStatusText,
+      isEntityTogglePending: ha.isEntityTogglePending,
+      runDeviceToggle: ha.runDeviceToggle
     },
     command: {
-      commandInput: commandWithFeedback.commandInput,
-      setCommandInput: commandWithFeedback.setCommandInput,
-      commandHistory: commandWithFeedback.commandHistory,
-      setCommandHistory: commandWithFeedback.setCommandHistory,
-      historyCursor: commandWithFeedback.historyCursor,
-      setHistoryCursor: commandWithFeedback.setHistoryCursor,
-      commandHints: commandWithFeedback.commandHints,
-      isRunningCommand: commandWithFeedback.isRunningCommand,
-      commandInputRef: commandWithFeedback.commandInputRef,
-      runPresetCommand: commandWithFeedback.runPresetCommand,
-      runCommandInternal: commandWithFeedback.runCommandInternal,
-      clearCommandHistory: commandWithFeedback.clearCommandHistory
+      commandInput: command.commandInput,
+      setCommandInput: command.setCommandInput,
+      commandHistory: command.commandHistory,
+      setCommandHistory: command.setCommandHistory,
+      historyCursor: command.historyCursor,
+      setHistoryCursor: command.setHistoryCursor,
+      commandHints: command.commandHints,
+      isRunningCommand: command.isRunningCommand,
+      commandInputRef: command.commandInputRef,
+      runPresetCommand: command.runPresetCommand,
+      runCommandInternal: command.runCommandInternal,
+      clearCommandHistory: command.clearCommandHistory
     },
-    calendar: productivityWithFeedback.calendar,
-    reminders: productivityWithFeedback.reminders,
-    automation: productivityWithFeedback.automation,
-    memos: productivityWithFeedback.memos,
-    profile: productivityWithFeedback.profile,
-    onboarding: uiWithFeedback.onboarding,
-    desk: uiWithFeedback.desk
+    calendar: productivity.calendar,
+    reminders: productivity.reminders,
+    automation: productivity.automation,
+    memos: productivity.memos,
+    profile: productivity.profile,
+    onboarding: ui.onboarding,
+    desk: ui.desk
   };
 }

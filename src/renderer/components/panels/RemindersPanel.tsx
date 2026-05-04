@@ -15,6 +15,7 @@ type Props = {
   onSnooze60: (id: string) => void;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onReminderCreated?: () => void;
 };
 
 export const RemindersPanel = memo(function RemindersPanel({
@@ -28,7 +29,8 @@ export const RemindersPanel = memo(function RemindersPanel({
   onSnooze10,
   onSnooze60,
   onComplete,
-  onDelete
+  onDelete,
+  onReminderCreated
 }: Props): JSX.Element {
   return (
     <section className="panel" aria-labelledby="reminders-panel-heading">
@@ -44,7 +46,7 @@ export const RemindersPanel = memo(function RemindersPanel({
           <option value="done">Done</option>
         </select>
       </div>
-      <ReminderForm onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} />
+      <ReminderForm onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} onCreated={onReminderCreated} />
       <ul className="list" aria-label="Reminders list">
         {isRefreshing ? (
           <li className="muted">Loading…</li>

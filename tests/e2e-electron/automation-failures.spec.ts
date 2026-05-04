@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "./electron-harness";
+import { test, expect } from "./electron-harness.js";
 
 test.describe("Renderer-Visible Automation Failures", () => {
   test("toggling missing rule shows structured non-retryable automation message", async ({ window }) => {

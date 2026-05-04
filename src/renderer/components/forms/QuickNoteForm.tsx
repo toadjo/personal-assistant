@@ -6,9 +6,10 @@ type Props = {
   onDone: () => Promise<void>;
   onError: (message: string) => void;
   onShowSuccess?: (message: string) => void;
+  onCreated?: () => void;
 };
 
-export function QuickNoteForm({ onDone, onError, onShowSuccess }: Props): JSX.Element {
+export function QuickNoteForm({ onDone, onError, onShowSuccess, onCreated }: Props): JSX.Element {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   async function handleSubmit(event: FormEvent): Promise<void> {
@@ -27,6 +28,7 @@ export function QuickNoteForm({ onDone, onError, onShowSuccess }: Props): JSX.El
       await onDone();
       // v1.2.7 persistent success feedback
       onShowSuccess?.("Note created");
+      onCreated?.();
     } catch (err) {
       onError(getAssistantInvokeErrorMessage(err));
     }

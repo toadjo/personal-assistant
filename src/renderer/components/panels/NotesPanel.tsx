@@ -18,6 +18,7 @@ type Props = {
   onShowSuccess?: (message: string) => void;
   onDeleteNote: (id: string, title: string) => void;
   onUpdateNote: (payload: UpdatePayload) => void;
+  onNoteCreated?: () => void;
 };
 
 function parseTagsInput(raw: string): string[] {
@@ -32,7 +33,8 @@ export const NotesPanel = memo(function NotesPanel({
   onError,
   onShowSuccess,
   onDeleteNote,
-  onUpdateNote
+  onUpdateNote,
+  onNoteCreated
 }: Props): JSX.Element {
   const { notes, isRefreshing } = useWorkspaceStore(
     useShallow((s) => ({
@@ -80,7 +82,7 @@ export const NotesPanel = memo(function NotesPanel({
       <div className="titleRow">
         <h2 id="notes-panel-heading">Memos</h2>
       </div>
-      <QuickNoteForm onDone={onFetchNotes} onError={onError} onShowSuccess={onShowSuccess} />
+      <QuickNoteForm onDone={onFetchNotes} onError={onError} onShowSuccess={onShowSuccess} onCreated={onNoteCreated} />
       <ul className="list" aria-label="Saved memos">
         {isRefreshing ? (
           <li className="muted">Loading…</li>

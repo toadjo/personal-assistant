@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "./electron-harness";
+import { test, expect } from "./electron-harness.js";
 
 test.describe("IPC Validation Errors", () => {
   test("invalid quick note payload shows stable validation copy", async ({ window }) => {
-    // Wait for the app to load
-    await window.waitForLoadState("networkidle");
+    await window.waitForLoadState("domcontentloaded");
 
     // Try to create a note with an empty title (invalid per schema)
     const error = await window.evaluate(async () => {
@@ -51,8 +50,8 @@ test.describe("IPC Validation Errors", () => {
     expect(error).toContain("date and time");
   });
 
-  test("invalid Home Assistant config field shows field-specific hint", async ({ window }) => {
-    await window.waitForLoadState("networkidle");
+  test("invalid Home Assistant config field shows stable validation copy", async ({ window }) => {
+    await window.waitForLoadState("domcontentloaded");
 
     // Try to configure HA with an empty URL
     const error = await window.evaluate(async () => {
@@ -69,6 +68,8 @@ test.describe("IPC Validation Errors", () => {
     });
 
     expect(error).toBeTruthy();
-    expect(error).toContain("Home Assistant URL is required");
+    // Should show the stable validation message
+    expect(error).toContain("That request had invalid data");
+    expect(error).toContain("Check the Home Assistant URL or token field");
   });
 });
