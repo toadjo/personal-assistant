@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FEEDBACK_AUTO_CLEAR_MS } from "../../constants/timing";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 export function useWorkspaceMessages() {
   const [status, setStatus] = useState("");
@@ -15,9 +15,12 @@ export function useWorkspaceMessages() {
     return () => clearTimeout(id);
   }, [status, error]);
 
-  const reportError = useCallback((err: unknown) => {
-    setError(getErrorMessage(err));
-  }, []);
+  const reportError = useCallback(
+    (err: unknown) => {
+      setError(getAssistantInvokeErrorMessage(err));
+    },
+    [setError]
+  );
 
   return { status, setStatus, error, setError, reportError };
 }

@@ -9,6 +9,10 @@ jobs:
   verify:
     runs-on: windows-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["20", "22"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies
@@ -39,6 +43,17 @@ jobs:
 
       - name: Electron preload smoke (real preload in BrowserWindow)
         run: npm run test:preload-electron
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Browser-stub E2E tests
+        run: npm run test:e2e
+
+      - name: Electron E2E tests
+        run: npm run test:e2e:electron
+        env:
+          ELECTRON_E2E_TEST_MODE: 1
 
       - name: npm audit (high+)
         run: npm audit --audit-level=high

@@ -22,6 +22,11 @@ vi.mock("electron", () => ({
   }
 }));
 
+vi.mock("../log", () => ({
+  mainLog: { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+}));
+
+import { decodeAssistantInvokeFailure } from "../../shared/invokeErrors";
 import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder } from "./reminders";
 
 describe("reminders service", () => {
@@ -60,5 +65,36 @@ describe("reminders service", () => {
     });
     expect(() => snoozeReminder(r.id, 0)).toThrow();
     expect(() => snoozeReminder(r.id, 999999)).toThrow();
+  });
+
+  it("completeReminder surfaces REMINDER_NOT_FOUND for unknown ids", () => {
+    try {
+      completeReminder("00000000-0000-4000-8000-000000000099");
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "reminders",
+        code: "REMINDER_NOT_FOUND",
+        retryable: false
+      });
+    }
+  });
+
+  it("snoozeReminder surfaces INVALID_REMINDER_OPERATION for invalid minutes", () => {
+    const r = createReminder({
+      text: "x",
+      dueAt: new Date(Date.now() + 120_000).toISOString(),
+      recurrence: "none"
+    });
+    try {
+      snoozeReminder(r.id, 0);
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "reminders",
+        code: "INVALID_REMINDER_OPERATION",
+        retryable: false
+      });
+    }
   });
 });

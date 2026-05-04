@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type Messages = { setStatus: (value: string) => void; setError: (value: string) => void };
 
@@ -11,14 +11,16 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
   const [isRefreshingHa, setIsRefreshingHa] = useState(false);
 
   useEffect(() => {
+    const api = window.assistantApi;
+    if (!api?.getHomeAssistantConfig) return;
     void (async () => {
       try {
-        const config = await window.assistantApi.getHomeAssistantConfig();
+        const config = await api.getHomeAssistantConfig();
         if (config.url) setHaUrl(config.url);
         setHasHaToken(config.hasToken);
         if (config.hasToken) setStatus("I already have a Home Assistant token on file for the Household window.");
       } catch {
-        // Non-fatal on startup.
+        // Expected when HA is not configured yet or prefs cannot be read; desk still works.
       }
     })();
   }, [setStatus]);
@@ -34,7 +36,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
       setHaToken("");
       setStatus("Saved. Next step: Test connection, then Refresh devices so I see your entities.");
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsSavingHa(false);
     }
@@ -50,7 +52,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
           : "That test did not succeed. Double-check the URL, token, and that HA allows this machine."
       );
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }, [setError, setStatus]);
 
@@ -65,7 +67,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
         await refreshAll();
         setStatus("All synced. You should see fresh states below.");
       } catch (err) {
-        setError(getErrorMessage(err));
+        setError(getAssistantInvokeErrorMessage(err));
       } finally {
         setIsRefreshingHa(false);
       }

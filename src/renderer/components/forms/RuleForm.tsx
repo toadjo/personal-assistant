@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { HaDeviceRow } from "../../types";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type Props = {
   devices: HaDeviceRow[];
@@ -67,7 +67,7 @@ export function RuleForm({ devices, onDone, onError }: Props): JSX.Element {
             setEntityId("");
             await onDone();
           } catch (err) {
-            onError(getErrorMessage(err));
+            onError(getAssistantInvokeErrorMessage(err));
           } finally {
             setIsSubmitting(false);
           }

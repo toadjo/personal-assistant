@@ -1,27 +1,23 @@
 import type { IpcMainInvokeEvent } from "electron";
-import { ipcMain } from "electron";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import { createNote, deleteNote, listNotes, updateNote } from "../../services/notes";
+import { registerInvoke } from "../invoke-handle";
 import { noteCreateSchema, noteUpdateSchema, optionalQuerySchema, uuidSchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
 /** Registers IPC handlers for listing, creating, updating, and deleting notes (trusted renderer only). */
 export function registerNotesHandlers(assertSender: AssertSender): void {
-  ipcMain.handle(IpcInvoke.notesList, (event, query) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.notesList, assertSender, (_event, query) => {
     return listNotes(optionalQuerySchema.parse(query));
   });
-  ipcMain.handle(IpcInvoke.notesCreate, (event, payload) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.notesCreate, assertSender, (_event, payload) => {
     return createNote(noteCreateSchema.parse(payload));
   });
-  ipcMain.handle(IpcInvoke.notesUpdate, (event, payload) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.notesUpdate, assertSender, (_event, payload) => {
     return updateNote(noteUpdateSchema.parse(payload));
   });
-  ipcMain.handle(IpcInvoke.notesDelete, (event, id) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.notesDelete, assertSender, (_event, id) => {
     return deleteNote(uuidSchema.parse(id));
   });
 }

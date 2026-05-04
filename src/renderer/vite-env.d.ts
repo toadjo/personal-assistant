@@ -56,10 +56,24 @@ declare global {
       setRuleEnabled: (id: string, enabled: boolean) => Promise<void>;
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
       onRemindersUpdated: (cb: () => void) => () => void;
-      onCommand: (cb: (_: unknown, command: string) => void) => () => void;
+      onCommand: (cb: (_event: unknown, command: string) => void) => () => void;
       openHouseholdWindow: () => Promise<boolean>;
       focusDeskWindow: () => Promise<boolean>;
       hideDeskWindow: () => Promise<boolean>;
+      /**
+       * Test-only API: allows Electron E2E tests to inject a fake fetch implementation
+       * to simulate Home Assistant failures without requiring a live server.
+       * Only active when ELECTRON_E2E_TEST_MODE is set.
+       */
+      setTestHaFetchOverride: (
+        config: { mode: "timeout" | "network_error" | "http_error"; status?: number } | null
+      ) => Promise<void>;
+      /**
+       * Test-only API: allows Electron E2E tests to inject a fake automation action executor
+       * to simulate timeout and failure modes without requiring real external services.
+       * Only active when ELECTRON_E2E_TEST_MODE is set.
+       */
+      setTestAutomationActionOverride: (config: { mode: "timeout" | "failure" } | null) => Promise<void>;
     };
   }
 }

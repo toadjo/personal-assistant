@@ -33,7 +33,9 @@ function assertSupportedNodeForTests() {
 
   if (Number.isFinite(major) && (major < minMajor || major >= maxExclusiveMajor)) {
     console.error(`\n[test] Node ${process.version} is outside package.json engines: ${enginesNode}`);
-    console.error("[test] Vitest rebuilds better-sqlite3 for your Node version; Node 24+ has no Windows prebuild, so npm falls back to node-gyp and Visual Studio.");
+    console.error(
+      "[test] Vitest rebuilds better-sqlite3 for your Node version; Node 24+ has no Windows prebuild, so npm falls back to node-gyp and Visual Studio."
+    );
     console.error("[test] Use Node 22 LTS (matches CI), e.g. nvm-windows: nvm install 22 && nvm use 22\n");
     process.exit(1);
   }

@@ -7,7 +7,13 @@ export function StatusBanner({ status, error }: Props): JSX.Element {
   return (
     <>
       {status ? (
-        <p className="status statusAssistant" role="status" aria-live="polite" aria-atomic="true">
+        <p
+          className="status statusAssistant"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          data-testid="desk-status-banner"
+        >
           <span className="statusBadge" aria-hidden="true">
             Assistant
           </span>
@@ -15,7 +21,13 @@ export function StatusBanner({ status, error }: Props): JSX.Element {
         </p>
       ) : null}
       {error ? (
-        <p className="error errorAssistant" role="alert" aria-live="assertive" aria-atomic="true">
+        <p
+          className="error errorAssistant"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          data-testid="desk-error-banner"
+        >
           <span className="errorBadge" aria-hidden="true">
             Heads up
           </span>

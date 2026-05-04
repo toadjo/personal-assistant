@@ -1,5 +1,5 @@
 import type { Note } from "../../../shared/types";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type SetStatus = (value: string) => void;
 type SetError = (message: string) => void;
@@ -21,7 +21,7 @@ export function useNoteActions(setStatus: SetStatus, setError: SetError, helpers
       setStatus("Memo removed.");
       await fetchNotesOnly();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
       await fetchNotesOnly();
     }
   }
@@ -39,7 +39,7 @@ export function useNoteActions(setStatus: SetStatus, setError: SetError, helpers
       setStatus("Memo updated.");
       await fetchNotesOnly();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
       await fetchNotesOnly();
     }
   }

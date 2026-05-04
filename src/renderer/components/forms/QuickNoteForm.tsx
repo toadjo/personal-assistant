@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type Props = {
   onDone: () => Promise<void>;
@@ -24,7 +24,7 @@ export function QuickNoteForm({ onDone, onError }: Props): JSX.Element {
       setContent("");
       await onDone();
     } catch (err) {
-      onError(getErrorMessage(err));
+      onError(getAssistantInvokeErrorMessage(err));
     }
   }
   return (

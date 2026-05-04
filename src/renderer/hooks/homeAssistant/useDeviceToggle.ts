@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 export function useDeviceToggle(
   refreshAll: () => Promise<void>,
@@ -24,7 +24,7 @@ export function useDeviceToggle(
       await refreshAll();
       setStatus(`${friendlyName} is in sync now.`);
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setTogglingEntityIds((prev) => {
         const next = new Set(prev);

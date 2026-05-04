@@ -50,6 +50,11 @@ const invokeBody = extractBlock(src, "IpcInvoke");
 const pushBody = extractBlock(src, "IpcRendererEvent");
 const output = buildOutput(invokeBody, pushBody);
 
+/** Normalize CRLF so --check matches on Windows working trees (core.autocrlf). */
+function normalizeLf(text) {
+  return text.replace(/\r\n/g, "\n");
+}
+
 const check = process.argv.includes("--check");
 if (check) {
   let existing;
@@ -59,7 +64,7 @@ if (check) {
     console.error(`Missing ${outPath}; run: node scripts/generate-preload-ipc.mjs`);
     process.exit(1);
   }
-  if (existing !== output) {
+  if (normalizeLf(existing) !== normalizeLf(output)) {
     console.error(`Generated preload IPC literals are out of date. Run: node scripts/generate-preload-ipc.mjs`);
     process.exit(1);
   }

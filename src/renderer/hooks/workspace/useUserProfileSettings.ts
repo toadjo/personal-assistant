@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { logRendererWarning } from "../../lib/log";
 
 type SetStatus = (value: string) => void;
@@ -33,7 +33,7 @@ export function useUserProfileSettings(setError: SetError, setStatus: SetStatus)
           : "Cleared your name—I'll use a simple time-of-day greeting."
       );
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }
 

@@ -1,12 +1,12 @@
 {
   "name": "personal-assistant",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Windows tray personal assistant MVP",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0 <24.0.0"
+    "node": ">=20.0.0 <26.0.0"
   },
   "scripts": {
     "prepare": "husky",
@@ -34,7 +34,8 @@
     "test:watch": "node scripts/run-vitest-for-node.mjs watch",
     "test:smoke": "node scripts/smoke-check.mjs",
     "test:preload-electron": "electron scripts/electron-preload-smoke.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:electron": "playwright test --config=playwright.electron.config.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",

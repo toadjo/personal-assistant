@@ -12,6 +12,10 @@ export function createAssertSender(getTrustedWindows: () => readonly (BrowserWin
   return (event: IpcMainInvokeEvent) => assertTrustedIpcSender(event, getTrustedWindows);
 }
 
+/**
+ * Wires `ipcMain.handle` for every `IpcInvoke` channel. Handlers use `registerInvoke` (`invoke-handle.ts`) so Zod
+ * failures map to stable `ipc_validation` errors; payload shapes are listed in `handler-payload-contract.test.ts`.
+ */
 export function registerIpcHandlers(getTrustedWindows: () => readonly (BrowserWindow | null)[]): void {
   const assertSender = createAssertSender(getTrustedWindows);
 

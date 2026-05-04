@@ -33,7 +33,9 @@ export const IpcInvoke = {
   rendererLogError: "renderer:logError",
   appOpenHouseholdWindow: "app:openHouseholdWindow",
   appFocusDeskWindow: "app:focusDeskWindow",
-  appHideDeskWindow: "app:hideDeskWindow"
+  appHideDeskWindow: "app:hideDeskWindow",
+  testSetHaFetchOverride: "test:setHaFetchOverride",
+  testSetAutomationActionOverride: "test:setAutomationActionOverride"
 } as const;
 
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */

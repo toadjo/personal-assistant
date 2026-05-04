@@ -1,5 +1,4 @@
 import type { IpcMainInvokeEvent } from "electron";
-import { ipcMain } from "electron";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import {
   completeReminder,
@@ -8,30 +7,26 @@ import {
   listReminders,
   snoozeReminder
 } from "../../services/reminders";
+import { registerInvoke } from "../invoke-handle";
 import { positiveIntegerSchema, reminderCreateSchema, uuidSchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
 /** Registers IPC handlers for listing, creating, completing, snoozing, and deleting reminders. */
 export function registerRemindersHandlers(assertSender: AssertSender): void {
-  ipcMain.handle(IpcInvoke.remindersList, (event) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.remindersList, assertSender, () => {
     return listReminders();
   });
-  ipcMain.handle(IpcInvoke.remindersCreate, (event, payload) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.remindersCreate, assertSender, (_event, payload) => {
     return createReminder(reminderCreateSchema.parse(payload));
   });
-  ipcMain.handle(IpcInvoke.remindersComplete, (event, id) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.remindersComplete, assertSender, (_event, id) => {
     return completeReminder(uuidSchema.parse(id));
   });
-  ipcMain.handle(IpcInvoke.remindersDelete, (event, id) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.remindersDelete, assertSender, (_event, id) => {
     return deleteReminder(uuidSchema.parse(id));
   });
-  ipcMain.handle(IpcInvoke.remindersSnooze, (event, id, minutes) => {
-    assertSender(event);
+  registerInvoke(IpcInvoke.remindersSnooze, assertSender, (_event, id, minutes) => {
     return snoozeReminder(uuidSchema.parse(id), positiveIntegerSchema.parse(minutes));
   });
 }

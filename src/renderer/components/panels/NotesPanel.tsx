@@ -26,7 +26,12 @@ function parseTagsInput(raw: string): string[] {
     .filter(Boolean);
 }
 
-export const NotesPanel = memo(function NotesPanel({ onFetchNotes, onError, onDeleteNote, onUpdateNote }: Props): JSX.Element {
+export const NotesPanel = memo(function NotesPanel({
+  onFetchNotes,
+  onError,
+  onDeleteNote,
+  onUpdateNote
+}: Props): JSX.Element {
   const { notes, isRefreshing } = useWorkspaceStore(
     useShallow((s) => ({
       notes: s.notes,
@@ -112,7 +117,12 @@ export const NotesPanel = memo(function NotesPanel({ onFetchNotes, onError, onDe
                     Pinned
                   </label>
                   <div className="row" style={{ gap: "0.5rem" }}>
-                    <button type="button" className="commandAction" onClick={() => saveEdit(n.id)} aria-label="Save memo changes">
+                    <button
+                      type="button"
+                      className="commandAction"
+                      onClick={() => saveEdit(n.id)}
+                      aria-label="Save memo changes"
+                    >
                       Save
                     </button>
                     <button type="button" className="ghostButton" onClick={cancelEdit} aria-label="Cancel memo edit">
@@ -128,7 +138,12 @@ export const NotesPanel = memo(function NotesPanel({ onFetchNotes, onError, onDe
                     {n.tags.length ? ` [${n.tags.join(", ")}]` : ""}
                   </span>
                   <div className="row" style={{ gap: "0.5rem", flexShrink: 0 }}>
-                    <button type="button" className="ghostButton" onClick={() => startEdit(n)} aria-label={`Edit memo ${n.title}`}>
+                    <button
+                      type="button"
+                      className="ghostButton"
+                      onClick={() => startEdit(n)}
+                      aria-label={`Edit memo ${n.title}`}
+                    >
                       Edit
                     </button>
                     <button

@@ -55,7 +55,26 @@ npm run test
 - **typecheck** — `tsc` for the main and renderer TypeScript projects
 - **test** — Vitest (main + renderer). Uses a Node rebuild of **`better-sqlite3`**, then **`electron-builder install-app-deps`** so the next **`npm run dev`** / Electron launch still works. Run on **Node 20 or 22** (see prerequisites).
 
-Pull requests and pushes to `main`/`master` run **lint, typecheck, tests, and production build** in GitHub Actions (see `.github/workflows/ci.yml`). The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
+#### E2E test layers
+
+```bash
+npm run test:e2e
+npm run test:e2e:electron
+```
+
+- **test:e2e** — Browser-stub Playwright suite with stubbed assistant API. Requires Playwright browsers installed locally: `npx playwright install --with-deps`. Fast UI coverage without Electron.
+- **test:e2e:electron** — Real Electron/preload/IPC Playwright suite. Runs actual Electron process with isolated user-data paths. Requires `ELECTRON_E2E_TEST_MODE=1` environment variable (set automatically in CI).
+
+#### Verification order for debugging
+
+When debugging failures, follow this sequence to narrow the layer:
+
+1. **Unit tests** (`npm test`) — Main/renderer logic and service layer
+2. **Preload smoke** (`npm run test:preload-electron`) — Real preload in BrowserWindow
+3. **Browser E2E** (`npm run test:e2e`) — UI coverage with stubbed API
+4. **Electron E2E** (`npm run test:e2e:electron`) — Full Electron/preload/IPC integration
+
+Pull requests and pushes to `main`/`master` run the full verification sequence in GitHub Actions (see `.github/workflows/ci.yml`): lint, typecheck, unit tests with coverage, build, preload smoke, Playwright browser installation, browser E2E, and Electron E2E. The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
 
 **Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` (Windows NSIS via `npm run release:build`), uploads workflow artifacts, and **publishes a [GitHub Release](https://github.com/toadjo/personal-assistant/releases)** with the installer files attached. You can also trigger the job from the Actions tab (**Run workflow**); the version input must match `package.json` (bump the version in a commit first, then run the workflow).
 

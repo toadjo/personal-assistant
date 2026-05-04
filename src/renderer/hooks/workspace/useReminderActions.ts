@@ -1,4 +1,4 @@
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type SetStatus = (value: string) => void;
 type SetError = (message: string) => void;
@@ -10,7 +10,7 @@ export function useReminderActions(setStatus: SetStatus, setError: SetError, fet
       setStatus(okMessage);
       await fetchRemindersOnly();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
       await fetchRemindersOnly();
     }
   }
@@ -21,7 +21,7 @@ export function useReminderActions(setStatus: SetStatus, setError: SetError, fet
       setStatus("Marked that follow-up as done.");
       await fetchRemindersOnly();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
       await fetchRemindersOnly();
     }
   }
@@ -33,7 +33,7 @@ export function useReminderActions(setStatus: SetStatus, setError: SetError, fet
       setStatus("Follow-up deleted.");
       await fetchRemindersOnly();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
       await fetchRemindersOnly();
     }
   }

@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
+import type { AssistantInvokeFailure } from "../../shared/invokeErrors";
 import { getDb } from "../db";
 import { getHaToken, saveHaToken } from "./secrets";
 import { mainLog } from "../log";
 import { assertHomeAssistantBaseUrl } from "./haUrlPolicy";
 import { parseHaStatesResponse, type HaStateRow } from "./haStatesResponse";
 import { getSetting, setSetting } from "./settingsRepository";
+import { throwAssistantInvoke } from "./structuredInvokeError";
 
 const HA_BASE_URL_KEY = "ha.baseUrl";
 const HA_REQUEST_TIMEOUT_MS = 10_000;
@@ -12,17 +14,65 @@ const HA_RETRY_DELAY_MS = 450;
 const HA_MAX_IDEMPOTENT_RETRIES = 1;
 const HA_RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
+/**
+ * Test-only seam: allows Electron E2E tests to inject a fake fetch implementation
+ * to simulate Home Assistant failures without requiring a live server.
+ * Call `setTestFetchOverride(fn)` before invoking HA operations in tests.
+ * Never set this in production code.
+ */
+let testFetchOverride: ((path: string, init?: RequestInit) => Promise<Response>) | null = null;
+
+export function setTestFetchOverride(fn: ((path: string, init?: RequestInit) => Promise<Response>) | null): void {
+  testFetchOverride = fn;
+}
+
+function throwHa(partial: Omit<AssistantInvokeFailure, "domain">): never {
+  return throwAssistantInvoke({
+    domain: "home_assistant",
+    ...partial
+  });
+}
+
+async function throwFromHttpResponse(res: Response, prefix: string, fallbackReason: string): Promise<never> {
+  const message = await formatHaHttpError(prefix, res, fallbackReason);
+  const retryable = HA_RETRYABLE_STATUS_CODES.has(res.status) || res.status === 408 || res.status === 429;
+  return throwHa({
+    code: `HTTP_${res.status}`,
+    message,
+    retryable
+  });
+}
+
 export async function configureHomeAssistant(url: string, token: string): Promise<void> {
   const normalizedUrl = normalizeUrl(url);
-  if (!normalizedUrl) throw new Error("Home Assistant URL is required");
-  assertHomeAssistantBaseUrl(new URL(normalizedUrl));
+  if (!normalizedUrl) {
+    throwHa({
+      code: "INVALID_URL",
+      message: "Home Assistant URL is required.",
+      retryable: false
+    });
+  }
+  try {
+    assertHomeAssistantBaseUrl(new URL(normalizedUrl));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Invalid Home Assistant URL.";
+    throwHa({
+      code: "URL_POLICY",
+      message,
+      retryable: false
+    });
+  }
   const trimmedToken = typeof token === "string" ? token.trim() : "";
   if (trimmedToken) {
     await saveHaToken(trimmedToken);
   } else {
     const existingToken = await getHaToken();
     if (!existingToken) {
-      throw new Error("Home Assistant token is required for initial setup");
+      throwHa({
+        code: "TOKEN_REQUIRED",
+        message: "Home Assistant token is required for initial setup.",
+        retryable: false
+      });
     }
   }
   setSetting(HA_BASE_URL_KEY, normalizedUrl);
@@ -39,10 +89,27 @@ type HaFetchOptions = {
 };
 
 async function authedFetch(path: string, init?: RequestInit, options?: HaFetchOptions): Promise<Response> {
+  // Test-only seam: use override if set (for E2E test deterministic failures)
+  if (testFetchOverride) {
+    return testFetchOverride(path, init);
+  }
+
   const token = await getHaToken();
   const url = getConfiguredBaseUrl();
-  if (!token || !url) throw new Error("Home Assistant not configured.");
-  if (!path.startsWith("/")) throw new Error("Home Assistant request path must start with '/'.");
+  if (!token || !url) {
+    throwHa({
+      code: "NOT_CONFIGURED",
+      message: "Home Assistant is not configured yet. Add a URL and token in Household settings.",
+      retryable: false
+    });
+  }
+  if (!path.startsWith("/")) {
+    throwHa({
+      code: "INVALID_REQUEST",
+      message: "Home Assistant request path must start with '/'.",
+      retryable: false
+    });
+  }
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -79,14 +146,26 @@ async function authedFetch(path: string, init?: RequestInit, options?: HaFetchOp
         continue;
       }
       if (isAbortError) {
-        throw new Error(`Home Assistant request timed out after ${HA_REQUEST_TIMEOUT_MS}ms.`);
+        throwHa({
+          code: "REQUEST_TIMEOUT",
+          message: `Home Assistant request timed out after ${HA_REQUEST_TIMEOUT_MS}ms.`,
+          retryable: true
+        });
       }
-      throw new Error(`Home Assistant request failed: ${toErrorMessage(error)}`);
+      throwHa({
+        code: "REQUEST_FAILED",
+        message: `Home Assistant request failed: ${toErrorMessage(error)}`,
+        retryable: true
+      });
     } finally {
       clearTimeout(timeoutRef);
     }
   }
-  throw new Error(`Home Assistant request failed: ${toErrorMessage(lastError)}`);
+  throwHa({
+    code: "REQUEST_FAILED",
+    message: `Home Assistant request failed: ${toErrorMessage(lastError)}`,
+    retryable: true
+  });
 }
 
 export async function testConnection(): Promise<boolean> {
@@ -99,21 +178,25 @@ export async function testConnection(): Promise<boolean> {
     if (configResponse.ok) {
       return true;
     }
-    throw new Error(await formatHaHttpError("connection failed", configResponse, "Check URL/token."));
+    throw await throwFromHttpResponse(configResponse, "connection failed", "Check URL/token.");
   }
-  throw new Error(await formatHaHttpError("connection failed", apiRootResponse, "Check URL/token."));
+  throw await throwFromHttpResponse(apiRootResponse, "connection failed", "Check URL/token.");
 }
 
 export async function refreshEntities(): Promise<void> {
   const statesResponse = await authedFetch("/api/states");
   if (!statesResponse.ok) {
-    throw new Error(await formatHaHttpError("states fetch failed", statesResponse, "Unable to read entity states."));
+    throw await throwFromHttpResponse(statesResponse, "states fetch failed", "Unable to read entity states.");
   }
   let statesJson: unknown;
   try {
     statesJson = await statesResponse.json();
   } catch {
-    throw new Error("Home Assistant states response was not valid JSON.");
+    throwHa({
+      code: "STATES_INVALID_JSON",
+      message: "Home Assistant states response was not valid JSON.",
+      retryable: true
+    });
   }
   const states = parseHaStatesResponse(statesJson);
   const syncMark = new Date().toISOString();
@@ -179,7 +262,7 @@ export async function toggleEntity(entityId: string): Promise<void> {
     body: JSON.stringify({ entity_id: entityId })
   });
   if (!response.ok) {
-    throw new Error(await formatHaHttpError("toggle failed", response, "Unable to toggle entity."));
+    throw await throwFromHttpResponse(response, "toggle failed", "Unable to toggle entity.");
   }
 }
 

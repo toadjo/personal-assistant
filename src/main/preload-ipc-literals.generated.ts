@@ -29,7 +29,9 @@ export const invokeChannelMap = {
   rendererLogError: "renderer:logError",
   appOpenHouseholdWindow: "app:openHouseholdWindow",
   appFocusDeskWindow: "app:focusDeskWindow",
-  appHideDeskWindow: "app:hideDeskWindow"
+  appHideDeskWindow: "app:hideDeskWindow",
+  testSetHaFetchOverride: "test:setHaFetchOverride",
+  testSetAutomationActionOverride: "test:setAutomationActionOverride"
 } as const;
 
 export const pushChannelMap = {

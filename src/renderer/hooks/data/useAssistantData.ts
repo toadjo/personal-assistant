@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Note } from "../../../shared/types";
+import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../../constants/assistant";
 import { QUERY_REFRESH_DEBOUNCE_MS } from "../../constants/timing";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 type SetError = (message: string) => void;
 
@@ -34,7 +35,7 @@ export function useAssistantData(setError: SetError) {
     try {
       setNotes(await api.listNotes(queryRef.current));
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }, [setError, setNotes]);
 
@@ -44,7 +45,7 @@ export function useAssistantData(setError: SetError) {
     try {
       setReminders(await api.listReminders());
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }, [setError, setReminders]);
 
@@ -69,7 +70,7 @@ export function useAssistantData(setError: SetError) {
         rules: ruleRows
       });
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsRefreshing(false);
     }
@@ -81,9 +82,7 @@ export function useAssistantData(setError: SetError) {
   useEffect(() => {
     const api = window.assistantApi;
     if (!api?.onRemindersUpdated) {
-      setError(
-        "This window is not running inside the Electron app (preload bridge missing). Open the app from the tray or use npm run dev."
-      );
+      setError(PRELOAD_BRIDGE_MISSING_MESSAGE);
       return;
     }
     void refreshRef.current();
@@ -92,12 +91,11 @@ export function useAssistantData(setError: SetError) {
         try {
           setReminders(await api.listReminders());
         } catch (err) {
-          setError(getErrorMessage(err));
+          setError(getAssistantInvokeErrorMessage(err));
         }
       })();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setError, setReminders]);
 
   useEffect(() => {
     const id = window.setTimeout(() => void fetchNotesOnly(), QUERY_REFRESH_DEBOUNCE_MS);

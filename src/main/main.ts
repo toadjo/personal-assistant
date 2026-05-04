@@ -4,7 +4,7 @@ import { getDb } from "./db";
 import { startReminderScheduler } from "./services/reminders";
 import { createAssertSender, registerIpcHandlers } from "./ipc/register-handlers";
 import { registerAppWindowHandlers } from "./ipc/handlers/appWindow.handlers";
-import { createWindow, showMainWindow } from "./window";
+import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } from "./window";
 import { createTray, type TrayOptions } from "./tray";
 import { startAutomationScheduler } from "./automation-scheduler";
 import { mainLog } from "./log";
@@ -116,6 +116,7 @@ if (!app.requestSingleInstanceLock()) {
   }
 
   app.whenReady().then(() => {
+    installDefaultContentSecurityPolicy();
     if (process.env.SENTRY_DSN) {
       Sentry.init({
         dsn: process.env.SENTRY_DSN,

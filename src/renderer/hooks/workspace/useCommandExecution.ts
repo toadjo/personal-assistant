@@ -4,7 +4,7 @@ import { executeAssistantCommand } from "../../command/executeAssistantCommand";
 import { MAX_COMMAND_HISTORY, COMMAND_HINT_SAMPLES } from "../../constants/command";
 import { COMMAND_HISTORY_PERSIST_DEBOUNCE_MS } from "../../constants/timing";
 import { normalizeCommandAlias } from "../../lib/commands";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { persistCommandHistory, loadCommandHistory } from "../../lib/storage/commandHistory";
 import type { HaDeviceRow } from "../../types";
 
@@ -48,7 +48,7 @@ export function useCommandExecution(args: {
     if (!api?.onCommand) {
       return;
     }
-    const off = api.onCommand((_ipc: unknown, command: string) => {
+    const off = api.onCommand((_event: unknown, command: string) => {
       setCommandInput(command === "new note" ? "new note " : command);
       commandInputRef.current?.focus();
       setStatus(`From the tray: “${command}”—tell me if you want anything else.`);
@@ -107,7 +107,7 @@ export function useCommandExecution(args: {
       setCommandInput("");
       await refreshAll();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsRunningCommand(false);
     }

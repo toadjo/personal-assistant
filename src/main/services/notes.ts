@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "../db";
 import { Note } from "../../shared/types";
+import { throwAssistantInvoke } from "./structuredInvokeError";
 
 export function listNotes(query?: string): Note[] {
   const db = getDb();
@@ -32,7 +33,15 @@ export function createNote(input: Pick<Note, "title" | "content" | "tags" | "pin
 }
 
 export function deleteNote(id: string): void {
-  getDb().prepare("DELETE FROM notes WHERE id=@id").run({ id });
+  const result = getDb().prepare("DELETE FROM notes WHERE id=@id").run({ id });
+  if (result.changes === 0) {
+    throwAssistantInvoke({
+      domain: "notes",
+      code: "NOTE_NOT_FOUND",
+      message: "That note was not found.",
+      retryable: false
+    });
+  }
 }
 
 export function updateNote(input: {
@@ -47,7 +56,12 @@ export function updateNote(input: {
     | Record<string, unknown>
     | undefined;
   if (!existing) {
-    throw new Error("Note not found.");
+    throwAssistantInvoke({
+      domain: "notes",
+      code: "NOTE_NOT_FOUND",
+      message: "That note was not found.",
+      retryable: false
+    });
   }
   const current = mapNote(existing);
   const title = input.title !== undefined ? normalizeText(input.title, "Note title") : current.title;
@@ -77,7 +91,12 @@ export function updateNote(input: {
 function mapNote(row: Record<string, unknown>): Note {
   const id = typeof row?.id === "string" && row.id.trim() ? row.id.trim() : "";
   if (!id) {
-    throw new Error("Note row is missing a valid id (database may be corrupted).");
+    throwAssistantInvoke({
+      domain: "notes",
+      code: "INVALID_NOTE_OPERATION",
+      message: "A note in the database could not be read. Try refreshing the desk.",
+      retryable: true
+    });
   }
   let tags: string[] = [];
   try {
@@ -102,11 +121,21 @@ function mapNote(row: Record<string, unknown>): Note {
 
 function normalizeText(value: unknown, fieldName: string): string {
   if (typeof value !== "string") {
-    throw new Error(`${fieldName} must be a string.`);
+    throwAssistantInvoke({
+      domain: "notes",
+      code: "INVALID_NOTE_OPERATION",
+      message: `${fieldName} must be valid text.`,
+      retryable: false
+    });
   }
   const normalized = value.trim();
   if (!normalized) {
-    throw new Error(`${fieldName} is required.`);
+    throwAssistantInvoke({
+      domain: "notes",
+      code: "INVALID_NOTE_OPERATION",
+      message: `${fieldName} is required.`,
+      retryable: false
+    });
   }
   return normalized;
 }

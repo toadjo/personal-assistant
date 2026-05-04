@@ -6,6 +6,7 @@ import { IpcRendererEvent } from "../../shared/ipc-channels";
 import { getDb } from "../db";
 import { safeWebContentsSend } from "../ipc-safe-send";
 import { mainLog } from "../log";
+import { throwAssistantInvoke } from "./structuredInvokeError";
 import { Reminder } from "../../shared/types";
 
 /** Upper bound so a far-future reminder does not block the process for days. */
@@ -42,25 +43,56 @@ export function createReminder(input: Omit<Reminder, "id" | "status" | "notifyCh
 
 export function completeReminder(id: string): void {
   validateId(id, "Reminder");
-  getDb().prepare("UPDATE reminders SET status='done' WHERE id=@id").run({ id });
+  const result = getDb().prepare("UPDATE reminders SET status='done' WHERE id=@id").run({ id });
+  if (result.changes === 0) {
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "REMINDER_NOT_FOUND",
+      message: "That reminder was not found.",
+      retryable: false
+    });
+  }
 }
 
 export function deleteReminder(id: string): void {
   validateId(id, "Reminder");
-  getDb().prepare("DELETE FROM reminders WHERE id=@id").run({ id });
+  const result = getDb().prepare("DELETE FROM reminders WHERE id=@id").run({ id });
+  if (result.changes === 0) {
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "REMINDER_NOT_FOUND",
+      message: "That reminder was not found.",
+      retryable: false
+    });
+  }
 }
 
 export function snoozeReminder(id: string, minutes: number): void {
   validateId(id, "Reminder");
   if (!Number.isFinite(minutes) || !Number.isInteger(minutes) || minutes <= 0 || minutes > 60 * 24 * 30) {
-    throw new Error("Snooze time must be between 1 and 43,200 minutes.");
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "INVALID_REMINDER_OPERATION",
+      message: "Snooze time must be between 1 and 43,200 minutes.",
+      retryable: false
+    });
   }
   const reminder = getDb().prepare("SELECT * FROM reminders WHERE id=@id").get({ id }) as Reminder | undefined;
   if (!reminder) {
-    throw new Error("Reminder not found.");
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "REMINDER_NOT_FOUND",
+      message: "That reminder was not found.",
+      retryable: false
+    });
   }
   if (reminder.status !== "pending") {
-    throw new Error("Only pending reminders can be snoozed.");
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "INVALID_REMINDER_OPERATION",
+      message: "Only pending reminders can be snoozed.",
+      retryable: false
+    });
   }
   const baseTime = new Date(reminder.dueAt).getTime();
   const now = Date.now();
@@ -187,7 +219,12 @@ export function startReminderScheduler(getWindows: () => readonly (BrowserWindow
 
 function validateId(id: string, resourceName: string): void {
   if (typeof id !== "string" || !id.trim()) {
-    throw new Error(`${resourceName} ID is required.`);
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "INVALID_REMINDER_OPERATION",
+      message: `${resourceName} ID is required.`,
+      retryable: false
+    });
   }
 }
 

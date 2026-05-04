@@ -1,0 +1,146 @@
+/**
+ * Productivity state composition hook.
+ *
+ * Ownership:
+ * - Reminder filtering and derived views (pending, overdue, visible)
+ * - Calendar state and agenda views
+ * - Note actions (delete, update)
+ * - Automation rule actions (delete, set enabled)
+ * - Profile settings (user preferred name)
+ *
+ * Dependencies:
+ * - Data slices: notes, reminders, rules from useDeskDataState
+ * - Feedback callbacks: setStatus, setError for UI feedback
+ * - Refresh callbacks: refreshAll, fetchNotesOnly, fetchRemindersOnly for data sync
+ * - Data helpers: mergeNote, removeNoteById for optimistic updates
+ *
+ * This hook receives data slices and feedback callbacks explicitly instead of
+ * reaching across the whole workspace. It does not depend on command or
+ * onboarding state.
+ */
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import type { Note, Reminder, AutomationRule } from "../../../shared/types";
+import type { ReminderFilter } from "../../types";
+import type { CalendarCell } from "../../lib/calendar";
+import {
+  overduePending,
+  pendingReminders as remindersPending,
+  visibleReminders as remindersVisible
+} from "../../lib/derived/reminders";
+import { useCalendarState } from "../workspace/useCalendarState";
+import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions";
+import { useNoteActions } from "../workspace/useNoteActions";
+import { useReminderActions } from "../workspace/useReminderActions";
+import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
+
+export type DeskProductivityState = {
+  calendar: {
+    calendarCursor: Date;
+    setCalendarCursor: Dispatch<SetStateAction<Date>>;
+    monthCells: CalendarCell[];
+    todayKey: string;
+    calendarSelectedKey: string;
+    setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
+    selectedDayAgenda: Reminder[];
+  };
+  reminders: {
+    filter: ReminderFilter;
+    setFilter: Dispatch<SetStateAction<ReminderFilter>>;
+    pending: Reminder[];
+    overdue: Reminder[];
+    visible: Reminder[];
+    snoozeMinutes: (id: string, minutes: number, okMessage: string) => Promise<void>;
+    completeById: (id: string) => Promise<void>;
+    deleteById: (id: string) => Promise<void>;
+  };
+  automation: {
+    deleteRuleById: (id: string, name: string) => Promise<void>;
+    setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
+  };
+  memos: {
+    deleteNote: (id: string, title: string) => Promise<void>;
+    updateNote: (payload: {
+      id: string;
+      title?: string;
+      content?: string;
+      tags?: string[];
+      pinned?: boolean;
+    }) => Promise<void>;
+  };
+  profile: {
+    userPreferredName: string;
+    userPreferredNameIsSet: boolean;
+    persistUserPreferredName: (name: string) => Promise<void>;
+  };
+};
+
+export function useDeskProductivityState(args: {
+  notes: Note[];
+  reminders: Reminder[];
+  rules: AutomationRule[];
+  setStatus: (value: string) => void;
+  setError: (value: string) => void;
+  refreshAll: () => Promise<void>;
+  fetchNotesOnly: () => Promise<void>;
+  fetchRemindersOnly: () => Promise<void>;
+  mergeNote: (note: Note) => void;
+  removeNoteById: (id: string) => void;
+}): DeskProductivityState {
+  const { reminders, setStatus, setError, refreshAll, fetchNotesOnly, fetchRemindersOnly, mergeNote, removeNoteById } =
+    args;
+
+  const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
+
+  const calendar = useCalendarState(reminders);
+  const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
+    mergeNote,
+    removeNoteById,
+    fetchNotesOnly
+  });
+  const { deleteRuleById, setRuleEnabledById } = useAutomationRuleActions(refreshAll, setStatus, setError);
+  const { snoozeReminderMinutes, completeReminderById, deleteReminderById } = useReminderActions(
+    setStatus,
+    setError,
+    fetchRemindersOnly
+  );
+  const profile = useUserProfileSettings(setError, setStatus);
+
+  const pendingList = useMemo(() => remindersPending(reminders), [reminders]);
+  const overdueReminders = useMemo(() => overduePending(pendingList), [pendingList]);
+  const visibleReminders = useMemo(() => remindersVisible(reminders, reminderFilter), [reminders, reminderFilter]);
+
+  return {
+    calendar: {
+      calendarCursor: calendar.calendarCursor,
+      setCalendarCursor: calendar.setCalendarCursor,
+      monthCells: calendar.monthCells,
+      todayKey: calendar.todayKey,
+      calendarSelectedKey: calendar.calendarSelectedKey,
+      setCalendarSelectedKey: calendar.setCalendarSelectedKey,
+      selectedDayAgenda: calendar.selectedDayAgenda
+    },
+    reminders: {
+      filter: reminderFilter,
+      setFilter: setReminderFilterState,
+      pending: pendingList,
+      overdue: overdueReminders,
+      visible: visibleReminders,
+      snoozeMinutes: snoozeReminderMinutes,
+      completeById: completeReminderById,
+      deleteById: deleteReminderById
+    },
+    automation: {
+      deleteRuleById,
+      setRuleEnabledById
+    },
+    memos: {
+      deleteNote,
+      updateNote
+    },
+    profile: {
+      userPreferredName: profile.userPreferredName,
+      userPreferredNameIsSet: profile.userPreferredNameIsSet,
+      persistUserPreferredName: profile.persistUserPreferredName
+    }
+  };
+}

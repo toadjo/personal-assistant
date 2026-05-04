@@ -50,11 +50,25 @@ contextBridge.exposeInMainWorld("assistantApi", {
     ipcRenderer.on(push.remindersUpdated, cb);
     return () => ipcRenderer.removeListener(push.remindersUpdated, cb);
   },
-  onCommand: (cb: (_: unknown, command: string) => void) => {
+  onCommand: (cb: (_event: unknown, command: string) => void) => {
     ipcRenderer.on(push.command, cb);
     return () => ipcRenderer.removeListener(push.command, cb);
   },
   openHouseholdWindow: () => ipcRenderer.invoke(invoke.appOpenHouseholdWindow),
   focusDeskWindow: () => ipcRenderer.invoke(invoke.appFocusDeskWindow),
-  hideDeskWindow: () => ipcRenderer.invoke(invoke.appHideDeskWindow)
+  hideDeskWindow: () => ipcRenderer.invoke(invoke.appHideDeskWindow),
+  /**
+   * Test-only API: allows Electron E2E tests to inject a fake fetch implementation
+   * to simulate Home Assistant failures without requiring a live server.
+   * Only active when ELECTRON_E2E_TEST_MODE is set.
+   */
+  setTestHaFetchOverride: (config: { mode: "timeout" | "network_error" | "http_error"; status?: number } | null) =>
+    ipcRenderer.invoke(invoke.testSetHaFetchOverride, config),
+  /**
+   * Test-only API: allows Electron E2E tests to inject a fake automation action executor
+   * to simulate timeout and failure modes without requiring real external services.
+   * Only active when ELECTRON_E2E_TEST_MODE is set.
+   */
+  setTestAutomationActionOverride: (config: { mode: "timeout" | "failure" } | null) =>
+    ipcRenderer.invoke(invoke.testSetAutomationActionOverride, config)
 });

@@ -5,26 +5,40 @@ import { resolveAppIconPath } from "./icons";
 import { getConfiguredDevServerUrl } from "./config/dev-server";
 import { isTrustedNavigationTarget } from "./security";
 
-/** Tight CSP for packaged builds; dev relaxes script/connect so Vite HMR and the dev server keep working. */
-function installDefaultContentSecurityPolicy(): void {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const responseHeaders = { ...(details.responseHeaders ?? {}) };
-    const csp = app.isPackaged
-      ? "default-src 'self'"
-      : [
-          "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-          "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' data: blob:",
-          "font-src 'self' data:",
-          "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* wss://127.0.0.1:* wss://localhost:*"
-        ].join("; ");
-    responseHeaders["Content-Security-Policy"] = [csp];
-    callback({ responseHeaders });
-  });
-}
+let defaultContentSecurityPolicyInstalled = false;
 
-installDefaultContentSecurityPolicy();
+/**
+ * Tight CSP for packaged builds; dev relaxes script/connect so Vite HMR and the dev server keep working.
+ * Safe to call before `app` is ready (defers until `ready`) and safe to call more than once (no-op after first install).
+ * This avoids crashes when stale `dist/` or another caller touches `session.defaultSession` too early.
+ */
+export function installDefaultContentSecurityPolicy(): void {
+  const apply = (): void => {
+    if (defaultContentSecurityPolicyInstalled) return;
+    defaultContentSecurityPolicyInstalled = true;
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      const responseHeaders = { ...(details.responseHeaders ?? {}) };
+      const csp = app.isPackaged
+        ? "default-src 'self'"
+        : [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob:",
+            "font-src 'self' data:",
+            "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* wss://127.0.0.1:* wss://localhost:*"
+          ].join("; ");
+      responseHeaders["Content-Security-Policy"] = [csp];
+      callback({ responseHeaders });
+    });
+  };
+
+  if (app.isReady()) {
+    apply();
+  } else {
+    app.once("ready", apply);
+  }
+}
 
 export type AppWindowRole = "desk" | "household";
 

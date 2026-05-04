@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { decodeAssistantInvokeFailure, encodeAssistantInvokeFailure } from "../../shared/invokeErrors";
 import { getDb } from "../db";
 import { mainLog } from "../log";
+import { throwAssistantInvoke } from "./structuredInvokeError";
 import { createReminder } from "./reminders";
 import { toggleEntity } from "./homeAssistant";
 import type { AutomationRule } from "../../shared/types";
@@ -22,6 +24,18 @@ const AUTOMATION_ACTION_TIMEOUT_MS = 10_000;
 const AUTOMATION_RETRY_ATTEMPTS = 3;
 const AUTOMATION_RETRY_DELAY_MS = 250;
 type RetryMeta = { attemptsUsed: number; retryCount: number };
+
+/**
+ * Test-only seam: allows Electron E2E tests to inject a fake automation action executor
+ * to simulate timeout and failure modes without requiring real external services.
+ * Call `setTestAutomationActionOverride(fn)` before invoking automation operations in tests.
+ * Never set this in production code.
+ */
+let testAutomationActionOverride: ((spec: AutomationActionPayload) => Promise<void>) | null = null;
+
+export function setTestAutomationActionOverride(fn: ((spec: AutomationActionPayload) => Promise<void>) | null): void {
+  testAutomationActionOverride = fn;
+}
 class AutomationRetryError extends Error {
   retryMeta: RetryMeta;
   constructor(message: string, retryMeta: RetryMeta) {
@@ -36,21 +50,34 @@ export function listRules(): AutomationRule[] {
     .prepare("SELECT * FROM automation_rules ORDER BY name ASC")
     .all()
     .map((row) => {
-      const r = row as Record<string, unknown>;
-      const actionType = validateActionType(r.actionType);
-      const rawActionConfig = safeParseObject(r.actionConfig, "automation actionConfig");
-      const base = {
-        id: typeof r.id === "string" ? r.id : "",
-        name: typeof r.name === "string" ? r.name : "",
-        triggerType: "time" as const,
-        triggerConfig: validateTriggerConfig(safeParseObject(r.triggerConfig, "automation triggerConfig")),
-        enabled: Boolean(r.enabled)
-      };
-      if (actionType === "localReminder") {
-        return { ...base, actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) };
+      try {
+        return mapAutomationRuleRow(row as Record<string, unknown>);
+      } catch (error) {
+        mainLog.error("[automation:listRules] invalid stored row", error);
+        throwAssistantInvoke({
+          domain: "automation",
+          code: "INVALID_STORED_CONFIG",
+          message: "One automation rule in the database could not be read. Try editing or deleting it in Household.",
+          retryable: false
+        });
       }
-      return { ...base, actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
     });
+}
+
+function mapAutomationRuleRow(r: Record<string, unknown>): AutomationRule {
+  const actionType = validateActionType(r.actionType);
+  const rawActionConfig = safeParseObject(r.actionConfig, "automation actionConfig");
+  const base = {
+    id: typeof r.id === "string" ? r.id : "",
+    name: typeof r.name === "string" ? r.name : "",
+    triggerType: "time" as const,
+    triggerConfig: validateTriggerConfig(safeParseObject(r.triggerConfig, "automation triggerConfig")),
+    enabled: Boolean(r.enabled)
+  };
+  if (actionType === "localReminder") {
+    return { ...base, actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) };
+  }
+  return { ...base, actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
 }
 
 export function createTimeRule(input: CreateTimeRulePayload): AutomationRule {
@@ -87,20 +114,48 @@ export function createTimeRule(input: CreateTimeRulePayload): AutomationRule {
 
 export function deleteRule(id: string): void {
   const trimmed = typeof id === "string" ? id.trim() : "";
-  if (!trimmed) throw new Error("Rule ID is required.");
+  if (!trimmed) {
+    throwAssistantInvoke({
+      domain: "automation",
+      code: "RULE_NOT_FOUND",
+      message: "Automation rule ID is required.",
+      retryable: false
+    });
+  }
   const db = getDb();
   const exists = db.prepare("SELECT id FROM automation_rules WHERE id = ?").get(trimmed);
-  if (!exists) throw new Error("Automation rule not found.");
+  if (!exists) {
+    throwAssistantInvoke({
+      domain: "automation",
+      code: "RULE_NOT_FOUND",
+      message: "That automation rule was not found.",
+      retryable: false
+    });
+  }
   db.prepare("DELETE FROM automation_rules WHERE id = ?").run(trimmed);
 }
 
 export function setRuleEnabled(id: string, enabled: boolean): void {
   const trimmed = typeof id === "string" ? id.trim() : "";
-  if (!trimmed) throw new Error("Rule ID is required.");
+  if (!trimmed) {
+    throwAssistantInvoke({
+      domain: "automation",
+      code: "RULE_NOT_FOUND",
+      message: "Automation rule ID is required.",
+      retryable: false
+    });
+  }
   const changes = getDb()
     .prepare("UPDATE automation_rules SET enabled = ? WHERE id = ?")
     .run(enabled ? 1 : 0, trimmed).changes;
-  if (changes === 0) throw new Error("Automation rule not found.");
+  if (changes === 0) {
+    throwAssistantInvoke({
+      domain: "automation",
+      code: "RULE_NOT_FOUND",
+      message: "That automation rule was not found.",
+      retryable: false
+    });
+  }
 }
 
 export async function runAutomationCycle(): Promise<void> {
@@ -153,7 +208,7 @@ export async function runAutomationCycle(): Promise<void> {
       } else {
         actionOrUnknownFailure += 1;
       }
-      writeLog(rule.id, "failed", startedAt, endedAt, `[${ruleLabel}] ${formatErrorMessage(error)}`, retryMeta);
+      writeLog(rule.id, "failed", startedAt, endedAt, `[${ruleLabel}] ${formatAutomationCycleError(error)}`, retryMeta);
       // Advance lastFiredAt on failure so we do not re-fire the same missed slot every scheduler tick (log/HA spam).
       getDb().prepare("UPDATE automation_rules SET lastFiredAt = @at WHERE id = @id").run({ at: endedAt, id: rule.id });
     }
@@ -199,6 +254,11 @@ function shouldRunTimeRule(nowMs: number, hhmm: string, lastFiredAt: string | nu
 }
 
 async function executeAutomationAction(spec: AutomationActionPayload): Promise<void> {
+  // Test-only seam: use override if set (for E2E test deterministic failures)
+  if (testAutomationActionOverride) {
+    return testAutomationActionOverride(spec);
+  }
+
   if (spec.actionType === "localReminder") {
     const { text } = spec.actionConfig;
     createReminder({ text, dueAt: new Date().toISOString(), recurrence: "none" });
@@ -220,16 +280,33 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
       };
     } catch (error) {
       lastError = error;
+      // Don't retry on structured ACTION_TIMEOUT - it's already a timeout
+      const decoded = decodeAssistantInvokeFailure(error);
+      if (decoded && decoded.code === "ACTION_TIMEOUT") {
+        break;
+      }
       if (i < safeAttempts - 1) {
         await sleep(AUTOMATION_RETRY_DELAY_MS);
       }
     }
   }
   const attemptsUsed = safeAttempts;
-  const retryCount = Math.max(0, attemptsUsed - 1);
-  throw new AutomationRetryError(`Automation failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`, {
-    attemptsUsed,
-    retryCount
+  const _retryCount = Math.max(0, attemptsUsed - 1);
+
+  // Classify the final error for structured reporting
+  const decoded = decodeAssistantInvokeFailure(lastError);
+  if (decoded && decoded.code === "ACTION_TIMEOUT") {
+    // Already a structured timeout error, re-throw as-is
+    throw lastError;
+  }
+
+  // For non-timeout failures after retries, throw ACTION_FAILED
+  const isRetryable = isTransientError(lastError);
+  throw encodeAssistantInvokeFailure({
+    domain: "automation",
+    code: "ACTION_FAILED",
+    message: `Automation action failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`,
+    retryable: isRetryable
   });
 }
 
@@ -242,10 +319,16 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
     return await Promise.race([
       promise,
       new Promise<T>((_, reject) => {
-        timeoutRef = setTimeout(
-          () => reject(new Error(`Automation action timed out after ${timeoutMs}ms.`)),
-          timeoutMs
-        );
+        timeoutRef = setTimeout(() => {
+          reject(
+            encodeAssistantInvokeFailure({
+              domain: "automation",
+              code: "ACTION_TIMEOUT",
+              message: `Automation action timed out after ${timeoutMs}ms.`,
+              retryable: true
+            })
+          );
+        }, timeoutMs);
         timeoutRef.unref();
       })
     ]);
@@ -283,6 +366,37 @@ function writeLog(
 function formatErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+/** Prefer decoded invoke failures for execution logs so JSON prefixes are not stored verbatim. */
+function formatAutomationCycleError(error: unknown): string {
+  const decoded = decodeAssistantInvokeFailure(error);
+  if (decoded) {
+    return `[${decoded.domain}:${decoded.code}] ${decoded.message}`;
+  }
+  return formatErrorMessage(error);
+}
+
+/** Determine if an error is transient (retryable) for ACTION_FAILED classification. */
+function isTransientError(error: unknown): boolean {
+  const decoded = decodeAssistantInvokeFailure(error);
+  if (decoded) {
+    // If it's already a structured error, use its retryable flag
+    return decoded.retryable;
+  }
+  // For non-structured errors, assume non-transient unless it's a known transient pattern
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    // Network-related errors are typically transient
+    return (
+      msg.includes("econnrefused") ||
+      msg.includes("etimedout") ||
+      msg.includes("timeout") ||
+      msg.includes("network") ||
+      msg.includes("fetch")
+    );
+  }
+  return false;
 }
 
 /** True when the failure is from parsing/normalizing stored rule JSON or fields (not external HA/reminder execution). */

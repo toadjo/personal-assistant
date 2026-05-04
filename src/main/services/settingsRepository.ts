@@ -2,7 +2,9 @@ import { getDb } from "../db";
 
 /** Centralized app_settings access (upsert / read / delete). */
 export function getSetting(key: string): string | undefined {
-  const row = getDb().prepare("SELECT value FROM app_settings WHERE key = ?").get(key) as { value?: string } | undefined;
+  const row = getDb().prepare("SELECT value FROM app_settings WHERE key = ?").get(key) as
+    | { value?: string }
+    | undefined;
   const v = row?.value;
   return typeof v === "string" ? v : undefined;
 }

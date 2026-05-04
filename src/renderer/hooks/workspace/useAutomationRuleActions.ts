@@ -1,4 +1,4 @@
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
@@ -11,7 +11,7 @@ export function useAutomationRuleActions(refreshAll: () => Promise<void>, setSta
       setStatus("Rule removed.");
       await refreshAll();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }
 
@@ -21,7 +21,7 @@ export function useAutomationRuleActions(refreshAll: () => Promise<void>, setSta
       setStatus(enabled ? "Rule enabled." : "Rule paused.");
       await refreshAll();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }
 

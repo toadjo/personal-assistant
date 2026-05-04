@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { getErrorMessage } from "../../lib/errors";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { parseLocalDateTimeInput, toLocalDateTimeInputValue } from "../../lib/dateTime";
 
 type Props = {
@@ -26,7 +26,7 @@ export function ReminderForm({ onDone, onError }: Props): JSX.Element {
       setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
       await onDone();
     } catch (err) {
-      onError(getErrorMessage(err));
+      onError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

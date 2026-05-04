@@ -15,9 +15,9 @@ export default tseslint.config(
   },
   {
     ignores: [
-      "dist/**",
-      "release/**",
-      "node_modules/**",
+      "**/dist/**",
+      "**/release/**",
+      "**/node_modules/**",
       ".vite/**",
       "prettier.config.mjs",
       "src/main/preload-ipc-literals.generated.ts"
