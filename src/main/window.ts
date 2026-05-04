@@ -19,7 +19,7 @@ export function installDefaultContentSecurityPolicy(): void {
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       const responseHeaders = { ...(details.responseHeaders ?? {}) };
       const csp = app.isPackaged
-        ? "default-src 'self'"
+        ? "default-src 'self'; script-src 'self'"
         : [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
