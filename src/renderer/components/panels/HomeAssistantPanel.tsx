@@ -19,7 +19,46 @@ type Props = {
   onRefreshEntities: () => void;
   onToggleDevice: (entityId: string, friendlyName: string) => Promise<void>;
   onError: (err: unknown) => void;
+  onShowSuccess?: (message: string) => void;
 };
+
+type ConnectionState = "notConfigured" | "configuredButUntested" | "connected" | "lastRefreshFailed";
+
+function getConnectionState(hasHaUrl: boolean, haReady: boolean, devices: HaDeviceRow[]): ConnectionState {
+  if (!hasHaUrl) return "notConfigured";
+  if (!haReady) return "configuredButUntested";
+  if (devices.length === 0) return "lastRefreshFailed";
+  return "connected";
+}
+
+function getConnectionSummary(state: ConnectionState, devices: HaDeviceRow[]): { label: string; description: string; className: string } {
+  switch (state) {
+    case "notConfigured":
+      return {
+        label: "Not configured",
+        description: "Add your Home Assistant URL and token to get started.",
+        className: "connection-not-configured",
+      };
+    case "configuredButUntested":
+      return {
+        label: "Configured but untested",
+        description: "Save your configuration, then click Test to verify the connection.",
+        className: "connection-untested",
+      };
+    case "connected":
+      return {
+        label: "Connected",
+        description: `${devices.length} device${devices.length === 1 ? "" : "s"} available.`,
+        className: "connection-connected",
+      };
+    case "lastRefreshFailed":
+      return {
+        label: "Connection issue",
+        description: "Unable to load devices. Check your configuration and try refreshing.",
+        className: "connection-failed",
+      };
+  }
+}
 
 export function HomeAssistantPanel({
   haUrl,
@@ -39,13 +78,25 @@ export function HomeAssistantPanel({
   onTest,
   onRefreshEntities,
   onToggleDevice,
-  onError
+  onError,
+  onShowSuccess
 }: Props): JSX.Element {
   return (
     <section className="panel addOnPanel">
       <div className="titleRow">
         <h3 className="panelSectionHeading">Home Assistant</h3>
       </div>
+      {/* v1.2.7 visible connection state summary */}
+      {(() => {
+        const state = getConnectionState(hasHaUrl, haReady, devices);
+        const summary = getConnectionSummary(state, devices);
+        return (
+          <div className={`connection-state-summary ${summary.className}`}>
+            <span className="connection-state-label">{summary.label}</span>
+            <span className="connection-state-description">{summary.description}</span>
+          </div>
+        );
+      })()}
       <p className="muted sectionIntro">{haStatusText}</p>
       <div className="row">
         <input
@@ -95,6 +146,8 @@ export function HomeAssistantPanel({
                 onClick={async () => {
                   try {
                     await onToggleDevice(d.entityId, d.friendlyName);
+                    // v1.2.7 persistent success feedback
+                    onShowSuccess?.(`Device toggled: ${d.friendlyName}`);
                   } catch (err) {
                     onError(err);
                   }
@@ -105,7 +158,12 @@ export function HomeAssistantPanel({
             </li>
           ))
         ) : (
-          <li className="muted">No devices yet. Save, then refresh.</li>
+          <li className="emptyState">
+            <p className="emptyStateTitle">No devices yet</p>
+            <p className="emptyStateDescription">
+              Save your Home Assistant configuration, then click Refresh devices to load your smart home devices.
+            </p>
+          </li>
         )}
       </ul>
     </section>

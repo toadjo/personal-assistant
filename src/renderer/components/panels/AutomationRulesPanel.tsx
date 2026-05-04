@@ -7,6 +7,7 @@ type Props = {
   devices: HaDeviceRow[];
   onRefresh: () => Promise<void>;
   onError: (message: string) => void;
+  onShowSuccess?: (message: string) => void;
   onDeleteRule: (id: string, name: string) => void;
   onSetRuleEnabled: (id: string, enabled: boolean) => void;
 };
@@ -17,6 +18,7 @@ export function AutomationRulesPanel({
   devices,
   onRefresh,
   onError,
+  onShowSuccess,
   onDeleteRule,
   onSetRuleEnabled
 }: Props): JSX.Element {
@@ -26,7 +28,7 @@ export function AutomationRulesPanel({
         <h3 className="panelSectionHeading">Daily rules</h3>
       </div>
       <p className="muted sectionIntro">Same time each day: new reminder or toggle a device.</p>
-      <RuleForm devices={devices} onDone={onRefresh} onError={onError} />
+      <RuleForm devices={devices} onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} />
       <ul className="list">
         {isRefreshing ? (
           <li className="muted">Loading…</li>
@@ -53,7 +55,12 @@ export function AutomationRulesPanel({
             </li>
           ))
         ) : (
-          <li className="muted">No rules yet.</li>
+          <li className="emptyState">
+            <p className="emptyStateTitle">No rules yet</p>
+            <p className="emptyStateDescription">
+              Rules automate daily tasks like reminders or device toggles. Use the form above to create your first rule.
+            </p>
+          </li>
         )}
       </ul>
     </section>

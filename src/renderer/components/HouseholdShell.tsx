@@ -26,7 +26,8 @@ export function HouseholdShell(): JSX.Element {
         </div>
         <div className="householdWindowActions">
           <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-household" />
-          <button type="button" className="ghostButton" onClick={() => void window.assistantApi.focusDeskWindow()}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <button type="button" className="ghostButton" onClick={() => void (window as any).assistantApi.focusDeskWindow()}>
             Desk window
           </button>
         </div>
@@ -46,11 +47,15 @@ export function HouseholdShell(): JSX.Element {
         isRefreshing={data.isRefreshing}
         devices={data.devices}
         isEntityTogglePending={ha.isEntityTogglePending}
-        onSave={() => void ha.saveHomeAssistantConfig()}
+        onSave={() => {
+          void ha.saveHomeAssistantConfig();
+          ui.showSuccess("Home Assistant configuration saved");
+        }}
         onTest={() => void ha.testHomeAssistant()}
         onRefreshEntities={() => void ha.refreshHomeAssistantEntities()}
         onToggleDevice={ha.runDeviceToggle}
         onError={ui.reportError}
+        onShowSuccess={ui.showSuccess}
       />
 
       <div className="grid householdAutomationGrid">
@@ -60,7 +65,11 @@ export function HouseholdShell(): JSX.Element {
           devices={data.devices}
           onRefresh={data.refreshAll}
           onError={ui.reportError}
-          onDeleteRule={(id, name) => void automation.deleteRuleById(id, name)}
+          onShowSuccess={ui.showSuccess}
+          onDeleteRule={(id, name) => {
+            void automation.deleteRuleById(id, name);
+            ui.showSuccess("Rule deleted");
+          }}
           onSetRuleEnabled={(id, enabled) => void automation.setRuleEnabledById(id, enabled)}
         />
         <AutomationLogsPanel isRefreshing={data.isRefreshing} logs={data.logs} />

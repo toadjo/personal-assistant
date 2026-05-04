@@ -10,6 +10,7 @@ type Props = {
   visibleReminders: Reminder[];
   onRefresh: () => Promise<void>;
   onError: (message: string) => void;
+  onShowSuccess?: (message: string) => void;
   onSnooze10: (id: string) => void;
   onSnooze60: (id: string) => void;
   onComplete: (id: string) => void;
@@ -23,6 +24,7 @@ export const RemindersPanel = memo(function RemindersPanel({
   visibleReminders,
   onRefresh,
   onError,
+  onShowSuccess,
   onSnooze10,
   onSnooze60,
   onComplete,
@@ -42,7 +44,7 @@ export const RemindersPanel = memo(function RemindersPanel({
           <option value="done">Done</option>
         </select>
       </div>
-      <ReminderForm onDone={onRefresh} onError={onError} />
+      <ReminderForm onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} />
       <ul className="list" aria-label="Reminders list">
         {isRefreshing ? (
           <li className="muted">Loading…</li>
@@ -94,7 +96,12 @@ export const RemindersPanel = memo(function RemindersPanel({
             </li>
           ))
         ) : (
-          <li className="muted">Nothing for this filter.</li>
+          <li className="emptyState">
+            <p className="emptyStateTitle">No reminders yet</p>
+            <p className="emptyStateDescription">
+              Reminders help you stay on top of tasks. Use the form above to create your first reminder with a due time.
+            </p>
+          </li>
         )}
       </ul>
     </section>

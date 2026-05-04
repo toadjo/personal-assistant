@@ -16,6 +16,8 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { AutomationRule, Note, Reminder } from "../../shared/types";
 import type { ReminderFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
 import type { CalendarCell } from "../lib/calendar";
+import type { OnboardingState, OnboardingStep } from "../types/onboarding";
+import type { SuccessMessage } from "./ui/usePersistentSuccess";
 import { useDeskUiState } from "./composition/useDeskUiState";
 import { useDeskDataState } from "./composition/useDeskDataState";
 import { useDeskHomeAssistantState } from "./composition/useDeskHomeAssistantState";
@@ -30,6 +32,11 @@ export type AssistantWorkspace = {
     setStatus: (value: string) => void;
     error: string;
     reportError: (err: unknown) => void;
+    // v1.2.7 persistent success feedback
+    successes: SuccessMessage[];
+    showSuccess: (message: string) => void;
+    dismissSuccess: (id: string) => void;
+    dismissAllSuccesses: () => void;
   };
   data: {
     query: string;
@@ -117,6 +124,14 @@ export type AssistantWorkspace = {
   onboarding: {
     show: boolean;
     setShow: (value: boolean) => void;
+    // v1.2.7 guided onboarding
+    guidedState: OnboardingState;
+    currentStep: OnboardingStep | null;
+    isComplete: boolean;
+    markNoteCreated: () => void;
+    markReminderCreated: () => void;
+    markHomeAssistantConnected: () => void;
+    skipHomeAssistant: () => void;
   };
   desk: {
     hideWindow: () => void;
@@ -212,7 +227,12 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       status: uiWithFeedback.status,
       setStatus: uiWithFeedback.setStatus,
       error: uiWithFeedback.error,
-      reportError: uiWithFeedback.reportError
+      reportError: uiWithFeedback.reportError,
+      // v1.2.7 persistent success feedback
+      successes: uiWithFeedback.successes,
+      showSuccess: uiWithFeedback.showSuccess,
+      dismissSuccess: uiWithFeedback.dismissSuccess,
+      dismissAllSuccesses: uiWithFeedback.dismissAllSuccesses,
     },
     data: {
       query: data.query,

@@ -6,9 +6,10 @@ type Props = {
   devices: HaDeviceRow[];
   onDone: () => Promise<void>;
   onError: (message: string) => void;
+  onShowSuccess?: (message: string) => void;
 };
 
-export function RuleForm({ devices, onDone, onError }: Props): JSX.Element {
+export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JSX.Element {
   const [name, setName] = useState("Morning check");
   const [at, setAt] = useState("08:00");
   const [actionType, setActionType] = useState<"localReminder" | "haToggle">("localReminder");
@@ -54,7 +55,8 @@ export function RuleForm({ devices, onDone, onError }: Props): JSX.Element {
             if (actionType === "localReminder" && !text.trim())
               throw new Error("Reminder text is required for reminder actions.");
             if (actionType === "haToggle" && !entityId) throw new Error("Select a device for haToggle actions.");
-            await window.assistantApi.createRule({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (window as any).assistantApi.createRule({
               name: name.trim(),
               triggerConfig: { at },
               actionType,
@@ -66,6 +68,8 @@ export function RuleForm({ devices, onDone, onError }: Props): JSX.Element {
             setText("Check your agenda");
             setEntityId("");
             await onDone();
+            // v1.2.7 persistent success feedback
+            onShowSuccess?.("Rule created");
           } catch (err) {
             onError(getAssistantInvokeErrorMessage(err));
           } finally {

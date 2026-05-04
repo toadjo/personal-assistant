@@ -5,16 +5,18 @@ import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 type Props = {
   onDone: () => Promise<void>;
   onError: (message: string) => void;
+  onShowSuccess?: (message: string) => void;
 };
 
-export function QuickNoteForm({ onDone, onError }: Props): JSX.Element {
+export function QuickNoteForm({ onDone, onError, onShowSuccess }: Props): JSX.Element {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   async function handleSubmit(event: FormEvent): Promise<void> {
     event.preventDefault();
     try {
       if (!title.trim() && !content.trim()) throw new Error("Write a title or content before adding a note.");
-      await window.assistantApi.createNote({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (window as any).assistantApi.createNote({
         title: title.trim() || "Untitled",
         content: content.trim(),
         tags: [],
@@ -23,6 +25,8 @@ export function QuickNoteForm({ onDone, onError }: Props): JSX.Element {
       setTitle("");
       setContent("");
       await onDone();
+      // v1.2.7 persistent success feedback
+      onShowSuccess?.("Note created");
     } catch (err) {
       onError(getAssistantInvokeErrorMessage(err));
     }

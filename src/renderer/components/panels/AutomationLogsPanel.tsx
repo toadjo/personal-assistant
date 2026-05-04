@@ -24,7 +24,12 @@ export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element 
             </li>
           ))
         ) : (
-          <li className="muted">No runs yet.</li>
+          <li className="emptyState">
+            <p className="emptyStateTitle">No runs yet</p>
+            <p className="emptyStateDescription">
+              Rule runs appear here after automation rules execute. Create a rule to see its execution history.
+            </p>
+          </li>
         )}
       </ul>
     </section>

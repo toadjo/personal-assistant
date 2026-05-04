@@ -15,6 +15,7 @@ type UpdatePayload = {
 type Props = {
   onFetchNotes: () => Promise<void>;
   onError: (message: string) => void;
+  onShowSuccess?: (message: string) => void;
   onDeleteNote: (id: string, title: string) => void;
   onUpdateNote: (payload: UpdatePayload) => void;
 };
@@ -29,6 +30,7 @@ function parseTagsInput(raw: string): string[] {
 export const NotesPanel = memo(function NotesPanel({
   onFetchNotes,
   onError,
+  onShowSuccess,
   onDeleteNote,
   onUpdateNote
 }: Props): JSX.Element {
@@ -78,7 +80,7 @@ export const NotesPanel = memo(function NotesPanel({
       <div className="titleRow">
         <h2 id="notes-panel-heading">Memos</h2>
       </div>
-      <QuickNoteForm onDone={onFetchNotes} onError={onError} />
+      <QuickNoteForm onDone={onFetchNotes} onError={onError} onShowSuccess={onShowSuccess} />
       <ul className="list" aria-label="Saved memos">
         {isRefreshing ? (
           <li className="muted">Loading…</li>
@@ -160,7 +162,12 @@ export const NotesPanel = memo(function NotesPanel({
             </li>
           ))
         ) : (
-          <li className="muted">No notes yet.</li>
+          <li className="emptyState">
+            <p className="emptyStateTitle">No notes yet</p>
+            <p className="emptyStateDescription">
+              Notes are for quick memos you want to keep. Use the form above to create your first note.
+            </p>
+          </li>
         )}
       </ul>
     </section>

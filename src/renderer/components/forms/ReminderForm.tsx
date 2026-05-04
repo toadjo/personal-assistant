@@ -6,9 +6,10 @@ import { parseLocalDateTimeInput, toLocalDateTimeInputValue } from "../../lib/da
 type Props = {
   onDone: () => Promise<void>;
   onError: (message: string) => void;
+  onShowSuccess?: (message: string) => void;
 };
 
-export function ReminderForm({ onDone, onError }: Props): JSX.Element {
+export function ReminderForm({ onDone, onError, onShowSuccess }: Props): JSX.Element {
   const [text, setText] = useState("");
   const [dueAt, setDueAt] = useState(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,10 +22,13 @@ export function ReminderForm({ onDone, onError }: Props): JSX.Element {
       if (new Date(parsedDueAt).getTime() < Date.now() + 30_000) {
         throw new Error("Reminder time must be at least 30 seconds in the future.");
       }
-      await window.assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (window as any).assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
       setText("");
       setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
       await onDone();
+      // v1.2.7 persistent success feedback
+      onShowSuccess?.("Reminder created");
     } catch (err) {
       onError(getAssistantInvokeErrorMessage(err));
     } finally {

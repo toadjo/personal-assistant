@@ -1,5 +1,6 @@
 import type { Ref, RefObject } from "react";
 import type { ReminderFilter } from "../../types";
+import { CommandExamples } from "../layout/CommandExamples";
 
 type Props = {
   commandInputRef: RefObject<HTMLInputElement | null>;
@@ -151,6 +152,7 @@ export function CommandPanel({
           Clear memo search
         </button>
       </div>
+      <CommandExamples haReady={haReady} onRunPreset={onPreset} />
     </section>
   );
 }
