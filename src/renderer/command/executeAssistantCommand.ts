@@ -18,30 +18,40 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
 
   const normalized = normalizeCommandAlias(raw);
   const lower = normalized.toLowerCase();
+  console.log("[executeAssistantCommand] Command:", normalized);
 
   if (lower === "open household" || lower === "household") {
+    console.log("[executeAssistantCommand] Branch: open household");
     await window.assistantApi.openHouseholdWindow();
     deps.setStatus("Opened the Household window for you.");
+    console.log("[executeAssistantCommand] Branch: open household completed");
     return;
   }
   if (lower === "help") {
+    console.log("[executeAssistantCommand] Branch: help");
     deps.setStatus(
       "Here is what I can do: new note …, remind … in 15m, search …, list reminders, open household. In the Household window (after you link HA): toggle …, refresh devices."
     );
+    console.log("[executeAssistantCommand] Branch: help completed");
     return;
   }
   if (lower === "list reminders") {
+    console.log("[executeAssistantCommand] Branch: list reminders");
     deps.setReminderFilter("pending");
     deps.setStatus("Showing your pending follow-ups.");
+    console.log("[executeAssistantCommand] Branch: list reminders completed");
     return;
   }
   if (lower.startsWith("search ")) {
+    console.log("[executeAssistantCommand] Branch: search");
     const q = normalized.slice(7).trim();
     deps.setQuery(q);
     deps.setStatus(`Searching memos for “${q}”.`);
+    console.log("[executeAssistantCommand] Branch: search completed");
     return;
   }
   if (lower.startsWith("new note ") || lower.startsWith("note ")) {
+    console.log("[executeAssistantCommand] Branch: new note");
     const text = normalized
       .replace(/^new note\s+/i, "")
       .replace(/^note\s+/i, "")
@@ -49,21 +59,27 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     if (!text) throw new Error("Add some text after “new note”—for example: new note buy coffee.");
     await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
     deps.setStatus("Got it—memo saved.");
+    console.log("[executeAssistantCommand] Branch: new note completed");
     return;
   }
   if (lower === "new note" || lower === "note") {
+    console.log("[executeAssistantCommand] Branch: new note (no text)");
     throw new Error("Tell me what to write. Example: new note buy coffee.");
   }
   if (lower.startsWith("remind ")) {
+    console.log("[executeAssistantCommand] Branch: remind");
     const parsed = parseReminderCommand(normalized);
     await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
     deps.setStatus(`All set—reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
+    console.log("[executeAssistantCommand] Branch: remind completed");
     return;
   }
   if (lower === "remind") {
+    console.log("[executeAssistantCommand] Branch: remind (no text)");
     throw new Error("Try something like: remind call mom in 15m");
   }
   if (lower.startsWith("toggle ")) {
+    console.log("[executeAssistantCommand] Branch: toggle");
     if (!deps.haReady)
       throw new Error(
         "Home Assistant is not linked yet. Open the Household window (House button, tray, or type open household), add your URL and token, then try again."
@@ -74,9 +90,11 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     );
     if (!device) throw new Error(`I could not find a device matching “${target}”. Try refresh devices in Household.`);
     await deps.runDeviceToggle(device.entityId, device.friendlyName);
+    console.log("[executeAssistantCommand] Branch: toggle completed");
     return;
   }
   if (lower === "refresh devices") {
+    console.log("[executeAssistantCommand] Branch: refresh devices");
     if (!deps.haReady)
       throw new Error(
         "Link Home Assistant in the Household window first (URL + token), then I can refresh devices for you."
@@ -84,7 +102,9 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     deps.setStatus("Refreshing devices from Home Assistant…");
     await deps.refreshHomeAssistantEntities();
     deps.setStatus("Device list is up to date.");
+    console.log("[executeAssistantCommand] Branch: refresh devices completed");
     return;
   }
+  console.log("[executeAssistantCommand] Branch: unknown command");
   throw new Error("I do not recognize that yet. Type help for ideas, or rephrase.");
 }
