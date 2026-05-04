@@ -68,12 +68,15 @@ export function createWindow(role: AppWindowRole): BrowserWindow {
   });
 
   const devUrl = getConfiguredDevServerUrl();
-  if (!app.isPackaged) {
+  if (!app.isPackaged && process.env.ELECTRON_E2E_TEST_MODE !== "1") {
     const url = new URL(devUrl);
     url.hash = isHousehold ? "household" : "";
     window.loadURL(url.toString());
   } else {
-    const indexPath = path.join(app.getAppPath(), "dist", "renderer", "index.html");
+    const indexPath =
+      process.env.ELECTRON_E2E_TEST_MODE === "1"
+        ? path.join(__dirname, "..", "..", "renderer", "index.html")
+        : path.join(app.getAppPath(), "dist", "renderer", "index.html");
     if (isHousehold) {
       window.loadFile(indexPath, { hash: "household" });
     } else {

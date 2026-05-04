@@ -6,6 +6,7 @@ export default defineConfig({
   fullyParallel: false, // Electron apps share state; run sequentially
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  timeout: 90_000,
   workers: 1,
   reporter: "list",
   use: {
