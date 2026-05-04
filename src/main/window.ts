@@ -54,7 +54,7 @@ export function createWindow(role: AppWindowRole): BrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      sandbox: true,
+      sandbox: false,
       nodeIntegration: false,
       webviewTag: false
     }
