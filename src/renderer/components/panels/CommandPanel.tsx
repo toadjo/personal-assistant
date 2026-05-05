@@ -50,20 +50,17 @@ export function CommandPanel({
 
   return (
     <section className={`panel commandPanel secretaryAsk${isRunningCommand ? " commandPanelThinking" : ""}`}>
-      <div className="titleRow">
-        <h2>Your brief</h2>
-      </div>
       {contextLine ? <p className="muted secretaryContext">{contextLine}</p> : null}
       {isRunningCommand ? (
         <p className="assistantThinking" aria-live="polite">
-          Working on that—one moment.
+          Working on that…
         </p>
       ) : null}
       <div className="row commandRow">
         <input
           ref={commandInputRef as Ref<HTMLInputElement>}
           className="fullWidth"
-          placeholder="Ask me anything—e.g. new note order ink, remind call in 20m, open household…"
+          placeholder="Ask me anything…"
           aria-label="Message the assistant"
           autoComplete="off"
           spellCheck={false}
@@ -109,13 +106,11 @@ export function CommandPanel({
           className="commandAction"
           onClick={() => void onRunCommand(commandInput)}
           disabled={isRunningCommand}
+          aria-label="Send command"
         >
           {isRunningCommand ? "…" : "Send"}
         </button>
       </div>
-      <p className="muted secretaryMeta">
-        Enter to send · Esc clears (or hides desk when empty) · ↑↓ past commands · Ctrl+Shift+H hides from anywhere
-      </p>
       <div className="row commandHintsRow">
         {commandHints.length ? (
           commandHints.map((hint) => (
@@ -125,7 +120,7 @@ export function CommandPanel({
           ))
         ) : (
           <span className="muted">
-            Not sure what to say? Try <code>help</code>—I will suggest what I can do.
+            Try <code>help</code> to see what I can do.
           </span>
         )}
       </div>

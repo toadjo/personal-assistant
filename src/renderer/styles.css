@@ -35,6 +35,7 @@
   --space-5: 24px;
 }
 
+html[data-theme="glass"],
 html[data-theme="paper"],
 html[data-theme="fog"] {
   color-scheme: light;
@@ -171,6 +172,50 @@ html[data-theme="deepblue"] {
   --error-bg: rgba(230, 90, 110, 0.16);
   --error-border: rgba(255, 150, 170, 0.38);
   --error-text: #ffd8e0;
+}
+
+/* Glass — frosted Apple-style */
+html[data-theme="glass"] {
+  --bg: #fafbfc;
+  --text: #1d1d21;
+  --title: #0a0a0d;
+  --subtitle: #5a5a64;
+  --panel-bg: rgba(255, 255, 255, 0.72);
+  --panel-border: rgba(0, 0, 0, 0.06);
+  --surface-border-strong: rgba(0, 0, 0, 0.1);
+  --stat-bg: rgba(255, 255, 255, 0.8);
+  --stat-border: rgba(0, 0, 0, 0.06);
+  --stat-text: #2a2a32;
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: rgba(0, 0, 0, 0.08);
+  --input-text: #111118;
+  --primary: #0071e3;
+  --primary-hover: #005bb5;
+  --primary-soft: rgba(0, 113, 227, 0.08);
+  --focus-ring: rgba(0, 113, 227, 0.3);
+  --muted: #6b6b76;
+  --list-text: #232328;
+  --ghost-bg: rgba(255, 255, 255, 0.65);
+  --ghost-text: #35353d;
+  --ghost-border: rgba(0, 0, 0, 0.06);
+  --success-bg: rgba(52, 199, 89, 0.08);
+  --success-border: rgba(52, 199, 89, 0.22);
+  --success-text: #1a7f37;
+  --error-bg: rgba(255, 59, 48, 0.06);
+  --error-border: rgba(255, 59, 48, 0.22);
+  --error-text: #c42b1f;
+}
+
+html[data-theme="glass"] .panel {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+html[data-theme="glass"] .panel:hover {
+  box-shadow:
+    0 6px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 html[data-theme="obsidian"] .panel,
@@ -1283,6 +1328,140 @@ button:disabled {
 
 .commandPanel {
   border-color: var(--surface-border-strong);
+}
+
+.remindersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.reminderCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.reminderCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border-color: color-mix(in srgb, var(--surface-border-strong) 52%, var(--panel-border) 48%);
+}
+
+.reminderCardOverdue {
+  border-color: color-mix(in srgb, var(--error-border) 55%, var(--panel-border) 45%);
+  background: color-mix(in srgb, var(--error-bg) 12%, var(--panel-bg) 88%);
+}
+
+.reminderCardContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.reminderCardContent h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  color: var(--title);
+  line-height: 1.3;
+}
+
+.reminderCardMeta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.reminderCardActions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.notesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.noteCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.noteCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border-color: color-mix(in srgb, var(--surface-border-strong) 52%, var(--panel-border) 48%);
+}
+
+.noteCardPinned {
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--panel-border) 76%);
+  background: color-mix(in srgb, var(--primary-soft) 12%, var(--panel-bg) 88%);
+}
+
+.noteCardContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.noteCardContent h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  color: var(--title);
+  line-height: 1.3;
+}
+
+.noteCardContent p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--list-text);
+  line-height: 1.45;
+}
+
+.noteCardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.noteCardActions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
 }
 
 .commandRow {

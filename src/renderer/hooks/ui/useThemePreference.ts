@@ -12,10 +12,10 @@ const LEGACY_THEME: Record<string, ThemeMode> = {
 
 function readInitialTheme(): ThemeMode {
   const raw = window.localStorage.getItem(STORAGE_THEME);
-  if (!raw) return "paper";
+  if (!raw) return "glass";
   const v = raw.trim();
   if (THEME_IDS.has(v as ThemeMode)) return v as ThemeMode;
-  return LEGACY_THEME[v] ?? "paper";
+  return LEGACY_THEME[v] ?? "glass";
 }
 
 export function useThemePreference() {

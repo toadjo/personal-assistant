@@ -83,12 +83,12 @@ export const NotesPanel = memo(function NotesPanel({
         <h2 id="notes-panel-heading">Memos</h2>
       </div>
       <QuickNoteForm onDone={onFetchNotes} onError={onError} onShowSuccess={onShowSuccess} onCreated={onNoteCreated} />
-      <ul className="list" aria-label="Saved memos">
+      <div className="notesGrid" aria-label="Saved memos">
         {isRefreshing ? (
-          <li className="muted">Loading…</li>
+          <p className="muted">Loading…</p>
         ) : notes.length ? (
           notes.map((n) => (
-            <li key={n.id} className="listRow">
+            <article key={n.id} className={`noteCard ${n.pinned ? "noteCardPinned" : ""}`}>
               {editingId === n.id ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1, minWidth: 0 }}>
                   <input
@@ -136,12 +136,20 @@ export const NotesPanel = memo(function NotesPanel({
                 </div>
               ) : (
                 <>
-                  <span>
-                    {n.pinned ? "(pinned) " : null}
-                    {n.title} — {n.content}
-                    {n.tags.length ? ` [${n.tags.join(", ")}]` : ""}
-                  </span>
-                  <div className="row" style={{ gap: "0.5rem", flexShrink: 0 }}>
+                  <div className="noteCardContent">
+                    <h3>{n.title}</h3>
+                    <p>{n.content}</p>
+                    {n.tags.length ? (
+                      <div className="noteCardTags">
+                        {n.tags.map((tag) => (
+                          <span key={tag} className="pill graphitePill">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="noteCardActions">
                     <button
                       type="button"
                       className="ghostButton"
@@ -161,17 +169,17 @@ export const NotesPanel = memo(function NotesPanel({
                   </div>
                 </>
               )}
-            </li>
+            </article>
           ))
         ) : (
-          <li className="emptyState">
+          <div className="emptyState">
             <p className="emptyStateTitle">No notes yet</p>
             <p className="emptyStateDescription">
               Notes are for quick memos you want to keep. Use the form above to create your first note.
             </p>
-          </li>
+          </div>
         )}
-      </ul>
+      </div>
     </section>
   );
 });

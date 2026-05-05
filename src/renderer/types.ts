@@ -1,6 +1,6 @@
 import type { AutomationRule } from "../shared/types";
 
-export type ThemeMode = "paper" | "obsidian" | "fog" | "deepblue";
+export type ThemeMode = "glass" | "paper" | "obsidian" | "fog" | "deepblue";
 
 export type HaDeviceRow = { entityId: string; friendlyName: string; state: string };
 

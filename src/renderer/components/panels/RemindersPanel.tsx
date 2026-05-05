@@ -47,20 +47,29 @@ export const RemindersPanel = memo(function RemindersPanel({
         </select>
       </div>
       <ReminderForm onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} onCreated={onReminderCreated} />
-      <ul className="list" aria-label="Reminders list">
+      <div className="remindersGrid" aria-label="Reminders list">
         {isRefreshing ? (
-          <li className="muted">Loading…</li>
+          <p className="muted">Loading…</p>
         ) : visibleReminders.length ? (
           visibleReminders.map((r) => (
-            <li key={r.id} className="listRow">
-              <span>
-                {r.text} ({r.status}) — {new Date(r.dueAt).toLocaleString()}
-                {r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? (
-                  <strong className="overdueBadge">Overdue</strong>
-                ) : null}
-              </span>
+            <article
+              key={r.id}
+              className={`reminderCard ${r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? "reminderCardOverdue" : ""}`}
+            >
+              <div className="reminderCardContent">
+                <h3>{r.text}</h3>
+                <p className="reminderCardMeta">
+                  {new Date(r.dueAt).toLocaleString()}
+                  {r.status === "pending" && new Date(r.dueAt).getTime() < Date.now() ? (
+                    <span className="overdueBadge">Overdue</span>
+                  ) : null}
+                </p>
+                <span className={`pill ${r.status === "pending" ? "pill" : "graphitePill"}`}>
+                  {r.status}
+                </span>
+              </div>
               {r.status === "pending" ? (
-                <div className="miniActions">
+                <div className="reminderCardActions">
                   <button
                     type="button"
                     className="ghostButton"
@@ -95,17 +104,17 @@ export const RemindersPanel = memo(function RemindersPanel({
                   </button>
                 </div>
               ) : null}
-            </li>
+            </article>
           ))
         ) : (
-          <li className="emptyState">
+          <div className="emptyState">
             <p className="emptyStateTitle">No reminders yet</p>
             <p className="emptyStateDescription">
               Reminders help you stay on top of tasks. Use the form above to create your first reminder with a due time.
             </p>
-          </li>
+          </div>
         )}
-      </ul>
+      </div>
     </section>
   );
 });

@@ -21,7 +21,7 @@ export function HouseholdShell(): JSX.Element {
           <p className="addOnEyebrow">Nice to have</p>
           <h1 className="addOnTitle">Household</h1>
           <p className="muted addOnLead">
-            Home Assistant and timed rules. Your memos and follow-ups stay in the <strong>desk</strong> window.
+            Home Assistant and timed rules.
           </p>
         </div>
         <div className="householdWindowActions">

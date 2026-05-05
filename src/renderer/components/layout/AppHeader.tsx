@@ -35,11 +35,7 @@ export function AppHeader({
           idPrefix="desk"
         />
         <h1>Personal Assistant</h1>
-        <p className="subtitle">
-          Memos and follow-ups on your desk—one line below. Home Assistant and timed rules live in a{" "}
-          <strong>second window</strong>—click <strong>House</strong>, use the tray, or type <code>open household</code>{" "}
-          in Your brief.
-        </p>
+        <p className="subtitle">Your desk, simplified.</p>
       </div>
       <div className="heroStats">
         <div className="heroStatsDesk">

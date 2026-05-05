@@ -16,14 +16,28 @@ if not exist package.json (
 
 where npm >nul 2>nul
 if errorlevel 1 (
-  echo  npm was not found on PATH. Install Node.js 20 or 22 LTS ^(see README^), then reopen this window.
+  echo  npm was not found on PATH. Install Node.js 22.12 or newer ^(see README^), then reopen this window.
   pause
   exit /b 1
 )
 
 echo.
 echo  App folder: %CD%
+echo  Closing existing Personal Assistant/Electron dev windows...
+taskkill /IM electron.exe /F >nul 2>nul
+taskkill /IM PersonalAssistant.exe /F >nul 2>nul
+taskkill /IM PersonalAssistantSetup.exe /F >nul 2>nul
+
+echo  Rebuilding main/preload once before dev launch...
+call npm run build:main
+if errorlevel 1 (
+  echo  build:main failed.
+  pause
+  exit /b 1
+)
+
 echo  Starting Vite + Electron. Close the Electron window or press Ctrl+C here to stop.
+echo  If the window still looks old, close the installed tray app and run this file again.
 echo.
 
 if not exist node_modules (

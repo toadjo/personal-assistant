@@ -43,6 +43,19 @@ npm run dev
 
 This runs the Vite dev server for the React UI, compiles the Electron **main** and **preload** TypeScript in watch mode, and launches Electron when outputs are ready. The window loads `http://localhost:5173` in development; closing the window keeps the app in the system tray.
 
+### Previewing the default theme during development
+
+The app stores the selected theme in browser localStorage under `assistant-theme`.
+
+v1.2.9 defaults new users to the Glass theme, but existing dev machines may keep an older saved theme. To preview the new-user default, open DevTools in the Electron window and run:
+
+```js
+localStorage.removeItem("assistant-theme");
+location.reload();
+```
+
+Or select **Glass · frosted** from the theme picker.
+
 ### Quality checks (run before you push)
 
 ```bash
