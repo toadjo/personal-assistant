@@ -106,10 +106,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
       expect(progress.noteCreated).toBe(true);
       expect(progress.reminderCreated).toBe(true);
       expect(progress.homeAssistantConnected).toBe(true);
+      expect(result.current.state.status).toBe("completed");
+      expect(result.current.isComplete).toBe(true);
     });
-
-    expect(result.current.state.status).toBe("completed");
-    expect(result.current.isComplete).toBe(true);
   });
 
   it("skipHomeAssistant skips HA step and marks flow as complete", async () => {
@@ -127,9 +126,8 @@ describe("useOnboardingProgress (v1.2.7)", () => {
       expect(progress.noteCreated).toBe(true);
       expect(progress.reminderCreated).toBe(true);
       expect(progress.skippedHomeAssistant).toBe(true);
+      expect(result.current.state.status).toBe("completed");
+      expect(result.current.isComplete).toBe(true);
     });
-
-    expect(result.current.state.status).toBe("completed");
-    expect(result.current.isComplete).toBe(true);
   });
 });

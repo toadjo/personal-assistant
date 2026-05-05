@@ -9,7 +9,19 @@ describe("useAssistantWorkspace after refactor", () => {
     window.localStorage.clear();
     // Mock assistantApi
     (window as any).assistantApi = {
-      hideDeskWindow: vi.fn()
+      hideDeskWindow: vi.fn(),
+      getAssistantSettings: vi.fn().mockResolvedValue({
+        name: "Assistant",
+        isConfigured: false,
+        userPreferredName: "",
+        userPreferredNameIsSet: false
+      }),
+      setUserPreferredName: vi.fn().mockResolvedValue({
+        name: "Assistant",
+        isConfigured: false,
+        userPreferredName: "",
+        userPreferredNameIsSet: false
+      })
     };
   });
 
