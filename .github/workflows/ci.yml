@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   verify:
     runs-on: windows-latest
@@ -55,6 +58,11 @@ jobs:
         env:
           ELECTRON_E2E_TEST_MODE: 1
 
-      - name: npm audit (high+)
-        run: npm audit --audit-level=high
-        continue-on-error: true
+      - name: npm audit (high+ advisory)
+        shell: pwsh
+        run: |
+          npm audit --audit-level=high
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "npm audit found high or critical advisories. Review them separately instead of using npm audit fix --force in CI."
+            exit 0
+          }
