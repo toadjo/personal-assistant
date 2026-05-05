@@ -47,41 +47,47 @@ describe("executeAssistantCommand", () => {
 
   it("no-ops on blank input", async () => {
     const deps = baseDeps({ rawInput: "   " });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(deps.setStatus).not.toHaveBeenCalled();
+    expect(result.mutated).toBe(false);
   });
 
   it("handles help", async () => {
     const deps = baseDeps({ rawInput: "help" });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(deps.setStatus).toHaveBeenCalledWith(expect.stringContaining("new note"));
+    expect(result.mutated).toBe(false);
   });
 
   it("opens household window", async () => {
     const deps = baseDeps({ rawInput: "open household" });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(window.assistantApi.openHouseholdWindow).toHaveBeenCalled();
     expect(deps.setStatus).toHaveBeenCalledWith("Opened the Household window for you.");
+    expect(result.mutated).toBe(false);
   });
 
   it("lists reminders via alias", async () => {
     const deps = baseDeps({ rawInput: "today" });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(deps.setReminderFilter).toHaveBeenCalledWith("pending");
+    expect(result.mutated).toBe(false);
   });
 
   it("search updates query", async () => {
     const deps = baseDeps({ rawInput: "search milk" });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("milk");
+    expect(result.mutated).toBe(false);
   });
 
   it("creates a note", async () => {
     const deps = baseDeps({ rawInput: "new note buy eggs" });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(window.assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy eggs", content: "buy eggs" })
     );
+    expect(result.mutated).toBe(true);
   });
 
   it("rejects empty new note", async () => {
@@ -104,18 +110,27 @@ describe("executeAssistantCommand", () => {
       haReady: true,
       devices: [{ entityId: "light.kitchen", friendlyName: "Kitchen Light", state: "off" }]
     });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(deps.runDeviceToggle).toHaveBeenCalledWith("light.kitchen", "Kitchen Light");
+    expect(result.mutated).toBe(true);
   });
 
   it("refresh devices calls refresh when HA ready", async () => {
     const deps = baseDeps({ rawInput: "refresh devices", haReady: true });
-    await executeAssistantCommand(deps);
+    const result = await executeAssistantCommand(deps);
     expect(deps.refreshHomeAssistantEntities).toHaveBeenCalled();
+    expect(result.mutated).toBe(true);
   });
 
   it("unknown command throws", async () => {
     const deps = baseDeps({ rawInput: "nope" });
     await expect(executeAssistantCommand(deps)).rejects.toThrow(/I do not recognize/);
+  });
+
+  it("reminder command mutates", async () => {
+    const deps = baseDeps({ rawInput: "remind call mom in 15m" });
+    const result = await executeAssistantCommand(deps);
+    expect(window.assistantApi.createReminder).toHaveBeenCalled();
+    expect(result.mutated).toBe(true);
   });
 });

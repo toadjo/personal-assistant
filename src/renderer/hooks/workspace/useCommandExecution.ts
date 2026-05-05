@@ -84,12 +84,10 @@ export function useCommandExecution(args: {
     const trimmed = rawInput.trim();
     if (!trimmed) return;
     const normalized = normalizeCommandAlias(trimmed);
-    console.log("[runCommandInternal] Starting command:", normalized);
     try {
       setError("");
       setIsRunningCommand(true);
-      console.log("[runCommandInternal] Before executeAssistantCommand");
-      await executeAssistantCommand({
+      const result = await executeAssistantCommand({
         rawInput: trimmed,
         devices,
         haReady,
@@ -97,27 +95,27 @@ export function useCommandExecution(args: {
         setReminderFilter,
         setStatus,
         refreshHomeAssistantEntities: async () => {
-          console.log("[runCommandInternal] refreshHomeAssistantEntities called");
           await window.assistantApi?.refreshHomeAssistantEntities?.();
-          console.log("[runCommandInternal] refreshHomeAssistantEntities completed");
         },
         runDeviceToggle
       });
-      console.log("[runCommandInternal] After executeAssistantCommand");
       setCommandHistory((prev) => {
         const next = [normalized, ...prev.filter((item) => item.toLowerCase() !== normalized.toLowerCase())];
         return next.slice(0, MAX_COMMAND_HISTORY);
       });
       setHistoryCursor(-1);
       setCommandInput("");
-      console.log("[runCommandInternal] Before refreshAll");
-      await refreshAll();
-      console.log("[runCommandInternal] After refreshAll");
+      if (result.mutated) {
+        await Promise.race([
+          refreshAll(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Refresh timeout")), 10000))
+        ]).catch(() => {
+          console.error("Refresh failed or timed out, but continuing");
+        });
+      }
     } catch (err) {
-      console.log("[runCommandInternal] Error:", err);
       setError(getAssistantInvokeErrorMessage(err));
     } finally {
-      console.log("[runCommandInternal] Finally block - clearing isRunningCommand");
       setIsRunningCommand(false);
     }
   }
