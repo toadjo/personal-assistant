@@ -280,40 +280,6 @@ body {
   margin-top: var(--space-2);
 }
 
-.secretaryLayout .secretaryTriple > .panel,
-.secretaryLayout .secretaryTriple > .panel.commandPanel {
-  margin-top: 0;
-}
-
-@media (min-width: 1024px) {
-  .secretaryTriple {
-    display: grid;
-    align-items: start;
-    gap: var(--space-4) clamp(16px, 2vw, 28px);
-    margin-top: var(--space-3);
-  }
-
-  .secretaryTriple-withIntro {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr) minmax(0, 1fr);
-  }
-
-  .secretaryTriple-compact {
-    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
-  }
-
-  .secretaryTriple > .panel {
-    min-width: 0;
-  }
-}
-
-.secretaryLayout .panel {
-  margin-top: var(--space-3);
-}
-
-.secretaryLayout .panel.commandPanel {
-  margin-top: var(--space-2);
-}
-
 .householdWindowLayout {
   min-height: 100vh;
   box-sizing: border-box;
@@ -430,6 +396,7 @@ h1 {
   gap: var(--space-3);
   padding: var(--space-2) 0;
   margin-bottom: var(--space-3);
+  min-height: 40px;
 }
 
 .utilityToolbarLeft {
@@ -459,6 +426,7 @@ h1 {
   white-space: nowrap;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(6px);
+  min-height: 32px;
 }
 
 .statusChipAttention {
@@ -493,6 +461,8 @@ h1 {
     border-color 0.15s ease,
     color 0.15s ease;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  min-height: 32px;
+  min-width: 32px;
 }
 
 .iconButton:hover:not(:disabled) {
@@ -1490,11 +1460,11 @@ button:disabled {
 
 .commandPanel {
   border-color: var(--surface-border-strong);
-  padding: var(--space-3);
+  padding: var(--space-2);
 }
 
 .commandHero {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .commandRow {
@@ -1506,18 +1476,18 @@ button:disabled {
 .commandInputHero {
   flex: 1;
   min-width: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
   font-size: 14px;
 }
 
 .commandActionHero {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   min-width: auto;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .commandHintsCompact {
@@ -1525,7 +1495,7 @@ button:disabled {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-1);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   font-size: 12px;
 }
 
@@ -1594,7 +1564,7 @@ button:disabled {
 /* Content grid - two-column desktop layout */
 .contentGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: var(--space-4);
   margin-top: var(--space-4);
 }
@@ -1679,36 +1649,36 @@ button:disabled {
 /* Empty state - Apple-like subtle design */
 .emptyState {
   text-align: center;
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-4) var(--space-3);
   border: 1px dashed color-mix(in srgb, var(--panel-border) 50%, transparent);
   background: color-mix(in srgb, var(--panel-bg) 50%, transparent);
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--muted);
 }
 
 .emptyStateIcon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto var(--space-3);
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--space-2);
   color: color-mix(in srgb, var(--muted) 40%, transparent);
 }
 
 .emptyStateTitle {
   margin: 0 0 var(--space-1);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--subtitle);
 }
 
 .emptyStateText {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
 .remindersGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--space-2);
   margin-top: var(--space-2);
 }
@@ -1717,18 +1687,18 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: 10px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition:
     box-shadow 0.15s ease,
     border-color 0.15s ease;
 }
 
 .reminderCard:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   border-color: color-mix(in srgb, var(--surface-border-strong) 52%, var(--panel-border) 48%);
 }
 
@@ -1774,7 +1744,7 @@ button:disabled {
 
 .notesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--space-2);
   margin-top: var(--space-2);
 }
@@ -1783,18 +1753,18 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: 10px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition:
     box-shadow 0.15s ease,
     border-color 0.15s ease;
 }
 
 .noteCard:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   border-color: color-mix(in srgb, var(--surface-border-strong) 52%, var(--panel-border) 48%);
 }
 
@@ -1872,11 +1842,6 @@ button:disabled {
   50% {
     opacity: 0.7;
   }
-}
-
-.commandHintsRow {
-  margin-top: var(--space-1);
-  align-items: center;
 }
 
 .assistantContextRow {
