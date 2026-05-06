@@ -134,16 +134,35 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
   test("command examples are shown in desk UI", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Check that command hints section contains examples (use first() to avoid strict mode violation)
-    const hintsSection = await window.locator(".commandHintsRow").first().isVisible();
-    expect(hintsSection).toBe(true);
+    // Check that base command example buttons are visible
+    const createNoteButton = await window.getByRole("button", { name: "Create a note" }).isVisible();
+    expect(createNoteButton).toBe(true);
+
+    const setReminderButton = await window.getByRole("button", { name: "Set a reminder" }).isVisible();
+    expect(setReminderButton).toBe(true);
+
+    const showRemindersButton = await window.getByRole("button", { name: "Show reminders" }).isVisible();
+    expect(showRemindersButton).toBe(true);
+
+    const showNotesButton = await window.getByRole("button", { name: "Show all notes" }).isVisible();
+    expect(showNotesButton).toBe(true);
   });
 
   test("HA-specific command examples are hidden when HA not configured", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // The command hints should still show base examples
-    const hintsSection = await window.locator(".commandHintsRow").first().isVisible();
-    expect(hintsSection).toBe(true);
+    // Base examples should be visible
+    const createNoteButton = await window.getByRole("button", { name: "Create a note" }).isVisible();
+    expect(createNoteButton).toBe(true);
+
+    // HA-specific examples should not be visible
+    const toggleDeviceButton = await window.getByRole("button", { name: "Toggle a device" }).isVisible();
+    expect(toggleDeviceButton).toBe(false);
+
+    const listDevicesButton = await window.getByRole("button", { name: "List all devices" }).isVisible();
+    expect(listDevicesButton).toBe(false);
+
+    const openHouseholdButton = await window.getByRole("button", { name: "Open Household window" }).isVisible();
+    expect(openHouseholdButton).toBe(false);
   });
 });
