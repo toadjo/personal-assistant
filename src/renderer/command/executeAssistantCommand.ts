@@ -56,14 +56,26 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     deps.setStatus(`Searching memos for "${q}".`);
     return { mutated: false };
   }
-  if (lower.startsWith("new note ") || lower.startsWith("note ") || lower.startsWith("make a note ") || lower.startsWith("add note ") || lower.startsWith("remember ")) {
+  if (
+    lower.startsWith("new note ") ||
+    lower.startsWith("note ") ||
+    lower.startsWith("make a note ") ||
+    lower.startsWith("add note ") ||
+    lower.startsWith("remember ")
+  ) {
     const text = parseNoteAlias(raw);
     if (!text) throw new Error("Tell me what to save. Example: make a note buy coffee.");
     await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
     deps.setStatus("Got it—memo saved.");
     return { mutated: true };
   }
-  if (lower === "new note" || lower === "note" || lower === "make a note" || lower === "add note" || lower === "remember") {
+  if (
+    lower === "new note" ||
+    lower === "note" ||
+    lower === "make a note" ||
+    lower === "add note" ||
+    lower === "remember"
+  ) {
     throw new Error("Tell me what to save. Example: make a note buy coffee.");
   }
   if (lower.startsWith("remind me to ")) {
@@ -90,9 +102,13 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     const matchingDevices = deps.devices.filter(
       (d) => d.friendlyName.toLowerCase().includes(target) || d.entityId.toLowerCase().includes(target)
     );
-    if (matchingDevices.length === 0) throw new Error(`I could not find a device matching "${target}". Try refresh devices in Household.`);
+    if (matchingDevices.length === 0)
+      throw new Error(`I could not find a device matching "${target}". Try refresh devices in Household.`);
     if (matchingDevices.length > 1) {
-      const names = matchingDevices.slice(0, 3).map((d) => d.friendlyName).join(", ");
+      const names = matchingDevices
+        .slice(0, 3)
+        .map((d) => d.friendlyName)
+        .join(", ");
       throw new Error(`I found multiple devices matching "${target}": ${names}. Try the full device name.`);
     }
     const device = matchingDevices[0]!;

@@ -1,3 +1,5 @@
+import { Info, AlertTriangle } from "lucide-react";
+
 type Props = {
   status: string;
   error: string;
@@ -15,7 +17,7 @@ export function StatusBanner({ status, error }: Props): JSX.Element {
           data-testid="desk-status-banner"
         >
           <span className="statusBadge" aria-hidden="true">
-            Assistant
+            <Info size={12} /> Assistant
           </span>
           <span className="statusMessage">{status}</span>
         </p>
@@ -29,7 +31,7 @@ export function StatusBanner({ status, error }: Props): JSX.Element {
           data-testid="desk-error-banner"
         >
           <span className="errorBadge" aria-hidden="true">
-            Heads up
+            <AlertTriangle size={12} /> Heads up
           </span>
           <span className="errorMessage">{error}</span>
         </p>

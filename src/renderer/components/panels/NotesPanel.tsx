@@ -1,8 +1,12 @@
 import { memo, useState } from "react";
 import type { Note } from "../../../shared/types";
+import { StickyNote, Pencil, Trash2 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { QuickNoteForm } from "../forms/QuickNoteForm";
+import { PanelHeader } from "../ui/PanelHeader";
+import { IconButton } from "../ui/IconButton";
+import { EmptyState } from "../ui/EmptyState";
 
 type UpdatePayload = {
   id: string;
@@ -79,9 +83,7 @@ export const NotesPanel = memo(function NotesPanel({
 
   return (
     <section className="panel" aria-labelledby="notes-panel-heading">
-      <div className="titleRow">
-        <h2 id="notes-panel-heading">Memos</h2>
-      </div>
+      <PanelHeader icon={StickyNote} title="Memos" />
       <QuickNoteForm onDone={onFetchNotes} onError={onError} onShowSuccess={onShowSuccess} onCreated={onNoteCreated} />
       <div className="notesGrid" aria-label="Saved memos">
         {isRefreshing ? (
@@ -150,34 +152,31 @@ export const NotesPanel = memo(function NotesPanel({
                     ) : null}
                   </div>
                   <div className="noteCardActions">
-                    <button
-                      type="button"
-                      className="ghostButton"
+                    <IconButton
+                      icon={Pencil}
+                      label={`Edit memo ${n.title}`}
                       onClick={() => startEdit(n)}
-                      aria-label={`Edit memo ${n.title}`}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="dangerButton"
+                      variant="ghost"
+                      size={14}
+                    />
+                    <IconButton
+                      icon={Trash2}
+                      label={`Delete memo ${n.title}`}
                       onClick={() => void onDeleteNote(n.id, n.title)}
-                      aria-label={`Delete memo ${n.title}`}
-                    >
-                      Delete
-                    </button>
+                      variant="danger"
+                      size={14}
+                    />
                   </div>
                 </>
               )}
             </article>
           ))
         ) : (
-          <div className="emptyState">
-            <p className="emptyStateTitle">No notes yet</p>
-            <p className="emptyStateDescription">
-              Notes are for quick memos you want to keep. Use the form above to create your first note.
-            </p>
-          </div>
+          <EmptyState
+            icon={StickyNote}
+            title="No notes yet"
+            description="Notes are for quick memos you want to keep. Use the form above to create your first note."
+          />
         )}
       </div>
     </section>

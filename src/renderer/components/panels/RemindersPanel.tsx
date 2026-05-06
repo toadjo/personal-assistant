@@ -1,7 +1,11 @@
 import { memo } from "react";
 import type { Reminder } from "../../../shared/types";
 import type { ReminderFilter } from "../../types";
+import { Bell, Clock, Check, Trash2 } from "lucide-react";
 import { ReminderForm } from "../forms/ReminderForm";
+import { PanelHeader } from "../ui/PanelHeader";
+import { IconButton } from "../ui/IconButton";
+import { EmptyState } from "../ui/EmptyState";
 
 type Props = {
   isRefreshing: boolean;
@@ -34,18 +38,22 @@ export const RemindersPanel = memo(function RemindersPanel({
 }: Props): JSX.Element {
   return (
     <section className="panel" aria-labelledby="reminders-panel-heading">
-      <div className="titleRow">
-        <h2 id="reminders-panel-heading">Follow-ups</h2>
-        <select
-          aria-label="Filter reminders by status"
-          value={reminderFilter}
-          onChange={(e) => setReminderFilter(e.target.value as ReminderFilter)}
-        >
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="done">Done</option>
-        </select>
-      </div>
+      <PanelHeader
+        icon={Bell}
+        title="Follow-ups"
+        actions={
+          <select
+            aria-label="Filter reminders by status"
+            value={reminderFilter}
+            onChange={(e) => setReminderFilter(e.target.value as ReminderFilter)}
+            className="themeSelect themeSelectWide"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
+          </select>
+        }
+      />
       <ReminderForm onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} onCreated={onReminderCreated} />
       <div className="remindersGrid" aria-label="Reminders list">
         {isRefreshing ? (
@@ -64,55 +72,48 @@ export const RemindersPanel = memo(function RemindersPanel({
                     <span className="overdueBadge">Overdue</span>
                   ) : null}
                 </p>
-                <span className={`pill ${r.status === "pending" ? "pill" : "graphitePill"}`}>
-                  {r.status}
-                </span>
+                <span className={`pill ${r.status === "pending" ? "pill" : "graphitePill"}`}>{r.status}</span>
               </div>
               {r.status === "pending" ? (
                 <div className="reminderCardActions">
-                  <button
-                    type="button"
-                    className="ghostButton"
+                  <IconButton
+                    icon={Clock}
+                    label={`Snooze reminder ten minutes: ${r.text}`}
                     onClick={() => void onSnooze10(r.id)}
-                    aria-label={`Snooze reminder ten minutes: ${r.text}`}
-                  >
-                    +10m
-                  </button>
-                  <button
-                    type="button"
-                    className="ghostButton"
+                    variant="ghost"
+                    size={14}
+                  />
+                  <IconButton
+                    icon={Clock}
+                    label={`Snooze reminder one hour: ${r.text}`}
                     onClick={() => void onSnooze60(r.id)}
-                    aria-label={`Snooze reminder one hour: ${r.text}`}
-                  >
-                    +1h
-                  </button>
-                  <button
-                    type="button"
-                    className="ghostButton"
+                    variant="ghost"
+                    size={14}
+                  />
+                  <IconButton
+                    icon={Check}
+                    label={`Mark reminder done: ${r.text}`}
                     onClick={() => void onComplete(r.id)}
-                    aria-label={`Mark reminder done: ${r.text}`}
-                  >
-                    Done
-                  </button>
-                  <button
-                    type="button"
-                    className="dangerButton"
+                    variant="ghost"
+                    size={14}
+                  />
+                  <IconButton
+                    icon={Trash2}
+                    label={`Delete reminder: ${r.text}`}
                     onClick={() => void onDelete(r.id)}
-                    aria-label={`Delete reminder: ${r.text}`}
-                  >
-                    Delete
-                  </button>
+                    variant="danger"
+                    size={14}
+                  />
                 </div>
               ) : null}
             </article>
           ))
         ) : (
-          <div className="emptyState">
-            <p className="emptyStateTitle">No reminders yet</p>
-            <p className="emptyStateDescription">
-              Reminders help you stay on top of tasks. Use the form above to create your first reminder with a due time.
-            </p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="No reminders yet"
+            description="Reminders help you stay on top of tasks. Use the form above to create your first reminder with a due time."
+          />
         )}
       </div>
     </section>

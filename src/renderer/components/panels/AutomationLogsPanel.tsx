@@ -1,5 +1,8 @@
 import type { ExecutionLogRow } from "../../types";
+import { Activity } from "lucide-react";
 import { formatRetrySummary } from "../../lib/format";
+import { PanelHeader } from "../ui/PanelHeader";
+import { EmptyState } from "../ui/EmptyState";
 
 type Props = {
   isRefreshing: boolean;
@@ -9,9 +12,7 @@ type Props = {
 export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element {
   return (
     <section className="panel addOnPanel">
-      <div className="titleRow">
-        <h3 className="panelSectionHeading">Rule runs</h3>
-      </div>
+      <PanelHeader icon={Activity} title="Rule runs" />
       <ul className="list">
         {isRefreshing ? (
           <li className="muted">Loading…</li>
@@ -24,12 +25,11 @@ export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element 
             </li>
           ))
         ) : (
-          <li className="emptyState">
-            <p className="emptyStateTitle">No runs yet</p>
-            <p className="emptyStateDescription">
-              Rule runs appear here after automation rules execute. Create a rule to see its execution history.
-            </p>
-          </li>
+          <EmptyState
+            icon={Activity}
+            title="No runs yet"
+            description="Rule runs appear here after automation rules execute. Create a rule to see its execution history."
+          />
         )}
       </ul>
     </section>

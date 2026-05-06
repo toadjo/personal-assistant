@@ -1,78 +1,80 @@
+import { Monitor, Wifi, WifiOff } from "lucide-react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { ThemeSelect } from "./layout/ThemeSelect";
-import { WelcomeBar } from "./layout/WelcomeBar";
+import { IconButton } from "./ui/IconButton";
+import { StatusChip } from "./ui/StatusChip";
 import { HomeAssistantPanel } from "./panels/HomeAssistantPanel";
 import { AutomationLogsPanel } from "./panels/AutomationLogsPanel";
 import { AutomationRulesPanel } from "./panels/AutomationRulesPanel";
 
 export function HouseholdShell(): JSX.Element {
-  const { ui, data, ha, automation, profile } = useAssistantWorkspace();
+  const { ui, data, ha, automation } = useAssistantWorkspace();
 
   return (
     <main className="container householdWindowLayout">
-      <header className="householdWindowHeader">
-        <div className="householdWindowLead">
-          <WelcomeBar
-            userPreferredName={profile.userPreferredName}
-            userPreferredNameIsSet={profile.userPreferredNameIsSet}
-            onSaveUserPreferredName={profile.persistUserPreferredName}
-            idPrefix="household"
+      <header className="utilityToolbar">
+        <div className="utilityToolbarLeft">
+          <h1 className="appIdentity">Household</h1>
+          <StatusChip
+            icon={ha.haReady ? Wifi : WifiOff}
+            label={ha.haReady ? "Connected" : "Not linked"}
+            count={data.devices.length}
+            variant={ha.haReady ? "success" : undefined}
           />
-          <p className="addOnEyebrow">Nice to have</p>
-          <h1 className="addOnTitle">Household</h1>
-          <p className="muted addOnLead">
-            Home Assistant and timed rules.
-          </p>
         </div>
-        <div className="householdWindowActions">
+        <div className="utilityToolbarRight">
+          <IconButton
+            icon={Monitor}
+            label="Open Desk window"
+            onClick={() => void window.assistantApi.focusDeskWindow()}
+            variant="ghost"
+          />
           <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-household" />
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <button type="button" className="ghostButton" onClick={() => void (window as any).assistantApi.focusDeskWindow()}>
-            Desk window
-          </button>
         </div>
       </header>
 
-      <HomeAssistantPanel
-        haUrl={ha.haUrl}
-        setHaUrl={ha.setHaUrl}
-        haToken={ha.haToken}
-        setHaToken={ha.setHaToken}
-        hasHaUrl={ha.hasHaUrl}
-        haStatusText={ha.haStatusText}
-        haReady={ha.haReady}
-        canSaveHa={ha.canSaveHa}
-        isSavingHa={ha.isSavingHa}
-        isRefreshingHa={ha.isRefreshingHa}
-        isRefreshing={data.isRefreshing}
-        devices={data.devices}
-        isEntityTogglePending={ha.isEntityTogglePending}
-        onSave={() => {
-          void ha.saveHomeAssistantConfig();
-          ui.showSuccess("Home Assistant configuration saved");
-        }}
-        onTest={() => void ha.testHomeAssistant()}
-        onRefreshEntities={() => void ha.refreshHomeAssistantEntities()}
-        onToggleDevice={ha.runDeviceToggle}
-        onError={ui.reportError}
-        onShowSuccess={ui.showSuccess}
-      />
-
-      <div className="grid householdAutomationGrid">
-        <AutomationRulesPanel
+      <div className="householdContent">
+        <HomeAssistantPanel
+          haUrl={ha.haUrl}
+          setHaUrl={ha.setHaUrl}
+          haToken={ha.haToken}
+          setHaToken={ha.setHaToken}
+          hasHaUrl={ha.hasHaUrl}
+          haStatusText={ha.haStatusText}
+          haReady={ha.haReady}
+          canSaveHa={ha.canSaveHa}
+          isSavingHa={ha.isSavingHa}
+          isRefreshingHa={ha.isRefreshingHa}
           isRefreshing={data.isRefreshing}
-          rules={data.rules}
           devices={data.devices}
-          onRefresh={data.refreshAll}
+          isEntityTogglePending={ha.isEntityTogglePending}
+          onSave={() => {
+            void ha.saveHomeAssistantConfig();
+            ui.showSuccess("Home Assistant configuration saved");
+          }}
+          onTest={() => void ha.testHomeAssistant()}
+          onRefreshEntities={() => void ha.refreshHomeAssistantEntities()}
+          onToggleDevice={ha.runDeviceToggle}
           onError={ui.reportError}
           onShowSuccess={ui.showSuccess}
-          onDeleteRule={(id, name) => {
-            void automation.deleteRuleById(id, name);
-            ui.showSuccess("Rule deleted");
-          }}
-          onSetRuleEnabled={(id, enabled) => void automation.setRuleEnabledById(id, enabled)}
         />
-        <AutomationLogsPanel isRefreshing={data.isRefreshing} logs={data.logs} />
+
+        <div className="grid householdAutomationGrid">
+          <AutomationRulesPanel
+            isRefreshing={data.isRefreshing}
+            rules={data.rules}
+            devices={data.devices}
+            onRefresh={data.refreshAll}
+            onError={ui.reportError}
+            onShowSuccess={ui.showSuccess}
+            onDeleteRule={(id, name) => {
+              void automation.deleteRuleById(id, name);
+              ui.showSuccess("Rule deleted");
+            }}
+            onSetRuleEnabled={(id, enabled) => void automation.setRuleEnabledById(id, enabled)}
+          />
+          <AutomationLogsPanel isRefreshing={data.isRefreshing} logs={data.logs} />
+        </div>
       </div>
     </main>
   );

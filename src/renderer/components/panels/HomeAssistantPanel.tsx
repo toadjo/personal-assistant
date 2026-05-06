@@ -1,4 +1,8 @@
 import type { HaDeviceRow } from "../../types";
+import { Home, Power, RefreshCw, PlugZap } from "lucide-react";
+import { PanelHeader } from "../ui/PanelHeader";
+import { IconButton } from "../ui/IconButton";
+import { EmptyState } from "../ui/EmptyState";
 
 type Props = {
   haUrl: string;
@@ -31,31 +35,34 @@ function getConnectionState(hasHaUrl: boolean, haReady: boolean, devices: HaDevi
   return "connected";
 }
 
-function getConnectionSummary(state: ConnectionState, devices: HaDeviceRow[]): { label: string; description: string; className: string } {
+function getConnectionSummary(
+  state: ConnectionState,
+  devices: HaDeviceRow[]
+): { label: string; description: string; className: string } {
   switch (state) {
     case "notConfigured":
       return {
         label: "Not configured",
         description: "Add your Home Assistant URL and token to get started.",
-        className: "connection-not-configured",
+        className: "connection-not-configured"
       };
     case "configuredButUntested":
       return {
         label: "Configured but untested",
         description: "Save your configuration, then click Test to verify the connection.",
-        className: "connection-untested",
+        className: "connection-untested"
       };
     case "connected":
       return {
         label: "Connected",
         description: `${devices.length} device${devices.length === 1 ? "" : "s"} available.`,
-        className: "connection-connected",
+        className: "connection-connected"
       };
     case "lastRefreshFailed":
       return {
         label: "Connection issue",
         description: "Unable to load devices. Check your configuration and try refreshing.",
-        className: "connection-failed",
+        className: "connection-failed"
       };
   }
 }
@@ -83,9 +90,7 @@ export function HomeAssistantPanel({
 }: Props): JSX.Element {
   return (
     <section className="panel addOnPanel">
-      <div className="titleRow">
-        <h3 className="panelSectionHeading">Home Assistant</h3>
-      </div>
+      <PanelHeader icon={Home} title="Home Assistant" />
       {/* v1.2.7 visible connection state summary */}
       {(() => {
         const state = getConnectionState(hasHaUrl, haReady, devices);
@@ -126,9 +131,14 @@ export function HomeAssistantPanel({
         <button type="button" disabled={!haReady} onClick={() => void onTest()}>
           Test
         </button>
-        <button type="button" disabled={isRefreshingHa || !haReady} onClick={() => void onRefreshEntities()}>
-          {isRefreshingHa ? "…" : "Refresh devices"}
-        </button>
+        <IconButton
+          icon={RefreshCw}
+          label="Refresh devices"
+          onClick={() => void onRefreshEntities()}
+          disabled={isRefreshingHa || !haReady}
+          variant="ghost"
+          size={14}
+        />
       </div>
       <ul className="list">
         {isRefreshing ? (
@@ -139,31 +149,29 @@ export function HomeAssistantPanel({
               <span>
                 {d.friendlyName} ({d.state})
               </span>
-              <button
-                type="button"
-                className="ghostButton"
-                disabled={isEntityTogglePending(d.entityId)}
+              <IconButton
+                icon={Power}
+                label={`Toggle ${d.friendlyName}`}
                 onClick={async () => {
                   try {
                     await onToggleDevice(d.entityId, d.friendlyName);
-                    // v1.2.7 persistent success feedback
                     onShowSuccess?.(`Device toggled: ${d.friendlyName}`);
                   } catch (err) {
                     onError(err);
                   }
                 }}
-              >
-                {isEntityTogglePending(d.entityId) ? "…" : "Toggle"}
-              </button>
+                disabled={isEntityTogglePending(d.entityId)}
+                variant="ghost"
+                size={14}
+              />
             </li>
           ))
         ) : (
-          <li className="emptyState">
-            <p className="emptyStateTitle">No devices yet</p>
-            <p className="emptyStateDescription">
-              Save your Home Assistant configuration, then click Refresh devices to load your smart home devices.
-            </p>
-          </li>
+          <EmptyState
+            icon={PlugZap}
+            title="No devices yet"
+            description="Save your Home Assistant configuration, then click Refresh devices to load your smart home devices."
+          />
         )}
       </ul>
     </section>

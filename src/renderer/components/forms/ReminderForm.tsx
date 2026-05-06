@@ -23,8 +23,7 @@ export function ReminderForm({ onDone, onError, onShowSuccess, onCreated }: Prop
       if (new Date(parsedDueAt).getTime() < Date.now() + 30_000) {
         throw new Error("Reminder time must be at least 30 seconds in the future.");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (window as any).assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
+      await window.assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
       setText("");
       setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
       await onDone();

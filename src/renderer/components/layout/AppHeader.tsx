@@ -26,35 +26,31 @@ export function AppHeader({
   haReady
 }: Props): JSX.Element {
   return (
-    <header className="hero">
-      <div className="heroLead">
+    <header className="desktopTopBar">
+      <div className="desktopTopBarLeft">
         <WelcomeBar
           userPreferredName={userPreferredName}
           userPreferredNameIsSet={userPreferredNameIsSet}
           onSaveUserPreferredName={onSaveUserPreferredName}
           idPrefix="desk"
         />
-        <h1>Personal Assistant</h1>
-        <p className="subtitle">Your desk, simplified.</p>
+        <span className="desktopAppName">Personal Assistant</span>
       </div>
-      <div className="heroStats">
-        <div className="heroStatsDesk">
-          <ThemeSelect theme={theme} onChange={onThemeChange} selectId="theme-select-desk" />
-          <span className="stat">Memos {notesCount}</span>
-          <span className="stat">Open {pendingRemindersCount}</span>
-          <span className={overdueRemindersCount > 0 ? "stat statAttention" : "stat"}>
-            Overdue {overdueRemindersCount}
-          </span>
-        </div>
+      <div className="desktopTopBarRight">
+        <span className="stat statCompact">Memos {notesCount}</span>
+        <span className="stat statCompact">Open {pendingRemindersCount}</span>
+        <span className={overdueRemindersCount > 0 ? "stat statCompact statAttention" : "stat statCompact"}>
+          Overdue {overdueRemindersCount}
+        </span>
         <button
           type="button"
-          className="heroStatsAddOn"
+          className="ghostButton ghostButtonCompact"
           title="Open Household window (Home Assistant and rules)"
           onClick={() => void window.assistantApi.openHouseholdWindow()}
         >
-          <span className="heroStatsAddOnLabel">House</span>
-          <span className={`stat statAddOn ${haReady ? "statAddOnLive" : ""}`}>{haReady ? "linked" : "off"}</span>
+          House <span className={`stat statAddOn ${haReady ? "statAddOnLive" : ""}`}>{haReady ? "linked" : "off"}</span>
         </button>
+        <ThemeSelect theme={theme} onChange={onThemeChange} selectId="theme-select-desk" />
       </div>
     </header>
   );

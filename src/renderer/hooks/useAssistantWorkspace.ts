@@ -200,7 +200,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       successes: ui.successes,
       showSuccess: ui.showSuccess,
       dismissSuccess: ui.dismissSuccess,
-      dismissAllSuccesses: ui.dismissAllSuccesses,
+      dismissAllSuccesses: ui.dismissAllSuccesses
     },
     data: {
       query: data.query,

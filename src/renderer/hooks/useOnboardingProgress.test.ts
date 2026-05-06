@@ -37,7 +37,12 @@ describe("useOnboardingProgress (v1.2.7)", () => {
   it("loads saved progress from localStorage", () => {
     window.localStorage.setItem(
       STORAGE_ONBOARDING_PROGRESS,
-      JSON.stringify({ noteCreated: true, reminderCreated: false, homeAssistantConnected: false, skippedHomeAssistant: false })
+      JSON.stringify({
+        noteCreated: true,
+        reminderCreated: false,
+        homeAssistantConnected: false,
+        skippedHomeAssistant: false
+      })
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
@@ -49,7 +54,12 @@ describe("useOnboardingProgress (v1.2.7)", () => {
   it("marks as complete when all steps are done", () => {
     window.localStorage.setItem(
       STORAGE_ONBOARDING_PROGRESS,
-      JSON.stringify({ noteCreated: true, reminderCreated: true, homeAssistantConnected: true, skippedHomeAssistant: false })
+      JSON.stringify({
+        noteCreated: true,
+        reminderCreated: true,
+        homeAssistantConnected: true,
+        skippedHomeAssistant: false
+      })
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
@@ -75,7 +85,12 @@ describe("useOnboardingProgress (v1.2.7)", () => {
   it("completes reminder step and moves to homeAssistant", async () => {
     window.localStorage.setItem(
       STORAGE_ONBOARDING_PROGRESS,
-      JSON.stringify({ noteCreated: true, reminderCreated: false, homeAssistantConnected: false, skippedHomeAssistant: false })
+      JSON.stringify({
+        noteCreated: true,
+        reminderCreated: false,
+        homeAssistantConnected: false,
+        skippedHomeAssistant: false
+      })
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
@@ -94,7 +109,12 @@ describe("useOnboardingProgress (v1.2.7)", () => {
   it("completes homeAssistant step and marks flow as complete", async () => {
     window.localStorage.setItem(
       STORAGE_ONBOARDING_PROGRESS,
-      JSON.stringify({ noteCreated: true, reminderCreated: true, homeAssistantConnected: false, skippedHomeAssistant: false })
+      JSON.stringify({
+        noteCreated: true,
+        reminderCreated: true,
+        homeAssistantConnected: false,
+        skippedHomeAssistant: false
+      })
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
@@ -114,7 +134,12 @@ describe("useOnboardingProgress (v1.2.7)", () => {
   it("skipHomeAssistant skips HA step and marks flow as complete", async () => {
     window.localStorage.setItem(
       STORAGE_ONBOARDING_PROGRESS,
-      JSON.stringify({ noteCreated: true, reminderCreated: true, homeAssistantConnected: false, skippedHomeAssistant: false })
+      JSON.stringify({
+        noteCreated: true,
+        reminderCreated: true,
+        homeAssistantConnected: false,
+        skippedHomeAssistant: false
+      })
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
