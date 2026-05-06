@@ -41,5 +41,6 @@ export const IpcInvoke = {
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */
 export const IpcRendererEvent = {
   remindersUpdated: "reminders:updated",
-  command: "command"
+  command: "command",
+  showAbout: "showAbout"
 } as const;

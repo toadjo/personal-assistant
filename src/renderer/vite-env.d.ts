@@ -57,6 +57,7 @@ declare global {
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
       onRemindersUpdated: (cb: () => void) => () => void;
       onCommand: (cb: (_event: unknown, command: string) => void) => () => void;
+      onShowAbout: (cb: () => void) => () => void;
       openHouseholdWindow: () => Promise<boolean>;
       focusDeskWindow: () => Promise<boolean>;
       hideDeskWindow: () => Promise<boolean>;

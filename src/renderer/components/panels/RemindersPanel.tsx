@@ -112,7 +112,7 @@ export const RemindersPanel = memo(function RemindersPanel({
           <EmptyState
             icon={Bell}
             title="No reminders yet"
-            description="Reminders help you stay on top of tasks. Use the form above to create your first reminder with a due time."
+            description="Set reminders and get desktop notifications when they're due. Everything stays on your computer. Use the form above to create your first reminder."
           />
         )}
       </div>
