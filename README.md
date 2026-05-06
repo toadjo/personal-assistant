@@ -47,7 +47,7 @@ This runs the Vite dev server for the React UI, compiles the Electron **main** a
 
 The app stores the selected theme in browser localStorage under `assistant-theme`.
 
-v1.2.9 defaults new users to the Glass theme, but existing dev machines may keep an older saved theme. To preview the new-user default, open DevTools in the Electron window and run:
+v1.3.0 defaults new users to the Glass theme, but existing dev machines may keep an older saved theme. To preview the new-user default, open DevTools in the Electron window and run:
 
 ```js
 localStorage.removeItem("assistant-theme");
@@ -235,6 +235,25 @@ npm run dist
 - Installer/exe icon paths are explicitly set to project-local `assets/app-icon.png` so builds do not depend on global machine assets.
 - `npm run dist` runs `npm run icons:prepare` (ICO from `assets/app-icon.png`) and `npm run clean:release` before packaging. `npm run release:build` runs `icons:prepare` as part of its script.
 - Remaining gap: auto-generated `.ico` uses one source PNG, so quality can be weaker at very small sizes (16x16/24x24). Practical workaround: replace `assets/app-icon.ico` with a designer-exported multi-size `.ico` (16/24/32/48/64/128/256) and keep the same filename.
+
+## Release Notes
+
+### v1.3.0
+
+**macOS utility redesign** - Complete visual overhaul to feel like a compact, native macOS utility:
+
+- Tightened command composer with compact square send button
+- Stable toolbar heights with consistent 32px controls
+- Two-column desktop layout with reduced calendar dominance (0.9:1.1 ratio)
+- Tighter memo/reminder cards (220px min-width, softer shadows)
+- Compact empty states with subtle Apple-like design
+- Cleaner CSS with stale rules removed
+
+**Compact responsive layout** - Optimized for 4K, 2K, 1080p, laptop, and narrow (430px) widths with capped panel widths and stable alignment.
+
+**Electron E2E stabilization** - Updated command examples test selectors to use accessible button role checks instead of stale CSS classes.
+
+**Dependency fixes** - Added lucide-react dependency and synchronized lockfile.
 
 ## Smoke Validation
 
