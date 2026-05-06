@@ -119,10 +119,46 @@ jobs:
           name: linux-${{ steps.artifacts.outputs.release_tag }}
           path: release/
 
+  package-macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS universal DMG/zip
+        run: npm run dist:mac
+
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Upload macOS release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ steps.artifacts.outputs.release_tag }}
+          path: release/
+
   publish-releases:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [package-windows, package-linux]
+    needs: [package-windows, package-linux, package-macos]
     permissions:
       contents: write
     steps:
@@ -156,11 +192,18 @@ jobs:
           name: linux-${{ steps.artifacts.outputs.release_tag }}
           path: tmp/linux
 
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-${{ steps.artifacts.outputs.release_tag }}
+          path: tmp/macos
+
       - name: Validate and stage mirrorable release assets
         run: |
           node scripts/release-assets.mjs \
             --windows-dir tmp/windows \
             --linux-dir tmp/linux \
+            --macos-dir tmp/macos \
             --out-dir release-assets
 
       - name: Publish GitHub Release (private repo)

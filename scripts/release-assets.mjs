@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const ALLOWED_PATTERNS = [".exe", ".blockmap", ".yml", ".AppImage", ".AppImage.zsync"];
+const ALLOWED_PATTERNS = [".exe", ".blockmap", ".yml", ".AppImage", ".AppImage.zsync", ".dmg", ".zip"];
 
 function normalize(p) {
   return p.replace(/\\/g, "/");
@@ -32,9 +32,10 @@ export function selectReleaseAssets(filePaths) {
   const selected = normalized.filter(isAllowedReleaseAsset);
   const exe = selected.filter((f) => f.endsWith(".exe"));
   const appImage = selected.filter((f) => f.endsWith(".AppImage"));
+  const dmg = selected.filter((f) => f.endsWith(".dmg"));
   return {
     selected,
-    required: { exe, appImage }
+    required: { exe, appImage, dmg }
   };
 }
 
@@ -44,6 +45,9 @@ export function validateReleaseAssets(selection) {
   }
   if (selection.required.appImage.length === 0) {
     throw new Error("Release validation failed: expected at least one Linux .AppImage artifact.");
+  }
+  if (selection.required.dmg.length === 0) {
+    throw new Error("Release validation failed: expected at least one macOS .dmg artifact.");
   }
 }
 
@@ -63,6 +67,7 @@ function parseArgs(argv) {
   const args = {
     windowsDir: "",
     linuxDir: "",
+    macosDir: "",
     outDir: ""
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -70,17 +75,18 @@ function parseArgs(argv) {
     const next = argv[i + 1];
     if (token === "--windows-dir") args.windowsDir = next;
     if (token === "--linux-dir") args.linuxDir = next;
+    if (token === "--macos-dir") args.macosDir = next;
     if (token === "--out-dir") args.outDir = next;
   }
-  if (!args.windowsDir || !args.linuxDir || !args.outDir) {
-    throw new Error("Usage: node scripts/release-assets.mjs --windows-dir <dir> --linux-dir <dir> --out-dir <dir>");
+  if (!args.windowsDir || !args.linuxDir || !args.macosDir || !args.outDir) {
+    throw new Error("Usage: node scripts/release-assets.mjs --windows-dir <dir> --linux-dir <dir> --macos-dir <dir> --out-dir <dir>");
   }
   return args;
 }
 
-export async function prepareValidatedReleaseAssets({ windowsDir, linuxDir, outDir }) {
-  const [windowsFiles, linuxFiles] = await Promise.all([listFilesRecursive(windowsDir), listFilesRecursive(linuxDir)]);
-  const selection = selectReleaseAssets([...windowsFiles, ...linuxFiles]);
+export async function prepareValidatedReleaseAssets({ windowsDir, linuxDir, macosDir, outDir }) {
+  const [windowsFiles, linuxFiles, macosFiles] = await Promise.all([listFilesRecursive(windowsDir), listFilesRecursive(linuxDir), listFilesRecursive(macosDir)]);
+  const selection = selectReleaseAssets([...windowsFiles, ...linuxFiles, ...macosFiles]);
   validateReleaseAssets(selection);
   const copied = await copySelectedAssets(selection.selected, outDir);
   return { copied, selection };
@@ -92,6 +98,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       console.log(`Validated release assets: ${selection.selected.length}`);
       console.log(`Windows installers (.exe): ${selection.required.exe.length}`);
       console.log(`Linux packages (.AppImage): ${selection.required.appImage.length}`);
+      console.log(`macOS packages (.dmg): ${selection.required.dmg.length}`);
       for (const file of copied) {
         console.log(file);
       }

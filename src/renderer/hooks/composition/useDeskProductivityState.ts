@@ -19,8 +19,8 @@
  * onboarding state.
  */
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import type { Note, Reminder, AutomationRule } from "../../../shared/types";
-import type { ReminderFilter } from "../../types";
+import type { Note, Reminder, AutomationRule, Task } from "../../../shared/types";
+import type { ReminderFilter, TaskFilter } from "../../types";
 import type { CalendarCell } from "../../lib/calendar";
 import {
   overduePending,
@@ -32,6 +32,7 @@ import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions"
 import { useNoteActions } from "../workspace/useNoteActions";
 import { useReminderActions } from "../workspace/useReminderActions";
 import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
+import { useTaskActions } from "../workspace/useTaskActions";
 
 export type DeskProductivityState = {
   calendar: {
@@ -52,6 +53,23 @@ export type DeskProductivityState = {
     snoozeMinutes: (id: string, minutes: number, okMessage: string) => Promise<void>;
     completeById: (id: string) => Promise<void>;
     deleteById: (id: string) => Promise<void>;
+  };
+  tasks: {
+    filter: TaskFilter;
+    setFilter: Dispatch<SetStateAction<TaskFilter>>;
+    visible: Task[];
+    overdueOpen: Task[];
+    dueTodayOpen: Task[];
+    completeById: (id: string) => Promise<void>;
+    deleteById: (id: string) => Promise<void>;
+    saveTask: (payload: {
+      id?: string;
+      title: string;
+      notes: string;
+      dueAt: string | null;
+      priority: "low" | "normal" | "high";
+      recurrence: "none" | "daily" | "weekly" | "monthly";
+    }) => Promise<void>;
   };
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;
@@ -77,17 +95,29 @@ export type DeskProductivityState = {
 export function useDeskProductivityState(args: {
   notes: Note[];
   reminders: Reminder[];
+  tasks: Task[];
   rules: AutomationRule[];
   setStatus: (value: string) => void;
   setError: (value: string) => void;
   refreshAll: () => Promise<void>;
   fetchNotesOnly: () => Promise<void>;
   fetchRemindersOnly: () => Promise<void>;
+  fetchTasksOnly: () => Promise<void>;
   mergeNote: (note: Note) => void;
   removeNoteById: (id: string) => void;
 }): DeskProductivityState {
-  const { reminders, setStatus, setError, refreshAll, fetchNotesOnly, fetchRemindersOnly, mergeNote, removeNoteById } =
-    args;
+  const {
+    reminders,
+    tasks,
+    setStatus,
+    setError,
+    refreshAll,
+    fetchNotesOnly,
+    fetchRemindersOnly,
+    fetchTasksOnly,
+    mergeNote,
+    removeNoteById
+  } = args;
 
   const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
 
@@ -103,6 +133,7 @@ export function useDeskProductivityState(args: {
     setError,
     fetchRemindersOnly
   );
+  const taskActions = useTaskActions(tasks, setStatus, setError, fetchTasksOnly);
   const profile = useUserProfileSettings(setError, setStatus);
 
   const pendingList = useMemo(() => remindersPending(reminders), [reminders]);
@@ -128,6 +159,16 @@ export function useDeskProductivityState(args: {
       snoozeMinutes: snoozeReminderMinutes,
       completeById: completeReminderById,
       deleteById: deleteReminderById
+    },
+    tasks: {
+      filter: taskActions.taskFilter,
+      setFilter: taskActions.setTaskFilter,
+      visible: taskActions.visible,
+      overdueOpen: taskActions.overdueOpen,
+      dueTodayOpen: taskActions.dueTodayOpen,
+      completeById: taskActions.completeById,
+      deleteById: taskActions.deleteById,
+      saveTask: taskActions.saveTask
     },
     automation: {
       deleteRuleById,

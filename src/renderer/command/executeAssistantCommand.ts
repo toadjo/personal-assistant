@@ -1,5 +1,5 @@
 import { normalizeCommandAlias, parseReminderCommand, parseReminderMeCommand, parseNoteAlias } from "../lib/commands";
-import type { HaDeviceRow, ReminderFilter } from "../types";
+import type { HaDeviceRow, ReminderFilter, TaskFilter } from "../types";
 
 export type AssistantCommandDeps = {
   rawInput: string;
@@ -7,6 +7,7 @@ export type AssistantCommandDeps = {
   haReady: boolean;
   setQuery: (value: string) => void;
   setReminderFilter: (value: ReminderFilter) => void;
+  setTaskFilter: (value: TaskFilter) => void;
   setStatus: (value: string) => void;
   refreshHomeAssistantEntities: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
@@ -26,13 +27,18 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note …, add note …, remember …, remind me to … in 15m, remind … in 15m, search …, find …, show notes, show reminders, open household, open home. In the Household window (after you link HA): toggle …, refresh devices."
+      "Here is what I can do: make a note …, add note …, add task …, todo …, remind me to … in 15m, remind … in 15m, search …, find …, show notes, show reminders, show tasks, open household, open home. In the Household window (after you link HA): toggle …, refresh devices."
     );
     return { mutated: false };
   }
   if (lower === "list reminders" || lower === "show reminders") {
     deps.setReminderFilter("pending");
     deps.setStatus("Showing your pending follow-ups.");
+    return { mutated: false };
+  }
+  if (lower === "show tasks") {
+    deps.setTaskFilter("open");
+    deps.setStatus("Showing your open tasks.");
     return { mutated: false };
   }
   if (lower === "clear notes search" || lower === "show notes") {
@@ -68,6 +74,22 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
     deps.setStatus("Got it—memo saved.");
     return { mutated: true };
+  }
+  if (lower.startsWith("add task ") || lower.startsWith("todo ") || lower.startsWith("task ")) {
+    const text = raw.replace(/^(add task|todo|task)\s+/i, "").trim();
+    if (!text) throw new Error("Tell me the task title. Example: add task pay rent.");
+    await window.assistantApi.createTask({
+      title: text,
+      notes: "",
+      dueAt: null,
+      priority: "normal",
+      recurrence: "none"
+    });
+    deps.setStatus("Task created.");
+    return { mutated: true };
+  }
+  if (lower === "add task" || lower === "todo" || lower === "task") {
+    throw new Error("Tell me the task title. Example: add task pay rent.");
   }
   if (
     lower === "new note" ||

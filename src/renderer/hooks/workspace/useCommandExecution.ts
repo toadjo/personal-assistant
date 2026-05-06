@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReminderFilter } from "../../types";
+import type { ReminderFilter, TaskFilter } from "../../types";
 import { executeAssistantCommand } from "../../command/executeAssistantCommand";
 import { MAX_COMMAND_HISTORY, COMMAND_HINT_SAMPLES } from "../../constants/command";
 import { COMMAND_HISTORY_PERSIST_DEBOUNCE_MS } from "../../constants/timing";
@@ -18,12 +18,13 @@ export function useCommandExecution(args: {
   haReady: boolean;
   setQuery: (value: string) => void;
   setReminderFilter: (value: ReminderFilter) => void;
+  setTaskFilter: (value: TaskFilter) => void;
   setStatus: SetStatus;
   setError: SetError;
   refreshAll: () => Promise<void>;
   runDeviceToggle: RunDeviceToggle;
 }) {
-  const { devices, haReady, setQuery, setReminderFilter, setStatus, setError, refreshAll, runDeviceToggle } = args;
+  const { devices, haReady, setQuery, setReminderFilter, setTaskFilter, setStatus, setError, refreshAll, runDeviceToggle } = args;
 
   const [commandInput, setCommandInput] = useState("");
   const [commandHistory, setCommandHistory] = useState(loadCommandHistory);
@@ -93,6 +94,7 @@ export function useCommandExecution(args: {
         haReady,
         setQuery,
         setReminderFilter,
+        setTaskFilter,
         setStatus,
         refreshHomeAssistantEntities: async () => {
           await window.assistantApi?.refreshHomeAssistantEntities?.();

@@ -2,6 +2,7 @@ import { app, crashReporter, type BrowserWindow, dialog, globalShortcut, Menu, p
 import * as Sentry from "@sentry/electron/main";
 import { getDb } from "./db";
 import { startReminderScheduler } from "./services/reminders";
+import { startTaskScheduler } from "./services/tasks";
 import { createAssertSender, registerIpcHandlers } from "./ipc/register-handlers";
 import { registerAppWindowHandlers } from "./ipc/handlers/appWindow.handlers";
 import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } from "./window";
@@ -13,6 +14,7 @@ let deskWin: BrowserWindow | null = null;
 let householdWin: BrowserWindow | null = null;
 let reminderSchedulerStop: (() => void) | null = null;
 let stopAutomationScheduler: (() => void) | null = null;
+let stopTaskScheduler: (() => void) | null = null;
 let isQuitting = false;
 let trayOptions: TrayOptions | null = null;
 
@@ -103,6 +105,7 @@ function startAppAfterDbOpen(): void {
 
   if (!isE2ETestMode) {
     reminderSchedulerStop = startReminderScheduler(getTrustedWindows).stop;
+    stopTaskScheduler = startTaskScheduler(getTrustedWindows).stop;
     stopAutomationScheduler = startAutomationScheduler();
   }
 }
@@ -184,6 +187,8 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
     reminderSchedulerStop = null;
     stopAutomationScheduler?.();
     stopAutomationScheduler = null;
+    stopTaskScheduler?.();
+    stopTaskScheduler = null;
   });
 
   app.on("activate", () => {

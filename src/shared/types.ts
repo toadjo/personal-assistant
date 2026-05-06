@@ -17,6 +17,20 @@ export type Reminder = {
   notifyChannel: "desktop";
 };
 
+export type Task = {
+  id: string;
+  title: string;
+  notes: string;
+  dueAt: string | null;
+  priority: "low" | "normal" | "high";
+  status: "open" | "done";
+  recurrence: "none" | "daily" | "weekly" | "monthly";
+  notifyChannel: "desktop";
+  createdAt: string;
+  updatedAt: string;
+  lastCompletedAt: string | null;
+};
+
 export type AutomationRuleBase = {
   id: string;
   name: string;

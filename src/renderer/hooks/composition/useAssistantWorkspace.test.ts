@@ -34,6 +34,7 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current).toHaveProperty("command");
     expect(result.current).toHaveProperty("calendar");
     expect(result.current).toHaveProperty("reminders");
+    expect(result.current).toHaveProperty("tasks");
     expect(result.current).toHaveProperty("automation");
     expect(result.current).toHaveProperty("memos");
     expect(result.current).toHaveProperty("profile");
@@ -59,6 +60,7 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current.data).toHaveProperty("setQuery");
     expect(result.current.data).toHaveProperty("notes");
     expect(result.current.data).toHaveProperty("reminders");
+    expect(result.current.data).toHaveProperty("tasks");
     expect(result.current.data).toHaveProperty("devices");
     expect(result.current.data).toHaveProperty("logs");
     expect(result.current.data).toHaveProperty("rules");
@@ -66,6 +68,7 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current.data).toHaveProperty("refreshAll");
     expect(result.current.data).toHaveProperty("fetchNotesOnly");
     expect(result.current.data).toHaveProperty("fetchRemindersOnly");
+    expect(result.current.data).toHaveProperty("fetchTasksOnly");
   });
 
   it("ha section has credentials, readiness, and device toggle", () => {
@@ -129,6 +132,19 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current.reminders).toHaveProperty("snoozeMinutes");
     expect(result.current.reminders).toHaveProperty("completeById");
     expect(result.current.reminders).toHaveProperty("deleteById");
+  });
+
+  it("tasks section has filter, derived views, and actions", () => {
+    const { result } = renderHook(() => useAssistantWorkspace());
+
+    expect(result.current.tasks).toHaveProperty("filter");
+    expect(result.current.tasks).toHaveProperty("setFilter");
+    expect(result.current.tasks).toHaveProperty("visible");
+    expect(result.current.tasks).toHaveProperty("overdueOpen");
+    expect(result.current.tasks).toHaveProperty("dueTodayOpen");
+    expect(result.current.tasks).toHaveProperty("completeById");
+    expect(result.current.tasks).toHaveProperty("deleteById");
+    expect(result.current.tasks).toHaveProperty("saveTask");
   });
 
   it("automation section has rule actions", () => {

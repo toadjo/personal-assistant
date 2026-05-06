@@ -14,7 +14,7 @@
  * for local optimistic updates. All renderer-side writes to store data should flow
  * through these helpers rather than raw store setters.
  */
-import type { Note, Reminder, AutomationRule } from "../../../shared/types";
+import type { Note, Reminder, AutomationRule, Task } from "../../../shared/types";
 import type { ExecutionLogRow, HaDeviceRow } from "../../types";
 import { useAssistantData } from "../data/useAssistantData";
 
@@ -23,6 +23,7 @@ export type DeskDataState = {
   setQuery: (value: string) => void;
   notes: Note[];
   reminders: Reminder[];
+  tasks: Task[];
   devices: HaDeviceRow[];
   logs: ExecutionLogRow[];
   rules: AutomationRule[];
@@ -30,9 +31,11 @@ export type DeskDataState = {
   refreshAll: () => Promise<void>;
   fetchNotesOnly: () => Promise<void>;
   fetchRemindersOnly: () => Promise<void>;
+  fetchTasksOnly: () => Promise<void>;
   // Optimistic update helpers
   mergeNote: (note: Note) => void;
   removeNoteById: (id: string) => void;
+  setTasks: (value: Task[] | ((prev: Task[]) => Task[])) => void;
 };
 
 export function useDeskDataState(setError: (message: string) => void): DeskDataState {
@@ -41,6 +44,7 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     setQuery,
     notes,
     reminders,
+    tasks,
     devices,
     logs,
     rules,
@@ -48,8 +52,10 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     refreshAll,
     fetchNotesOnly,
     fetchRemindersOnly,
+    fetchTasksOnly,
     mergeNote,
-    removeNoteById
+    removeNoteById,
+    setTasks
   } = useAssistantData(setError);
 
   return {
@@ -57,6 +63,7 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     setQuery,
     notes,
     reminders,
+    tasks,
     devices,
     logs,
     rules,
@@ -64,7 +71,9 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     refreshAll,
     fetchNotesOnly,
     fetchRemindersOnly,
+    fetchTasksOnly,
     mergeNote,
-    removeNoteById
+    removeNoteById,
+    setTasks
   };
 }

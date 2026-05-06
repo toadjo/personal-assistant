@@ -20,10 +20,13 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
   test("creating a note advances onboarding progress", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Create a note using the UI form
-    await window.getByLabel("Quick note title").fill("First onboarding note");
-    await window.getByLabel("Quick note content").fill("Created during onboarding");
-    await window.getByRole("button", { name: "Add" }).click();
+    // Create a note using the quick note form (scoped to avoid Add button ambiguity)
+    const noteForm = window.locator("form").filter({
+      has: window.getByLabel("Quick note title")
+    });
+    await noteForm.getByLabel("Quick note title").fill("First onboarding note");
+    await noteForm.getByLabel("Quick note content").fill("Created during onboarding");
+    await noteForm.getByRole("button", { name: "Add" }).click();
 
     // Wait for the note to be created
     await window.waitForTimeout(1000);

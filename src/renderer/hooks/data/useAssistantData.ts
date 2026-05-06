@@ -8,19 +8,21 @@ import { useWorkspaceStore } from "../../stores/workspaceStore";
 type SetError = (message: string) => void;
 
 export function useAssistantData(setError: SetError) {
-  const { query, setQuery, notes, reminders, devices, logs, rules, isRefreshing, setNotes, setReminders } =
+  const { query, setQuery, notes, reminders, tasks, devices, logs, rules, isRefreshing, setNotes, setReminders, setTasks } =
     useWorkspaceStore(
       useShallow((s) => ({
         query: s.query,
         setQuery: s.setQuery,
         notes: s.notes,
         reminders: s.reminders,
+        tasks: s.tasks,
         devices: s.devices,
         logs: s.logs,
         rules: s.rules,
         isRefreshing: s.isRefreshing,
         setNotes: s.setNotes,
-        setReminders: s.setReminders
+        setReminders: s.setReminders,
+        setTasks: s.setTasks
       }))
     );
   const setFromFullRefresh = useWorkspaceStore((s) => s.setFromFullRefresh);
@@ -49,15 +51,26 @@ export function useAssistantData(setError: SetError) {
     }
   }, [setError, setReminders]);
 
+  const fetchTasksOnly = useCallback(async (): Promise<void> => {
+    const api = window.assistantApi;
+    if (!api?.listTasks) return;
+    try {
+      setTasks(await api.listTasks());
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }, [setError, setTasks]);
+
   const refreshAll = useCallback(async () => {
     const api = window.assistantApi;
     if (!api?.listNotes) return;
     try {
       setError("");
       setIsRefreshing(true);
-      const [noteRows, rems, devs, logRows, ruleRows] = await Promise.all([
+      const [noteRows, rems, taskRows, devs, logRows, ruleRows] = await Promise.all([
         api.listNotes(queryRef.current),
         api.listReminders(),
+        api.listTasks(),
         api.listDevices(),
         api.listExecutionLogs(),
         api.listRules()
@@ -65,6 +78,7 @@ export function useAssistantData(setError: SetError) {
       setFromFullRefresh({
         notes: noteRows,
         reminders: rems,
+        tasks: taskRows,
         devices: devs,
         logs: logRows,
         rules: ruleRows
@@ -121,6 +135,7 @@ export function useAssistantData(setError: SetError) {
     setQuery,
     notes,
     reminders,
+    tasks,
     devices,
     logs,
     rules,
@@ -128,7 +143,9 @@ export function useAssistantData(setError: SetError) {
     refreshAll,
     fetchNotesOnly,
     fetchRemindersOnly,
+    fetchTasksOnly,
     mergeNote,
-    removeNoteById
+    removeNoteById,
+    setTasks
   };
 }

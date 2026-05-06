@@ -7,6 +7,7 @@ import { registerNotesHandlers } from "./handlers/notes.handlers";
 import { registerRemindersHandlers } from "./handlers/reminders.handlers";
 import { registerRendererHandlers } from "./handlers/renderer.handlers";
 import { registerSettingsHandlers } from "./handlers/settings.handlers";
+import { registerTasksHandlers } from "./handlers/tasks.handlers";
 
 export function createAssertSender(getTrustedWindows: () => readonly (BrowserWindow | null)[]) {
   return (event: IpcMainInvokeEvent) => assertTrustedIpcSender(event, getTrustedWindows);
@@ -21,6 +22,7 @@ export function registerIpcHandlers(getTrustedWindows: () => readonly (BrowserWi
 
   registerNotesHandlers(assertSender);
   registerRemindersHandlers(assertSender);
+  registerTasksHandlers(assertSender);
   registerHomeAssistantHandlers(assertSender);
   registerSettingsHandlers(assertSender);
   registerAutomationHandlers(assertSender);

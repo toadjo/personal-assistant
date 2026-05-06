@@ -14,5 +14,6 @@ export type ExecutionLogRow = {
 };
 
 export type ReminderFilter = "all" | "pending" | "done";
+export type TaskFilter = "all" | "open" | "done" | "overdue";
 
 export type AutomationRuleListItem = Pick<AutomationRule, "id" | "name" | "triggerConfig" | "actionType" | "enabled">;

@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -23,6 +23,7 @@
     "dist": "npm run build && npm run clean:release && electron-builder --publish never",
     "dist:win": "npm run build && npm run icons:prepare && npm run clean:release && electron-builder --win --publish never",
     "dist:linux": "npm run build && npm run icons:prepare:linux && npm run clean:release && electron-builder --linux --publish never",
+    "dist:mac": "npm run build && npm run clean:release && electron-builder --mac universal --publish never",
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
@@ -112,6 +113,30 @@
       ],
       "icon": "assets/generated/app-icon-linux.png",
       "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/app-icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     }
   }
 }

@@ -7,7 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN?: string;
 }
 
-import type { AssistantSettings, AutomationRule, Note, Reminder } from "../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task } from "../shared/types";
 
 declare global {
   interface Window {
@@ -27,6 +27,25 @@ declare global {
       completeReminder: (id: string) => Promise<void>;
       deleteReminder: (id: string) => Promise<void>;
       snoozeReminder: (id: string, minutes: number) => Promise<void>;
+      listTasks: (query?: string) => Promise<Task[]>;
+      createTask: (payload: {
+        title: string;
+        notes: string;
+        dueAt: string | null;
+        priority: "low" | "normal" | "high";
+        recurrence: "none" | "daily" | "weekly" | "monthly";
+      }) => Promise<Task>;
+      updateTask: (payload: {
+        id: string;
+        title?: string;
+        notes?: string;
+        dueAt?: string | null;
+        priority?: "low" | "normal" | "high";
+        status?: "open" | "done";
+        recurrence?: "none" | "daily" | "weekly" | "monthly";
+      }) => Promise<Task>;
+      completeTask: (id: string) => Promise<Task>;
+      deleteTask: (id: string) => Promise<void>;
       configureHomeAssistant: (payload: { url: string; token: string }) => Promise<void>;
       getHomeAssistantConfig: () => Promise<{ url: string; hasToken: boolean }>;
       testHomeAssistant: () => Promise<boolean>;

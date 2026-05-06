@@ -1,4 +1,4 @@
-import { Home, StickyNote, Bell, AlertTriangle } from "lucide-react";
+import { Home, StickyNote, Bell, AlertTriangle, ListTodo } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { StatusBanner } from "./layout/StatusBanner";
@@ -10,15 +10,17 @@ import { CalendarPanel } from "./panels/CalendarPanel";
 import { NotesPanel } from "./panels/NotesPanel";
 import { RemindersPanel } from "./panels/RemindersPanel";
 import { AboutPanel } from "./panels/AboutPanel";
+import { TasksPanel } from "./panels/TasksPanel";
+import { TodayDashboardPanel } from "./panels/TodayDashboardPanel";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 
 export function AssistantShell(): JSX.Element {
-  const { ui, data, ha, command, calendar, reminders, memos, onboarding, desk } = useAssistantWorkspace();
+  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
-  const appVersion = "1.4.0";
+  const appVersion = "1.5.0";
 
   useEffect(() => {
     const handleShowAbout = () => setShowAbout(true);
@@ -37,12 +39,16 @@ export function AssistantShell(): JSX.Element {
         <div className="utilityToolbarRight">
           <StatusChip icon={StickyNote} label="Memos" count={data.notes.length} />
           <StatusChip icon={Bell} label="Open" count={reminders.pending.length} />
+          <StatusChip icon={ListTodo} label="Tasks" count={data.tasks.filter((task) => task.status === "open").length} />
           {reminders.overdue.length > 0 ? (
             <StatusChip icon={AlertTriangle} label="Overdue" count={reminders.overdue.length} variant="attention" />
           ) : null}
+          {tasks.overdueOpen.length > 0 ? (
+            <StatusChip icon={AlertTriangle} label="Task overdue" count={tasks.overdueOpen.length} variant="attention" />
+          ) : null}
           <IconButton
             icon={Home}
-            label={ha.haReady ? "Household — linked" : "Household — not linked"}
+            label={ha.haReady ? "Home Assistant — linked (optional)" : "Home Assistant — optional"}
             onClick={() => void window.assistantApi.openHouseholdWindow()}
             variant={ha.haReady ? "default" : "ghost"}
           />
@@ -136,6 +142,13 @@ export function AssistantShell(): JSX.Element {
 
       <div className="contentGrid">
         <div className="contentMain">
+          <TodayDashboardPanel
+            overdueTasks={tasks.overdueOpen}
+            dueTodayTasks={tasks.dueTodayOpen}
+            upcomingReminders={reminders.pending}
+            selectedDayAgenda={calendar.selectedDayAgenda}
+            pinnedNotes={data.notes.filter((note) => note.pinned)}
+          />
           <div className="todayStrip">
             <CalendarPanel
               calendarCursor={calendar.calendarCursor}
@@ -170,6 +183,14 @@ export function AssistantShell(): JSX.Element {
             onComplete={(id) => void reminders.completeById(id)}
             onDelete={(id) => reminders.deleteById(id)}
             onReminderCreated={() => onboarding.markReminderCreated()}
+          />
+          <TasksPanel
+            filter={tasks.filter}
+            setFilter={tasks.setFilter}
+            tasks={tasks.visible}
+            onSaveTask={tasks.saveTask}
+            onComplete={tasks.completeById}
+            onDelete={tasks.deleteById}
           />
         </div>
       </div>
