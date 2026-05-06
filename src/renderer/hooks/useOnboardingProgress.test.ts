@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { useOnboardingProgress } from "./useOnboardingProgress";
 import { STORAGE_ONBOARDING_PROGRESS } from "../constants/storageKeys";
@@ -70,7 +70,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
   it("completes note step and saves to localStorage", async () => {
     const { result } = renderHook(() => useOnboardingProgress());
 
-    result.current.markNoteCreated();
+    act(() => {
+      result.current.markNoteCreated();
+    });
 
     await waitFor(() => {
       const saved = window.localStorage.getItem(STORAGE_ONBOARDING_PROGRESS);
@@ -79,7 +81,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
       expect(progress.noteCreated).toBe(true);
     });
 
-    expect(result.current.currentStep).toBe("reminder");
+    await waitFor(() => {
+      expect(result.current.currentStep).toBe("reminder");
+    });
   });
 
   it("completes reminder step and moves to homeAssistant", async () => {
@@ -94,7 +98,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
-    result.current.markReminderCreated();
+    act(() => {
+      result.current.markReminderCreated();
+    });
 
     await waitFor(() => {
       const saved = window.localStorage.getItem(STORAGE_ONBOARDING_PROGRESS);
@@ -103,7 +109,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
       expect(progress.reminderCreated).toBe(true);
     });
 
-    expect(result.current.currentStep).toBe("homeAssistant");
+    await waitFor(() => {
+      expect(result.current.currentStep).toBe("homeAssistant");
+    });
   });
 
   it("completes homeAssistant step and marks flow as complete", async () => {
@@ -118,7 +126,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
-    result.current.markHomeAssistantConnected();
+    act(() => {
+      result.current.markHomeAssistantConnected();
+    });
 
     await waitFor(() => {
       const saved = window.localStorage.getItem(STORAGE_ONBOARDING_PROGRESS);
@@ -143,7 +153,9 @@ describe("useOnboardingProgress (v1.2.7)", () => {
     );
     const { result } = renderHook(() => useOnboardingProgress());
 
-    result.current.skipHomeAssistant();
+    act(() => {
+      result.current.skipHomeAssistant();
+    });
 
     await waitFor(() => {
       const saved = window.localStorage.getItem(STORAGE_ONBOARDING_PROGRESS);

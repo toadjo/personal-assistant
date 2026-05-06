@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import sharp from "sharp";
 
 /**
@@ -14,6 +15,18 @@ const GENERATED_DIR = path.resolve("assets", "generated");
 const GENERATED_ICON = path.join(GENERATED_DIR, "app-icon-linux.png");
 const TEMP_ICON_PATH = path.resolve("assets", ".app-icon-linux.tmp.png");
 
+export const linuxIconConfig = {
+  iconSize: ICON_SIZE,
+  sourceIcon: SOURCE_ICON,
+  generatedDir: GENERATED_DIR,
+  generatedIcon: GENERATED_ICON,
+  tempIconPath: TEMP_ICON_PATH
+};
+
+export function isExpectedLinuxIconSize(metadata, iconSize = ICON_SIZE) {
+  return metadata?.width === iconSize && metadata?.height === iconSize;
+}
+
 async function fileExists(filePath) {
   try {
     await fs.access(filePath);
@@ -23,7 +36,7 @@ async function fileExists(filePath) {
   }
 }
 
-async function ensureLinuxIcon() {
+export async function ensureLinuxIcon() {
   console.log("Checking Linux icon...");
 
   if (!(await fileExists(SOURCE_ICON))) {
@@ -34,7 +47,7 @@ async function ensureLinuxIcon() {
     // Check if generated icon already exists at correct size
     if (await fileExists(GENERATED_ICON)) {
       const metadata = await sharp(GENERATED_ICON).metadata();
-      if (metadata.width === ICON_SIZE && metadata.height === ICON_SIZE) {
+      if (isExpectedLinuxIconSize(metadata, ICON_SIZE)) {
         console.log("Linux icon already generated at correct size.");
         return;
       }
@@ -54,7 +67,9 @@ async function ensureLinuxIcon() {
   }
 }
 
-ensureLinuxIcon().catch((error) => {
-  console.error("Failed to generate Linux icon:", error);
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  ensureLinuxIcon().catch((error) => {
+    console.error("Failed to generate Linux icon:", error);
+    process.exit(1);
+  });
+}

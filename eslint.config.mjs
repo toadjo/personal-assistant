@@ -25,7 +25,7 @@ export default tseslint.config(
     ]
   },
   {
-    files: ["scripts/**/*.mjs", "tests/e2e-electron/**/*.js"],
+    files: ["scripts/**/*.{mjs,cjs}", "tests/e2e-electron/**/*.js"],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",

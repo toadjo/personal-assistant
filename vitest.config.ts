@@ -7,7 +7,8 @@ export default defineConfig({
     globals: true,
     environment: "happy-dom",
     setupFiles: ["src/renderer/test/setup.ts"],
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    environmentMatchGlobs: [["scripts/**/*.test.mjs", "node"]],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.mjs"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
