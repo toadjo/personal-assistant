@@ -108,7 +108,7 @@
     },
     "linux": {
       "target": ["AppImage"],
-      "icon": "assets/app-icon.png",
+      "icon": "assets/generated/app-icon-linux.png",
       "category": "Utility"
     }
   }
