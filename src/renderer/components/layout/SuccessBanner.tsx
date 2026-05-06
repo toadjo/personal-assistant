@@ -3,7 +3,9 @@
  * Displays success messages that stay visible longer than transient status updates.
  */
 
+import { Check, X } from "lucide-react";
 import type { SuccessMessage } from "../../hooks/ui/usePersistentSuccess";
+import { IconButton } from "../ui/IconButton";
 
 type Props = {
   successes: SuccessMessage[];
@@ -19,27 +21,26 @@ export function SuccessBanner({ successes, onDismiss, onDismissAll }: Props): JS
       <div className="success-banner-content">
         {successes.map((success) => (
           <div key={success.id} className="success-message">
-            <span className="success-icon">✓</span>
+            <Check size={14} className="success-icon" />
             <span className="success-text">{success.message}</span>
-            <button
-              type="button"
-              className="ghostButton success-dismiss"
+            <IconButton
+              icon={X}
+              label="Dismiss success message"
               onClick={() => onDismiss(success.id)}
-              aria-label="Dismiss success message"
-            >
-              ×
-            </button>
+              variant="ghost"
+              size={12}
+            />
           </div>
         ))}
         {successes.length > 1 && (
-          <button
-            type="button"
-            className="ghostButton success-dismiss-all"
+          <IconButton
+            icon={X}
+            label="Dismiss all success messages"
             onClick={onDismissAll}
-            aria-label="Dismiss all success messages"
-          >
-            Dismiss all
-          </button>
+            variant="ghost"
+            size={12}
+            className="success-dismiss-all"
+          />
         )}
       </div>
     </div>

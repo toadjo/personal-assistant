@@ -18,7 +18,7 @@ describe("SuccessBanner (v1.2.7)", () => {
     );
 
     expect(screen.getByText("Note created")).toBeDefined();
-    expect(screen.getByText("✓")).toBeDefined();
+    expect(screen.getByLabelText("Dismiss success message")).toBeDefined();
   });
 
   it("renders multiple success messages", () => {
@@ -47,7 +47,7 @@ describe("SuccessBanner (v1.2.7)", () => {
       />
     );
 
-    const dismissButton = screen.getByText("×");
+    const dismissButton = screen.getByLabelText("Dismiss success message");
     dismissButton.click();
 
     expect(onDismiss).toHaveBeenCalledWith("1");
@@ -66,7 +66,7 @@ describe("SuccessBanner (v1.2.7)", () => {
       />
     );
 
-    const dismissAllButton = screen.getByText("Dismiss all");
+    const dismissAllButton = screen.getByLabelText("Dismiss all success messages");
     dismissAllButton.click();
 
     expect(onDismissAll).toHaveBeenCalled();

@@ -55,8 +55,7 @@ export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JS
             if (actionType === "localReminder" && !text.trim())
               throw new Error("Reminder text is required for reminder actions.");
             if (actionType === "haToggle" && !entityId) throw new Error("Select a device for haToggle actions.");
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (window as any).assistantApi.createRule({
+            await window.assistantApi.createRule({
               name: name.trim(),
               triggerConfig: { at },
               actionType,

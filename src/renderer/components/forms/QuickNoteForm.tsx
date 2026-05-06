@@ -16,8 +16,7 @@ export function QuickNoteForm({ onDone, onError, onShowSuccess, onCreated }: Pro
     event.preventDefault();
     try {
       if (!title.trim() && !content.trim()) throw new Error("Write a title or content before adding a note.");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (window as any).assistantApi.createNote({
+      await window.assistantApi.createNote({
         title: title.trim() || "Untitled",
         content: content.trim(),
         tags: [],

@@ -1,7 +1,10 @@
 import { memo } from "react";
 import type { Reminder } from "../../../shared/types";
 import type { CalendarCell } from "../../lib/calendar";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { parseLocalDateKey, toLocalDateKey } from "../../lib/calendar";
+import { PanelHeader } from "../ui/PanelHeader";
+import { IconButton } from "../ui/IconButton";
 
 type Props = {
   calendarCursor: Date;
@@ -30,39 +33,44 @@ export const CalendarPanel = memo(function CalendarPanel({
 }: Props): JSX.Element {
   return (
     <section className="panel secretaryCalendar" aria-labelledby="calendar-panel-heading">
-      <div className="titleRow">
-        <h2 id="calendar-panel-heading">Calendar</h2>
-        <div className="miniActions" role="toolbar" aria-label="Calendar month navigation">
-          <button
-            type="button"
-            className="ghostButton"
-            aria-label="Previous month"
-            onClick={() => setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1))}
-          >
-            Prev
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            aria-label="Go to today"
-            onClick={() => {
-              const now = new Date();
-              setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), 1));
-              onSelectDateKey(toLocalDateKey(now));
-            }}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            aria-label="Next month"
-            onClick={() => setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1))}
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <PanelHeader
+        icon={Calendar}
+        title="Calendar"
+        actions={
+          <div className="miniActions" role="toolbar" aria-label="Calendar month navigation">
+            <IconButton
+              icon={ChevronLeft}
+              label="Previous month"
+              onClick={() =>
+                setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1))
+              }
+              variant="ghost"
+              size={14}
+            />
+            <button
+              type="button"
+              className="ghostButton"
+              aria-label="Go to today"
+              onClick={() => {
+                const now = new Date();
+                setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), 1));
+                onSelectDateKey(toLocalDateKey(now));
+              }}
+            >
+              Today
+            </button>
+            <IconButton
+              icon={ChevronRight}
+              label="Next month"
+              onClick={() =>
+                setCalendarCursor(new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1))
+              }
+              variant="ghost"
+              size={14}
+            />
+          </div>
+        }
+      />
       <p className="muted">{calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</p>
       <div className="calendarGrid" aria-label="Month view">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (

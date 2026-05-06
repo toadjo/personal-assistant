@@ -1,5 +1,7 @@
 import type { Ref, RefObject } from "react";
 import type { ReminderFilter } from "../../types";
+import { Send, Loader2, Trash2, X } from "lucide-react";
+import { IconButton } from "../ui/IconButton";
 import { CommandExamples } from "../layout/CommandExamples";
 
 type Props = {
@@ -25,7 +27,7 @@ type Props = {
 export function CommandPanel({
   commandInputRef,
   query,
-  reminderFilter,
+  reminderFilter: _reminderFilter,
   haReady,
   commandInput,
   setCommandInput,
@@ -40,27 +42,18 @@ export function CommandPanel({
   onPreset,
   onHideDeskIfInputEmpty
 }: Props): JSX.Element {
-  const contextLine = [
-    query ? `Memos: "${query}"` : null,
-    reminderFilter !== "all" ? `Follow-ups: ${reminderFilter}` : null,
-    haReady ? null : "Household window not linked yet—I can still help with memos and follow-ups."
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
     <section className={`panel commandPanel secretaryAsk${isRunningCommand ? " commandPanelThinking" : ""}`}>
-      {contextLine ? <p className="muted secretaryContext">{contextLine}</p> : null}
       {isRunningCommand ? (
-        <p className="assistantThinking" aria-live="polite">
+        <p className="assistantThinkingInline" aria-live="polite">
           Working on that…
         </p>
       ) : null}
       <div className="row commandRow">
         <input
           ref={commandInputRef as Ref<HTMLInputElement>}
-          className="fullWidth"
-          placeholder="Ask me anything…"
+          className="fullWidth commandInputHero"
+          placeholder="What can I help with?"
           aria-label="Message the assistant"
           autoComplete="off"
           spellCheck={false}
@@ -101,51 +94,39 @@ export function CommandPanel({
             }
           }}
         />
-        <button
-          type="button"
-          className="commandAction"
+        <IconButton
+          icon={isRunningCommand ? Loader2 : Send}
+          label="Send command"
           onClick={() => void onRunCommand(commandInput)}
           disabled={isRunningCommand}
-          aria-label="Send command"
-        >
-          {isRunningCommand ? "…" : "Send"}
-        </button>
+          variant="default"
+          size={18}
+          className="commandActionHero"
+        />
       </div>
-      <div className="row commandHintsRow">
+      <div className="commandHintsCompact">
         {commandHints.length ? (
           commandHints.map((hint) => (
-            <button type="button" key={hint} className="pillButton" onClick={() => setCommandInput(hint)}>
+            <button
+              type="button"
+              key={hint}
+              className="pillButton pillButtonCompact"
+              onClick={() => setCommandInput(hint)}
+            >
               {hint}
             </button>
           ))
         ) : (
-          <span className="muted">
-            Try <code>help</code> to see what I can do.
+          <span className="muted commandHintText">
+            Try <code>help</code>
           </span>
         )}
-      </div>
-      {commandHistory.length ? (
-        <div className="row commandHintsRow">
-          {commandHistory.map((item) => (
-            <button type="button" key={item} className="ghostButton" onClick={() => setCommandInput(item)}>
-              {item}
-            </button>
-          ))}
-          <button type="button" className="ghostButton" onClick={onClearHistory}>
-            Clear history
-          </button>
-        </div>
-      ) : null}
-      <div className="row commandHintsRow secretaryActions">
-        <button type="button" className="ghostButton" onClick={() => onPreset("help")}>
-          Help
-        </button>
-        <button type="button" className="ghostButton" onClick={() => onPreset("list reminders")}>
-          Reminders
-        </button>
-        <button type="button" className="ghostButton" onClick={onClearNoteSearch}>
-          Clear memo search
-        </button>
+        {commandHistory.length > 0 ? (
+          <IconButton icon={Trash2} label="Clear command history" onClick={onClearHistory} variant="ghost" size={13} />
+        ) : null}
+        {query ? (
+          <IconButton icon={X} label="Clear memo search" onClick={onClearNoteSearch} variant="ghost" size={13} />
+        ) : null}
       </div>
       <CommandExamples haReady={haReady} onRunPreset={onPreset} />
     </section>

@@ -1,5 +1,5 @@
+import { Home, StickyNote, Bell, AlertTriangle } from "lucide-react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
-import { AppHeader } from "./layout/AppHeader";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
 import { OnboardingPanel } from "./panels/OnboardingPanel";
@@ -8,122 +8,129 @@ import { CommandPanel } from "./panels/CommandPanel";
 import { CalendarPanel } from "./panels/CalendarPanel";
 import { NotesPanel } from "./panels/NotesPanel";
 import { RemindersPanel } from "./panels/RemindersPanel";
+import { ThemeSelect } from "./layout/ThemeSelect";
+import { StatusChip } from "./ui/StatusChip";
+import { IconButton } from "./ui/IconButton";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 
 export function AssistantShell(): JSX.Element {
-  const { ui, data, ha, command, calendar, reminders, memos, profile, onboarding, desk } = useAssistantWorkspace();
+  const { ui, data, ha, command, calendar, reminders, memos, onboarding, desk } = useAssistantWorkspace();
 
   return (
-    <main className="container secretaryLayout">
-      <AppHeader
-        theme={ui.theme}
-        onThemeChange={ui.setTheme}
-        userPreferredName={profile.userPreferredName}
-        userPreferredNameIsSet={profile.userPreferredNameIsSet}
-        onSaveUserPreferredName={profile.persistUserPreferredName}
-        notesCount={data.notes.length}
-        pendingRemindersCount={reminders.pending.length}
-        overdueRemindersCount={reminders.overdue.length}
-        haReady={ha.haReady}
-      />
+    <main className="container desktopShell">
+      <header className="utilityToolbar">
+        <div className="utilityToolbarLeft">
+          <span className="appIdentity">Personal Assistant</span>
+        </div>
+        <div className="utilityToolbarRight">
+          <StatusChip icon={StickyNote} label="Memos" count={data.notes.length} />
+          <StatusChip icon={Bell} label="Open" count={reminders.pending.length} />
+          {reminders.overdue.length > 0 ? (
+            <StatusChip icon={AlertTriangle} label="Overdue" count={reminders.overdue.length} variant="attention" />
+          ) : null}
+          <IconButton
+            icon={Home}
+            label={ha.haReady ? "Household — linked" : "Household — not linked"}
+            onClick={() => void window.assistantApi.openHouseholdWindow()}
+            variant={ha.haReady ? "default" : "ghost"}
+          />
+          <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-desk" />
+        </div>
+      </header>
 
       <StatusBanner status={ui.status} error={ui.error} />
 
-      <SuccessBanner
-        successes={ui.successes}
-        onDismiss={ui.dismissSuccess}
-        onDismissAll={ui.dismissAllSuccesses}
-      />
+      <SuccessBanner successes={ui.successes} onDismiss={ui.dismissSuccess} onDismissAll={ui.dismissAllSuccesses} />
 
-      <div className="secretaryDesk">
-        <div
-          className={
-            onboarding.show ? "secretaryTriple secretaryTriple-withIntro" : "secretaryTriple secretaryTriple-compact"
-          }
-        >
-          {onboarding.show && !onboarding.isComplete ? (
-        <GuidedOnboardingPanel
-              currentStep={onboarding.currentStep}
-              onComplete={() => {
-                window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-                window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-                onboarding.setShow(false);
-                ui.setStatus("Welcome aboard—onboarding complete!");
-              }}
-              onCreateNote={() => {
-                // Focus on notes panel and trigger note creation
-                data.setQuery("");
-                onboarding.markNoteCreated();
-                ui.setStatus("Great! Note created. Next: add a reminder.");
-              }}
-              onCreateReminder={() => {
-                // Focus on reminders panel and trigger reminder creation
-                onboarding.markReminderCreated();
-                ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
-              }}
-              onOpenHousehold={() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                void (window as any).assistantApi.openHouseholdWindow();
-              }}
-              onSkipHomeAssistant={() => {
-                onboarding.skipHomeAssistant();
-                window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-                window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-                onboarding.setShow(false);
-                ui.setStatus("Onboarding complete—you can connect Home Assistant anytime from Household.");
-              }}
-            />
-          ) : (
-            <OnboardingPanel
-              visible={onboarding.show}
-              haReady={ha.haReady}
-              commandHistoryLength={command.commandHistory.length}
-              onHideForNow={() => {
-                window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
-                onboarding.setShow(false);
-                ui.setStatus("Understood—we will skip the guided intro.");
-              }}
-              onFinishSetup={() => {
-                onboarding.setShow(false);
-                window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-                window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-                ui.setStatus("Welcome aboard—intro marked complete.");
-              }}
-              onRunPreset={command.runPresetCommand}
-            />
-          )}
+      <div className="commandHero">
+        <CommandPanel
+          commandInputRef={command.commandInputRef}
+          query={data.query}
+          reminderFilter={reminders.filter}
+          haReady={ha.haReady}
+          commandInput={command.commandInput}
+          setCommandInput={command.setCommandInput}
+          commandHints={command.commandHints}
+          commandHistory={command.commandHistory}
+          historyCursor={command.historyCursor}
+          setHistoryCursor={command.setHistoryCursor}
+          isRunningCommand={command.isRunningCommand}
+          onRunCommand={command.runCommandInternal}
+          onClearHistory={command.clearCommandHistory}
+          onClearNoteSearch={() => data.setQuery("")}
+          onPreset={command.runPresetCommand}
+          onHideDeskIfInputEmpty={desk.hideWindow}
+        />
+      </div>
 
-          <CommandPanel
-            commandInputRef={command.commandInputRef}
-            query={data.query}
-            reminderFilter={reminders.filter}
-            haReady={ha.haReady}
-            commandInput={command.commandInput}
-            setCommandInput={command.setCommandInput}
-            commandHints={command.commandHints}
-            commandHistory={command.commandHistory}
-            historyCursor={command.historyCursor}
-            setHistoryCursor={command.setHistoryCursor}
-            isRunningCommand={command.isRunningCommand}
-            onRunCommand={command.runCommandInternal}
-            onClearHistory={command.clearCommandHistory}
-            onClearNoteSearch={() => data.setQuery("")}
-            onPreset={command.runPresetCommand}
-            onHideDeskIfInputEmpty={desk.hideWindow}
-          />
-
-          <CalendarPanel
-            calendarCursor={calendar.calendarCursor}
-            setCalendarCursor={calendar.setCalendarCursor}
-            monthCells={calendar.monthCells}
-            todayKey={calendar.todayKey}
-            selectedDateKey={calendar.calendarSelectedKey}
-            onSelectDateKey={calendar.setCalendarSelectedKey}
-            dayAgenda={calendar.selectedDayAgenda}
+      {onboarding.show && !onboarding.isComplete ? (
+        <div className="onboardingHero">
+          <GuidedOnboardingPanel
+            currentStep={onboarding.currentStep}
+            onComplete={() => {
+              window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+              window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+              onboarding.setShow(false);
+              ui.setStatus("Welcome aboard—onboarding complete!");
+            }}
+            onCreateNote={() => {
+              data.setQuery("");
+              onboarding.markNoteCreated();
+              ui.setStatus("Great! Note created. Next: add a reminder.");
+            }}
+            onCreateReminder={() => {
+              onboarding.markReminderCreated();
+              ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
+            }}
+            onOpenHousehold={() => {
+              void window.assistantApi.openHouseholdWindow();
+            }}
+            onSkipHomeAssistant={() => {
+              onboarding.skipHomeAssistant();
+              window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+              window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+              onboarding.setShow(false);
+              ui.setStatus("Onboarding complete—you can connect Home Assistant anytime from Household.");
+            }}
           />
         </div>
+      ) : onboarding.show ? (
+        <div className="onboardingHero">
+          <OnboardingPanel
+            visible={onboarding.show}
+            haReady={ha.haReady}
+            commandHistoryLength={command.commandHistory.length}
+            onHideForNow={() => {
+              window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
+              onboarding.setShow(false);
+              ui.setStatus("Understood—we will skip the guided intro.");
+            }}
+            onFinishSetup={() => {
+              onboarding.setShow(false);
+              window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+              window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+              ui.setStatus("Welcome aboard—intro marked complete.");
+            }}
+            onRunPreset={command.runPresetCommand}
+          />
+        </div>
+      ) : null}
 
-        <div className="grid secretaryMemosGrid">
+      <div className="contentGrid">
+        <div className="contentMain">
+          <div className="todayStrip">
+            <CalendarPanel
+              calendarCursor={calendar.calendarCursor}
+              setCalendarCursor={calendar.setCalendarCursor}
+              monthCells={calendar.monthCells}
+              todayKey={calendar.todayKey}
+              selectedDateKey={calendar.calendarSelectedKey}
+              onSelectDateKey={calendar.setCalendarSelectedKey}
+              dayAgenda={calendar.selectedDayAgenda}
+            />
+          </div>
+        </div>
+        <div>
           <NotesPanel
             onFetchNotes={data.fetchNotesOnly}
             onError={ui.reportError}

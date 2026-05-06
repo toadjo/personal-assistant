@@ -10,7 +10,7 @@ const DEFAULT_PROGRESS: OnboardingProgress = {
   noteCreated: false,
   reminderCreated: false,
   homeAssistantConnected: false,
-  skippedHomeAssistant: false,
+  skippedHomeAssistant: false
 };
 
 function loadProgress(): OnboardingProgress {
@@ -91,8 +91,8 @@ export function useOnboardingProgress() {
   const state: OnboardingState = isComplete
     ? { status: "completed" }
     : currentStep
-    ? { status: "inProgress", step: currentStep, progress }
-    : { status: "notStarted" };
+      ? { status: "inProgress", step: currentStep, progress }
+      : { status: "notStarted" };
 
   return {
     state,
@@ -103,6 +103,6 @@ export function useOnboardingProgress() {
     markReminderCreated,
     markHomeAssistantConnected,
     skipHomeAssistant,
-    reset,
+    reset
   };
 }

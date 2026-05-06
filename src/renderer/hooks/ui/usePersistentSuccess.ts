@@ -17,7 +17,7 @@ export function usePersistentSuccess() {
   const showSuccess = useCallback((message: string): void => {
     const id = Date.now().toString();
     setSuccesses((prev) => [...prev, { id, message, timestamp: Date.now() }]);
-    
+
     // Auto-dismiss after 5 seconds
     setTimeout(() => {
       setSuccesses((prev) => prev.filter((s) => s.id !== id));
@@ -36,6 +36,6 @@ export function usePersistentSuccess() {
     successes,
     showSuccess,
     dismissSuccess,
-    dismissAll,
+    dismissAll
   };
 }

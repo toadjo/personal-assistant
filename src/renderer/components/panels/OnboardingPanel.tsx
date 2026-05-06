@@ -1,3 +1,5 @@
+import { Compass, CheckCircle } from "lucide-react";
+
 type Props = {
   visible: boolean;
   haReady: boolean;
@@ -19,7 +21,9 @@ export function OnboardingPanel({
   return (
     <section className="panel onboarding">
       <div className="titleRow">
-        <h2>First time here</h2>
+        <h2>
+          <Compass size={16} className="panelHeaderIcon" /> First time here
+        </h2>
         <div className="miniActions">
           <button type="button" className="ghostButton" onClick={onHideForNow}>
             Skip
@@ -38,7 +42,7 @@ export function OnboardingPanel({
         <li className="onboardingChecklistItem">
           <span>Household (Home Assistant)</span>
           <span className={`onboardingState ${haReady ? "onboardingStateDone" : "onboardingStatePending"}`}>
-            {haReady ? "Ready" : "Optional"}
+            {haReady ? <CheckCircle size={12} /> : null} {haReady ? "Ready" : "Optional"}
           </span>
         </li>
         <li className="onboardingChecklistItem">
@@ -46,6 +50,7 @@ export function OnboardingPanel({
           <span
             className={`onboardingState ${commandHistoryLength > 0 ? "onboardingStateDone" : "onboardingStatePending"}`}
           >
+            {commandHistoryLength > 0 ? <CheckCircle size={12} /> : null}{" "}
             {commandHistoryLength > 0 ? "Done" : "Try a line"}
           </span>
         </li>

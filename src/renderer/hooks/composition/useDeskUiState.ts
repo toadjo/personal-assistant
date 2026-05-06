@@ -86,7 +86,7 @@ export function useDeskUiState(): DeskUiState {
       markNoteCreated: onboardingProgress.markNoteCreated,
       markReminderCreated: onboardingProgress.markReminderCreated,
       markHomeAssistantConnected: onboardingProgress.markHomeAssistantConnected,
-      skipHomeAssistant: onboardingProgress.skipHomeAssistant,
+      skipHomeAssistant: onboardingProgress.skipHomeAssistant
     },
     desk: {
       hideWindow: () => {
