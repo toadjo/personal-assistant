@@ -28,19 +28,19 @@ export function GuidedOnboardingPanel({
   const steps: Record<OnboardingStep, { title: string; description: string; action: string; instruction: string }> = {
     note: {
       title: "Create your first note",
-      description: "Notes are for quick memos you want to keep. Let's add one to get started.",
+      description: "Notes are for quick memos, ideas, or anything you want to remember. Everything stays on your computer.",
       action: "I've created a note",
       instruction: "Use the Notes panel on the right to create your first note, then click the button below."
     },
     reminder: {
       title: "Create your first reminder",
-      description: "Reminders help you stay on top of tasks. Add one with a due time.",
+      description: "Reminders show desktop notifications when they're due. Set a time and we'll alert you.",
       action: "I've created a reminder",
       instruction: "Use the Reminders panel on the right to create your first reminder, then click the button below."
     },
     homeAssistant: {
       title: "Connect Home Assistant (optional)",
-      description: "Connect to control smart home devices. You can skip this and add it later.",
+      description: "Connect to control your smart home devices. You can skip this and add it later anytime.",
       action: "Connect Home Assistant",
       instruction: "Open the Household window to connect your Home Assistant instance, or skip for now."
     }

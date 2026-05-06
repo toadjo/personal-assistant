@@ -54,6 +54,10 @@ contextBridge.exposeInMainWorld("assistantApi", {
     ipcRenderer.on(push.command, cb);
     return () => ipcRenderer.removeListener(push.command, cb);
   },
+  onShowAbout: (cb: () => void) => {
+    ipcRenderer.on(push.showAbout, cb);
+    return () => ipcRenderer.removeListener(push.showAbout, cb);
+  },
   openHouseholdWindow: () => ipcRenderer.invoke(invoke.appOpenHouseholdWindow),
   focusDeskWindow: () => ipcRenderer.invoke(invoke.appFocusDeskWindow),
   hideDeskWindow: () => ipcRenderer.invoke(invoke.appHideDeskWindow),

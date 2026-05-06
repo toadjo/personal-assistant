@@ -69,8 +69,10 @@
     logRendererError: async () => {},
     onRemindersUpdated: () => () => {},
     onCommand: () => () => {},
+    onShowAbout: () => () => {},
     openHouseholdWindow: async () => true,
     focusDeskWindow: async () => true,
-    hideDeskWindow: async () => true
+    hideDeskWindow: async () => true,
+    openDataFolder: async () => {}
   };
 })();

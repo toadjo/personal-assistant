@@ -36,5 +36,6 @@ export const invokeChannelMap = {
 
 export const pushChannelMap = {
   remindersUpdated: "reminders:updated",
-  command: "command"
+  command: "command",
+  showAbout: "showAbout"
 } as const;

@@ -1,4 +1,5 @@
 import { Home, StickyNote, Bell, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
@@ -8,6 +9,7 @@ import { CommandPanel } from "./panels/CommandPanel";
 import { CalendarPanel } from "./panels/CalendarPanel";
 import { NotesPanel } from "./panels/NotesPanel";
 import { RemindersPanel } from "./panels/RemindersPanel";
+import { AboutPanel } from "./panels/AboutPanel";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
@@ -15,6 +17,16 @@ import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/sto
 
 export function AssistantShell(): JSX.Element {
   const { ui, data, ha, command, calendar, reminders, memos, onboarding, desk } = useAssistantWorkspace();
+  const [showAbout, setShowAbout] = useState(false);
+  const appVersion = "1.4.0";
+
+  useEffect(() => {
+    const handleShowAbout = () => setShowAbout(true);
+    const unsubscribe = window.assistantApi.onShowAbout(handleShowAbout);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <main className="container desktopShell">
@@ -113,6 +125,12 @@ export function AssistantShell(): JSX.Element {
             }}
             onRunPreset={command.runPresetCommand}
           />
+        </div>
+      ) : null}
+
+      {showAbout ? (
+        <div className="onboardingHero">
+          <AboutPanel version={appVersion} onClose={() => setShowAbout(false)} />
         </div>
       ) : null}
 

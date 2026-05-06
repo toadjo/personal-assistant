@@ -117,7 +117,7 @@ export const CalendarPanel = memo(function CalendarPanel({
             </li>
           ))
         ) : (
-          <li className="muted">Nothing scheduled.</li>
+          <li className="muted">Nothing scheduled for this day.</li>
         )}
       </ul>
     </section>

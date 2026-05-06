@@ -34,9 +34,9 @@ export function OnboardingPanel({
         </div>
       </div>
       <p className="muted">
-        Add your name at the top left for a personal greeting. Your desk is memos, follow-ups, and the line below. The
-        window can close—the app stays in the tray. Home Assistant is optional—open the <strong>Household</strong>{" "}
-        window from <strong>House</strong> or the tray when you want it.
+        Welcome to PersonalAssistant. This app helps you capture notes, set reminders, and control your home—all from your
+        desktop. Everything stays on your computer. The app lives in your system tray—close the window and it keeps
+        running. Home Assistant is optional—connect whenever you're ready.
       </p>
       <ul className="onboardingChecklist">
         <li className="onboardingChecklistItem">
