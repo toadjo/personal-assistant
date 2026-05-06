@@ -14,7 +14,7 @@ export function HouseholdShell(): JSX.Element {
     <main className="container householdWindowLayout">
       <header className="utilityToolbar">
         <div className="utilityToolbarLeft">
-          <span className="appIdentity">Household</span>
+          <h1 className="appIdentity">Household</h1>
           <StatusChip
             icon={ha.haReady ? Wifi : WifiOff}
             label={ha.haReady ? "Connected" : "Not linked"}

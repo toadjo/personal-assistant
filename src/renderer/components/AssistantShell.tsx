@@ -20,7 +20,7 @@ export function AssistantShell(): JSX.Element {
     <main className="container desktopShell">
       <header className="utilityToolbar">
         <div className="utilityToolbarLeft">
-          <span className="appIdentity">Personal Assistant</span>
+          <h1 className="appIdentity">Personal Assistant</h1>
         </div>
         <div className="utilityToolbarRight">
           <StatusChip icon={StickyNote} label="Memos" count={data.notes.length} />
