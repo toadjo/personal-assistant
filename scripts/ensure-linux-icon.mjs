@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -8,35 +8,46 @@ import sharp from "sharp";
  */
 
 const ICON_SIZE = 512;
-const SOURCE_ICON = path.join(process.cwd(), "assets", "app-icon.png");
-const TARGET_ICON = path.join(process.cwd(), "assets", "app-icon.png");
+const ICON_PATH = path.resolve("assets", "app-icon.png");
+const TEMP_ICON_PATH = path.resolve("assets", ".app-icon-linux.tmp.png");
+
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function ensureLinuxIcon() {
   console.log("Checking Linux icon...");
 
-  if (!fs.existsSync(SOURCE_ICON)) {
-    console.error(`Source icon not found: ${SOURCE_ICON}`);
-    console.error("Please add app-icon.png to the assets folder.");
-    process.exit(1);
+  if (!(await fileExists(ICON_PATH))) {
+    throw new Error(`Missing Linux icon source: ${ICON_PATH}`);
   }
 
   try {
     // Check if icon is already the right size
-    const metadata = await sharp(SOURCE_ICON).metadata();
+    const metadata = await sharp(ICON_PATH).metadata();
     if (metadata.width === ICON_SIZE && metadata.height === ICON_SIZE) {
       console.log("Linux icon already exists at correct size.");
       return;
     }
 
     console.log(`Resizing Linux icon to ${ICON_SIZE}x${ICON_SIZE}...`);
-    await sharp(SOURCE_ICON)
-      .resize(ICON_SIZE, ICON_SIZE)
-      .toFile(TARGET_ICON);
-    console.log("Linux icon generated successfully.");
+    // Read file into buffer first to avoid Sharp's same-file detection
+    const iconBuffer = await fs.readFile(ICON_PATH);
+    await sharp(iconBuffer).resize(ICON_SIZE, ICON_SIZE).png().toFile(TEMP_ICON_PATH);
+    await fs.rename(TEMP_ICON_PATH, ICON_PATH);
+    console.log("Linux icon ready.");
   } catch (error) {
-    console.error("Failed to generate Linux icon:", error);
-    process.exit(1);
+    await fs.rm(TEMP_ICON_PATH, { force: true });
+    throw error;
   }
 }
 
-ensureLinuxIcon();
+ensureLinuxIcon().catch((error) => {
+  console.error("Failed to generate Linux icon:", error);
+  process.exit(1);
+});
