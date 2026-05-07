@@ -38,6 +38,18 @@
   color: var(--text-muted);
 }
 
+.briefItemActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.briefActionButton {
+  padding: 4px;
+  min-width: 24px;
+  height: 24px;
+}
+
 .briefEmptyState {
   color: var(--text-muted);
   font-style: italic;

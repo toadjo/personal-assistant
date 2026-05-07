@@ -148,6 +148,9 @@ export function AssistantShell(): JSX.Element {
             upcomingReminders={reminders.pending}
             selectedDayAgenda={calendar.selectedDayAgenda}
             pinnedNotes={data.notes.filter((note) => note.pinned)}
+            onCompleteTask={tasks.completeById}
+            onCompleteReminder={reminders.completeById}
+            onSnoozeReminder={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
           />
           <div className="todayStrip">
             <CalendarPanel

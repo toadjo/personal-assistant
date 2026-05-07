@@ -1,6 +1,7 @@
 import type { Note, Reminder, Task } from "../../../shared/types";
 import { PanelHeader } from "../ui/PanelHeader";
-import { LayoutDashboard, AlertCircle, Clock, Pin, Calendar } from "lucide-react";
+import { IconButton } from "../ui/IconButton";
+import { LayoutDashboard, AlertCircle, Clock, Pin, Calendar, Check, Clock as Snooze } from "lucide-react";
 import { deriveFocusBrief, getBriefSummary } from "../../lib/derived/brief";
 import type { BriefItem } from "../../types";
 import "./TodayDashboardPanel.css";
@@ -11,6 +12,9 @@ type Props = {
   upcomingReminders: Reminder[];
   selectedDayAgenda: Reminder[];
   pinnedNotes: Note[];
+  onCompleteTask: (id: string) => void;
+  onCompleteReminder: (id: string) => void;
+  onSnoozeReminder: (id: string) => void;
 };
 
 function getIconForUrgency(urgency: BriefItem["urgency"]) {
@@ -44,7 +48,10 @@ export function TodayDashboardPanel({
   dueTodayTasks,
   upcomingReminders,
   selectedDayAgenda,
-  pinnedNotes
+  pinnedNotes,
+  onCompleteTask,
+  onCompleteReminder,
+  onSnoozeReminder
 }: Props): JSX.Element {
   const briefItems = deriveFocusBrief({
     overdueTasks,
@@ -82,6 +89,35 @@ export function TodayDashboardPanel({
                       <div className="briefItemMeta">
                         {getUrgencyLabel(item.urgency)} • {item.kind}
                       </div>
+                    </div>
+                    <div className="briefItemActions">
+                      {item.kind === "task" && (
+                        <IconButton
+                          icon={Check}
+                          size={16}
+                          onClick={() => onCompleteTask(item.sourceId)}
+                          label="Complete task"
+                          className="briefActionButton"
+                        />
+                      )}
+                      {(item.kind === "reminder" || item.kind === "agenda") && (
+                        <>
+                          <IconButton
+                            icon={Check}
+                            size={16}
+                            onClick={() => onCompleteReminder(item.sourceId)}
+                            label="Complete reminder"
+                            className="briefActionButton"
+                          />
+                          <IconButton
+                            icon={Snooze}
+                            size={16}
+                            onClick={() => onSnoozeReminder(item.sourceId)}
+                            label="Snooze 10 minutes"
+                            className="briefActionButton"
+                          />
+                        </>
+                      )}
                     </div>
                   </li>
                 );
