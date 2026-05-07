@@ -67,6 +67,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 **Remaining validation:**
 
 - Validate `npm run dist:mac` on macOS or GitHub Actions macOS runner.
+- Use the `Validate macOS package` workflow for safe validation-only runs (does not publish releases).
 - Confirm release output includes at least one `.dmg` and at least one `.zip`.
 
 **Next steps:**
