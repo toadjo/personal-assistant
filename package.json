@@ -19,11 +19,12 @@
     "check:preload-ipc": "node scripts/generate-preload-ipc.mjs --check",
     "icons:prepare": "node scripts/ensure-win-icon.mjs",
     "icons:prepare:linux": "node scripts/ensure-linux-icon.mjs",
+    "icons:prepare:mac": "node scripts/ensure-mac-icon.mjs",
     "clean:release": "node scripts/clean-release.mjs",
     "dist": "npm run build && npm run clean:release && electron-builder --publish never",
     "dist:win": "npm run build && npm run icons:prepare && npm run clean:release && electron-builder --win --publish never",
     "dist:linux": "npm run build && npm run icons:prepare:linux && npm run clean:release && electron-builder --linux --publish never",
-    "dist:mac": "npm run build && npm run clean:release && electron-builder --mac universal --publish never",
+    "dist:mac": "npm run build && npm run icons:prepare:mac && npm run clean:release && electron-builder --mac universal --publish never",
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
@@ -39,7 +40,8 @@
     "test:smoke": "node scripts/smoke-check.mjs",
     "test:preload-electron": "node scripts/run-preload-smoke.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:electron": "playwright test --config=playwright.electron.config.ts"
+    "test:e2e:electron": "playwright test --config=playwright.electron.config.ts",
+    "handoff": "node scripts/handoff.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",

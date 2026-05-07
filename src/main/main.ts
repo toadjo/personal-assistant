@@ -1,4 +1,13 @@
-import { app, crashReporter, type BrowserWindow, dialog, globalShortcut, Menu, powerMonitor } from "electron";
+import {
+  app,
+  crashReporter,
+  type BrowserWindow,
+  dialog,
+  globalShortcut,
+  Menu,
+  powerMonitor,
+  type MenuItemConstructorOptions
+} from "electron";
 import * as Sentry from "@sentry/electron/main";
 import { getDb } from "./db";
 import { startReminderScheduler } from "./services/reminders";
@@ -9,6 +18,8 @@ import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } fro
 import { createTray, type TrayOptions } from "./tray";
 import { startAutomationScheduler } from "./automation-scheduler";
 import { mainLog } from "./log";
+import { IpcRendererEvent } from "../shared/ipc-channels";
+import { safeWebContentsSend } from "./ipc-safe-send";
 
 let deskWin: BrowserWindow | null = null;
 let householdWin: BrowserWindow | null = null;
@@ -55,8 +66,73 @@ function hideDeskWindow(): void {
   }
 }
 
+function ensureDeskWindow(): void {
+  if (deskWin && !deskWin.isDestroyed()) {
+    showMainWindow(deskWin);
+  } else {
+    deskWin = createWindow("desk");
+    deskWin.on("close", (event) => {
+      if (!isQuitting) {
+        event.preventDefault();
+        deskWin?.hide();
+      }
+    });
+    if (deskWin) {
+      showMainWindow(deskWin);
+    }
+  }
+}
+
+function createMacOSMenu(): void {
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: app.getName(),
+      submenu: [
+        {
+          label: "About",
+          click: () => {
+            ensureDeskWindow();
+            if (deskWin && !deskWin.isDestroyed()) {
+              safeWebContentsSend(deskWin.webContents, IpcRendererEvent.showAbout);
+            }
+          }
+        },
+        { type: "separator" },
+        { role: "hide" },
+        { role: "hideOthers" },
+        { role: "unhide" },
+        { type: "separator" },
+        { role: "quit" }
+      ]
+    },
+    {
+      label: "Window",
+      submenu: [
+        {
+          label: "Open Desk",
+          click: () => {
+            ensureDeskWindow();
+          }
+        },
+        {
+          label: "Open Household",
+          click: () => {
+            openOrFocusHouseholdWindow();
+          }
+        },
+        { type: "separator" },
+        { role: "minimize" },
+        { role: "zoom" }
+      ]
+    }
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
 function startAppAfterDbOpen(): void {
-  if (process.platform !== "darwin") {
+  if (process.platform === "darwin") {
+    createMacOSMenu();
+  } else {
     Menu.setApplicationMenu(null);
   }
 
@@ -192,7 +268,6 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
   });
 
   app.on("activate", () => {
-    if (!deskWin) return;
-    showMainWindow(deskWin);
+    ensureDeskWindow();
   });
 }

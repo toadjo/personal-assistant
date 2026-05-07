@@ -2,8 +2,7 @@
 
 ## Repo and environment
 
-- Working repo: `C:\Users\FAMILY PC\Desktop\personal-assistant`
-- Do not use: `C:\Users\FAMILY PC\Desktop\project430` (stale non-git copy)
+- Working repo: `C:\Users\ITPC4\Desktop\project 430`
 - On Windows PowerShell, use `npm.cmd` (not bare `npm`)
 
 ## Release workflow assumptions
@@ -49,3 +48,32 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Validated asset list selected for publish
 - Missing required file classes (`.exe` and/or `.AppImage`)
 - Electron version and embedded Node version if failure involves preload/electron launch
+
+## macOS support status (v1.5)
+
+**Current state:**
+
+- Build config exists in `package.json` (DMG/zip targets, universal arch)
+- CI workflow has macOS packaging job
+- `dist:mac` script exists
+- `build/entitlements.mac.plist` created with minimal unsigned entitlements
+- `scripts/ensure-mac-icon.mjs` created for .icns generation (macOS-only)
+- macOS application menu implemented (app menu with About/Hide/Quit, Window menu with Open Desk/Open Household)
+- macOS window lifecycle tightened (activate recreates desk window if destroyed)
+- macOS tray click behavior adjusted (always shows/focuses desk window, no toggle)
+
+**Remaining blocker:**
+
+- `assets/app-icon.icns` - required icon file does not exist
+  - Generate with `npm run icons:prepare:mac` on macOS
+  - Commit the generated .icns to the repository
+  - Validate `npm run dist:mac` on macOS or with committed .icns
+
+**Next steps:**
+
+1. ~~Create `build/entitlements.mac.plist` with minimal unsigned entitlements~~ (done)
+2. ~~Add macOS icon preparation script or document .icns generation blocker~~ (done)
+3. ~~Update `dist:mac` to run icon preparation before electron-builder~~ (done)
+4. ~~Implement macOS application menu, window lifecycle, and tray behavior~~ (done)
+5. Generate `assets/app-icon.icns` on macOS and commit to repository
+6. Validate `npm run dist:mac` reaches electron-builder successfully
