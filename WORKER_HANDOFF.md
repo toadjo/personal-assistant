@@ -1,9 +1,133 @@
 # Worker Handoff
 
+## Current branch status
+
+- Branch: `release/linux-appimage-audit`
+- Purpose: Linux AppImage audit and dependency security cleanup
+- HEAD commit: `3d721fb` - "chore: enforce repository line endings"
+- Working tree: Clean (no uncommitted changes)
+
+## Recent commit history
+
+```
+3d721fb chore: enforce repository line endings
+20371e9 chore: tidy quality baseline cleanup
+3ea818f chore: clean up dependency upgrade tracking
+f52535e chore: document Electron 42 upgrade failure due to better-sqlite3 incompatibility
+cc691de docs: correct handoff test count and document Electron upgrade tracking
+```
+
+**Recent work summary:**
+
+- Added `.gitattributes` to enforce LF line endings across the repository
+- Cleaned up quality baseline with formatting improvements (22 files)
+- Documented Electron 42 upgrade failure and reverted to Electron 35
+- Corrected Away Brief feature test count (16 total: 13 helper + 3 panel)
+- Strengthened away brief and security coverage
+
 ## Repo and environment
 
 - Working repo: `C:\Users\ITPC4\Desktop\project 430`
 - On Windows PowerShell, use `npm.cmd` (not bare `npm`)
+- Node.js: Use `node` command directly
+- Git: Use `git` command directly
+
+## Development setup
+
+**Initial setup:**
+
+```bash
+npm install
+```
+
+**Development mode:**
+
+```bash
+npm run dev
+```
+
+- Starts Vite dev server for renderer process
+- Starts Electron main process in watch mode
+- Hot reload enabled for renderer changes
+
+**Key scripts:**
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run test` - Run unit tests
+- `npm run check:preload-ipc` - Check preload IPC literals are up to date
+- `npm run test:smoke` - Run smoke tests
+- `npm run test:preload-electron` - Run preload Electron smoke tests
+- `npm run test:e2e` - Run E2E tests
+- `npm run test:e2e:electron` - Run Electron E2E tests
+- `npm run handoff` - Show worker handoff info
+
+## Architecture overview
+
+**Process architecture:**
+
+- Main process: Electron main process (`src/main/main.ts`)
+- Renderer process: React/Vite UI (`src/renderer/`)
+- Preload script: Secure IPC bridge (`src/main/preload.ts`)
+
+**Key directories:**
+
+- `src/main/` - Electron main process code
+  - `ipc/` - IPC handlers and schemas
+  - `services/` - Business logic (notes, reminders, tasks, home assistant)
+  - `db/` - Database migrations and access
+  - `automation/` - Automation rule execution
+- `src/renderer/` - React UI code
+  - `components/` - React components
+  - `hooks/` - Custom React hooks
+  - `lib/` - Utility functions
+  - `command/` - Command parsing and execution
+- `tests/` - E2E tests
+- `scripts/` - Build and utility scripts
+
+**Database:**
+
+- SQLite database stored in `%APPDATA%\PersonalAssistant\assistant.db`
+- Migrations in `src/main/db/migrations/`
+- Uses `better-sqlite3` for synchronous database access
+
+**IPC architecture:**
+
+- All renderer-to-main communication goes through `contextBridge` in preload
+- IPC handlers registered in `src/main/ipc/register-handlers.ts`
+- All mutations validated with Zod schemas in `src/main/ipc/schemas.ts`
+- Sender validation via `assertTrustedIpcSender` in `src/main/security.ts`
+
+## Test coverage
+
+**Unit tests (Vitest):**
+
+- 232 tests passing across 39 test files
+- Coverage areas:
+  - IPC handlers and payload validation
+  - Services (notes, reminders, tasks, home assistant, automation)
+  - Command parsing and execution
+  - Derived data (brief, away-brief)
+  - Security (navigation validation, sender validation)
+  - Database migrations
+
+**E2E tests (Playwright):**
+
+- Electron E2E tests in `tests/e2e-electron/`
+- Web E2E tests in `tests/e2e/`
+- Test areas:
+  - First-run onboarding
+  - IPC validation
+  - Automation failures (structured errors)
+  - Structured retryable/non-retryable errors
+
+**Test execution:**
+
+- Run unit tests: `npm test`
+- Run E2E tests: `npm run test:e2e` (requires built app)
+- Run Electron E2E tests: `npm run test:e2e:electron` (requires built app)
 
 ## Release workflow assumptions
 
@@ -149,3 +273,93 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Binary assets (images, icons, archives, databases) marked as binary to prevent normalization
 - Future Windows workers should not fight CRLF status noise manually
 - Before staging, run `git status --short --branch` and `git diff --stat` to confirm real content changes only
+
+## Known issues and blockers
+
+**Dependency security:**
+
+- Electron 35.0.0 has 10 high vulnerabilities (blocked by better-sqlite3 incompatibility)
+- Electron 42 upgrade attempted but failed due to better-sqlite3 v11.8.1 native module incompatibility
+- See Dependency Risk Register for next retry condition
+
+**macOS validation:**
+
+- `npm run dist:mac` not yet validated on macOS or GitHub Actions macOS runner
+- Use "Validate macOS package" workflow for safe validation-only runs
+
+**Generated files:**
+
+- `src/main/preload-ipc-literals.generated.ts` is auto-generated
+- If dirty with no content diff, restore with `git restore -- src/main/preload-ipc-literals.generated.ts`
+- If dirty with real content diff, run `npm run check:preload-ipc` to regenerate
+
+## Development workflow
+
+**Before committing:**
+
+1. Run `git status --short --branch` to see what's changed
+2. Run `git diff --stat` to see diff summary
+3. Run verification checks: `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`
+4. If `preload-ipc-literals.generated.ts` is dirty with no content diff, restore it
+5. Stage only intended changes
+6. Commit with descriptive message
+
+**Commit message format:**
+
+- Use conventional commit format: `type: description`
+- Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`
+- Example: `chore: enforce repository line endings`
+
+**Branching strategy:**
+
+- Main development: `main` branch
+- Feature branches: `feature/feature-name`
+- Release branches: `release/release-name`
+- Current branch: `release/linux-appimage-audit` (Linux AppImage audit and dependency security cleanup)
+
+## Key configuration files
+
+- `package.json` - Dependencies and scripts
+- `tsconfig.json` - TypeScript configuration
+- `vite.config.ts` - Vite build configuration
+- `electron-builder.yml` - Electron packaging configuration
+- `.editorconfig` - Editor configuration (LF line endings)
+- `.gitattributes` - Git line ending policy
+- `eslint.config.mjs` - ESLint configuration
+- `prettier.config.mjs` - Prettier configuration
+
+## Troubleshooting
+
+**TypeScript errors:**
+
+- Run `npm run typecheck` to see all TypeScript errors
+- Check `tsconfig.main.json` and `tsconfig.renderer.json` for configuration
+
+**Lint errors:**
+
+- Run `npm run lint` to see all lint errors
+- Check `eslint.config.mjs` for configuration
+
+**Test failures:**
+
+- Run `npm test` to see unit test failures
+- Run `npm run test:e2e` to see E2E test failures (requires built app)
+- Run `npm run test:e2e:electron` to see Electron E2E test failures (requires built app)
+
+**Build failures:**
+
+- Run `npm run build` to see build errors
+- Check Vite configuration in `vite.config.ts`
+- Check Electron configuration in `electron-builder.yml`
+
+**Database issues:**
+
+- Database location: `%APPDATA%\PersonalAssistant\assistant.db`
+- To reset database, delete the database file and restart the app
+- Migrations in `src/main/db/migrations/`
+
+**Electron issues:**
+
+- Check Electron version in `package.json`
+- Check preload script in `src/main/preload.ts`
+- Check main process in `src/main/main.ts`
