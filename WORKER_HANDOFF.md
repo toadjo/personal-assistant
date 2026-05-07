@@ -274,6 +274,53 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Future Windows workers should not fight CRLF status noise manually
 - Before staging, run `git status --short --branch` and `git diff --stat` to confirm real content changes only
 
+## Next product direction
+
+**Goal:** Make Personal Assistant feel like a local-first personal operating layer, not a Home Assistant shell with a better UI.
+
+**Priority 1: Daily Command Center**
+
+- Build this first.
+- Replace the current top-of-desk brief stack with a new `DailyCommandCenterPanel`.
+- Combine Focus Brief priorities, Away Brief changes, overdue and due-today tasks, pending reminders, pinned notes, and a small "Now" queue with the top 3 actions.
+- Add a derived helper, likely `src/renderer/lib/derived/daily-command-center.ts`, that returns stable typed sections: `nowItems`, `attentionItems`, `contextItems`, `summary`, and `pressure`.
+- Reuse existing Focus Brief and Away Brief derived helpers where possible instead of duplicating date logic.
+- Add quick actions only for already-supported mutations: complete task, complete reminder, snooze reminder 10 minutes, mark Away Brief as seen, and open relevant panel/filter where existing state supports it.
+- Keep Home Assistant optional and visually secondary. The Command Center must be useful with no Home Assistant configured.
+- Fix touched mojibake user-facing strings such as `β€”`, replacing them with plain punctuation that follows repo style.
+
+**Priority 2: Worker Sync Log**
+
+- Add a repo-local human handoff log for cross-computer continuity, separate from the large `WORKER_HANDOFF.md`.
+- Use a concise file name such as `WORKER_ACTIVITY.md`.
+- Add an npm script, for example `npm run activity`, that prints branch, HEAD, dirty status, latest activity entries, and latest commits.
+- Update `npm run handoff` to mention the activity log path.
+- Document a simple rule: every meaningful worker slice adds one short activity entry with goal, files touched, checks run, and next action.
+- Do not put secrets, local absolute machine paths, tokens, or personal data in the activity log.
+
+**Priority 3: Personal Automations**
+
+- Add one local-first automation capability that does not depend on Home Assistant.
+- Start with the lowest-risk behavior: rules can create a reminder or task from local app state.
+- Keep existing automation storage and IPC patterns. Do not add a new database subsystem unless the current automation schema cannot represent the behavior.
+- Expose this in the existing automation UI with clear wording that it is local automation, not Home Assistant.
+- Add validation so malformed automation configs cannot cross IPC boundaries.
+
+**Required test coverage for the product direction:**
+
+- Daily Command Center derived helper: empty state, overdue first, due-today before upcoming, Away Brief items included only when present, done tasks/reminders excluded, and no Home Assistant configured.
+- Daily Command Center panel: renders summary and top actions, complete task calls the task handler, complete reminder calls the reminder handler, snooze reminder calls the snooze handler, and mark seen clears Away Brief state.
+- Worker Sync Log: script prints branch, HEAD, dirty files, recent commits, and activity path without mutating repo state.
+- Local automations: schema rejects invalid local action configs, valid local action config executes through the existing automation path, and failed local action logs a clear structured error.
+
+**Suggested commit sequence:**
+
+1. `feat: add daily command center`
+2. `chore: add worker activity handoff log`
+3. `feat: add local personal automations`
+
+If the first slice gets large, stop after the Daily Command Center commit and update this handoff with exact remaining work.
+
 ## Known issues and blockers
 
 **Dependency security:**
