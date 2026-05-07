@@ -139,3 +139,13 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 4. ~~Implement macOS application menu, window lifecycle, and tray behavior~~ (done)
 5. ~~Generate `assets/app-icon.icns` and commit to repository~~ (done)
 6. Validate `npm run dist:mac` reaches electron-builder successfully
+
+## Line ending policy
+
+**Repository-wide LF enforcement:**
+
+- `.gitattributes` at repo root enforces LF line endings for all text files
+- Windows batch/cmd/PowerShell scripts keep CRLF for native execution
+- Binary assets (images, icons, archives, databases) marked as binary to prevent normalization
+- Future Windows workers should not fight CRLF status noise manually
+- Before staging, run `git status --short --branch` and `git diff --stat` to confirm real content changes only
