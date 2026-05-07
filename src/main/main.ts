@@ -236,7 +236,7 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
           ? error.message
           : "The local database could not be opened (disk full, file locked, or database damaged).";
       mainLog.error("Database startup failed", error);
-      dialog.showErrorBox("Personal Assistant — database error", `${message}\n\nThe app will exit.`);
+      dialog.showErrorBox("Personal Assistant - database error", `${message}\n\nThe app will exit.`);
       app.exit(1);
       return;
     }
@@ -246,7 +246,7 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
     } catch (error) {
       mainLog.error("Application startup failed after database open", error);
       const message = error instanceof Error ? error.message : String(error);
-      dialog.showErrorBox("Personal Assistant — startup error", `${message}\n\nThe app will exit.`);
+      dialog.showErrorBox("Personal Assistant - startup error", `${message}\n\nThe app will exit.`);
       app.exit(1);
     }
   });

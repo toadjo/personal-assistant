@@ -52,7 +52,7 @@ export function useCommandExecution(args: {
     const off = api.onCommand((_event: unknown, command: string) => {
       setCommandInput(command === "new note" ? "new note " : command);
       commandInputRef.current?.focus();
-      setStatus(`From the tray: “${command}”—tell me if you want anything else.`);
+      setStatus(`From the tray: "${command}" - tell me if you want anything else.`);
     });
     return off;
   }, [setStatus]);

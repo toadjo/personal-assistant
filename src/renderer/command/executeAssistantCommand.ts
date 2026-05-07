@@ -77,7 +77,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     const text = parseNoteAlias(raw);
     if (!text) throw new Error("Tell me what to save. Example: make a note buy coffee.");
     await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
-    deps.setStatus("Got it—memo saved.");
+    deps.setStatus("Got it - memo saved.");
     return { mutated: true };
   }
   if (lower.startsWith("add task ") || lower.startsWith("todo ") || lower.startsWith("task ")) {
@@ -108,13 +108,13 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   if (lower.startsWith("remind me to ")) {
     const parsed = parseReminderMeCommand(normalized);
     await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
-    deps.setStatus(`All set—reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
+    deps.setStatus(`All set - reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
     return { mutated: true };
   }
   if (lower.startsWith("remind ")) {
     const parsed = parseReminderCommand(normalized);
     await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
-    deps.setStatus(`All set—reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
+    deps.setStatus(`All set - reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
     return { mutated: true };
   }
   if (lower === "remind" || lower === "remind me to") {

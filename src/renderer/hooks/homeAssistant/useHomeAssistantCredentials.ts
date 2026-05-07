@@ -48,7 +48,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
       setStatus("Pinging Home Assistant…");
       setStatus(
         (await window.assistantApi.testHomeAssistant())
-          ? "Connection looks good—we can talk to Home Assistant."
+          ? "Connection looks good - we can talk to Home Assistant."
           : "That test did not succeed. Double-check the URL, token, and that HA allows this machine."
       );
     } catch (err) {
@@ -63,7 +63,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
         setIsRefreshingHa(true);
         setStatus("Pulling the latest device list from Home Assistant…");
         await window.assistantApi.refreshHomeAssistantEntities();
-        setStatus("Entities updated—syncing this app…");
+        setStatus("Entities updated - syncing this app…");
         await refreshAll();
         setStatus("All synced. You should see fresh states below.");
       } catch (err) {

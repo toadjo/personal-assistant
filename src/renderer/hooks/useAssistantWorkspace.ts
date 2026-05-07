@@ -2,7 +2,7 @@
  * Stable facade for desk workspace composition.
  *
  * This hook is a thin assembler over domain-level composition hooks. It does not
- * own any logic directly—all behavior is delegated to:
+ * own any logic directly - all behavior is delegated to:
  * - {@link useDeskUiState}: status/error, theme, onboarding, desk window actions
  * - {@link useDeskDataState}: fetched entities and refresh flows
  * - {@link useDeskHomeAssistantState}: HA credentials, readiness UI, device toggling
@@ -205,7 +205,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       window.localStorage.setItem(STORAGE_ONBOARDED, "1");
       window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
       ui.onboarding.setShow(false);
-      ui.setStatus("Nice—first command received. I will stay out of your way unless you need me.");
+      ui.setStatus("Nice - first command received. I will stay out of your way unless you need me.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [command.commandHistory.length, ui.onboarding.show, ui.onboarding.setShow, ui.setStatus]);

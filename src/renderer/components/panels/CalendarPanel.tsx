@@ -113,7 +113,7 @@ export const CalendarPanel = memo(function CalendarPanel({
         {dayAgenda.length ? (
           dayAgenda.map((r) => (
             <li key={r.id}>
-              {new Date(r.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} — {r.text}
+              {new Date(r.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - {r.text}
             </li>
           ))
         ) : (

@@ -46,7 +46,7 @@ html[data-theme="deepblue"] {
   color-scheme: dark;
 }
 
-/* Paper — clean white desk */
+/* Paper - clean white desk */
 html[data-theme="paper"] {
   --bg: #f6f6f8;
   --text: #141418;
@@ -174,7 +174,7 @@ html[data-theme="deepblue"] {
   --error-text: #ffd8e0;
 }
 
-/* Glass — frosted Apple-style */
+/* Glass - frosted Apple-style */
 html[data-theme="glass"] {
   --bg: #fafbfc;
   --text: #1d1d21;
@@ -272,14 +272,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Wide band: intro | Ask | Month (stacks on narrow viewports). */
-.secretaryTriple {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-
 .householdWindowLayout {
   min-height: 100vh;
   box-sizing: border-box;
@@ -354,20 +346,6 @@ button.heroStatsAddOn {
 html[data-theme="obsidian"] .householdWindowLayout .addOnPanel,
 html[data-theme="deepblue"] .householdWindowLayout .addOnPanel {
   box-shadow: 0 2px 18px rgba(0, 0, 0, 0.38);
-}
-
-.secretaryAsk .titleRow {
-  margin-bottom: var(--space-1);
-}
-
-.secretaryMeta,
-.secretaryContext {
-  font-size: 12px;
-  margin: 0 0 var(--space-2);
-}
-
-.secretaryActions {
-  margin-bottom: 0;
 }
 
 h1 {
@@ -556,60 +534,6 @@ h1 {
   gap: var(--space-1);
 }
 
-.welcomeRow {
-  margin: 0 0 var(--space-3);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--panel-border);
-  max-width: min(48rem, 100%);
-}
-
-.welcomeText {
-  margin: 0 0 var(--space-2);
-  font-size: 18px;
-  font-weight: 620;
-  letter-spacing: -0.02em;
-  color: var(--title);
-  line-height: 1.25;
-}
-
-.welcomeNameForm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.welcomeNameInput {
-  min-width: 140px;
-  max-width: 240px;
-  flex: 0 1 200px;
-}
-
-.welcomeSave,
-.welcomeClear {
-  padding: 6px 11px;
-  font-size: 13px;
-}
-
-.welcomeHint {
-  margin: var(--space-2) 0 0;
-  font-size: 12px;
-}
-
-.brandRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.brandLogo {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 1px solid var(--panel-border);
-}
-
 .eyebrow {
   margin: 0;
   font-size: 12px;
@@ -625,50 +549,6 @@ h1 {
   align-items: flex-start;
   gap: var(--space-4);
   margin-bottom: var(--space-3);
-}
-
-.heroStats {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.heroStatsDesk {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.heroStatsAddOn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: var(--space-3);
-  margin-left: 2px;
-  border-left: 1px solid var(--surface-border-strong);
-}
-
-.heroStatsAddOnLabel {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.statAddOn {
-  box-shadow: none;
-  opacity: 0.94;
-  font-size: 12px;
-}
-
-.statAddOnLive {
-  border-color: color-mix(in srgb, var(--success-border) 42%, var(--stat-border) 58%);
-  background: color-mix(in srgb, var(--success-bg) 22%, var(--stat-bg) 78%);
 }
 
 .stat {
@@ -708,30 +588,6 @@ h1 {
   background: color-mix(in srgb, var(--ghost-bg) 94%, transparent);
   border-color: color-mix(in srgb, var(--primary) 22%, var(--ghost-border) 78%);
   color: var(--title);
-}
-
-.themeSelectWrap {
-  display: inline-flex;
-  align-items: center;
-}
-
-.themeSelect {
-  min-width: 122px;
-  border-radius: 999px;
-  padding: 7px 30px 7px 11px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--stat-text);
-  background: var(--ghost-bg);
-  border: 1px solid var(--stat-border);
-}
-
-.themeSelectWide {
-  min-width: 168px;
-}
-
-.themeSelect:hover {
-  border-color: color-mix(in srgb, var(--primary) 22%, var(--stat-border) 78%);
 }
 
 .assistantMeta {
@@ -802,63 +658,6 @@ h1 {
   border-color: color-mix(in srgb, var(--primary) 18%, var(--panel-border) 82%);
 }
 
-.sectionLabel {
-  margin: 0 0 var(--space-2);
-  font-size: 13px;
-}
-
-.sectionCards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
-  margin: 0 0 var(--space-3);
-}
-
-.sectionCard {
-  display: grid;
-  gap: var(--space-1);
-  text-align: left;
-  padding: var(--space-2) 12px;
-  border-radius: 12px;
-  border: 1px solid var(--panel-border);
-  background: color-mix(in srgb, var(--panel-bg) 88%, transparent);
-  color: var(--ghost-text);
-  box-shadow: none;
-  transform: none;
-}
-
-.sectionCard:hover {
-  transform: none;
-  box-shadow: none;
-  border-color: color-mix(in srgb, var(--primary) 16%, var(--panel-border) 84%);
-}
-
-.sectionCard strong {
-  font-size: 13px;
-  color: var(--title);
-}
-
-.sectionCard span {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.sectionCardActive {
-  border-color: color-mix(in srgb, var(--primary) 28%, var(--panel-border) 72%);
-  background: color-mix(in srgb, var(--primary-soft) 40%, var(--panel-bg) 60%);
-}
-
-.firstActionBar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-2);
-}
-
-.compactGrid {
-  margin-top: var(--space-1);
-}
-
 .panel:hover {
   border-color: color-mix(in srgb, var(--surface-border-strong) 52%, var(--panel-border) 48%);
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.055);
@@ -905,40 +704,6 @@ h1 {
   color: var(--muted);
   border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
   background: color-mix(in srgb, var(--panel-bg) 74%, transparent);
-}
-
-.onboardingNamePanel {
-  border-color: color-mix(in srgb, var(--primary) 24%, var(--panel-border) 76%);
-}
-
-.assistantSettings {
-  margin-top: var(--space-2);
-}
-
-.settingsHint {
-  margin: var(--space-1) 0 var(--space-2);
-}
-
-.collapsibleGroup {
-  padding-top: var(--space-2);
-}
-
-.collapsibleSummary {
-  list-style: none;
-  cursor: pointer;
-  margin-bottom: var(--space-1);
-}
-
-.collapsibleSummary::-webkit-details-marker {
-  display: none;
-}
-
-.collapsibleSummary:focus-visible {
-  outline: none;
-  border-radius: 10px;
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--bg) 72%, transparent),
-    0 0 0 4px var(--focus-ring);
 }
 
 .presetRow {
@@ -1085,10 +850,6 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-.dayBatchActions {
-  margin: var(--space-1) 0 var(--space-2);
-}
-
 .fullWidth {
   width: 100%;
   min-width: 0;
@@ -1131,7 +892,6 @@ button:disabled {
 .topNavButton:focus-visible,
 .themeToggle:focus-visible,
 .themeSelect:focus-visible,
-.sectionCard:focus-visible,
 .pillButton:focus-visible,
 .ghostButton:focus-visible,
 .dangerButton:focus-visible,
@@ -1152,54 +912,6 @@ button:disabled {
 
 .dayFocusTitle .subheading {
   margin: 0;
-}
-
-.plannerTitleRow {
-  margin-top: var(--space-1);
-}
-
-.plannerHeading {
-  margin: 0;
-}
-
-.quickCaptureRow {
-  align-items: center;
-}
-
-.quickCaptureRow input {
-  flex: 1 1 260px;
-  min-width: 220px;
-}
-
-.quickCaptureActions {
-  gap: var(--space-1);
-}
-
-.snapshotGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.snapshotCard {
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: var(--space-3);
-  background: var(--stat-bg);
-}
-
-.snapshotLabel {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.snapshotValue {
-  margin: var(--space-1) 0 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--title);
 }
 
 .calendarGrid {
@@ -1337,62 +1049,6 @@ button:disabled {
   padding-bottom: 0;
 }
 
-.logRow {
-  border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 70%, transparent);
-  padding: 8px 0 10px;
-}
-
-.logRow:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-.logHeadline {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
-
-.logMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  font-size: 12px;
-  margin-top: var(--space-1);
-}
-
-.logError {
-  margin-top: var(--space-1);
-  font-size: 12px;
-  color: var(--error-text);
-}
-
-.confidenceBadge {
-  border-radius: 999px;
-  padding: 1px 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.confidenceHigh {
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
-  color: var(--success-text);
-}
-
-.confidenceMedium {
-  background: color-mix(in srgb, #f59e0b 14%, transparent);
-  border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
-  color: color-mix(in srgb, #f59e0b 70%, var(--title) 30%);
-}
-
-.confidenceLow {
-  background: var(--error-bg);
-  border: 1px solid var(--error-border);
-  color: var(--error-text);
-}
-
 .status {
   margin: 0 0 10px;
   color: var(--success-text);
@@ -1502,27 +1158,6 @@ button:disabled {
 .commandHintText {
   color: var(--muted);
   font-size: 12px;
-}
-
-.pillButton {
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--ghost-border);
-  background: var(--ghost-bg);
-  color: var(--ghost-text);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.pillButton:hover {
-  background: color-mix(in srgb, var(--ghost-bg) 94%, transparent);
-  border-color: color-mix(in srgb, var(--primary) 22%, var(--ghost-border) 78%);
-  color: var(--title);
 }
 
 .pillButtonCompact {
@@ -1810,10 +1445,6 @@ button:disabled {
   margin-top: var(--space-1);
 }
 
-.commandRow {
-  align-items: stretch;
-}
-
 .commandAction {
   min-width: 94px;
 }
@@ -1844,75 +1475,9 @@ button:disabled {
   }
 }
 
-.assistantContextRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-3);
-}
-
-.contextChip {
-  border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-  color: var(--muted);
-  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
-  white-space: nowrap;
-}
-
-.assistantShortcutRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: var(--space-1) 0 var(--space-2);
-}
-
-.reminderFilterRow {
-  margin-top: var(--space-1);
-}
-
-.reminderQuickRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  width: 100%;
-}
-
-.quickMinutesInput {
-  min-width: 88px;
-  width: 88px;
-}
-
-.filterButtonActive {
-  border-color: color-mix(in srgb, var(--primary) 42%, var(--ghost-border) 58%);
-  background: color-mix(in srgb, var(--primary-soft) 62%, var(--ghost-bg) 38%);
-  color: color-mix(in srgb, var(--title) 72%, var(--primary) 28%);
-}
-
-.assistantTip {
-  margin-top: var(--space-2);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.commandFootnote {
-  margin: var(--space-1) 0 0;
-}
-
 .assistantMeta .ghostButton {
   padding: 6px 10px;
   font-size: 12px;
-}
-
-.emptyState {
-  text-align: center;
-  border-style: dashed;
-  background: color-mix(in srgb, var(--panel-bg) 82%, transparent);
-}
-
-.showMoreButton {
-  margin-top: var(--space-2);
 }
 
 @media (max-width: 900px) {
@@ -1969,10 +1534,6 @@ button:disabled {
 
   .topNavButton {
     width: 100%;
-  }
-
-  .snapshotGrid {
-    grid-template-columns: 1fr;
   }
 
   .assistantMeta {

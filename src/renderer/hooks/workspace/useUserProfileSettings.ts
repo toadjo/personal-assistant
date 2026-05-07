@@ -29,8 +29,8 @@ export function useUserProfileSettings(setError: SetError, setStatus: SetStatus)
       setUserPreferredNameIsSet(s.userPreferredNameIsSet);
       setStatus(
         s.userPreferredNameIsSet
-          ? `I'll greet you as “${s.userPreferredName}” from now on.`
-          : "Cleared your name—I'll use a simple time-of-day greeting."
+          ? `I'll greet you as "${s.userPreferredName}" from now on.`
+          : "Cleared your name - I'll use a simple time-of-day greeting."
       );
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));

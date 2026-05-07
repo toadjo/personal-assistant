@@ -12,7 +12,7 @@ export function useDeviceToggle(
 
   async function runDeviceToggle(entityId: string, friendlyName: string): Promise<void> {
     if (togglingEntityIds.has(entityId)) {
-      setStatus(`Still working on ${friendlyName}—give me a second.`);
+      setStatus(`Still working on ${friendlyName} - give me a second.`);
       return;
     }
     try {
@@ -20,7 +20,7 @@ export function useDeviceToggle(
       setStatus(`Switching ${friendlyName}…`);
       setTogglingEntityIds((prev) => new Set(prev).add(entityId));
       await window.assistantApi.toggleDevice(entityId);
-      setStatus(`${friendlyName} updated—refreshing everything…`);
+      setStatus(`${friendlyName} updated - refreshing everything…`);
       await refreshAll();
       setStatus(`${friendlyName} is in sync now.`);
     } catch (err) {

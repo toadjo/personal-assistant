@@ -4,7 +4,7 @@
  * **Preload:** literals are copied into `preload-ipc-literals.generated.ts` by
  * `scripts/generate-preload-ipc.mjs` (run from `build:main` / `test`). Preload imports that file
  * only (not this module) to avoid runtime resolution issues. After editing, run codegen or
- * `npm test` — `preload-channels.test.ts` asserts parity.
+ * `npm test` - `preload-channels.test.ts` asserts parity.
  */
 export const IpcInvoke = {
   notesList: "notes:list",

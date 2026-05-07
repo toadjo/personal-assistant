@@ -48,7 +48,7 @@ export function AssistantShell(): JSX.Element {
           ) : null}
           <IconButton
             icon={Home}
-            label={ha.haReady ? "Home Assistant — linked (optional)" : "Home Assistant — optional"}
+            label={ha.haReady ? "Home Assistant - linked (optional)" : "Home Assistant - optional"}
             onClick={() => void window.assistantApi.openHouseholdWindow()}
             variant={ha.haReady ? "default" : "ghost"}
           />
@@ -89,7 +89,7 @@ export function AssistantShell(): JSX.Element {
               window.localStorage.setItem(STORAGE_ONBOARDED, "1");
               window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
               onboarding.setShow(false);
-              ui.setStatus("Welcome aboard—onboarding complete!");
+              ui.setStatus("Welcome aboard - onboarding complete!");
             }}
             onCreateNote={() => {
               data.setQuery("");
@@ -108,7 +108,7 @@ export function AssistantShell(): JSX.Element {
               window.localStorage.setItem(STORAGE_ONBOARDED, "1");
               window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
               onboarding.setShow(false);
-              ui.setStatus("Onboarding complete—you can connect Home Assistant anytime from Household.");
+              ui.setStatus("Onboarding complete - you can connect Home Assistant anytime from Household.");
             }}
           />
         </div>
@@ -121,13 +121,13 @@ export function AssistantShell(): JSX.Element {
             onHideForNow={() => {
               window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
               onboarding.setShow(false);
-              ui.setStatus("Understood—we will skip the guided intro.");
+              ui.setStatus("Understood - we will skip the guided intro.");
             }}
             onFinishSetup={() => {
               onboarding.setShow(false);
               window.localStorage.setItem(STORAGE_ONBOARDED, "1");
               window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-              ui.setStatus("Welcome aboard—intro marked complete.");
+              ui.setStatus("Welcome aboard - intro marked complete.");
             }}
             onRunPreset={command.runPresetCommand}
           />

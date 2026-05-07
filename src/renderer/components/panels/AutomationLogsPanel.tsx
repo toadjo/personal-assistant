@@ -21,7 +21,7 @@ export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element 
             <li key={l.id}>
               <strong>{l.status.toUpperCase()}</strong> · {new Date(l.startedAt).toLocaleString()} ·{" "}
               {formatRetrySummary(l.attemptCount, l.retryCount)}
-              {l.error ? ` — ${l.error}` : ""}
+              {l.error ? ` - ${l.error}` : ""}
             </li>
           ))
         ) : (
