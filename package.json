@@ -24,7 +24,7 @@
     "dist": "npm run build && npm run clean:release && electron-builder --publish never",
     "dist:win": "npm run build && npm run icons:prepare && npm run clean:release && electron-builder --win --publish never",
     "dist:linux": "npm run build && npm run icons:prepare:linux && npm run clean:release && electron-builder --linux --publish never",
-    "dist:mac": "npm run build && npm run icons:prepare:mac && npm run clean:release && electron-builder --mac universal --publish never",
+    "dist:mac": "npm run build && npm run icons:prepare:mac && npm run clean:release && electron-builder --mac --universal --publish never",
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
