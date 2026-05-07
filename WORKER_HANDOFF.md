@@ -36,7 +36,7 @@ Validation and mirroring rules:
 - Defensive timestamp parsing prevents bogus items from invalid dates
 - Command aliases: `catch me up`, `what changed`, `since I was away`
 - Panel integrated above Focus Brief in desk view
-- Tests: 12/12 passing (9 helper tests, 3 panel tests)
+- Tests: 16/16 passing (13 helper tests, 3 panel tests)
 
 ## Security audit summary (May 2026)
 
@@ -73,7 +73,8 @@ Validation and mirroring rules:
 
 - `npm audit --audit-level=high` reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
 - These are in the build toolchain, not in app runtime dependencies
-- Not blocking for release but should be tracked for future Electron upgrades
+- Not blocking for release
+- Next action: Track Electron/electron-builder upgrade separately as a dependency management task
 
 ## Full audit command sequence (Windows)
 
