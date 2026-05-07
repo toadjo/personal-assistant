@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
-import type { Note } from "../../../shared/types";
+import type { Note, ExecutionLog } from "../../../shared/types";
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../../constants/assistant";
 import { QUERY_REFRESH_DEBOUNCE_MS } from "../../constants/timing";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
@@ -75,12 +75,34 @@ export function useAssistantData(setError: SetError) {
         api.listExecutionLogs(),
         api.listRules()
       ]);
+      // Transform log rows to match shared ExecutionLog type
+      const transformedLogs: ExecutionLog[] = logRows.map((l: {
+        id: string;
+        ruleId: string;
+        status: string;
+        startedAt: string;
+        endedAt: string;
+        error?: string;
+        attemptCount: number;
+        retryCount: number;
+        ruleName: string;
+        actionLabel: string;
+      }) => ({
+        id: l.id,
+        ruleId: l.ruleId,
+        status: l.status as "success" | "failed",
+        startedAt: l.startedAt,
+        endedAt: l.endedAt,
+        error: l.error,
+        attemptCount: l.attemptCount,
+        retryCount: l.retryCount
+      }));
       setFromFullRefresh({
         notes: noteRows,
         reminders: rems,
         tasks: taskRows,
         devices: devs,
-        logs: logRows,
+        logs: transformedLogs,
         rules: ruleRows
       });
     } catch (err) {

@@ -1,6 +1,6 @@
-import type { AutomationRule } from "../shared/types";
+import type { AutomationRule, ExecutionLog } from "../shared/types";
 
-export type ThemeMode = "light" | "dark" | "system";
+export type ThemeMode = "glass" | "paper" | "obsidian" | "fog" | "deepblue";
 
 export type HaDeviceRow = {
   entityId: string;
@@ -9,23 +9,12 @@ export type HaDeviceRow = {
   attributes?: Record<string, unknown>;
 };
 
-export type ExecutionLogRow = {
-  id: number;
-  ruleId: number;
-  status: "success" | "error";
-  message: string;
-  executedAt: string;
-};
+export type ExecutionLogRow = ExecutionLog;
 
 export type ReminderFilter = "all" | "pending" | "done";
-export type TaskFilter = "all" | "open" | "completed";
+export type TaskFilter = "all" | "open" | "done" | "overdue";
 
-export type AutomationRuleListItem = {
-  id: number;
-  name: string;
-  trigger: string;
-  action: string;
-  enabled: boolean;
+export type AutomationRuleListItem = Omit<AutomationRule, "actionConfig"> & {
   lastExecutedAt?: string;
 };
 
@@ -38,3 +27,4 @@ export type BriefItem = {
   urgency: BriefItemUrgency;
   sourceId: string;
 };
+

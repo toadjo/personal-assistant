@@ -32,7 +32,8 @@ export function useTaskActions(
     if (taskFilter === "all") return tasks;
     if (taskFilter === "open") return tasks.filter((task) => task.status === "open");
     if (taskFilter === "done") return tasks.filter((task) => task.status === "done");
-    return overdueOpen;
+    if (taskFilter === "overdue") return overdueOpen;
+    return tasks;
   }, [taskFilter, tasks, overdueOpen]);
 
   async function completeById(id: string): Promise<void> {
