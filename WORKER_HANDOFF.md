@@ -16,12 +16,13 @@
 
 - `package-windows`: builds NSIS artifacts and uploads `installer-history/vX.Y.Z/*`
 - `package-linux`: builds Linux AppImage artifacts and uploads `release/`
-- `publish-releases`: downloads both artifact sets, validates required assets, then publishes/mirrors
+- `package-macos`: builds macOS DMG/zip artifacts and uploads `release/`
+- `publish-releases`: downloads Windows, Linux, and macOS artifact sets, validates required assets, then publishes/mirrors
 
 Validation and mirroring rules:
 
-- Required before publish: at least one `.exe` and at least one `.AppImage`
-- Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`
+- Required before publish: at least one `.exe`, at least one `.AppImage`, and at least one `.dmg`
+- Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`, `.zip`
 - Public release mirroring fails fast if `PUBLIC_RELEASE_TOKEN` is missing
 - Public mirror uses `gh release create` if release does not exist; otherwise `gh release upload --clobber`
 
