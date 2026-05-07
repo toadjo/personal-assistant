@@ -33,9 +33,10 @@ export function selectReleaseAssets(filePaths) {
   const exe = selected.filter((f) => f.endsWith(".exe"));
   const appImage = selected.filter((f) => f.endsWith(".AppImage"));
   const dmg = selected.filter((f) => f.endsWith(".dmg"));
+  const zip = selected.filter((f) => f.endsWith(".zip"));
   return {
     selected,
-    required: { exe, appImage, dmg }
+    required: { exe, appImage, dmg, zip }
   };
 }
 
@@ -48,6 +49,9 @@ export function validateReleaseAssets(selection) {
   }
   if (selection.required.dmg.length === 0) {
     throw new Error("Release validation failed: expected at least one macOS .dmg artifact.");
+  }
+  if (selection.required.zip.length === 0) {
+    throw new Error("Release validation failed: expected at least one macOS .zip artifact.");
   }
 }
 
@@ -99,6 +103,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       console.log(`Windows installers (.exe): ${selection.required.exe.length}`);
       console.log(`Linux packages (.AppImage): ${selection.required.appImage.length}`);
       console.log(`macOS packages (.dmg): ${selection.required.dmg.length}`);
+      console.log(`macOS packages (.zip): ${selection.required.zip.length}`);
       for (const file of copied) {
         console.log(file);
       }

@@ -148,7 +148,7 @@ npm install
 npm run dev
 ```
 
-## Release Packaging (Windows + Linux AppImage)
+## Release Packaging (Windows, Linux AppImage, macOS)
 
 Versioned packaging outputs now live under:
 

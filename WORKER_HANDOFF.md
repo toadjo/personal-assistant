@@ -101,7 +101,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 
 - Branch: `main`
 - Tracking branch: `origin/main`
-- HEAD: `6826393`
+- HEAD: `635c937`
 - Package version: `1.4.2`
 - Working tree: clean
 
@@ -118,6 +118,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 9. ~~Push cleanup baseline to `origin/main`~~ (completed)
 10. ~~Fix handoff documentation accuracy~~ (completed - updated HEAD, date, removed "Ready for commit")
 11. ~~Reconcile release docs with workflow behavior~~ (completed - README.md now includes macOS, corrected PUBLIC_RELEASE_TOKEN behavior)
+12. ~~Commit and push docs changes~~ (completed - `635c937`)
 
 **Security audit findings (npm audit --audit-level=high):**
 
@@ -151,5 +152,5 @@ npm.cmd run test:e2e:electron
 **Notes for the next worker:**
 
 - Release publishing now depends on Windows, Linux, and macOS package jobs in `.github/workflows/release.yml`.
-- Public release mirroring is guarded by `PUBLIC_RELEASE_TOKEN`; current workflow logic appears to skip public mirroring when it is unset rather than fail immediately. Treat `WORKER_HANDOFF.md` and the workflow file as the source to reconcile if the intended behavior is strict fail-fast.
-- README release automation text may lag behind the workflow because it still describes Windows plus Linux assets in one section. Verify before editing docs.
+- Public release mirroring is guarded by `PUBLIC_RELEASE_TOKEN`; the workflow skips public mirroring when it is unset (does not fail).
+- Release asset validation now requires `.exe`, `.AppImage`, `.dmg`, and `.zip` artifacts. If any are missing, the publish job will fail with a clear error message.

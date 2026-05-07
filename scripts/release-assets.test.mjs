@@ -43,4 +43,13 @@ describe("release asset selection", () => {
     ]);
     expect(() => validateReleaseAssets(selection)).toThrow(/at least one macOS \.dmg/);
   });
+
+  it("fails validation when .zip is missing", () => {
+    const selection = selectReleaseAssets([
+      "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe",
+      "release/personal-assistant-1.4.0.AppImage",
+      "release/personal-assistant-1.4.0.dmg"
+    ]);
+    expect(() => validateReleaseAssets(selection)).toThrow(/at least one macOS \.zip/);
+  });
 });
