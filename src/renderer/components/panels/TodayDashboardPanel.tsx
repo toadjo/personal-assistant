@@ -96,7 +96,7 @@ export function TodayDashboardPanel({
                           icon={Check}
                           size={16}
                           onClick={() => onCompleteTask(item.sourceId)}
-                          label="Complete task"
+                          label={`Complete task: ${item.label}`}
                           className="briefActionButton"
                         />
                       )}
@@ -106,14 +106,14 @@ export function TodayDashboardPanel({
                             icon={Check}
                             size={16}
                             onClick={() => onCompleteReminder(item.sourceId)}
-                            label="Complete reminder"
+                            label={`Complete reminder: ${item.label}`}
                             className="briefActionButton"
                           />
                           <IconButton
                             icon={Snooze}
                             size={16}
                             onClick={() => onSnoozeReminder(item.sourceId)}
-                            label="Snooze 10 minutes"
+                            label={`Snooze reminder ten minutes: ${item.label}`}
                             className="briefActionButton"
                           />
                         </>

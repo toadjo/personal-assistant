@@ -86,7 +86,7 @@ describe("TodayDashboardPanel", () => {
       />
     );
 
-    const completeButton = screen.getByLabelText("Complete task");
+    const completeButton = screen.getByLabelText("Complete task: Task");
     completeButton.click();
     expect(onCompleteTask).toHaveBeenCalledWith("task-1");
   });
@@ -114,11 +114,11 @@ describe("TodayDashboardPanel", () => {
       />
     );
 
-    const completeButton = screen.getByLabelText("Complete reminder");
+    const completeButton = screen.getByLabelText("Complete reminder: Reminder");
     completeButton.click();
     expect(onCompleteReminder).toHaveBeenCalledWith("reminder-1");
 
-    const snoozeButton = screen.getByLabelText("Snooze 10 minutes");
+    const snoozeButton = screen.getByLabelText("Snooze reminder ten minutes: Reminder");
     snoozeButton.click();
     expect(onSnoozeReminder).toHaveBeenCalledWith("reminder-1");
   });
@@ -146,11 +146,11 @@ describe("TodayDashboardPanel", () => {
       />
     );
 
-    const completeButton = screen.getByLabelText("Complete reminder");
+    const completeButton = screen.getByLabelText("Complete reminder: Agenda");
     completeButton.click();
     expect(onCompleteReminder).toHaveBeenCalledWith("agenda-1");
 
-    const snoozeButton = screen.getByLabelText("Snooze 10 minutes");
+    const snoozeButton = screen.getByLabelText("Snooze reminder ten minutes: Agenda");
     snoozeButton.click();
     expect(onSnoozeReminder).toHaveBeenCalledWith("agenda-1");
   });
