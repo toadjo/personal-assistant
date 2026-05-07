@@ -155,6 +155,101 @@ describe("deriveAwayBrief", () => {
     expect(result[0]?.reason).toBe("overdue");
     expect(result[1]?.reason).toBe("new");
   });
+
+  it("excludes completed tasks from overdue", () => {
+    const result = deriveAwayBrief({
+      tasks: [
+        {
+          id: "task-1",
+          title: "Completed overdue task",
+          notes: "",
+          dueAt: "2026-05-06T10:00:00.000Z",
+          priority: "normal",
+          status: "done",
+          recurrence: "none",
+          notifyChannel: "desktop",
+          createdAt: "2026-05-05T10:00:00.000Z",
+          updatedAt: "2026-05-05T10:00:00.000Z",
+          lastCompletedAt: "2026-05-06T10:00:00.000Z"
+        }
+      ],
+      reminders: [],
+      notes: [],
+      lastSeenAt: "2026-05-07T10:00:00.000Z",
+      now: new Date("2026-05-07T12:00:00.000Z")
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it("excludes done reminders from overdue", () => {
+    const result = deriveAwayBrief({
+      tasks: [],
+      reminders: [
+        {
+          id: "reminder-1",
+          text: "Done reminder",
+          dueAt: "2026-05-06T10:00:00.000Z",
+          recurrence: "none",
+          status: "done",
+          notifyChannel: "desktop"
+        }
+      ],
+      notes: [],
+      lastSeenAt: "2026-05-07T10:00:00.000Z",
+      now: new Date("2026-05-07T12:00:00.000Z")
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it("handles invalid timestamps gracefully", () => {
+    const result = deriveAwayBrief({
+      tasks: [
+        {
+          id: "task-1",
+          title: "Task with invalid date",
+          notes: "",
+          dueAt: null,
+          priority: "normal",
+          status: "open",
+          recurrence: "none",
+          notifyChannel: "desktop",
+          createdAt: "invalid-date",
+          updatedAt: "invalid-date",
+          lastCompletedAt: null
+        }
+      ],
+      reminders: [],
+      notes: [],
+      lastSeenAt: "2026-05-07T10:00:00.000Z",
+      now: new Date("2026-05-07T12:00:00.000Z")
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it("handles invalid lastSeenAt gracefully", () => {
+    const result = deriveAwayBrief({
+      tasks: [
+        {
+          id: "task-1",
+          title: "New task",
+          notes: "",
+          dueAt: null,
+          priority: "normal",
+          status: "open",
+          recurrence: "none",
+          notifyChannel: "desktop",
+          createdAt: "2026-05-07T11:00:00.000Z",
+          updatedAt: "2026-05-07T11:00:00.000Z",
+          lastCompletedAt: null
+        }
+      ],
+      reminders: [],
+      notes: [],
+      lastSeenAt: "invalid-date",
+      now: new Date("2026-05-07T12:00:00.000Z")
+    });
+    expect(result).toHaveLength(0);
+  });
 });
 
 describe("getAwayBriefSummary", () => {

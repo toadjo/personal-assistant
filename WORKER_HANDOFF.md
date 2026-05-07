@@ -26,6 +26,55 @@ Validation and mirroring rules:
 - Public release mirroring fails fast if `PUBLIC_RELEASE_TOKEN` is missing
 - Public mirror uses `gh release create` if release does not exist; otherwise `gh release upload --clobber`
 
+## Current feature status (v1.5)
+
+**Away Brief feature (new in v1.5):**
+
+- Local-first "Since You Were Away" brief shows tasks, reminders, and notes changed since last seen
+- Uses localStorage key `assistant-desk-last-seen-at` to track last seen timestamp
+- Excludes completed tasks and done reminders from overdue/due items
+- Defensive timestamp parsing prevents bogus items from invalid dates
+- Command aliases: `catch me up`, `what changed`, `since I was away`
+- Panel integrated above Focus Brief in desk view
+- Tests: 12/12 passing (9 helper tests, 3 panel tests)
+
+## Security audit summary (May 2026)
+
+**Electron boundaries:**
+
+- All IPC handlers use `assertTrustedIpcSender` to validate sender is a trusted window
+- Navigation validation via `isTrustedNavigationTarget` only allows file:// URLs or dev server URLs
+- Test-only APIs (`setTestHaFetchOverride`, `setTestAutomationActionOverride`) gated by `ELECTRON_E2E_TEST_MODE`
+
+**IPC validation:**
+
+- All renderer-to-main mutations have Zod schemas in `src/main/ipc/schemas.ts`
+- Schema validation maps to stable `ipc_validation` errors via `invoke-handle.ts`
+- Payload shapes tested in `handler-payload-contract.test.ts`
+
+**SQL injection:**
+
+- All SQL queries use prepared statements with parameter binding (verified in notes.ts, reminders.ts)
+- No string interpolation with user input found
+
+**Home Assistant URL policy:**
+
+- `assertHomeAssistantBaseUrl` enforces HTTPS for public hosts
+- HTTP only allowed for localhost/private LAN (RFC1918, .local, ::1, fe80:/fc/fd ranges)
+- Logs warning when HTTP is used on local networks
+
+**Secrets handling:**
+
+- Home Assistant token stored via Electron's `safeStorage` when available
+- Fallback to plaintext with warning when encryption unavailable
+- Encrypted tokens prefixed with `sse1:` for identification
+
+**Known vulnerabilities:**
+
+- `npm audit --audit-level=high` reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
+- These are in the build toolchain, not in app runtime dependencies
+- Not blocking for release but should be tracked for future Electron upgrades
+
 ## Full audit command sequence (Windows)
 
 ```powershell
@@ -38,6 +87,7 @@ npm.cmd run test:smoke
 npm.cmd run test:preload-electron
 npm.cmd run test:e2e
 npm.cmd run test:e2e:electron
+npm.cmd audit --audit-level=high
 ```
 
 ## Stop/report rule
