@@ -47,7 +47,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Exact command used
 - Relevant environment values (`PUBLIC_RELEASE_TOKEN` set/unset)
 - Validated asset list selected for publish
-- Missing required file classes (`.exe` and/or `.AppImage`)
+- Missing required file classes (`.exe`, `.AppImage`, and/or `.dmg`)
 - Electron version and embedded Node version if failure involves preload/electron launch
 
 ## macOS support status (v1.5)
