@@ -49,5 +49,8 @@ export function normalizeCommandAlias(input: string): string {
   if (lower === "show reminders") return "list reminders";
   if (lower === "show notes") return "clear notes search";
   if (lower === "open home") return "open household";
+  if (lower === "catch me up") return "catch me up";
+  if (lower === "what changed") return "catch me up";
+  if (lower === "since i was away") return "catch me up";
   return input.trim();
 }

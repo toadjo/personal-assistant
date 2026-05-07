@@ -12,14 +12,19 @@ import { RemindersPanel } from "./panels/RemindersPanel";
 import { AboutPanel } from "./panels/AboutPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { TodayDashboardPanel } from "./panels/TodayDashboardPanel";
+import { AwayBriefPanel } from "./panels/AwayBriefPanel";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
+import { deriveAwayBrief } from "../lib/derived/away-brief";
+import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
+import type { AwayBriefItem } from "../types";
 
 export function AssistantShell(): JSX.Element {
   const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
+  const [awayBriefItems, setAwayBriefItems] = useState<AwayBriefItem[]>([]);
   const appVersion = "1.5.0";
 
   useEffect(() => {
@@ -29,6 +34,31 @@ export function AssistantShell(): JSX.Element {
       unsubscribe();
     };
   }, []);
+
+  // Compute away brief items when data changes
+  useEffect(() => {
+    const lastSeenAt = getLastSeenAt();
+    const items = deriveAwayBrief({
+      tasks: data.tasks,
+      reminders: data.reminders,
+      notes: data.notes,
+      lastSeenAt,
+      now: new Date()
+    });
+    setAwayBriefItems(items);
+  }, [data.tasks, data.reminders, data.notes]);
+
+  // Update last-seen timestamp after initial data refresh and desk render
+  useEffect(() => {
+    if (!data.isRefreshing) {
+      setLastSeenAt(new Date().toISOString());
+    }
+  }, [data.isRefreshing]);
+
+  const handleMarkSeen = () => {
+    setLastSeenAt(new Date().toISOString());
+    setAwayBriefItems([]);
+  };
 
   return (
     <main className="container desktopShell">
@@ -142,6 +172,7 @@ export function AssistantShell(): JSX.Element {
 
       <div className="contentGrid">
         <div className="contentMain">
+          <AwayBriefPanel items={awayBriefItems} onMarkSeen={handleMarkSeen} />
           <TodayDashboardPanel
             overdueTasks={tasks.overdueOpen}
             dueTodayTasks={tasks.dueTodayOpen}

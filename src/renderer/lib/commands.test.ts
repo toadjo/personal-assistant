@@ -8,6 +8,12 @@ describe("normalizeCommandAlias", () => {
     expect(normalizeCommandAlias("open home")).toBe("open household");
   });
 
+  it("maps away brief aliases to catch me up", () => {
+    expect(normalizeCommandAlias("catch me up")).toBe("catch me up");
+    expect(normalizeCommandAlias("what changed")).toBe("catch me up");
+    expect(normalizeCommandAlias("since i was away")).toBe("catch me up");
+  });
+
   it("preserves Focus Brief aliases for executeAssistantCommand", () => {
     expect(normalizeCommandAlias("today")).toBe("today");
     expect(normalizeCommandAlias("What's next")).toBe("What's next");

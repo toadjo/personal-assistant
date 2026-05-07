@@ -28,3 +28,14 @@ export type BriefItem = {
   sourceId: string;
 };
 
+export type AwayBriefItemKind = "task" | "reminder" | "note";
+export type AwayBriefReason = "new" | "updated" | "due" | "overdue";
+export type AwayBriefItem = {
+  kind: AwayBriefItemKind;
+  reason: AwayBriefReason;
+  label: string;
+  detail?: string;
+  sourceId: string;
+  changedAt: string;
+};
+
