@@ -8,23 +8,35 @@ import { useWorkspaceStore } from "../../stores/workspaceStore";
 type SetError = (message: string) => void;
 
 export function useAssistantData(setError: SetError) {
-  const { query, setQuery, notes, reminders, tasks, devices, logs, rules, isRefreshing, setNotes, setReminders, setTasks } =
-    useWorkspaceStore(
-      useShallow((s) => ({
-        query: s.query,
-        setQuery: s.setQuery,
-        notes: s.notes,
-        reminders: s.reminders,
-        tasks: s.tasks,
-        devices: s.devices,
-        logs: s.logs,
-        rules: s.rules,
-        isRefreshing: s.isRefreshing,
-        setNotes: s.setNotes,
-        setReminders: s.setReminders,
-        setTasks: s.setTasks
-      }))
-    );
+  const {
+    query,
+    setQuery,
+    notes,
+    reminders,
+    tasks,
+    devices,
+    logs,
+    rules,
+    isRefreshing,
+    setNotes,
+    setReminders,
+    setTasks
+  } = useWorkspaceStore(
+    useShallow((s) => ({
+      query: s.query,
+      setQuery: s.setQuery,
+      notes: s.notes,
+      reminders: s.reminders,
+      tasks: s.tasks,
+      devices: s.devices,
+      logs: s.logs,
+      rules: s.rules,
+      isRefreshing: s.isRefreshing,
+      setNotes: s.setNotes,
+      setReminders: s.setReminders,
+      setTasks: s.setTasks
+    }))
+  );
   const setFromFullRefresh = useWorkspaceStore((s) => s.setFromFullRefresh);
   const setIsRefreshing = useWorkspaceStore((s) => s.setIsRefreshing);
 
@@ -76,27 +88,29 @@ export function useAssistantData(setError: SetError) {
         api.listRules()
       ]);
       // Transform log rows to match shared ExecutionLog type
-      const transformedLogs: ExecutionLog[] = logRows.map((l: {
-        id: string;
-        ruleId: string;
-        status: string;
-        startedAt: string;
-        endedAt: string;
-        error?: string;
-        attemptCount: number;
-        retryCount: number;
-        ruleName: string;
-        actionLabel: string;
-      }) => ({
-        id: l.id,
-        ruleId: l.ruleId,
-        status: l.status as "success" | "failed",
-        startedAt: l.startedAt,
-        endedAt: l.endedAt,
-        error: l.error,
-        attemptCount: l.attemptCount,
-        retryCount: l.retryCount
-      }));
+      const transformedLogs: ExecutionLog[] = logRows.map(
+        (l: {
+          id: string;
+          ruleId: string;
+          status: string;
+          startedAt: string;
+          endedAt: string;
+          error?: string;
+          attemptCount: number;
+          retryCount: number;
+          ruleName: string;
+          actionLabel: string;
+        }) => ({
+          id: l.id,
+          ruleId: l.ruleId,
+          status: l.status as "success" | "failed",
+          startedAt: l.startedAt,
+          endedAt: l.endedAt,
+          error: l.error,
+          attemptCount: l.attemptCount,
+          retryCount: l.retryCount
+        })
+      );
       setFromFullRefresh({
         notes: noteRows,
         reminders: rems,

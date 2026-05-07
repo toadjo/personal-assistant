@@ -28,7 +28,8 @@ export function GuidedOnboardingPanel({
   const steps: Record<OnboardingStep, { title: string; description: string; action: string; instruction: string }> = {
     note: {
       title: "Create your first note",
-      description: "Notes are for quick memos, ideas, or anything you want to remember. Everything stays on your computer.",
+      description:
+        "Notes are for quick memos, ideas, or anything you want to remember. Everything stays on your computer.",
       action: "I've created a note",
       instruction: "Use the Notes panel on the right to create your first note, then click the button below."
     },

@@ -69,12 +69,21 @@ export function AssistantShell(): JSX.Element {
         <div className="utilityToolbarRight">
           <StatusChip icon={StickyNote} label="Memos" count={data.notes.length} />
           <StatusChip icon={Bell} label="Open" count={reminders.pending.length} />
-          <StatusChip icon={ListTodo} label="Tasks" count={data.tasks.filter((task) => task.status === "open").length} />
+          <StatusChip
+            icon={ListTodo}
+            label="Tasks"
+            count={data.tasks.filter((task) => task.status === "open").length}
+          />
           {reminders.overdue.length > 0 ? (
             <StatusChip icon={AlertTriangle} label="Overdue" count={reminders.overdue.length} variant="attention" />
           ) : null}
           {tasks.overdueOpen.length > 0 ? (
-            <StatusChip icon={AlertTriangle} label="Task overdue" count={tasks.overdueOpen.length} variant="attention" />
+            <StatusChip
+              icon={AlertTriangle}
+              label="Task overdue"
+              count={tasks.overdueOpen.length}
+              variant="attention"
+            />
           ) : null}
           <IconButton
             icon={Home}

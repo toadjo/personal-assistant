@@ -18,9 +18,9 @@ const test = base.extend({
     if (!fs.existsSync(mainPath)) {
       throw new Error(
         `Electron main entry point not found:\n` +
-        `  repoRoot: ${repoRoot}\n` +
-        `  buildPath: ${buildPath}\n` +
-        `  mainPath: ${mainPath}`
+          `  repoRoot: ${repoRoot}\n` +
+          `  buildPath: ${buildPath}\n` +
+          `  mainPath: ${mainPath}`
       );
     }
 

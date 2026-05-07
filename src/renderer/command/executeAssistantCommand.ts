@@ -46,7 +46,13 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     deps.setStatus("Showing all memos.");
     return { mutated: false };
   }
-  if (lower === "brief" || lower === "today" || lower === "focus" || lower === "what's next" || lower === "whats next") {
+  if (
+    lower === "brief" ||
+    lower === "today" ||
+    lower === "focus" ||
+    lower === "what's next" ||
+    lower === "whats next"
+  ) {
     deps.setQuery("");
     deps.setStatus("Here's your focus brief for today. See the Today panel for priorities.");
     return { mutated: false };

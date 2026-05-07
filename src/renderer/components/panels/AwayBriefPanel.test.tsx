@@ -35,7 +35,9 @@ describe("AwayBriefPanel", () => {
     const onMarkSeen = vi.fn();
     render(<AwayBriefPanel items={[]} onMarkSeen={onMarkSeen} />);
 
-    expect(screen.getByText("Nothing changed since you last checked.", { selector: ".awayBriefEmptyState" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Nothing changed since you last checked.", { selector: ".awayBriefEmptyState" })
+    ).toBeInTheDocument();
   });
 
   it("mark-seen action updates via callback", () => {

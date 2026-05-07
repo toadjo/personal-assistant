@@ -73,7 +73,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "brief" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Today panel for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -81,7 +83,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "today" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Today panel for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -89,7 +93,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "focus" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Today panel for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -97,7 +103,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "what's next" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Today panel for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -105,7 +113,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "whats next" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Today panel for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 

@@ -49,7 +49,17 @@ export function useDeskCommandState(args: {
   refreshAll: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
 }): DeskCommandState {
-  const { devices, haReady, setQuery, setReminderFilter, setTaskFilter, setStatus, setError, refreshAll, runDeviceToggle } = args;
+  const {
+    devices,
+    haReady,
+    setQuery,
+    setReminderFilter,
+    setTaskFilter,
+    setStatus,
+    setError,
+    refreshAll,
+    runDeviceToggle
+  } = args;
 
   const command = useCommandExecution({
     devices,

@@ -38,4 +38,3 @@ export type AwayBriefItem = {
   sourceId: string;
   changedAt: string;
 };
-

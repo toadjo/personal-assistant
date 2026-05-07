@@ -60,13 +60,7 @@ export function AwayBriefPanel({ items, onMarkSeen }: Props): JSX.Element {
       <div className="awayBriefHeader">
         <PanelHeader icon={History} title="Since You Were Away" />
         {items.length > 0 && (
-          <IconButton
-            icon={X}
-            size={16}
-            onClick={onMarkSeen}
-            label="Mark as seen"
-            className="awayBriefDismiss"
-          />
+          <IconButton icon={X} size={16} onClick={onMarkSeen} label="Mark as seen" className="awayBriefDismiss" />
         )}
       </div>
       <div className="awayBriefContent">

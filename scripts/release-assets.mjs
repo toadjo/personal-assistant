@@ -79,13 +79,19 @@ function parseArgs(argv) {
     if (token === "--out-dir") args.outDir = next;
   }
   if (!args.windowsDir || !args.linuxDir || !args.macosDir || !args.outDir) {
-    throw new Error("Usage: node scripts/release-assets.mjs --windows-dir <dir> --linux-dir <dir> --macos-dir <dir> --out-dir <dir>");
+    throw new Error(
+      "Usage: node scripts/release-assets.mjs --windows-dir <dir> --linux-dir <dir> --macos-dir <dir> --out-dir <dir>"
+    );
   }
   return args;
 }
 
 export async function prepareValidatedReleaseAssets({ windowsDir, linuxDir, macosDir, outDir }) {
-  const [windowsFiles, linuxFiles, macosFiles] = await Promise.all([listFilesRecursive(windowsDir), listFilesRecursive(linuxDir), listFilesRecursive(macosDir)]);
+  const [windowsFiles, linuxFiles, macosFiles] = await Promise.all([
+    listFilesRecursive(windowsDir),
+    listFilesRecursive(linuxDir),
+    listFilesRecursive(macosDir)
+  ]);
   const selection = selectReleaseAssets([...windowsFiles, ...linuxFiles, ...macosFiles]);
   validateReleaseAssets(selection);
   const copied = await copySelectedAssets(selection.selected, outDir);

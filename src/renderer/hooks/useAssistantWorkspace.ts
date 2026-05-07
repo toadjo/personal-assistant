@@ -236,8 +236,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       isRefreshing: data.isRefreshing,
       refreshAll: data.refreshAll,
       fetchNotesOnly: data.fetchNotesOnly,
-      fetchRemindersOnly: data.fetchRemindersOnly
-      ,
+      fetchRemindersOnly: data.fetchRemindersOnly,
       fetchTasksOnly: data.fetchTasksOnly
     },
     ha: {

@@ -34,8 +34,8 @@ export function OnboardingPanel({
         </div>
       </div>
       <p className="muted">
-        Welcome to PersonalAssistant. This app helps you capture notes, set reminders, and control your home—all from your
-        desktop. Everything stays on your computer. The app lives in your system tray—close the window and it keeps
+        Welcome to PersonalAssistant. This app helps you capture notes, set reminders, and control your home—all from
+        your desktop. Everything stays on your computer. The app lives in your system tray—close the window and it keeps
         running. Home Assistant is optional—connect whenever you're ready.
       </p>
       <ul className="onboardingChecklist">

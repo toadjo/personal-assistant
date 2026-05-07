@@ -161,16 +161,17 @@ function getTaskById(id: string): Task | null {
   return row ?? null;
 }
 
-function assertRecurrenceHasDueAt(
-  recurrence: "none" | "daily" | "weekly" | "monthly",
-  dueAt: string | null
-): void {
+function assertRecurrenceHasDueAt(recurrence: "none" | "daily" | "weekly" | "monthly", dueAt: string | null): void {
   if (recurrence !== "none" && !dueAt) {
     throw new Error("Recurring tasks require dueAt.");
   }
 }
 
-function advanceDueDate(currentDueAt: string | null, recurrence: "daily" | "weekly" | "monthly", untilFuture = false): string {
+function advanceDueDate(
+  currentDueAt: string | null,
+  recurrence: "daily" | "weekly" | "monthly",
+  untilFuture = false
+): string {
   if (!currentDueAt) {
     const now = new Date();
     if (recurrence === "daily") {

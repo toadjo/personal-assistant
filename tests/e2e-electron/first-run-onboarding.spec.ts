@@ -9,7 +9,10 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
     expect(heading).toBe(true);
 
     // Check for description text
-    const stepDescription = await window.locator(".stepDescription").filter({ hasText: "Notes are for quick memos" }).isVisible();
+    const stepDescription = await window
+      .locator(".stepDescription")
+      .filter({ hasText: "Notes are for quick memos" })
+      .isVisible();
     expect(stepDescription).toBe(true);
 
     // Check for the action button
@@ -47,7 +50,15 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
 
     // Set up onboarding at note step using correct key and shape
     await window.evaluate(() => {
-      localStorage.setItem("assistant-onboarding-progress", JSON.stringify({ noteCreated: true, reminderCreated: false, homeAssistantConnected: false, skippedHomeAssistant: false }));
+      localStorage.setItem(
+        "assistant-onboarding-progress",
+        JSON.stringify({
+          noteCreated: true,
+          reminderCreated: false,
+          homeAssistantConnected: false,
+          skippedHomeAssistant: false
+        })
+      );
     });
 
     // Reload to pick up the new state
@@ -87,7 +98,15 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
 
     // Set up onboarding at HA step using correct key and shape
     await window.evaluate(() => {
-      localStorage.setItem("assistant-onboarding-progress", JSON.stringify({ noteCreated: true, reminderCreated: true, homeAssistantConnected: false, skippedHomeAssistant: false }));
+      localStorage.setItem(
+        "assistant-onboarding-progress",
+        JSON.stringify({
+          noteCreated: true,
+          reminderCreated: true,
+          homeAssistantConnected: false,
+          skippedHomeAssistant: false
+        })
+      );
     });
 
     // Reload to pick up the new state
@@ -118,7 +137,15 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
 
     // Set up onboarding as complete using correct key and shape
     await window.evaluate(() => {
-      localStorage.setItem("assistant-onboarding-progress", JSON.stringify({ noteCreated: true, reminderCreated: true, homeAssistantConnected: true, skippedHomeAssistant: false }));
+      localStorage.setItem(
+        "assistant-onboarding-progress",
+        JSON.stringify({
+          noteCreated: true,
+          reminderCreated: true,
+          homeAssistantConnected: true,
+          skippedHomeAssistant: false
+        })
+      );
     });
 
     // Reload to pick up the new state

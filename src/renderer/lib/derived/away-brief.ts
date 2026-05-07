@@ -46,7 +46,7 @@ function getLatestChangeTimestamp(item: Task | Reminder | Note): string {
 
 function getTaskReason(task: Task, lastSeenAt: string | null, now: Date): AwayBriefReason | null {
   if (task.status === "done") return null;
-  
+
   const isCurrentlyOverdue = task.dueAt && isOverdue(task.dueAt, now);
   const isCurrentlyDue = task.dueAt && isToday(task.dueAt, now);
   const createdAt = parseDateSafe(task.createdAt);
@@ -65,7 +65,7 @@ function getTaskReason(task: Task, lastSeenAt: string | null, now: Date): AwayBr
 
 function getReminderReason(reminder: Reminder, lastSeenAt: string | null, now: Date): AwayBriefReason | null {
   if (reminder.status === "done") return null;
-  
+
   const isCurrentlyOverdue = isOverdue(reminder.dueAt, now);
   const isCurrentlyDue = isToday(reminder.dueAt, now);
   const lastSeen = lastSeenAt ? parseDateSafe(lastSeenAt) : null;

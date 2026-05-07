@@ -38,21 +38,23 @@ export const reminderCreateSchema = z.object({
   recurrence: z.enum(["none", "daily"])
 });
 
-export const taskCreateSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  notes: z.string().max(5000),
-  dueAt: z.string().datetime({ offset: true }).nullable(),
-  priority: z.enum(["low", "normal", "high"]),
-  recurrence: z.enum(["none", "daily", "weekly", "monthly"])
-}).superRefine((value, ctx) => {
-  if (value.recurrence !== "none" && !value.dueAt) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Recurring tasks require dueAt.",
-      path: ["dueAt"]
-    });
-  }
-});
+export const taskCreateSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    notes: z.string().max(5000),
+    dueAt: z.string().datetime({ offset: true }).nullable(),
+    priority: z.enum(["low", "normal", "high"]),
+    recurrence: z.enum(["none", "daily", "weekly", "monthly"])
+  })
+  .superRefine((value, ctx) => {
+    if (value.recurrence !== "none" && !value.dueAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Recurring tasks require dueAt.",
+        path: ["dueAt"]
+      });
+    }
+  });
 
 export const taskUpdateSchema = z
   .object({
@@ -64,9 +66,18 @@ export const taskUpdateSchema = z
     status: z.enum(["open", "done"]).optional(),
     recurrence: z.enum(["none", "daily", "weekly", "monthly"]).optional()
   })
-  .refine((v) => v.title !== undefined || v.notes !== undefined || v.dueAt !== undefined || v.priority !== undefined || v.status !== undefined || v.recurrence !== undefined, {
-    message: "At least one of title, notes, dueAt, priority, status, or recurrence must be provided."
-  })
+  .refine(
+    (v) =>
+      v.title !== undefined ||
+      v.notes !== undefined ||
+      v.dueAt !== undefined ||
+      v.priority !== undefined ||
+      v.status !== undefined ||
+      v.recurrence !== undefined,
+    {
+      message: "At least one of title, notes, dueAt, priority, status, or recurrence must be provided."
+    }
+  )
   .superRefine((value, ctx) => {
     if (value.recurrence && value.recurrence !== "none" && value.dueAt === null) {
       ctx.addIssue({
