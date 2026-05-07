@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AutomationRule, Note, Reminder } from "../../shared/types";
+import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
 import type { ExecutionLogRow, HaDeviceRow } from "../types";
 
 /**
@@ -20,6 +20,7 @@ export type WorkspaceDataState = {
   query: string;
   notes: Note[];
   reminders: Reminder[];
+  tasks: Task[];
   devices: HaDeviceRow[];
   logs: ExecutionLogRow[];
   rules: AutomationRule[];
@@ -29,18 +30,21 @@ export type WorkspaceDataState = {
   setFromFullRefresh: (payload: {
     notes: Note[];
     reminders: Reminder[];
+    tasks: Task[];
     devices: HaDeviceRow[];
     logs: ExecutionLogRow[];
     rules: AutomationRule[];
   }) => void;
   setNotes: (value: Note[] | ((prev: Note[]) => Note[])) => void;
   setReminders: (value: Reminder[] | ((prev: Reminder[]) => Reminder[])) => void;
+  setTasks: (value: Task[] | ((prev: Task[]) => Task[])) => void;
 };
 
 export const useWorkspaceStore = create<WorkspaceDataState>((set) => ({
   query: "",
   notes: [],
   reminders: [],
+  tasks: [],
   devices: [],
   logs: [],
   rules: [],
@@ -51,5 +55,7 @@ export const useWorkspaceStore = create<WorkspaceDataState>((set) => ({
   setNotes: (value: Note[] | ((prev: Note[]) => Note[])) =>
     set((s) => ({ notes: typeof value === "function" ? value(s.notes) : value })),
   setReminders: (value: Reminder[] | ((prev: Reminder[]) => Reminder[])) =>
-    set((s) => ({ reminders: typeof value === "function" ? value(s.reminders) : value }))
+    set((s) => ({ reminders: typeof value === "function" ? value(s.reminders) : value })),
+  setTasks: (value: Task[] | ((prev: Task[]) => Task[])) =>
+    set((s) => ({ tasks: typeof value === "function" ? value(s.tasks) : value }))
 }));

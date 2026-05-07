@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -19,10 +19,12 @@
     "check:preload-ipc": "node scripts/generate-preload-ipc.mjs --check",
     "icons:prepare": "node scripts/ensure-win-icon.mjs",
     "icons:prepare:linux": "node scripts/ensure-linux-icon.mjs",
+    "icons:prepare:mac": "node scripts/ensure-mac-icon.mjs",
     "clean:release": "node scripts/clean-release.mjs",
-    "dist": "npm run build && npm run clean:release && electron-builder",
-    "dist:win": "npm run build && npm run icons:prepare && npm run clean:release && electron-builder --win",
-    "dist:linux": "npm run build && npm run icons:prepare:linux && npm run clean:release && electron-builder --linux",
+    "dist": "npm run build && npm run clean:release && electron-builder --publish never",
+    "dist:win": "npm run build && npm run icons:prepare && npm run clean:release && electron-builder --win --publish never",
+    "dist:linux": "npm run build && npm run icons:prepare:linux && npm run clean:release && electron-builder --linux --publish never",
+    "dist:mac": "npm run build && npm run icons:prepare:mac && npm run clean:release && electron-builder --mac --universal --publish never",
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
@@ -36,9 +38,10 @@
     "test:node": "npm test",
     "test:watch": "node scripts/run-vitest-for-node.mjs watch",
     "test:smoke": "node scripts/smoke-check.mjs",
-    "test:preload-electron": "electron scripts/electron-preload-smoke.mjs",
+    "test:preload-electron": "node scripts/run-preload-smoke.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:electron": "playwright test --config=playwright.electron.config.ts"
+    "test:e2e:electron": "playwright test --config=playwright.electron.config.ts",
+    "handoff": "node scripts/handoff.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",
@@ -67,7 +70,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^3.2.4",
     "concurrently": "^9.1.2",
-    "electron": "^33.2.1",
+    "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
     "eslint": "^9.18.0",
     "eslint-plugin-react-hooks": "^5.1.0",
@@ -107,9 +110,35 @@
       "uninstallerIcon": "assets/app-icon.ico"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "icon": "assets/generated/app-icon-linux.png",
       "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/app-icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     }
   }
 }

@@ -46,7 +46,6 @@ export function parseNoteAlias(raw: string): string {
 
 export function normalizeCommandAlias(input: string): string {
   const lower = input.trim().toLowerCase();
-  if (lower === "today" || lower === "what's next" || lower === "whats next") return "list reminders";
   if (lower === "show reminders") return "list reminders";
   if (lower === "show notes") return "clear notes search";
   if (lower === "open home") return "open household";

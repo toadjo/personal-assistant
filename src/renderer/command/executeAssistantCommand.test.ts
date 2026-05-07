@@ -9,6 +9,7 @@ function baseDeps(overrides: Partial<Parameters<typeof executeAssistantCommand>[
     haReady: false,
     setQuery: vi.fn(),
     setReminderFilter: vi.fn(),
+    setTaskFilter: vi.fn(),
     setStatus: vi.fn(),
     refreshHomeAssistantEntities: vi.fn().mockResolvedValue(undefined),
     runDeviceToggle: vi.fn().mockResolvedValue(undefined),
@@ -22,6 +23,7 @@ describe("executeAssistantCommand", () => {
       assistantApi: {
         createNote: vi.fn().mockResolvedValue(undefined),
         createReminder: vi.fn().mockResolvedValue(undefined),
+        createTask: vi.fn().mockResolvedValue(undefined),
         openHouseholdWindow: vi.fn().mockResolvedValue(true),
         focusDeskWindow: vi.fn().mockResolvedValue(true),
         getAssistantSettings: vi.fn().mockResolvedValue({
@@ -67,10 +69,43 @@ describe("executeAssistantCommand", () => {
     expect(result.mutated).toBe(false);
   });
 
-  it("lists reminders via alias", async () => {
+  it("handles brief command", async () => {
+    const deps = baseDeps({ rawInput: "brief" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles today command", async () => {
     const deps = baseDeps({ rawInput: "today" });
     const result = await executeAssistantCommand(deps);
-    expect(deps.setReminderFilter).toHaveBeenCalledWith("pending");
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles focus command", async () => {
+    const deps = baseDeps({ rawInput: "focus" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles what's next command", async () => {
+    const deps = baseDeps({ rawInput: "what's next" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles whats next command", async () => {
+    const deps = baseDeps({ rawInput: "whats next" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
     expect(result.mutated).toBe(false);
   });
 
@@ -300,6 +335,22 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "list reminders" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setReminderFilter).toHaveBeenCalledWith("pending");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("creates a task with add task alias", async () => {
+    const deps = baseDeps({ rawInput: "add task plan groceries" });
+    const result = await executeAssistantCommand(deps);
+    expect(window.assistantApi.createTask).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "plan groceries", recurrence: "none" })
+    );
+    expect(result.mutated).toBe(true);
+  });
+
+  it("show tasks applies open task filter", async () => {
+    const deps = baseDeps({ rawInput: "show tasks" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setTaskFilter).toHaveBeenCalledWith("open");
     expect(result.mutated).toBe(false);
   });
 });

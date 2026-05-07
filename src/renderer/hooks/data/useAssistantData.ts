@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
-import type { Note } from "../../../shared/types";
+import type { Note, ExecutionLog } from "../../../shared/types";
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../../constants/assistant";
 import { QUERY_REFRESH_DEBOUNCE_MS } from "../../constants/timing";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
@@ -8,19 +8,21 @@ import { useWorkspaceStore } from "../../stores/workspaceStore";
 type SetError = (message: string) => void;
 
 export function useAssistantData(setError: SetError) {
-  const { query, setQuery, notes, reminders, devices, logs, rules, isRefreshing, setNotes, setReminders } =
+  const { query, setQuery, notes, reminders, tasks, devices, logs, rules, isRefreshing, setNotes, setReminders, setTasks } =
     useWorkspaceStore(
       useShallow((s) => ({
         query: s.query,
         setQuery: s.setQuery,
         notes: s.notes,
         reminders: s.reminders,
+        tasks: s.tasks,
         devices: s.devices,
         logs: s.logs,
         rules: s.rules,
         isRefreshing: s.isRefreshing,
         setNotes: s.setNotes,
-        setReminders: s.setReminders
+        setReminders: s.setReminders,
+        setTasks: s.setTasks
       }))
     );
   const setFromFullRefresh = useWorkspaceStore((s) => s.setFromFullRefresh);
@@ -49,24 +51,58 @@ export function useAssistantData(setError: SetError) {
     }
   }, [setError, setReminders]);
 
+  const fetchTasksOnly = useCallback(async (): Promise<void> => {
+    const api = window.assistantApi;
+    if (!api?.listTasks) return;
+    try {
+      setTasks(await api.listTasks());
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }, [setError, setTasks]);
+
   const refreshAll = useCallback(async () => {
     const api = window.assistantApi;
     if (!api?.listNotes) return;
     try {
       setError("");
       setIsRefreshing(true);
-      const [noteRows, rems, devs, logRows, ruleRows] = await Promise.all([
+      const [noteRows, rems, taskRows, devs, logRows, ruleRows] = await Promise.all([
         api.listNotes(queryRef.current),
         api.listReminders(),
+        api.listTasks(),
         api.listDevices(),
         api.listExecutionLogs(),
         api.listRules()
       ]);
+      // Transform log rows to match shared ExecutionLog type
+      const transformedLogs: ExecutionLog[] = logRows.map((l: {
+        id: string;
+        ruleId: string;
+        status: string;
+        startedAt: string;
+        endedAt: string;
+        error?: string;
+        attemptCount: number;
+        retryCount: number;
+        ruleName: string;
+        actionLabel: string;
+      }) => ({
+        id: l.id,
+        ruleId: l.ruleId,
+        status: l.status as "success" | "failed",
+        startedAt: l.startedAt,
+        endedAt: l.endedAt,
+        error: l.error,
+        attemptCount: l.attemptCount,
+        retryCount: l.retryCount
+      }));
       setFromFullRefresh({
         notes: noteRows,
         reminders: rems,
+        tasks: taskRows,
         devices: devs,
-        logs: logRows,
+        logs: transformedLogs,
         rules: ruleRows
       });
     } catch (err) {
@@ -121,6 +157,7 @@ export function useAssistantData(setError: SetError) {
     setQuery,
     notes,
     reminders,
+    tasks,
     devices,
     logs,
     rules,
@@ -128,7 +165,9 @@ export function useAssistantData(setError: SetError) {
     refreshAll,
     fetchNotesOnly,
     fetchRemindersOnly,
+    fetchTasksOnly,
     mergeNote,
-    removeNoteById
+    removeNoteById,
+    setTasks
   };
 }

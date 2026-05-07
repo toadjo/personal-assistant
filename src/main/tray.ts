@@ -69,8 +69,14 @@ export function createTray(options: TrayOptions): Tray {
   tray.on("click", () => {
     const w = options.getDeskWindow();
     if (!w) return;
-    if (w.isVisible()) w.hide();
-    else showMainWindow(w);
+    if (process.platform === "darwin") {
+      // On macOS, tray click always shows/focuses the desk window (no toggle)
+      showMainWindow(w);
+    } else {
+      // On Windows/Linux, tray click toggles hide/show
+      if (w.isVisible()) w.hide();
+      else showMainWindow(w);
+    }
   });
   return tray;
 }

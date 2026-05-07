@@ -9,6 +9,8 @@ import {
   optionalQuerySchema,
   positiveIntegerSchema,
   reminderCreateSchema,
+  taskCreateSchema,
+  taskUpdateSchema,
   rendererLogPayloadSchema,
   ruleCreateSchema,
   ruleEnabledPayloadSchema,
@@ -53,6 +55,11 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.remindersComplete ||
         ch === IpcInvoke.remindersDelete ||
         ch === IpcInvoke.remindersSnooze ||
+        ch === IpcInvoke.tasksList ||
+        ch === IpcInvoke.tasksCreate ||
+        ch === IpcInvoke.tasksUpdate ||
+        ch === IpcInvoke.tasksComplete ||
+        ch === IpcInvoke.tasksDelete ||
         ch === IpcInvoke.haConfigure ||
         ch === IpcInvoke.haToggle ||
         ch === IpcInvoke.settingsSetAssistantName ||
@@ -97,6 +104,26 @@ describe("IPC handler payload contracts", () => {
 
   it("reminderCreateSchema rejects invalid ISO datetime", () => {
     expect(() => reminderCreateSchema.parse({ text: "x", dueAt: "not-iso", recurrence: "none" })).toThrow();
+  });
+
+  it("task schemas reject recurring task without dueAt", () => {
+    expect(() =>
+      taskCreateSchema.parse({
+        title: "pay rent",
+        notes: "",
+        dueAt: null,
+        priority: "normal",
+        recurrence: "weekly"
+      })
+    ).toThrow();
+
+    expect(() =>
+      taskUpdateSchema.parse({
+        id: "00000000-0000-4000-8000-000000000001",
+        recurrence: "monthly",
+        dueAt: null
+      })
+    ).toThrow();
   });
 
   it("haEntityIdSchema rejects malformed entity ids", () => {

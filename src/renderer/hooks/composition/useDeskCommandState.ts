@@ -20,7 +20,7 @@
  * depend on broader workspace state like onboarding or productivity actions.
  */
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { ReminderFilter, HaDeviceRow } from "../../types";
+import type { ReminderFilter, TaskFilter, HaDeviceRow } from "../../types";
 import { useCommandExecution } from "../workspace/useCommandExecution";
 
 export type DeskCommandState = {
@@ -43,18 +43,20 @@ export function useDeskCommandState(args: {
   haReady: boolean;
   setQuery: (value: string) => void;
   setReminderFilter: (value: ReminderFilter) => void;
+  setTaskFilter: (value: TaskFilter) => void;
   setStatus: (value: string) => void;
   setError: (value: string) => void;
   refreshAll: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
 }): DeskCommandState {
-  const { devices, haReady, setQuery, setReminderFilter, setStatus, setError, refreshAll, runDeviceToggle } = args;
+  const { devices, haReady, setQuery, setReminderFilter, setTaskFilter, setStatus, setError, refreshAll, runDeviceToggle } = args;
 
   const command = useCommandExecution({
     devices,
     haReady,
     setQuery,
     setReminderFilter,
+    setTaskFilter,
     setStatus,
     setError,
     refreshAll,

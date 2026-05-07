@@ -14,8 +14,8 @@
  */
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { AutomationRule, Note, Reminder } from "../../shared/types";
-import type { ReminderFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
+import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
+import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
 import type { CalendarCell } from "../lib/calendar";
 import type { OnboardingState, OnboardingStep } from "../types/onboarding";
 import type { SuccessMessage } from "./ui/usePersistentSuccess";
@@ -45,6 +45,7 @@ export type AssistantWorkspace = {
     setQuery: (value: string) => void;
     notes: Note[];
     reminders: Reminder[];
+    tasks: Task[];
     devices: HaDeviceRow[];
     logs: ExecutionLogRow[];
     rules: AutomationRule[];
@@ -52,6 +53,7 @@ export type AssistantWorkspace = {
     refreshAll: () => Promise<void>;
     fetchNotesOnly: () => Promise<void>;
     fetchRemindersOnly: () => Promise<void>;
+    fetchTasksOnly: () => Promise<void>;
   };
   ha: {
     haUrl: string;
@@ -104,6 +106,23 @@ export type AssistantWorkspace = {
     completeById: (id: string) => Promise<void>;
     deleteById: (id: string) => Promise<void>;
   };
+  tasks: {
+    filter: TaskFilter;
+    setFilter: (value: TaskFilter) => void;
+    visible: Task[];
+    overdueOpen: Task[];
+    dueTodayOpen: Task[];
+    completeById: (id: string) => Promise<void>;
+    deleteById: (id: string) => Promise<void>;
+    saveTask: (payload: {
+      id?: string;
+      title: string;
+      notes: string;
+      dueAt: string | null;
+      priority: "low" | "normal" | "high";
+      recurrence: "none" | "daily" | "weekly" | "monthly";
+    }) => Promise<void>;
+  };
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;
     setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
@@ -154,12 +173,14 @@ export function useAssistantWorkspace(): AssistantWorkspace {
   const productivity = useDeskProductivityState({
     notes: data.notes,
     reminders: data.reminders,
+    tasks: data.tasks,
     rules: data.rules,
     setStatus: ui.setStatus,
     setError: ui.setError,
     refreshAll: data.refreshAll,
     fetchNotesOnly: data.fetchNotesOnly,
     fetchRemindersOnly: data.fetchRemindersOnly,
+    fetchTasksOnly: data.fetchTasksOnly,
     mergeNote: data.mergeNote,
     removeNoteById: data.removeNoteById
   });
@@ -170,6 +191,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
     haReady: ha.haReady,
     setQuery: data.setQuery,
     setReminderFilter: productivity.reminders.setFilter,
+    setTaskFilter: productivity.tasks.setFilter,
     setStatus: ui.setStatus,
     setError: ui.setError,
     refreshAll: data.refreshAll,
@@ -207,6 +229,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       setQuery: data.setQuery,
       notes: data.notes,
       reminders: data.reminders,
+      tasks: data.tasks,
       devices: data.devices,
       logs: data.logs,
       rules: data.rules,
@@ -214,6 +237,8 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       refreshAll: data.refreshAll,
       fetchNotesOnly: data.fetchNotesOnly,
       fetchRemindersOnly: data.fetchRemindersOnly
+      ,
+      fetchTasksOnly: data.fetchTasksOnly
     },
     ha: {
       haUrl: ha.haUrl,
@@ -249,6 +274,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
     },
     calendar: productivity.calendar,
     reminders: productivity.reminders,
+    tasks: productivity.tasks,
     automation: productivity.automation,
     memos: productivity.memos,
     profile: productivity.profile,

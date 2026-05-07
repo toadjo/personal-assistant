@@ -4,7 +4,9 @@ Windows-first tray personal assistant MVP built with Electron + React + TypeScri
 
 ## Install the app (Windows, no Git/Node)
 
-1. Open **[Releases](https://github.com/toadjo/personal-assistant/releases)** and download the latest **`Setup` `.exe`** from the release assets.
+1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
+   - Windows: `Setup` `.exe`
+   - Linux: `.AppImage` (AppImage-only support in this pass)
 2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
@@ -89,7 +91,13 @@ When debugging failures, follow this sequence to narrow the layer:
 
 Pull requests and pushes to `main`/`master` run the full verification sequence in GitHub Actions (see `.github/workflows/ci.yml`): lint, typecheck, unit tests with coverage, build, preload smoke, Playwright browser installation, browser E2E, and Electron E2E. The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
 
-**Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` (Windows NSIS via `npm run release:build`), uploads workflow artifacts, and **publishes a [GitHub Release](https://github.com/toadjo/personal-assistant/releases)** with the installer files attached. You can also trigger the job from the Actions tab (**Run workflow**); the version input must match `package.json` (bump the version in a commit first, then run the workflow).
+**Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` with three jobs:
+
+- `package-windows` builds NSIS artifacts and uploads versioned installer history artifacts.
+- `package-linux` builds Linux AppImage artifacts and uploads `release/` outputs.
+- `publish-releases` downloads both artifact sets, validates required `.exe` + `.AppImage` presence, publishes the private release, then mirrors release assets only to **[toadjo/Personal-Assistant-R Releases](https://github.com/toadjo/Personal-Assistant-R/releases)**.
+
+Public mirroring requires `PUBLIC_RELEASE_TOKEN`. If the secret is missing, the publish job fails with a clear error. Source code is not pushed or synced to the public repo; only release assets (`.exe`, `.blockmap`, `.yml`, `.AppImage`, optional `.AppImage.zsync`) are uploaded.
 
 **Dependabot** is enabled for npm (`.github/dependabot.yml`).
 
@@ -138,12 +146,12 @@ npm install
 npm run dev
 ```
 
-## Release Packaging (Windows)
+## Release Packaging (Windows + Linux AppImage)
 
-Versioned installer outputs now live under:
+Versioned packaging outputs now live under:
 
-- `release/v<version>/` (full electron-builder output for that version)
-- `installer-history/v<version>/` (copied installer artifacts: `.exe`, `.blockmap`, `.yml`)
+- `release/v<version>/` (full electron-builder output for that version, including Linux AppImage artifacts when built)
+- `installer-history/v<version>/` (copied Windows installer artifacts: `.exe`, `.blockmap`, `.yml`)
 
 These folders are ignored by git so local/repeatable installer builds stay out of normal source-control flow.
 

@@ -1,18 +1,31 @@
-import { app, crashReporter, type BrowserWindow, dialog, globalShortcut, Menu, powerMonitor } from "electron";
+import {
+  app,
+  crashReporter,
+  type BrowserWindow,
+  dialog,
+  globalShortcut,
+  Menu,
+  powerMonitor,
+  type MenuItemConstructorOptions
+} from "electron";
 import * as Sentry from "@sentry/electron/main";
 import { getDb } from "./db";
 import { startReminderScheduler } from "./services/reminders";
+import { startTaskScheduler } from "./services/tasks";
 import { createAssertSender, registerIpcHandlers } from "./ipc/register-handlers";
 import { registerAppWindowHandlers } from "./ipc/handlers/appWindow.handlers";
 import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } from "./window";
 import { createTray, type TrayOptions } from "./tray";
 import { startAutomationScheduler } from "./automation-scheduler";
 import { mainLog } from "./log";
+import { IpcRendererEvent } from "../shared/ipc-channels";
+import { safeWebContentsSend } from "./ipc-safe-send";
 
 let deskWin: BrowserWindow | null = null;
 let householdWin: BrowserWindow | null = null;
 let reminderSchedulerStop: (() => void) | null = null;
 let stopAutomationScheduler: (() => void) | null = null;
+let stopTaskScheduler: (() => void) | null = null;
 let isQuitting = false;
 let trayOptions: TrayOptions | null = null;
 
@@ -53,8 +66,73 @@ function hideDeskWindow(): void {
   }
 }
 
+function ensureDeskWindow(): void {
+  if (deskWin && !deskWin.isDestroyed()) {
+    showMainWindow(deskWin);
+  } else {
+    deskWin = createWindow("desk");
+    deskWin.on("close", (event) => {
+      if (!isQuitting) {
+        event.preventDefault();
+        deskWin?.hide();
+      }
+    });
+    if (deskWin) {
+      showMainWindow(deskWin);
+    }
+  }
+}
+
+function createMacOSMenu(): void {
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: app.getName(),
+      submenu: [
+        {
+          label: "About",
+          click: () => {
+            ensureDeskWindow();
+            if (deskWin && !deskWin.isDestroyed()) {
+              safeWebContentsSend(deskWin.webContents, IpcRendererEvent.showAbout);
+            }
+          }
+        },
+        { type: "separator" },
+        { role: "hide" },
+        { role: "hideOthers" },
+        { role: "unhide" },
+        { type: "separator" },
+        { role: "quit" }
+      ]
+    },
+    {
+      label: "Window",
+      submenu: [
+        {
+          label: "Open Desk",
+          click: () => {
+            ensureDeskWindow();
+          }
+        },
+        {
+          label: "Open Household",
+          click: () => {
+            openOrFocusHouseholdWindow();
+          }
+        },
+        { type: "separator" },
+        { role: "minimize" },
+        { role: "zoom" }
+      ]
+    }
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
 function startAppAfterDbOpen(): void {
-  if (process.platform !== "darwin") {
+  if (process.platform === "darwin") {
+    createMacOSMenu();
+  } else {
     Menu.setApplicationMenu(null);
   }
 
@@ -103,6 +181,7 @@ function startAppAfterDbOpen(): void {
 
   if (!isE2ETestMode) {
     reminderSchedulerStop = startReminderScheduler(getTrustedWindows).stop;
+    stopTaskScheduler = startTaskScheduler(getTrustedWindows).stop;
     stopAutomationScheduler = startAutomationScheduler();
   }
 }
@@ -184,10 +263,11 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
     reminderSchedulerStop = null;
     stopAutomationScheduler?.();
     stopAutomationScheduler = null;
+    stopTaskScheduler?.();
+    stopTaskScheduler = null;
   });
 
   app.on("activate", () => {
-    if (!deskWin) return;
-    showMainWindow(deskWin);
+    ensureDeskWindow();
   });
 }

@@ -15,11 +15,11 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  package:
+  package-windows:
     runs-on: windows-latest
     timeout-minutes: 45
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
           }
           Write-Host "OK: dispatch version matches package.json ($pkg)"
 
-      - name: Package installer (no git bump in CI)
+      - name: Package Windows installer (no git bump in CI)
         run: npm run release:build -- -SkipVersionBump -AllowDirtyGit -ReplaceExisting
 
       - name: Resolve versioned artifact paths
@@ -77,17 +77,171 @@ jobs:
           if (-not (Test-Path -LiteralPath $historyDir)) { throw "Missing $historyDir — packaging may have failed." }
           Add-Content -Path $env:GITHUB_OUTPUT -Value "release_tag=$tag"
 
-      - name: Upload release artifacts
+      - name: Upload Windows release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nsis-${{ github.run_id }}
+          name: windows-${{ steps.artifacts.outputs.release_tag }}
           path: installer-history/${{ steps.artifacts.outputs.release_tag }}/
 
-      - name: Publish GitHub Release
+  package-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Linux AppImage
+        run: npm run dist:linux
+
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Upload Linux release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ steps.artifacts.outputs.release_tag }}
+          path: release/
+
+  package-macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS universal DMG/zip
+        run: npm run dist:mac
+
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Upload macOS release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ steps.artifacts.outputs.release_tag }}
+          path: release/
+
+  publish-releases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [package-windows, package-linux, package-macos]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Resolve release metadata
+        id: artifacts
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-${{ steps.artifacts.outputs.release_tag }}
+          path: tmp/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-${{ steps.artifacts.outputs.release_tag }}
+          path: tmp/linux
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-${{ steps.artifacts.outputs.release_tag }}
+          path: tmp/macos
+
+      - name: Validate and stage mirrorable release assets
+        run: |
+          node scripts/release-assets.mjs \
+            --windows-dir tmp/windows \
+            --linux-dir tmp/linux \
+            --macos-dir tmp/macos \
+            --out-dir release-assets
+
+      - name: Publish GitHub Release (private repo)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.artifacts.outputs.release_tag }}
           name: Personal Assistant ${{ steps.artifacts.outputs.release_tag }}
-          files: installer-history/${{ steps.artifacts.outputs.release_tag }}/*
+          files: release-assets/*
           generate_release_notes: true
           fail_on_unmatched_files: false
+
+      - name: Check public mirror token
+        id: public_mirror
+        shell: bash
+        env:
+          PUBLIC_RELEASE_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$PUBLIC_RELEASE_TOKEN" ]; then
+            echo "PUBLIC_RELEASE_TOKEN is not set; skipping public release asset mirroring."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mirror assets to public repo
+        if: steps.public_mirror.outputs.enabled == 'true'
+        shell: bash
+        env:
+          PUBLIC_RELEASE_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+        run: |
+          tag="${{ steps.artifacts.outputs.release_tag }}"
+          repo="toadjo/Personal-Assistant-R"
+          GH_TOKEN="$PUBLIC_RELEASE_TOKEN"
+          if GH_TOKEN="$GH_TOKEN" gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
+            GH_TOKEN="$GH_TOKEN" gh release upload "$tag" release-assets/* --repo "$repo" --clobber
+          else
+            GH_TOKEN="$GH_TOKEN" gh release create "$tag" release-assets/* \
+              --repo "$repo" \
+              --title "Personal Assistant $tag" \
+              --notes "Release assets for Personal Assistant $tag"
+          fi

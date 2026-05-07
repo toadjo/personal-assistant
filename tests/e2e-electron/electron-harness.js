@@ -25,8 +25,8 @@ const test = base.extend({
     }
 
     const electronApp = await electron.launch({
-      executablePath: require("electron"),
       args: [mainPath],
+      cwd: repoRoot,
       env: {
         ...process.env,
         ELECTRON_E2E_TEST_MODE: "1",

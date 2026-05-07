@@ -20,6 +20,25 @@ contextBridge.exposeInMainWorld("assistantApi", {
   completeReminder: (id: string) => ipcRenderer.invoke(invoke.remindersComplete, id),
   deleteReminder: (id: string) => ipcRenderer.invoke(invoke.remindersDelete, id),
   snoozeReminder: (id: string, minutes: number) => ipcRenderer.invoke(invoke.remindersSnooze, id, minutes),
+  listTasks: (query?: string) => ipcRenderer.invoke(invoke.tasksList, query),
+  createTask: (payload: {
+    title: string;
+    notes: string;
+    dueAt: string | null;
+    priority: "low" | "normal" | "high";
+    recurrence: "none" | "daily" | "weekly" | "monthly";
+  }) => ipcRenderer.invoke(invoke.tasksCreate, payload),
+  updateTask: (payload: {
+    id: string;
+    title?: string;
+    notes?: string;
+    dueAt?: string | null;
+    priority?: "low" | "normal" | "high";
+    status?: "open" | "done";
+    recurrence?: "none" | "daily" | "weekly" | "monthly";
+  }) => ipcRenderer.invoke(invoke.tasksUpdate, payload),
+  completeTask: (id: string) => ipcRenderer.invoke(invoke.tasksComplete, id),
+  deleteTask: (id: string) => ipcRenderer.invoke(invoke.tasksDelete, id),
   configureHomeAssistant: (payload: { url: string; token: string }) => ipcRenderer.invoke(invoke.haConfigure, payload),
   getHomeAssistantConfig: () => ipcRenderer.invoke(invoke.haGetConfig),
   testHomeAssistant: () => ipcRenderer.invoke(invoke.haTest),
