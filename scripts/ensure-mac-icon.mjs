@@ -1,7 +1,6 @@
-import { execSync } from "node:child_process";
-import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,10 +9,21 @@ const projectRoot = path.resolve(__dirname, "..");
 
 const pngPath = path.join(projectRoot, "assets", "app-icon.png");
 const icnsPath = path.join(projectRoot, "assets", "app-icon.icns");
-const iconsetDir = path.join(projectRoot, "assets", "app-icon.iconset");
 
-// Required sizes for .icns (macOS icon set)
-const ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024];
+export const macIconConfig = {
+  sourceIcon: pngPath,
+  generatedIcon: icnsPath
+};
+
+export const icnsEntries = [
+  { type: "icp4", size: 16 },
+  { type: "icp5", size: 32 },
+  { type: "icp6", size: 64 },
+  { type: "ic07", size: 128 },
+  { type: "ic08", size: 256 },
+  { type: "ic09", size: 512 },
+  { type: "ic10", size: 1024 }
+];
 
 async function fileExists(targetPath) {
   try {
@@ -24,98 +34,51 @@ async function fileExists(targetPath) {
   }
 }
 
-async function generateIconset() {
-  console.log("Generating macOS iconset from source PNG...");
+export async function buildIcnsBuffer(sourceBuffer) {
+  const chunks = [];
+  let totalLength = 8;
 
+  for (const entry of icnsEntries) {
+    const png = await sharp(sourceBuffer).resize(entry.size, entry.size).png().toBuffer();
+    const header = Buffer.alloc(8);
+    header.write(entry.type, 0, 4, "ascii");
+    header.writeUInt32BE(png.length + 8, 4);
+    chunks.push(header, png);
+    totalLength += header.length + png.length;
+  }
+
+  const fileHeader = Buffer.alloc(8);
+  fileHeader.write("icns", 0, 4, "ascii");
+  fileHeader.writeUInt32BE(totalLength, 4);
+  return Buffer.concat([fileHeader, ...chunks], totalLength);
+}
+
+async function generateIcns() {
   if (!(await fileExists(pngPath))) {
     throw new Error(`Missing required icon source: ${pngPath}`);
   }
 
-  // Create iconset directory
-  await mkdir(iconsetDir, { recursive: true });
-
-  // Read source image
+  console.log("Generating macOS .icns from source PNG...");
   const sourceBuffer = await readFile(pngPath);
-
-  // Generate all required sizes
-  for (const size of ICON_SIZES) {
-    const regularFilename = `icon_${size}x${size}.png`;
-    const retinaFilename = `icon_${size / 2}x${size / 2}@2x.png`;
-
-    // Regular size
-    await sharp(sourceBuffer).resize(size, size).png().toFile(path.join(iconsetDir, regularFilename));
-
-    // Retina size (2x) - only for sizes that have a half-integer equivalent
-    if (size % 2 === 0 && size / 2 >= 16) {
-      await sharp(sourceBuffer)
-        .resize(size / 2, size / 2)
-        .png()
-        .toFile(path.join(iconsetDir, retinaFilename));
-    }
-  }
-
-  console.log(`Generated iconset at ${iconsetDir}`);
-}
-
-async function convertIconsetToIcns() {
-  console.log("Converting iconset to .icns using iconutil...");
-
-  try {
-    // iconutil is macOS-only
-    execSync(`iconutil -c icns "${iconsetDir}"`, {
-      cwd: projectRoot,
-      stdio: "inherit"
-    });
-    console.log(`Generated .icns at ${icnsPath}`);
-  } catch {
-    throw new Error(
-      `iconutil failed. This script requires macOS. On Windows, provide a pre-built assets/app-icon.icns or run on a Mac.`
-    );
-  }
-}
-
-async function cleanupIconset() {
-  try {
-    await rm(iconsetDir, { recursive: true, force: true });
-    console.log("Cleaned up temporary iconset directory.");
-  } catch {
-    // Directory doesn't exist, nothing to clean
-  }
+  await writeFile(icnsPath, await buildIcnsBuffer(sourceBuffer));
+  console.log(`Generated .icns at ${icnsPath}`);
 }
 
 async function main() {
-  if (process.platform !== "darwin") {
-    console.error("ERROR: macOS icon generation requires macOS platform.");
-    console.error("");
-    console.error("On Windows/Linux:");
-    console.error("  1. Generate .icns on a Mac using: npm run icons:prepare:mac");
-    console.error("  2. Commit assets/app-icon.icns to the repository");
-    console.error("  3. The script will skip generation if .icns already exists");
-    console.error("");
-    console.error("Alternatively, use a designer-provided .icns file.");
-    process.exit(1);
-  }
-
-  // Check if .icns already exists
   if (await fileExists(icnsPath)) {
     console.log(`macOS icon already exists: ${icnsPath}`);
     console.log("Skipping generation. Delete the file to regenerate.");
     return;
   }
 
-  try {
-    await generateIconset();
-    await convertIconsetToIcns();
-    await cleanupIconset();
-    console.log("macOS icon preparation complete.");
-  } catch (error) {
-    await cleanupIconset();
-    throw error;
-  }
+  await generateIcns();
+  console.log("macOS icon preparation complete.");
 }
 
-main().catch((error) => {
-  console.error("Could not prepare macOS .icns icon.");
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error("Could not prepare macOS .icns icon.");
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}

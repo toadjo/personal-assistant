@@ -58,17 +58,16 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - CI workflow has macOS packaging job
 - `dist:mac` script exists
 - `build/entitlements.mac.plist` created with minimal unsigned entitlements
-- `scripts/ensure-mac-icon.mjs` created for .icns generation (macOS-only)
+- `scripts/ensure-mac-icon.mjs` created for cross-platform .icns generation from `assets/app-icon.png`
+- `assets/app-icon.icns` generated and committed
 - macOS application menu implemented (app menu with About/Hide/Quit, Window menu with Open Desk/Open Household)
 - macOS window lifecycle tightened (activate recreates desk window if destroyed)
 - macOS tray click behavior adjusted (always shows/focuses desk window, no toggle)
 
-**Remaining blocker:**
+**Remaining validation:**
 
-- `assets/app-icon.icns` - required icon file does not exist
-  - Generate with `npm run icons:prepare:mac` on macOS
-  - Commit the generated .icns to the repository
-  - Validate `npm run dist:mac` on macOS or with committed .icns
+- Validate `npm run dist:mac` on macOS or GitHub Actions macOS runner.
+- Confirm release output includes at least one `.dmg` and at least one `.zip`.
 
 **Next steps:**
 
@@ -76,5 +75,5 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 2. ~~Add macOS icon preparation script or document .icns generation blocker~~ (done)
 3. ~~Update `dist:mac` to run icon preparation before electron-builder~~ (done)
 4. ~~Implement macOS application menu, window lifecycle, and tray behavior~~ (done)
-5. Generate `assets/app-icon.icns` on macOS and commit to repository
+5. ~~Generate `assets/app-icon.icns` and commit to repository~~ (done)
 6. Validate `npm run dist:mac` reaches electron-builder successfully
