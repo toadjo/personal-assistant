@@ -1,0 +1,44 @@
+.briefList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.briefListItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.briefListItemIcon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.briefListItemContent {
+  flex: 1;
+}
+
+.briefItemLabel {
+  font-weight: 400;
+}
+
+.briefItemLabelOverdue {
+  font-weight: 600;
+}
+
+.briefItemDetail {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.briefItemMeta {
+  font-size: 0.75em;
+  color: var(--text-muted);
+}
+
+.briefEmptyState {
+  color: var(--text-muted);
+  font-style: italic;
+}

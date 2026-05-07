@@ -1,6 +1,9 @@
 import type { Note, Reminder, Task } from "../../../shared/types";
 import { PanelHeader } from "../ui/PanelHeader";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, AlertCircle, Clock, Pin, Calendar } from "lucide-react";
+import { deriveFocusBrief, getBriefSummary } from "../../lib/derived/brief";
+import type { BriefItem } from "../../types";
+import "./TodayDashboardPanel.css";
 
 type Props = {
   overdueTasks: Task[];
@@ -10,9 +13,30 @@ type Props = {
   pinnedNotes: Note[];
 };
 
-function renderTaskLine(task: Task): string {
-  if (!task.dueAt) return task.title;
-  return `${task.title} (${new Date(task.dueAt).toLocaleString()})`;
+function getIconForUrgency(urgency: BriefItem["urgency"]) {
+  switch (urgency) {
+    case "overdue":
+      return AlertCircle;
+    case "today":
+      return Clock;
+    case "upcoming":
+      return Calendar;
+    case "context":
+      return Pin;
+  }
+}
+
+function getUrgencyLabel(urgency: BriefItem["urgency"]): string {
+  switch (urgency) {
+    case "overdue":
+      return "Overdue";
+    case "today":
+      return "Today";
+    case "upcoming":
+      return "Upcoming";
+    case "context":
+      return "Context";
+  }
 }
 
 export function TodayDashboardPanel({
@@ -22,34 +46,60 @@ export function TodayDashboardPanel({
   selectedDayAgenda,
   pinnedNotes
 }: Props): JSX.Element {
+  const briefItems = deriveFocusBrief({
+    overdueTasks,
+    dueTodayTasks,
+    upcomingReminders,
+    selectedDayAgenda,
+    pinnedNotes
+  });
+
+  const summary = getBriefSummary(briefItems);
+  const topItems = briefItems.slice(0, 3);
+
   return (
     <section className="panel" aria-labelledby="today-dashboard-heading">
-      <PanelHeader icon={LayoutDashboard} title="Today" />
+      <PanelHeader icon={LayoutDashboard} title="Focus Brief" />
       <div className="notesGrid">
         <article className="noteCard">
-          <h3>Overdue tasks ({overdueTasks.length})</h3>
-          <p>{overdueTasks.slice(0, 3).map(renderTaskLine).join(" • ") || "No overdue tasks."}</p>
+          <h3>Summary</h3>
+          <p>{summary}</p>
         </article>
+        {topItems.length > 0 ? (
+          <article className="noteCard">
+            <h3>Top priorities</h3>
+            <ul className="briefList">
+              {topItems.map((item) => {
+                const Icon = getIconForUrgency(item.urgency);
+                return (
+                  <li key={item.sourceId} className="briefListItem">
+                    <Icon size={16} className="briefListItemIcon" />
+                    <div className="briefListItemContent">
+                      <div className={`briefItemLabel ${item.urgency === "overdue" ? "briefItemLabelOverdue" : ""}`}>
+                        {item.label}
+                      </div>
+                      {item.detail && <div className="briefItemDetail">{item.detail}</div>}
+                      <div className="briefItemMeta">
+                        {getUrgencyLabel(item.urgency)} • {item.kind}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </article>
+        ) : (
+          <article className="noteCard">
+            <h3>Top priorities</h3>
+            <p className="briefEmptyState">No items to show. Add tasks, reminders, or pin notes to see them here.</p>
+          </article>
+        )}
         <article className="noteCard">
-          <h3>Due today ({dueTodayTasks.length})</h3>
-          <p>{dueTodayTasks.slice(0, 3).map(renderTaskLine).join(" • ") || "No tasks due today."}</p>
-        </article>
-        <article className="noteCard">
-          <h3>Upcoming reminders ({upcomingReminders.length})</h3>
+          <h3>Pressure</h3>
           <p>
-            {upcomingReminders
-              .slice(0, 3)
-              .map((reminder) => `${reminder.text} (${new Date(reminder.dueAt).toLocaleString()})`)
-              .join(" • ") || "No upcoming reminders."}
+            {briefItems.filter((item) => item.urgency === "overdue").length} overdue •{" "}
+            {briefItems.filter((item) => item.urgency === "today").length} due today
           </p>
-        </article>
-        <article className="noteCard">
-          <h3>Selected day agenda ({selectedDayAgenda.length})</h3>
-          <p>{selectedDayAgenda.slice(0, 3).map((reminder) => reminder.text).join(" • ") || "No agenda items."}</p>
-        </article>
-        <article className="noteCard">
-          <h3>Pinned notes ({pinnedNotes.length})</h3>
-          <p>{pinnedNotes.slice(0, 3).map((note) => note.title).join(" • ") || "No pinned notes."}</p>
         </article>
       </div>
     </section>

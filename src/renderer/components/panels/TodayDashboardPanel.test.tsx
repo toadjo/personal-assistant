@@ -3,10 +3,24 @@ import { describe, expect, it } from "vitest";
 import { TodayDashboardPanel } from "./TodayDashboardPanel";
 
 describe("TodayDashboardPanel", () => {
-  it("renders standalone productivity summary without HA dependency", () => {
+  it("renders Focus Brief with summary, priorities, and pressure", () => {
     render(
       <TodayDashboardPanel
-        overdueTasks={[{ id: "1", title: "late", notes: "", dueAt: new Date().toISOString(), priority: "normal", status: "open", recurrence: "none", notifyChannel: "desktop", createdAt: "", updatedAt: "", lastCompletedAt: null }]}
+        overdueTasks={[
+          {
+            id: "1",
+            title: "late",
+            notes: "",
+            dueAt: new Date().toISOString(),
+            priority: "normal",
+            status: "open",
+            recurrence: "none",
+            notifyChannel: "desktop",
+            createdAt: "",
+            updatedAt: "",
+            lastCompletedAt: null
+          }
+        ]}
         dueTodayTasks={[]}
         upcomingReminders={[]}
         selectedDayAgenda={[]}
@@ -14,7 +28,23 @@ describe("TodayDashboardPanel", () => {
       />
     );
 
-    expect(screen.getByText(/Overdue tasks/i)).toBeInTheDocument();
-    expect(screen.getByText(/Pinned notes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Summary/i)).toBeInTheDocument();
+    expect(screen.getByText(/Top priorities/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pressure/i)).toBeInTheDocument();
+    expect(screen.getByText(/late/i)).toBeInTheDocument();
+  });
+
+  it("shows empty state when no items", () => {
+    render(
+      <TodayDashboardPanel
+        overdueTasks={[]}
+        dueTodayTasks={[]}
+        upcomingReminders={[]}
+        selectedDayAgenda={[]}
+        pinnedNotes={[]}
+      />
+    );
+
+    expect(screen.getByText(/No items to show/i)).toBeInTheDocument();
   });
 });

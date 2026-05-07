@@ -69,10 +69,43 @@ describe("executeAssistantCommand", () => {
     expect(result.mutated).toBe(false);
   });
 
-  it("lists reminders via alias", async () => {
+  it("handles brief command", async () => {
+    const deps = baseDeps({ rawInput: "brief" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles today command", async () => {
     const deps = baseDeps({ rawInput: "today" });
     const result = await executeAssistantCommand(deps);
-    expect(deps.setReminderFilter).toHaveBeenCalledWith("pending");
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles focus command", async () => {
+    const deps = baseDeps({ rawInput: "focus" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles what's next command", async () => {
+    const deps = baseDeps({ rawInput: "what's next" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles whats next command", async () => {
+    const deps = baseDeps({ rawInput: "whats next" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
     expect(result.mutated).toBe(false);
   });
 
