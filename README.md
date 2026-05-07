@@ -2,11 +2,12 @@
 
 Windows-first tray personal assistant MVP built with Electron + React + TypeScript.
 
-## Install the app (Windows, no Git/Node)
+## Install the app (Windows, Linux, macOS, no Git/Node)
 
 1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
    - Windows: `Setup` `.exe`
    - Linux: `.AppImage` (AppImage-only support in this pass)
+   - macOS: `.dmg` or `.zip`
 2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
@@ -95,9 +96,10 @@ Pull requests and pushes to `main`/`master` run the full verification sequence i
 
 - `package-windows` builds NSIS artifacts and uploads versioned installer history artifacts.
 - `package-linux` builds Linux AppImage artifacts and uploads `release/` outputs.
-- `publish-releases` downloads both artifact sets, validates required `.exe` + `.AppImage` presence, publishes the private release, then mirrors release assets only to **[toadjo/Personal-Assistant-R Releases](https://github.com/toadjo/Personal-Assistant-R/releases)**.
+- `package-macos` builds macOS DMG/zip artifacts and uploads `release/` outputs.
+- `publish-releases` downloads all three artifact sets, validates required `.exe` + `.AppImage` + `.dmg` + `.zip` presence, publishes the private release, then mirrors release assets only to **[toadjo/Personal-Assistant-R Releases](https://github.com/toadjo/Personal-Assistant-R/releases)**.
 
-Public mirroring requires `PUBLIC_RELEASE_TOKEN`. If the secret is missing, the publish job fails with a clear error. Source code is not pushed or synced to the public repo; only release assets (`.exe`, `.blockmap`, `.yml`, `.AppImage`, optional `.AppImage.zsync`) are uploaded.
+Public mirroring requires `PUBLIC_RELEASE_TOKEN`. If the secret is missing, the publish job skips mirroring (does not fail). Source code is not pushed or synced to the public repo; only release assets (`.exe`, `.blockmap`, `.yml`, `.AppImage`, `.dmg`, `.zip`, optional `.AppImage.zsync`) are uploaded.
 
 **Dependabot** is enabled for npm (`.github/dependabot.yml`).
 

@@ -79,7 +79,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 5. ~~Generate `assets/app-icon.icns` and commit to repository~~ (done)
 6. Validate `npm run dist:mac` reaches electron-builder successfully
 
-## Continuation instructions after cleanup slice (2025-01-XX)
+## Continuation instructions after cleanup slice (2026-05-07)
 
 **Completed cleanup work:**
 
@@ -95,13 +95,15 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Preload IPC file is clean (check:preload-ipc passed)
 - Build and smoke checks passed (build, test:smoke, test:preload-electron)
 - Visual QA passed (no regressions found at 1400px, 1024px, narrow widths; toolbar does not overflow; all panels look professional)
+- Cleanup baseline committed as `6826393 chore: clean up ui baseline`
 
 **Current state:**
 
 - Branch: `main`
 - Tracking branch: `origin/main`
-- HEAD: `3a84dd5479e7758c3c10b2a75f32233c4d46d6be`
+- HEAD: `6826393`
 - Package version: `1.4.2`
+- Working tree: clean
 
 **Next actions:**
 
@@ -112,8 +114,10 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 5. ~~Second dead-code pass - search for unused renderer components, hooks, CSS classes, constants~~ (completed - removed AppHeader.tsx, WelcomeBar.tsx, and associated CSS)
 6. ~~Security confidence pass - run `npm audit --audit-level=high`~~ (completed)
 7. ~~If visual or CSS changes made: run `npm.cmd run build`, `npm.cmd run test:smoke`, `npm.cmd run test:preload-electron`~~ (completed - all passed)
-
-**Ready for commit:**
+8. ~~Commit cleanup baseline~~ (completed - `6826393 chore: clean up ui baseline`)
+9. ~~Push cleanup baseline to `origin/main`~~ (completed)
+10. ~~Fix handoff documentation accuracy~~ (completed - updated HEAD, date, removed "Ready for commit")
+11. ~~Reconcile release docs with workflow behavior~~ (completed - README.md now includes macOS, corrected PUBLIC_RELEASE_TOKEN behavior)
 
 **Security audit findings (npm audit --audit-level=high):**
 
