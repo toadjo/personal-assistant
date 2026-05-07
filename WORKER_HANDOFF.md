@@ -71,10 +71,12 @@ Validation and mirroring rules:
 
 **Known vulnerabilities:**
 
-- `npm audit --audit-level=high` reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
+- Electron upgrade to 42.0.0 attempted but failed due to better-sqlite3 native module incompatibility
+- better-sqlite3 v11.8.1 cannot be rebuilt against Electron 42 (v8 API changes)
+- Reverted to electron@35.0.0 and electron-builder@25.1.8
+- `npm audit --audit-level=high` still reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
 - These are in the build toolchain, not in app runtime dependencies
-- Not blocking for release
-- Next action: Track Electron/electron-builder upgrade separately as a dependency management task
+- Next action: Wait for better-sqlite3 to release Electron 42-compatible version before retrying upgrade
 
 ## Full audit command sequence (Windows)
 
