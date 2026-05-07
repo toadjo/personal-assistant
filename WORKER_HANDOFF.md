@@ -69,14 +69,22 @@ Validation and mirroring rules:
 - Fallback to plaintext with warning when encryption unavailable
 - Encrypted tokens prefixed with `sse1:` for identification
 
+## Dependency Risk Register
+
+| Package          | Current Version | Vulnerability                 | Toolchain Area  | Blocker                                   | Next Retry Condition                                                  |
+| ---------------- | --------------- | ----------------------------- | --------------- | ----------------------------------------- | --------------------------------------------------------------------- |
+| electron         | 35.0.0          | 10 high vulnerabilities       | Build/runtime   | better-sqlite3 v11.8.1 incompatibility    | Test latest better-sqlite3, then retry Electron 42 in separate branch |
+| electron-builder | 25.1.8          | 2 low vulnerabilities         | Build packaging | Dependent on Electron upgrade             | Retry after Electron upgrade succeeds                                 |
+| tar              | 6.2.1           | Multiple high vulnerabilities | Build toolchain | Transitive dependency of electron-builder | Will resolve with Electron/electron-builder upgrade                   |
+
 **Known vulnerabilities:**
 
-- Electron upgrade to 42.0.0 attempted but failed due to better-sqlite3 native module incompatibility
+- `npm audit --audit-level=high` reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
+- These are in the build toolchain, not in app runtime dependencies
+- Electron 42 upgrade attempted but failed due to better-sqlite3 native module incompatibility
 - better-sqlite3 v11.8.1 cannot be rebuilt against Electron 42 (v8 API changes)
 - Reverted to electron@35.0.0 and electron-builder@25.1.8
-- `npm audit --audit-level=high` still reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
-- These are in the build toolchain, not in app runtime dependencies
-- Next action: Wait for better-sqlite3 to release Electron 42-compatible version before retrying upgrade
+- package-lock.json reverted to cc691de to remove failed upgrade churn
 
 ## Full audit command sequence (Windows)
 
