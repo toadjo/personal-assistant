@@ -87,7 +87,7 @@ export const NotesPanel = memo(function NotesPanel({
       <QuickNoteForm onDone={onFetchNotes} onError={onError} onShowSuccess={onShowSuccess} onCreated={onNoteCreated} />
       <div className="notesGrid" aria-label="Saved memos">
         {isRefreshing ? (
-          <p className="muted">Loading…</p>
+          <p className="muted">Loading...</p>
         ) : notes.length ? (
           notes.map((n) => (
             <article key={n.id} className={`noteCard ${n.pinned ? "noteCardPinned" : ""}`}>

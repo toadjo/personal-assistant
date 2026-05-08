@@ -15,11 +15,11 @@ export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element 
       <PanelHeader icon={Activity} title="Rule runs" />
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading…</li>
+          <li className="muted">Loading...</li>
         ) : logs.length ? (
           logs.map((l) => (
             <li key={l.id}>
-              <strong>{l.status.toUpperCase()}</strong> · {new Date(l.startedAt).toLocaleString()} ·{" "}
+              <strong>{l.status.toUpperCase()}</strong> | {new Date(l.startedAt).toLocaleString()} |{" "}
               {formatRetrySummary(l.attemptCount, l.retryCount)}
               {l.error ? ` - ${l.error}` : ""}
             </li>

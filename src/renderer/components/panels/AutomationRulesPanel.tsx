@@ -33,13 +33,13 @@ export function AutomationRulesPanel({
       <RuleForm devices={devices} onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} />
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading…</li>
+          <li className="muted">Loading...</li>
         ) : rules.length ? (
           rules.map((r) => (
             <li key={r.id} className="listRow">
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className={r.enabled ? "" : "muted"}>{r.enabled ? "" : "(paused) "}</span>
-                {r.name} · {r.triggerConfig.at} → {r.actionType === "haToggle" ? "toggle device" : "reminder"}
+                {r.name} | {r.triggerConfig.at} {"->"} {r.actionType === "haToggle" ? "toggle device" : "reminder"}
               </span>
               <div className="row" style={{ gap: "0.5rem", flexShrink: 0 }}>
                 <IconButton

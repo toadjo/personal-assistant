@@ -27,7 +27,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note …, add note …, add task …, todo …, remind me to … in 15m, remind … in 15m, search …, find …, show notes, show reminders, show tasks, open household, open home. In the Household window (after you link HA): toggle …, refresh devices."
+      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, open household, open home. In the Household window (after you link HA): toggle ..., refresh devices."
     );
     return { mutated: false };
   }
@@ -147,7 +147,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
       throw new Error(
         "Link Home Assistant in the Household window first (URL + token), then I can refresh devices for you."
       );
-    deps.setStatus("Refreshing devices from Home Assistant…");
+    deps.setStatus("Refreshing devices from Home Assistant...");
     await deps.refreshHomeAssistantEntities();
     deps.setStatus("Device list is up to date.");
     return { mutated: true };

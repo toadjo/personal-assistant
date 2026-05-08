@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TasksPanel } from "./TasksPanel";
 
@@ -39,7 +39,7 @@ describe("TasksPanel", () => {
 
     fireEvent.change(screen.getByPlaceholderText(/Task title/i), { target: { value: "Plan week" } });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
-    expect(onSaveTask).toHaveBeenCalled();
+    await waitFor(() => expect(onSaveTask).toHaveBeenCalled());
 
     fireEvent.click(screen.getByLabelText(/Complete task Pay rent/i));
     expect(onComplete).toHaveBeenCalledWith("t1");

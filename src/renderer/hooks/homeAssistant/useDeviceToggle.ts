@@ -17,10 +17,10 @@ export function useDeviceToggle(
     }
     try {
       setError("");
-      setStatus(`Switching ${friendlyName}…`);
+      setStatus(`Switching ${friendlyName}...`);
       setTogglingEntityIds((prev) => new Set(prev).add(entityId));
       await window.assistantApi.toggleDevice(entityId);
-      setStatus(`${friendlyName} updated - refreshing everything…`);
+      setStatus(`${friendlyName} updated - refreshing everything...`);
       await refreshAll();
       setStatus(`${friendlyName} is in sync now.`);
     } catch (err) {

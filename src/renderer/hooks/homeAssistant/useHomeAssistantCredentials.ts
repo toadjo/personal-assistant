@@ -29,7 +29,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
     try {
       setError("");
       setIsSavingHa(true);
-      setStatus("Saving your Home Assistant settings…");
+      setStatus("Saving your Home Assistant settings...");
       await window.assistantApi.configureHomeAssistant({ url: haUrl, token: haToken });
       const config = await window.assistantApi.getHomeAssistantConfig();
       setHasHaToken(config.hasToken);
@@ -45,7 +45,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
   const testHomeAssistant = useCallback(async () => {
     try {
       setError("");
-      setStatus("Pinging Home Assistant…");
+      setStatus("Pinging Home Assistant...");
       setStatus(
         (await window.assistantApi.testHomeAssistant())
           ? "Connection looks good - we can talk to Home Assistant."
@@ -61,9 +61,9 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
       try {
         setError("");
         setIsRefreshingHa(true);
-        setStatus("Pulling the latest device list from Home Assistant…");
+        setStatus("Pulling the latest device list from Home Assistant...");
         await window.assistantApi.refreshHomeAssistantEntities();
-        setStatus("Entities updated - syncing this app…");
+        setStatus("Entities updated - syncing this app...");
         await refreshAll();
         setStatus("All synced. You should see fresh states below.");
       } catch (err) {

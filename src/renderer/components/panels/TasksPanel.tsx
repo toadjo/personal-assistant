@@ -115,7 +115,7 @@ export const TasksPanel = memo(function TasksPanel({
                 <h3>{task.title}</h3>
                 <p>{task.notes || "No notes"}</p>
                 <p className="reminderCardMeta">
-                  {task.dueAt ? new Date(task.dueAt).toLocaleString() : "No due date"} • {task.priority} • {task.recurrence}
+                  {task.dueAt ? new Date(task.dueAt).toLocaleString() : "No due date"} | {task.priority} | {task.recurrence}
                 </p>
                 <span className={`pill ${task.status === "open" ? "" : "graphitePill"}`}>{task.status}</span>
               </div>

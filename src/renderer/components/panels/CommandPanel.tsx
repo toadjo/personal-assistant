@@ -46,7 +46,7 @@ export function CommandPanel({
     <section className={`panel commandPanel secretaryAsk${isRunningCommand ? " commandPanelThinking" : ""}`}>
       {isRunningCommand ? (
         <p className="assistantThinkingInline" aria-live="polite">
-          Working on that…
+          Working on that...
         </p>
       ) : null}
       <div className="row commandRow">

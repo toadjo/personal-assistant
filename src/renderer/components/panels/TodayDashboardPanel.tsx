@@ -87,7 +87,7 @@ export function TodayDashboardPanel({
                       </div>
                       {item.detail && <div className="briefItemDetail">{item.detail}</div>}
                       <div className="briefItemMeta">
-                        {getUrgencyLabel(item.urgency)} • {item.kind}
+                        {getUrgencyLabel(item.urgency)} | {item.kind}
                       </div>
                     </div>
                     <div className="briefItemActions">
@@ -133,7 +133,7 @@ export function TodayDashboardPanel({
         <article className="noteCard">
           <h3>Pressure</h3>
           <p>
-            {briefItems.filter((item) => item.urgency === "overdue").length} overdue •{" "}
+            {briefItems.filter((item) => item.urgency === "overdue").length} overdue |{" "}
             {briefItems.filter((item) => item.urgency === "today").length} due today
           </p>
         </article>

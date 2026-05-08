@@ -30,7 +30,7 @@ function validationUserMessage(err: ZodError): string {
 }
 
 /**
- * Registers `ipcMain.handle` with trusted-sender assertion and stable Zod → renderer error mapping.
+ * Registers `ipcMain.handle` with trusted-sender assertion and stable Zod to renderer error mapping.
  * Raw Zod issues are logged in main only; the renderer receives {@link IPC_VALIDATION_DEFAULT_MESSAGE} or a short field hint.
  */
 export function registerInvoke(
