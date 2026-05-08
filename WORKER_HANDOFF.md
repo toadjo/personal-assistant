@@ -21,9 +21,9 @@
 
 Validation and mirroring rules:
 
-- Required before publish: at least one `.exe`, at least one `.AppImage`, and at least one `.dmg`
-- Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`, `.zip`
-- Public release mirroring fails fast if `PUBLIC_RELEASE_TOKEN` is missing
+- Required before publish: at least one `.exe`, at least one `.AppImage`, at least one `.dmg`, and at least one `.zip`
+- Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`
+- Public release mirroring skips if `PUBLIC_RELEASE_TOKEN` is unset (does not fail)
 - Public mirror uses `gh release create` if release does not exist; otherwise `gh release upload --clobber`
 
 ## Full audit command sequence (Windows)
@@ -47,7 +47,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Exact command used
 - Relevant environment values (`PUBLIC_RELEASE_TOKEN` set/unset)
 - Validated asset list selected for publish
-- Missing required file classes (`.exe`, `.AppImage`, and/or `.dmg`)
+- Missing required file classes (`.exe`, `.AppImage`, `.dmg`, and/or `.zip`)
 - Electron version and embedded Node version if failure involves preload/electron launch
 
 ## macOS support status (v1.5)
@@ -96,6 +96,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Build and smoke checks passed (build, test:smoke, test:preload-electron)
 - Visual QA passed (no regressions found at 1400px, 1024px, narrow widths; toolbar does not overflow; all panels look professional)
 - Cleanup baseline committed as `6826393 chore: clean up ui baseline`
+- UI text normalization completed as `24fd0fb chore: normalize ui text` (replaced non-ASCII characters with ASCII equivalents across 14 files, fixed React act warnings in TasksPanel.test.tsx)
 
 **Current state:**
 
@@ -119,6 +120,8 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 10. ~~Fix handoff documentation accuracy~~ (completed - updated HEAD, date, removed "Ready for commit")
 11. ~~Reconcile release docs with workflow behavior~~ (completed - README.md now includes macOS, corrected PUBLIC_RELEASE_TOKEN behavior)
 12. ~~Commit and push docs changes~~ (completed - `635c937`)
+13. ~~Require .zip artifact in release validation~~ (completed - `59fba2a`)
+14. ~~Normalize remaining non-ASCII UI text to ASCII equivalents~~ (completed - `24fd0fb`)
 
 **Security audit findings (npm audit --audit-level=high):**
 
