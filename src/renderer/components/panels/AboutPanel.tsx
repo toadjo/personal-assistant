@@ -3,7 +3,7 @@ import { PanelHeader } from "../ui/PanelHeader";
 
 type Props = {
   version: string;
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 export function AboutPanel({ version, onClose }: Props): JSX.Element {
@@ -23,7 +23,7 @@ export function AboutPanel({ version, onClose }: Props): JSX.Element {
       <div className="aboutContent">
         <h3>PersonalAssistant {version}</h3>
         <p className="muted">
-          A Windows desktop utility for notes, reminders, calendar, and household assistant workflows.
+          A desktop utility for notes, tasks, reminders, and optional household assistant workflows.
         </p>
 
         <div className="aboutSection">

@@ -68,3 +68,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Refreshed command examples with local-first ordering: added `add task pay rent`, `what's next` (Daily Command Center), and kept HA examples conditional. Added `catch me up` command handler that surfaces the Daily Command Center. Updated `brief/today/focus/what's next` status copy to reference Daily Command Center instead of Today panel. Replaced em-dashes and ellipsis in status strings with plain ASCII punctuation. Updated `OnboardingPanel` welcome copy to lead with notes, tasks, reminders, and DCC; added Sample task button; strengthened Home Assistant optional wording. Updated `GuidedOnboardingPanel` HA step description to clarify skipping does not reduce core usefulness.
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
 - Next action: Ship v1.4.8.
+
+## 2026-05-11: Release And Platform Hardening (v1.4.9)
+
+- Files touched: `.github/workflows/release.yml`, `.github/workflows/validate-macos-package.yml`, `vite.config.ts`, `src/renderer/vite-env.d.ts`, `src/renderer/components/AssistantShell.tsx`, `src/renderer/components/panels/AboutPanel.tsx`, `src/renderer/components/panels/AboutPanel.test.tsx`
+- Changes: Added `retention-days: 1` to all workflow artifact uploads in `release.yml` (Windows, Linux, macOS) and `validate-macos-package.yml` to reduce GitHub artifact storage pressure. Replaced mojibake em-dashes in release workflow error messages with plain ASCII. Exposed `__APP_VERSION__` via Vite `define` reading from `package.json`, added renderer type declaration, and replaced hardcoded `const appVersion = "1.5.0"` in `AssistantShell` with the build-time constant. Updated `AboutPanel` description to local-first copy and made `onClose` optional to match runtime behavior. Added `AboutPanel` tests verifying version prop rendering and local-first description.
+- Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
+- Next action: Rerun v1.4.3 release workflow after GitHub quota recalculates, then run Validate macOS package workflow.

@@ -35,7 +35,7 @@ export function AssistantShell(): JSX.Element {
     summary: "All clear - nothing needs attention right now.",
     pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 }
   });
-  const appVersion = "1.5.0";
+  const appVersion = __APP_VERSION__;
 
   useEffect(() => {
     const handleShowAbout = () => setShowAbout(true);

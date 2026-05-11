@@ -73,3 +73,4 @@ jobs:
         with:
           name: macos-release-artifacts
           path: release/
+          retention-days: 1

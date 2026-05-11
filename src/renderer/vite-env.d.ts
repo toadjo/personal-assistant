@@ -10,6 +10,8 @@ interface ImportMetaEnv {
 import type { AssistantSettings, AutomationRule, Note, Reminder, Task } from "../shared/types";
 
 declare global {
+  const __APP_VERSION__: string;
+
   interface Window {
     assistantApi: {
       listNotes: (query?: string) => Promise<Note[]>;
