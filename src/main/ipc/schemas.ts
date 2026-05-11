@@ -108,10 +108,15 @@ export const ruleCreateSchema = z
   .object({
     name: z.string().trim().min(1).max(120),
     triggerConfig: z.object({ at: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid HH:MM time") }),
-    actionType: z.enum(["localReminder", "haToggle"]),
+    actionType: z.enum(["localReminder", "localTask", "haToggle"]),
     actionConfig: z
       .object({
         text: z.string().trim().min(1).max(500).optional(),
+        title: z.string().trim().min(1).max(200).optional(),
+        notes: z.string().trim().max(2000).optional(),
+        dueAt: z.string().datetime({ offset: true }).nullable().optional(),
+        priority: z.enum(["low", "normal", "high"]).optional(),
+        recurrence: z.enum(["none", "daily", "weekly", "monthly"]).optional(),
         entityId: haEntityIdSchema.optional()
       })
       .refine((value) => Object.keys(value).length > 0, "Rule action config is required"),
@@ -124,6 +129,32 @@ export const ruleCreateSchema = z
         message: "Reminder text is required for localReminder actions",
         path: ["actionConfig", "text"]
       });
+    }
+    if (value.actionType === "localTask") {
+      if (!value.actionConfig.title) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Task title is required for localTask actions",
+          path: ["actionConfig", "title"]
+        });
+      }
+      const priority = value.actionConfig.priority;
+      if (priority && priority !== "low" && priority !== "normal" && priority !== "high") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Priority must be low, normal, or high",
+          path: ["actionConfig", "priority"]
+        });
+      }
+      const recurrence = value.actionConfig.recurrence;
+      const dueAt = value.actionConfig.dueAt;
+      if (recurrence && recurrence !== "none" && (dueAt === null || dueAt === undefined)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Recurring tasks require a due date",
+          path: ["actionConfig", "dueAt"]
+        });
+      }
     }
     if (value.actionType === "haToggle" && !value.actionConfig.entityId) {
       ctx.addIssue({

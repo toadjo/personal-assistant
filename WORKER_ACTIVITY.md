@@ -47,3 +47,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Added open-panel navigation actions (tasks, reminders, notes) to DCC items; improved visual hierarchy with primary Summary/Now cards and compact Attention/Context; added mark-seen regression test and Now ordering stability test.
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
 - Next action: Continue local automation and local-first desk experience work.
+
+## 2026-05-11: Local Personal Automations (v1.4.6)
+
+- Files touched: `src/shared/types.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/services/automation.ts`, `src/main/services/automation.test.ts`, `src/main/ipc/automation/formatActionLabel.ts`, `src/main/preload.ts`, `src/renderer/components/forms/RuleForm.tsx`, `src/renderer/components/forms/RuleForm.test.tsx`, `src/renderer/components/panels/AutomationRulesPanel.tsx`
+- Changes: Extended automation action types with `localTask`. Added full task fields (title, notes, dueAt, priority, recurrence) to IPC schema and automation service. Updated `RuleForm` with local-first ordering and task creation fields. Updated `AutomationRulesPanel` copy to local-first. Added IPC schema tests, automation service tests, and RuleForm renderer tests.
+- Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
+- Next action: Ship v1.4.6.

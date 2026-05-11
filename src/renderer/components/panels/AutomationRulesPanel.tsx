@@ -28,8 +28,8 @@ export function AutomationRulesPanel({
 }: Props): JSX.Element {
   return (
     <section className="panel addOnPanel">
-      <PanelHeader icon={Timer} title="Daily rules" />
-      <p className="muted sectionIntro">Same time each day: new reminder or toggle a device.</p>
+      <PanelHeader icon={Timer} title="Personal automations" />
+      <p className="muted sectionIntro">Same time each day: create a reminder, add a task, or toggle a Home Assistant device.</p>
       <RuleForm devices={devices} onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} />
       <ul className="list">
         {isRefreshing ? (
@@ -39,7 +39,7 @@ export function AutomationRulesPanel({
             <li key={r.id} className="listRow">
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className={r.enabled ? "" : "muted"}>{r.enabled ? "" : "(paused) "}</span>
-                {r.name} · {r.triggerConfig.at} → {r.actionType === "haToggle" ? "toggle device" : "reminder"}
+                {r.name} · {r.triggerConfig.at} → {r.actionType === "haToggle" ? "toggle device" : r.actionType === "localTask" ? "create task" : "reminder"}
               </span>
               <div className="row" style={{ gap: "0.5rem", flexShrink: 0 }}>
                 <IconButton

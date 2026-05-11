@@ -57,6 +57,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
       enabled: boolean;
     } & (
       | { actionType: "localReminder"; actionConfig: { text: string } }
+      | { actionType: "localTask"; actionConfig: { title: string; notes: string; dueAt: string | null; priority: "low" | "normal" | "high"; recurrence: "none" | "daily" | "weekly" | "monthly" } }
       | { actionType: "haToggle"; actionConfig: { entityId: string } }
     )
   ) => ipcRenderer.invoke(invoke.automationRulesCreate, payload),
