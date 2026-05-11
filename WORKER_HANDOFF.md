@@ -4,17 +4,17 @@
 
 - Branch: `release/linux-appimage-audit`
 - Purpose: Linux AppImage audit and dependency security cleanup
-- HEAD commit: `e834d71` - "chore: harden release packaging"
+- HEAD commit: Check with `git log --oneline -1`
 - Working tree: Check with git status
 
 ## Recent commit history
 
 ```
+02a94b4 docs: update handoff with v1.4.7-1.4.9 progress
 e834d71 chore: harden release packaging
 1cc8d64 feat: strengthen local-first desk experience
 007d5ee fix: improve automation retry logs
-9c0bc26 feat: add local personal automations
-70db8d0 feat: add daily command center
+39c007b feat: add local task automations
 ```
 
 **Recent work summary:**
@@ -30,6 +30,7 @@ e834d71 chore: harden release packaging
 - Strengthened local-first desk experience: refreshed command examples, onboarding copy, and status strings
 - Hardened release packaging: added 1-day artifact retention, cleaned workflow mojibake, wired app version via Vite define
 - All new features include focused tests (316 tests across 47 files)
+- Preparing v1.5.0 release package with version bump and release notes
 
 ## Repo and environment
 
@@ -154,10 +155,19 @@ Validation and mirroring rules:
 
 - Required before publish: at least one `.exe`, at least one `.AppImage`, and at least one `.dmg`
 - Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`, `.zip`
-- Public release mirroring fails fast if `PUBLIC_RELEASE_TOKEN` is missing
+- Public release mirroring is skipped if `PUBLIC_RELEASE_TOKEN` is missing
 - Public mirror uses `gh release create` if release does not exist; otherwise `gh release upload --clobber`
 
-## Current feature status (v1.5)
+## Current feature status (v1.5.0)
+
+**Local-first operating layer:**
+
+- Daily Command Center is the primary desk surface.
+- Local notes, tasks, reminders, and automations are useful with no Home Assistant configured.
+- Home Assistant remains optional and visually secondary.
+- Local automations can create reminders and tasks.
+- Automation logs show action labels and retry metadata.
+- About panel version comes from package metadata through the renderer build.
 
 **Away Brief feature (new in v1.5):**
 
@@ -308,9 +318,9 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 
 **Post-v1.4.9 next priorities:**
 
-1. **macOS packaging validation** - Run `Validate macOS package` workflow after GitHub artifact quota recalculates.
-2. **Electron dependency upgrade retry** - Test latest `better-sqlite3` against Electron 42 in a branch.
-3. **Windows tray polish (v1.2.9)** - Improve tray menu, startup preferences, and in-app version visibility.
+1. **v1.5.0 release** - Push the accumulated release branch commits, tag `v1.5.0`, and monitor `Release package`.
+2. **macOS packaging validation** - Run `Validate macOS package` workflow after GitHub artifact quota recalculates.
+3. **Electron dependency upgrade retry** - Test latest `better-sqlite3` against Electron 42 in a branch.
 
 ## Known issues and blockers
 

@@ -75,3 +75,9 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Added `retention-days: 1` to all workflow artifact uploads in `release.yml` (Windows, Linux, macOS) and `validate-macos-package.yml` to reduce GitHub artifact storage pressure. Replaced mojibake em-dashes in release workflow error messages with plain ASCII. Exposed `__APP_VERSION__` via Vite `define` reading from `package.json`, added renderer type declaration, and replaced hardcoded `const appVersion = "1.5.0"` in `AssistantShell` with the build-time constant. Updated `AboutPanel` description to local-first copy and made `onClose` optional to match runtime behavior. Added `AboutPanel` tests verifying version prop rendering and local-first description.
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
 - Next action: Rerun v1.4.3 release workflow after GitHub quota recalculates, then run Validate macOS package workflow.
+
+## 2026-05-11: Prepare v1.5.0 local-first release
+
+- Files touched: `package.json`, `package-lock.json`, `README.md`, `WORKER_HANDOFF.md`, `WORKER_ACTIVITY.md`
+- Checks run: `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
+- Next action: Commit release prep, push branch, tag `v1.5.0`, and monitor release packaging after GitHub artifact quota is healthy.
