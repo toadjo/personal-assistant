@@ -41,7 +41,8 @@
     "test:preload-electron": "node scripts/run-preload-smoke.mjs",
     "test:e2e": "playwright test",
     "test:e2e:electron": "playwright test --config=playwright.electron.config.ts",
-    "handoff": "node scripts/handoff.mjs"
+    "handoff": "node scripts/handoff.mjs",
+    "activity": "node scripts/activity.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",

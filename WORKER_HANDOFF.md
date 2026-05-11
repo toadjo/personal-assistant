@@ -4,17 +4,17 @@
 
 - Branch: `release/linux-appimage-audit`
 - Purpose: Linux AppImage audit and dependency security cleanup
-- HEAD commit: `3d721fb` - "chore: enforce repository line endings"
-- Working tree: Clean (no uncommitted changes)
+- HEAD commit: `e0dc703` - "docs: add next product direction to handoff"
+- Working tree: Check with git status
 
 ## Recent commit history
 
 ```
+e0dc703 docs: add next product direction to handoff
+1cd9ff4 docs: expand worker handoff with comprehensive details
 3d721fb chore: enforce repository line endings
 20371e9 chore: tidy quality baseline cleanup
 3ea818f chore: clean up dependency upgrade tracking
-f52535e chore: document Electron 42 upgrade failure due to better-sqlite3 incompatibility
-cc691de docs: correct handoff test count and document Electron upgrade tracking
 ```
 
 **Recent work summary:**
@@ -24,6 +24,7 @@ cc691de docs: correct handoff test count and document Electron upgrade tracking
 - Documented Electron 42 upgrade failure and reverted to Electron 35
 - Corrected Away Brief feature test count (16 total: 13 helper + 3 panel)
 - Strengthened away brief and security coverage
+- Added worker activity log (`WORKER_ACTIVITY.md`) and `npm run activity` script
 
 ## Repo and environment
 
@@ -63,6 +64,7 @@ npm run dev
 - `npm run test:e2e` - Run E2E tests
 - `npm run test:e2e:electron` - Run Electron E2E tests
 - `npm run handoff` - Show worker handoff info
+- `npm run activity` - Show worker activity log and repo state
 
 ## Architecture overview
 
@@ -350,6 +352,10 @@ If the first slice gets large, stop after the Daily Command Center commit and up
 4. If `preload-ipc-literals.generated.ts` is dirty with no content diff, restore it
 5. Stage only intended changes
 6. Commit with descriptive message
+
+**Worker activity rule:**
+
+After every meaningful worker slice, add one short entry to `WORKER_ACTIVITY.md` with the goal, files touched, checks run, and next action. Do not include secrets, tokens, local absolute machine paths, or personal data.
 
 **Commit message format:**
 

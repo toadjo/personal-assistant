@@ -56,4 +56,7 @@ log.split("\n").forEach((line) => console.log("  ", line));
 console.log("\nHandoff file:");
 console.log("  ", join(repoRoot, "WORKER_HANDOFF.md"));
 
+console.log("\nActivity log:");
+console.log("  ", join(repoRoot, "WORKER_ACTIVITY.md"));
+
 console.log("\n=== End Handoff Info ===");
