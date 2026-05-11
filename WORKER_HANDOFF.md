@@ -4,17 +4,17 @@
 
 - Branch: `release/linux-appimage-audit`
 - Purpose: Linux AppImage audit and dependency security cleanup
-- HEAD commit: `e0dc703` - "docs: add next product direction to handoff"
+- HEAD commit: `e834d71` - "chore: harden release packaging"
 - Working tree: Check with git status
 
 ## Recent commit history
 
 ```
-e0dc703 docs: add next product direction to handoff
-1cd9ff4 docs: expand worker handoff with comprehensive details
-3d721fb chore: enforce repository line endings
-20371e9 chore: tidy quality baseline cleanup
-3ea818f chore: clean up dependency upgrade tracking
+e834d71 chore: harden release packaging
+1cc8d64 feat: strengthen local-first desk experience
+007d5ee fix: improve automation retry logs
+9c0bc26 feat: add local personal automations
+70db8d0 feat: add daily command center
 ```
 
 **Recent work summary:**
@@ -22,9 +22,14 @@ e0dc703 docs: add next product direction to handoff
 - Added `.gitattributes` to enforce LF line endings across the repository
 - Cleaned up quality baseline with formatting improvements (22 files)
 - Documented Electron 42 upgrade failure and reverted to Electron 35
-- Corrected Away Brief feature test count (16 total: 13 helper + 3 panel)
-- Strengthened away brief and security coverage
 - Added worker activity log (`WORKER_ACTIVITY.md`) and `npm run activity` script
+- Built Daily Command Center combining Focus Brief, Away Brief, tasks, reminders, and pinned notes
+- Added local personal automations (`localTask`) with full task fields and validation
+- Fixed automation retry metadata to preserve `attemptsUsed` and `retryCount` in logs
+- Improved Automation Logs Panel with action labels, ASCII separators, and retry summary
+- Strengthened local-first desk experience: refreshed command examples, onboarding copy, and status strings
+- Hardened release packaging: added 1-day artifact retention, cleaned workflow mojibake, wired app version via Vite define
+- All new features include focused tests (316 tests across 47 files)
 
 ## Repo and environment
 
@@ -106,7 +111,7 @@ npm run dev
 
 **Unit tests (Vitest):**
 
-- 232 tests passing across 39 test files
+- 316 tests passing across 47 test files
 - Coverage areas:
   - IPC handlers and payload validation
   - Services (notes, reminders, tasks, home assistant, automation)
@@ -280,48 +285,32 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 
 **Goal:** Make Personal Assistant feel like a local-first personal operating layer, not a Home Assistant shell with a better UI.
 
-**Priority 1: Daily Command Center**
+**Priority 1: Daily Command Center (DONE)**
 
-- Build this first.
-- Replace the current top-of-desk brief stack with a new `DailyCommandCenterPanel`.
-- Combine Focus Brief priorities, Away Brief changes, overdue and due-today tasks, pending reminders, pinned notes, and a small "Now" queue with the top 3 actions.
-- Add a derived helper, likely `src/renderer/lib/derived/daily-command-center.ts`, that returns stable typed sections: `nowItems`, `attentionItems`, `contextItems`, `summary`, and `pressure`.
-- Reuse existing Focus Brief and Away Brief derived helpers where possible instead of duplicating date logic.
-- Add quick actions only for already-supported mutations: complete task, complete reminder, snooze reminder 10 minutes, mark Away Brief as seen, and open relevant panel/filter where existing state supports it.
-- Keep Home Assistant optional and visually secondary. The Command Center must be useful with no Home Assistant configured.
-- Fix touched mojibake user-facing strings such as `β€”`, replacing them with plain punctuation that follows repo style.
+- ~~Build this first.~~ Done in `70db8d0`.
+- ~~Replace the current top-of-desk brief stack with a new `DailyCommandCenterPanel`.~~ Done.
+- ~~Combine Focus Brief priorities, Away Brief changes, overdue and due-today tasks, pending reminders, pinned notes, and a small "Now" queue with the top 3 actions.~~ Done.
+- ~~Add a derived helper that returns stable typed sections.~~ Done in `src/renderer/lib/derived/daily-command-center.ts`.
+- ~~Add quick actions for already-supported mutations.~~ Done.
+- ~~Keep Home Assistant optional and visually secondary.~~ Done.
 
-**Priority 2: Worker Sync Log**
+**Priority 2: Worker Sync Log (DONE)**
 
-- Add a repo-local human handoff log for cross-computer continuity, separate from the large `WORKER_HANDOFF.md`.
-- Use a concise file name such as `WORKER_ACTIVITY.md`.
-- Add an npm script, for example `npm run activity`, that prints branch, HEAD, dirty status, latest activity entries, and latest commits.
-- Update `npm run handoff` to mention the activity log path.
-- Document a simple rule: every meaningful worker slice adds one short activity entry with goal, files touched, checks run, and next action.
-- Do not put secrets, local absolute machine paths, tokens, or personal data in the activity log.
+- ~~Add a repo-local human handoff log.~~ Done: `WORKER_ACTIVITY.md` exists.
+- ~~Add an npm script.~~ Done: `npm run activity`.
+- ~~Document the activity entry rule.~~ Done.
 
-**Priority 3: Personal Automations**
+**Priority 3: Personal Automations (DONE)**
 
-- Add one local-first automation capability that does not depend on Home Assistant.
-- Start with the lowest-risk behavior: rules can create a reminder or task from local app state.
-- Keep existing automation storage and IPC patterns. Do not add a new database subsystem unless the current automation schema cannot represent the behavior.
-- Expose this in the existing automation UI with clear wording that it is local automation, not Home Assistant.
-- Add validation so malformed automation configs cannot cross IPC boundaries.
+- ~~Add one local-first automation capability.~~ Done in `9c0bc26`: `localTask` with full task fields.
+- ~~Expose in existing automation UI with clear wording.~~ Done.
+- ~~Add validation so malformed configs cannot cross IPC boundaries.~~ Done.
 
-**Required test coverage for the product direction:**
+**Post-v1.4.9 next priorities:**
 
-- Daily Command Center derived helper: empty state, overdue first, due-today before upcoming, Away Brief items included only when present, done tasks/reminders excluded, and no Home Assistant configured.
-- Daily Command Center panel: renders summary and top actions, complete task calls the task handler, complete reminder calls the reminder handler, snooze reminder calls the snooze handler, and mark seen clears Away Brief state.
-- Worker Sync Log: script prints branch, HEAD, dirty files, recent commits, and activity path without mutating repo state.
-- Local automations: schema rejects invalid local action configs, valid local action config executes through the existing automation path, and failed local action logs a clear structured error.
-
-**Suggested commit sequence:**
-
-1. `feat: add daily command center`
-2. `chore: add worker activity handoff log`
-3. `feat: add local personal automations`
-
-If the first slice gets large, stop after the Daily Command Center commit and update this handoff with exact remaining work.
+1. **macOS packaging validation** - Run `Validate macOS package` workflow after GitHub artifact quota recalculates.
+2. **Electron dependency upgrade retry** - Test latest `better-sqlite3` against Electron 42 in a branch.
+3. **Windows tray polish (v1.2.9)** - Improve tray menu, startup preferences, and in-app version visibility.
 
 ## Known issues and blockers
 
