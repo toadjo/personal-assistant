@@ -1,9 +1,10 @@
 import type { DailyCommandCenter } from "../../lib/derived/daily-command-center";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
-import { Command, AlertCircle, Clock, Pin, Calendar, Check, Clock as Snooze, History, X } from "lucide-react";
+import { Command, AlertCircle, Clock, Pin, Calendar, Check, Clock as Snooze, History, X, ExternalLink } from "lucide-react";
 import type { BriefItem } from "../../types";
 import type { AwayBriefItem } from "../../types";
+import type { TaskFilter, ReminderFilter } from "../../types";
 import "./DailyCommandCenterPanel.css";
 
 type Props = {
@@ -12,6 +13,9 @@ type Props = {
   onCompleteReminder: (id: string) => void;
   onSnoozeReminder: (id: string) => void;
   onMarkSeen: () => void;
+  onOpenTasks?: (filter: TaskFilter) => void;
+  onOpenReminders?: (filter: ReminderFilter) => void;
+  onOpenNotes?: () => void;
 };
 
 function getIconForUrgency(urgency: BriefItem["urgency"]) {
@@ -81,12 +85,19 @@ function formatChangedAt(isoString: string): string {
   return date.toLocaleDateString();
 }
 
+function getTaskFilterForUrgency(urgency: BriefItem["urgency"]): TaskFilter {
+  return urgency === "overdue" ? "overdue" : "open";
+}
+
 export function DailyCommandCenterPanel({
   data,
   onCompleteTask,
   onCompleteReminder,
   onSnoozeReminder,
-  onMarkSeen
+  onMarkSeen,
+  onOpenTasks,
+  onOpenReminders,
+  onOpenNotes
 }: Props): JSX.Element {
   const { nowItems, attentionItems, contextItems, awayItems, summary, pressure } = data;
 
@@ -134,13 +145,24 @@ export function DailyCommandCenterPanel({
                     </div>
                     <div className="dccItemActions">
                       {item.action === "complete-task" && (
-                        <IconButton
-                          icon={Check}
-                          size={16}
-                          onClick={() => onCompleteTask(item.sourceId)}
-                          label={`Complete task: ${item.label}`}
-                          className="dccActionButton"
-                        />
+                        <>
+                          <IconButton
+                            icon={Check}
+                            size={16}
+                            onClick={() => onCompleteTask(item.sourceId)}
+                            label={`Complete task: ${item.label}`}
+                            className="dccActionButton"
+                          />
+                          {onOpenTasks && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
+                              label={`Open tasks: ${item.label}`}
+                              className="dccActionButton"
+                            />
+                          )}
+                        </>
                       )}
                       {item.action === "complete-reminder" && (
                         <>
@@ -158,6 +180,15 @@ export function DailyCommandCenterPanel({
                             label={`Snooze reminder ten minutes: ${item.label}`}
                             className="dccActionButton"
                           />
+                          {onOpenReminders && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenReminders("pending")}
+                              label={`Open reminders: ${item.label}`}
+                              className="dccActionButton"
+                            />
+                          )}
                         </>
                       )}
                     </div>
@@ -218,13 +249,24 @@ export function DailyCommandCenterPanel({
                     </div>
                     <div className="dccItemActions">
                       {item.kind === "task" && (
-                        <IconButton
-                          icon={Check}
-                          size={16}
-                          onClick={() => onCompleteTask(item.sourceId)}
-                          label={`Complete task: ${item.label}`}
-                          className="dccActionButton"
-                        />
+                        <>
+                          <IconButton
+                            icon={Check}
+                            size={16}
+                            onClick={() => onCompleteTask(item.sourceId)}
+                            label={`Complete task: ${item.label}`}
+                            className="dccActionButton"
+                          />
+                          {onOpenTasks && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
+                              label={`Open tasks: ${item.label}`}
+                              className="dccActionButton"
+                            />
+                          )}
+                        </>
                       )}
                       {(item.kind === "reminder" || item.kind === "agenda") && (
                         <>
@@ -242,7 +284,25 @@ export function DailyCommandCenterPanel({
                             label={`Snooze reminder ten minutes: ${item.label}`}
                             className="dccActionButton"
                           />
+                          {onOpenReminders && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenReminders("pending")}
+                              label={`Open reminders: ${item.label}`}
+                              className="dccActionButton"
+                            />
+                          )}
                         </>
+                      )}
+                      {item.kind === "note" && onOpenNotes && (
+                        <IconButton
+                          icon={ExternalLink}
+                          size={16}
+                          onClick={() => onOpenNotes()}
+                          label={`Open notes: ${item.label}`}
+                          className="dccActionButton"
+                        />
                       )}
                     </div>
                   </li>
@@ -268,6 +328,26 @@ export function DailyCommandCenterPanel({
                       <div className="dccItemMeta">
                         {getUrgencyLabel(item.urgency)} / {item.kind}
                       </div>
+                    </div>
+                    <div className="dccItemActions">
+                      {item.kind === "note" && onOpenNotes && (
+                        <IconButton
+                          icon={ExternalLink}
+                          size={16}
+                          onClick={() => onOpenNotes()}
+                          label={`Open notes: ${item.label}`}
+                          className="dccActionButton"
+                        />
+                      )}
+                      {item.kind === "reminder" && onOpenReminders && (
+                        <IconButton
+                          icon={ExternalLink}
+                          size={16}
+                          onClick={() => onOpenReminders("pending")}
+                          label={`Open reminders: ${item.label}`}
+                          className="dccActionButton"
+                        />
+                      )}
                     </div>
                   </li>
                 );

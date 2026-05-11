@@ -211,6 +211,9 @@ export function AssistantShell(): JSX.Element {
             onCompleteReminder={reminders.completeById}
             onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
             onMarkSeen={handleMarkSeen}
+            onOpenTasks={tasks.setFilter}
+            onOpenReminders={reminders.setFilter}
+            onOpenNotes={() => data.setQuery("")}
           />
           <div className="todayStrip">
             <CalendarPanel

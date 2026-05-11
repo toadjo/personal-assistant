@@ -121,6 +121,23 @@ describe("deriveDailyCommandCenter", () => {
     expect(result.nowItems).toHaveLength(3);
   });
 
+  it("keeps stable now ordering: overdue before due-today before upcoming", () => {
+    const upcoming = makeBriefItem({ urgency: "upcoming", label: "Upcoming", sourceId: "u1" });
+    const today = makeBriefItem({ urgency: "today", label: "Today", sourceId: "t1" });
+    const overdue1 = makeBriefItem({ urgency: "overdue", label: "Overdue A", sourceId: "o1" });
+    const overdue2 = makeBriefItem({ urgency: "overdue", label: "Overdue B", sourceId: "o2" });
+
+    const result = deriveDailyCommandCenter({
+      focusBrief: [upcoming, today, overdue1, overdue2],
+      awayBrief: []
+    });
+
+    expect(result.nowItems).toHaveLength(3);
+    expect(result.nowItems[0]?.sourceId).toBe("o1");
+    expect(result.nowItems[1]?.sourceId).toBe("o2");
+    expect(result.nowItems[2]?.sourceId).toBe("t1");
+  });
+
   it("includes away brief items in the returned shape", () => {
     const awayItem = makeAwayItem({ label: "New task", reason: "new" });
 

@@ -297,4 +297,94 @@ describe("DailyCommandCenterPanel", () => {
     expect(screen.getByText("Pinned note")).toBeInTheDocument();
     expect(screen.getByText("Upcoming reminder")).toBeInTheDocument();
   });
+
+  it("calls onOpenTasks when open task button is clicked", () => {
+    const onOpenTasks = vi.fn();
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "task",
+          label: "Overdue task",
+          urgency: "overdue",
+          sourceId: "t1",
+          action: "complete-task"
+        }
+      ],
+      attentionItems: [
+        { kind: "task", label: "Overdue task", urgency: "overdue", sourceId: "t1" }
+      ],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenTasks={onOpenTasks}
+      />
+    );
+
+    screen.getAllByLabelText(/Open tasks: Overdue task/)[0]!.click();
+    expect(onOpenTasks).toHaveBeenCalledWith("overdue");
+  });
+
+  it("calls onOpenReminders when open reminder button is clicked", () => {
+    const onOpenReminders = vi.fn();
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "reminder",
+          label: "Today reminder",
+          urgency: "today",
+          sourceId: "r1",
+          action: "complete-reminder"
+        }
+      ],
+      attentionItems: [
+        { kind: "reminder", label: "Today reminder", urgency: "today", sourceId: "r1" }
+      ],
+      summary: "Now: 1 due today."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenReminders={onOpenReminders}
+      />
+    );
+
+    screen.getAllByLabelText(/Open reminders: Today reminder/)[0]!.click();
+    expect(onOpenReminders).toHaveBeenCalledWith("pending");
+  });
+
+  it("calls onOpenNotes when open notes button is clicked on a context note", () => {
+    const onOpenNotes = vi.fn();
+    const data = makeData({
+      contextItems: [
+        { kind: "note", label: "Pinned note", urgency: "context", sourceId: "n1" }
+      ],
+      summary: "Now: 1 context."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenNotes={onOpenNotes}
+      />
+    );
+
+    screen.getByLabelText(/Open notes: Pinned note/).click();
+    expect(onOpenNotes).toHaveBeenCalledTimes(1);
+  });
 });

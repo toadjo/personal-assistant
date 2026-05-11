@@ -40,3 +40,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Files touched: `src/renderer/lib/derived/daily-command-center.ts`, `src/renderer/lib/derived/daily-command-center.test.ts`, `src/renderer/components/panels/DailyCommandCenterPanel.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.test.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.css`, `src/renderer/components/AssistantShell.tsx`
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
 - Next action: Verify Daily Command Center renders as primary desk surface.
+
+## 2026-05-11: Daily Command Center Polish (v1.4.5)
+
+- Files touched: `src/renderer/components/panels/DailyCommandCenterPanel.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.test.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.css`, `src/renderer/components/AssistantShell.tsx`, `src/renderer/lib/derived/daily-command-center.test.ts`
+- Changes: Added open-panel navigation actions (tasks, reminders, notes) to DCC items; improved visual hierarchy with primary Summary/Now cards and compact Attention/Context; added mark-seen regression test and Now ordering stability test.
+- Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
+- Next action: Continue local automation and local-first desk experience work.
