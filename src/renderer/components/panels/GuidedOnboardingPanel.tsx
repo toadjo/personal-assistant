@@ -41,7 +41,7 @@ export function GuidedOnboardingPanel({
     },
     homeAssistant: {
       title: "Connect Home Assistant (optional)",
-      description: "Connect to control your smart home devices. You can skip this and add it later anytime.",
+      description: "Connect to control your smart home devices. This step is optional - skipping it does not reduce the app's core usefulness.",
       action: "Connect Home Assistant",
       instruction: "Open the Household window to connect your Home Assistant instance, or skip for now."
     }

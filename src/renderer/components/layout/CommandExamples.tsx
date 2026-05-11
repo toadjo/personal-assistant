@@ -12,8 +12,9 @@ type Props = {
 
 const BASE_EXAMPLES = [
   { command: "new note meeting with team", label: "Create a note" },
+  { command: "add task pay rent", label: "Add a task" },
   { command: "remind standup in 30m", label: "Set a reminder" },
-  { command: "list reminders", label: "Show reminders" },
+  { command: "what's next", label: "Daily Command Center" },
   { command: "show notes", label: "Show all notes" }
 ];
 

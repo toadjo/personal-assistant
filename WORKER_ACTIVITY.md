@@ -61,3 +61,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Fixed `withRetry` to preserve `attemptsUsed` and `retryCount` in thrown `AutomationRetryError` so failed logs record correct retry metadata. Tightened `validateLocalTaskConfig` to reject invalid priority and recurrence instead of silently defaulting. Updated `isInvalidAutomationStoredConfigError` to include `localTask` validation messages. Improved `AutomationLogsPanel` with action labels, plain ASCII separators, and concise error formatting. Updated `ExecutionLogRow` renderer type and `useAssistantData` to pass through `ruleName` and `actionLabel`.
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
 - Next action: Continue reliability work or move toward v1.2.7 UX improvements.
+
+## 2026-05-11: Local-First Desk Experience (v1.4.8)
+
+- Files touched: `src/renderer/components/layout/CommandExamples.tsx`, `src/renderer/components/layout/CommandExamples.test.tsx`, `src/renderer/command/executeAssistantCommand.ts`, `src/renderer/command/executeAssistantCommand.test.ts`, `src/renderer/components/panels/OnboardingPanel.tsx`, `src/renderer/components/panels/OnboardingPanel.test.tsx`, `src/renderer/components/panels/GuidedOnboardingPanel.tsx`
+- Changes: Refreshed command examples with local-first ordering: added `add task pay rent`, `what's next` (Daily Command Center), and kept HA examples conditional. Added `catch me up` command handler that surfaces the Daily Command Center. Updated `brief/today/focus/what's next` status copy to reference Daily Command Center instead of Today panel. Replaced em-dashes and ellipsis in status strings with plain ASCII punctuation. Updated `OnboardingPanel` welcome copy to lead with notes, tasks, reminders, and DCC; added Sample task button; strengthened Home Assistant optional wording. Updated `GuidedOnboardingPanel` HA step description to clarify skipping does not reduce core usefulness.
+- Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
+- Next action: Ship v1.4.8.

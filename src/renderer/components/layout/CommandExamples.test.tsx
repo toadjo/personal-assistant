@@ -9,8 +9,9 @@ describe("CommandExamples (v1.2.7)", () => {
 
     expect(screen.getByText("Try these commands:")).toBeDefined();
     expect(screen.getByText("Create a note")).toBeDefined();
+    expect(screen.getByText("Add a task")).toBeDefined();
     expect(screen.getByText("Set a reminder")).toBeDefined();
-    expect(screen.getByText("Show reminders")).toBeDefined();
+    expect(screen.getByText("Daily Command Center")).toBeDefined();
     expect(screen.getByText("Show all notes")).toBeDefined();
 
     // HA-specific examples should not be shown
@@ -25,8 +26,9 @@ describe("CommandExamples (v1.2.7)", () => {
 
     expect(screen.getByText("Try these commands:")).toBeDefined();
     expect(screen.getByText("Create a note")).toBeDefined();
+    expect(screen.getByText("Add a task")).toBeDefined();
     expect(screen.getByText("Set a reminder")).toBeDefined();
-    expect(screen.getByText("Show reminders")).toBeDefined();
+    expect(screen.getByText("Daily Command Center")).toBeDefined();
     expect(screen.getByText("Show all notes")).toBeDefined();
 
     // HA-specific examples should be shown
@@ -43,5 +45,25 @@ describe("CommandExamples (v1.2.7)", () => {
     button.click();
 
     expect(onRunPreset).toHaveBeenCalledWith("new note meeting with team");
+  });
+
+  it("calls onRunPreset for task example", () => {
+    const onRunPreset = vi.fn();
+    render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
+
+    const button = screen.getByText("Add a task");
+    button.click();
+
+    expect(onRunPreset).toHaveBeenCalledWith("add task pay rent");
+  });
+
+  it("calls onRunPreset for Daily Command Center example", () => {
+    const onRunPreset = vi.fn();
+    render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
+
+    const button = screen.getByText("Daily Command Center");
+    button.click();
+
+    expect(onRunPreset).toHaveBeenCalledWith("what's next");
   });
 });
