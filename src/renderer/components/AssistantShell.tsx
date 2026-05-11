@@ -1,5 +1,5 @@
 import { Home, StickyNote, Bell, AlertTriangle, ListTodo } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
@@ -11,20 +11,30 @@ import { NotesPanel } from "./panels/NotesPanel";
 import { RemindersPanel } from "./panels/RemindersPanel";
 import { AboutPanel } from "./panels/AboutPanel";
 import { TasksPanel } from "./panels/TasksPanel";
-import { TodayDashboardPanel } from "./panels/TodayDashboardPanel";
-import { AwayBriefPanel } from "./panels/AwayBriefPanel";
+import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
+import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
+import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
-import type { AwayBriefItem } from "../types";
+import type { DailyCommandCenter } from "../lib/derived/daily-command-center";
+import type { BriefItem } from "../types";
 
 export function AssistantShell(): JSX.Element {
   const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
-  const [awayBriefItems, setAwayBriefItems] = useState<AwayBriefItem[]>([]);
+  const focusBriefRef = useRef<BriefItem[]>([]);
+  const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
+    nowItems: [],
+    attentionItems: [],
+    contextItems: [],
+    awayItems: [],
+    summary: "All clear - nothing needs attention right now.",
+    pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 }
+  });
   const appVersion = "1.5.0";
 
   useEffect(() => {
@@ -35,18 +45,27 @@ export function AssistantShell(): JSX.Element {
     };
   }, []);
 
-  // Compute away brief items when data changes
+  // Compute daily command center when data changes
   useEffect(() => {
     const lastSeenAt = getLastSeenAt();
-    const items = deriveAwayBrief({
+    const focusBrief = deriveFocusBrief({
+      overdueTasks: tasks.overdueOpen,
+      dueTodayTasks: tasks.dueTodayOpen,
+      upcomingReminders: reminders.pending,
+      selectedDayAgenda: calendar.selectedDayAgenda,
+      pinnedNotes: data.notes.filter((note) => note.pinned)
+    });
+    const awayBrief = deriveAwayBrief({
       tasks: data.tasks,
       reminders: data.reminders,
       notes: data.notes,
       lastSeenAt,
       now: new Date()
     });
-    setAwayBriefItems(items);
-  }, [data.tasks, data.reminders, data.notes]);
+    focusBriefRef.current = focusBrief;
+    const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief });
+    setDailyCommandCenter(dcc);
+  }, [data.tasks, data.reminders, data.notes, tasks.overdueOpen, tasks.dueTodayOpen, reminders.pending, calendar.selectedDayAgenda]);
 
   // Update last-seen timestamp after initial data refresh and desk render
   useEffect(() => {
@@ -57,7 +76,12 @@ export function AssistantShell(): JSX.Element {
 
   const handleMarkSeen = () => {
     setLastSeenAt(new Date().toISOString());
-    setAwayBriefItems([]);
+    setDailyCommandCenter(
+      deriveDailyCommandCenter({
+        focusBrief: focusBriefRef.current,
+        awayBrief: []
+      })
+    );
   };
 
   return (
@@ -181,16 +205,12 @@ export function AssistantShell(): JSX.Element {
 
       <div className="contentGrid">
         <div className="contentMain">
-          <AwayBriefPanel items={awayBriefItems} onMarkSeen={handleMarkSeen} />
-          <TodayDashboardPanel
-            overdueTasks={tasks.overdueOpen}
-            dueTodayTasks={tasks.dueTodayOpen}
-            upcomingReminders={reminders.pending}
-            selectedDayAgenda={calendar.selectedDayAgenda}
-            pinnedNotes={data.notes.filter((note) => note.pinned)}
+          <DailyCommandCenterPanel
+            data={dailyCommandCenter}
             onCompleteTask={tasks.completeById}
             onCompleteReminder={reminders.completeById}
-            onSnoozeReminder={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+            onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+            onMarkSeen={handleMarkSeen}
           />
           <div className="todayStrip">
             <CalendarPanel

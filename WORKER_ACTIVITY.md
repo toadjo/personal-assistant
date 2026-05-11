@@ -34,3 +34,9 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Files touched: `package.json`, `package-lock.json`, `WORKER_ACTIVITY.md`
 - Checks run: `git status --short --branch`, `npm test -- scripts/activity.test.mjs`, `npm run activity`
 - Next action: Monitor GitHub Actions "Release package" workflow for v1.4.3.
+
+## 2026-05-11: Daily Command Center Foundation (v1.4.4)
+
+- Files touched: `src/renderer/lib/derived/daily-command-center.ts`, `src/renderer/lib/derived/daily-command-center.test.ts`, `src/renderer/components/panels/DailyCommandCenterPanel.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.test.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.css`, `src/renderer/components/AssistantShell.tsx`
+- Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
+- Next action: Verify Daily Command Center renders as primary desk surface.

@@ -1,0 +1,116 @@
+.dccGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+.dccCard {
+  background: var(--card-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.dccCard h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.dccSummary p {
+  margin: 0.25rem 0;
+  font-size: 0.9375rem;
+}
+
+.dccPressure {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  margin-top: 0.25rem;
+}
+
+.dccList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dccListItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--item-bg, rgba(255, 255, 255, 0.03));
+}
+
+.dccListItemIcon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+}
+
+.dccListItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.dccItemLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, rgba(255, 255, 255, 0.9));
+}
+
+.dccItemLabelOverdue {
+  color: var(--color-attention, #f59e0b);
+}
+
+.dccItemDetail {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  margin-top: 0.125rem;
+}
+
+.dccItemMeta {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  margin-top: 0.25rem;
+}
+
+.dccItemActions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.dccActionButton {
+  padding: 0.25rem;
+}
+
+.dccAwayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.dccAwayHeader h3 {
+  margin: 0;
+}
+
+.dccAwayDismiss {
+  padding: 0.25rem;
+}
+
+.dccEmptyState {
+  font-size: 0.875rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  margin: 0;
+  text-align: center;
+  padding: 1rem 0;
+}
