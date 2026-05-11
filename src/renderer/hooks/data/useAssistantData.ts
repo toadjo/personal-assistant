@@ -87,7 +87,7 @@ export function useAssistantData(setError: SetError) {
         api.listExecutionLogs(),
         api.listRules()
       ]);
-      // Transform log rows to match shared ExecutionLog type
+      // Transform log rows to match ExecutionLogRow type
       const transformedLogs: ExecutionLog[] = logRows.map(
         (l: {
           id: string;
@@ -98,8 +98,8 @@ export function useAssistantData(setError: SetError) {
           error?: string;
           attemptCount: number;
           retryCount: number;
-          ruleName: string;
-          actionLabel: string;
+          ruleName?: string;
+          actionLabel?: string;
         }) => ({
           id: l.id,
           ruleId: l.ruleId,
@@ -108,7 +108,9 @@ export function useAssistantData(setError: SetError) {
           endedAt: l.endedAt,
           error: l.error,
           attemptCount: l.attemptCount,
-          retryCount: l.retryCount
+          retryCount: l.retryCount,
+          ruleName: l.ruleName,
+          actionLabel: l.actionLabel
         })
       );
       setFromFullRefresh({

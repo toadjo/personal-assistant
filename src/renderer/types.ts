@@ -9,7 +9,10 @@ export type HaDeviceRow = {
   attributes?: Record<string, unknown>;
 };
 
-export type ExecutionLogRow = ExecutionLog;
+export type ExecutionLogRow = ExecutionLog & {
+  ruleName?: string;
+  actionLabel?: string;
+};
 
 export type ReminderFilter = "all" | "pending" | "done";
 export type TaskFilter = "all" | "open" | "done" | "overdue";

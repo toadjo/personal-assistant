@@ -305,24 +305,25 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
       }
     }
   }
-  const attemptsUsed = safeAttempts;
-  const _retryCount = Math.max(0, attemptsUsed - 1);
-
   // Classify the final error for structured reporting
   const decoded = decodeAssistantInvokeFailure(lastError);
   if (decoded && decoded.code === "ACTION_TIMEOUT") {
-    // Already a structured timeout error, re-throw as-is
+    // Already a structured timeout error, re-throw as-is (timeout is terminal, retry meta is 1/0)
     throw lastError;
   }
 
-  // For non-timeout failures after retries, throw ACTION_FAILED
+  // For non-timeout failures after retries, throw ACTION_FAILED with preserved retry metadata
+  const retryMeta = { attemptsUsed: safeAttempts, retryCount: Math.max(0, safeAttempts - 1) };
   const isRetryable = isTransientError(lastError);
-  throw encodeAssistantInvokeFailure({
-    domain: "automation",
-    code: "ACTION_FAILED",
-    message: `Automation action failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`,
-    retryable: isRetryable
-  });
+  throw new AutomationRetryError(
+    encodeAssistantInvokeFailure({
+      domain: "automation",
+      code: "ACTION_FAILED",
+      message: `Automation action failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`,
+      retryable: isRetryable
+    }).message,
+    retryMeta
+  );
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -421,10 +422,14 @@ function isInvalidAutomationStoredConfigError(error: unknown): boolean {
   return (
     /^Invalid automation (triggerConfig|actionConfig):/.test(m) ||
     /Automation trigger time must use HH:MM format\./.test(m) ||
-    /Automation action type must be 'localReminder' or 'haToggle'\./.test(m) ||
+    /Automation action type must be 'localReminder', 'localTask', or 'haToggle'\./.test(m) ||
     /Automation action config must be an object\./.test(m) ||
     /localReminder action requires non-empty text\./.test(m) ||
-    /haToggle action requires a valid entityId\./.test(m)
+    /haToggle action requires a valid entityId\./.test(m) ||
+    /localTask action requires a non-empty title\./.test(m) ||
+    /localTask action requires a valid priority/.test(m) ||
+    /localTask action requires a valid recurrence/.test(m) ||
+    /Recurring localTask actions require dueAt\./.test(m)
   );
 }
 
@@ -503,8 +508,14 @@ function validateLocalTaskConfig(actionConfig: unknown): { title: string; notes:
   if (!title) throw new Error("localTask action requires a non-empty title.");
   const notes = typeof o.notes === "string" ? o.notes : "";
   const dueAt = typeof o.dueAt === "string" && o.dueAt ? o.dueAt : null;
-  const priority = o.priority === "low" || o.priority === "normal" || o.priority === "high" ? o.priority : "normal";
-  const recurrence = o.recurrence === "daily" || o.recurrence === "weekly" || o.recurrence === "monthly" ? o.recurrence : "none";
+  if (!(o.priority === "low" || o.priority === "normal" || o.priority === "high")) {
+    throw new Error("localTask action requires a valid priority (low, normal, or high).");
+  }
+  const priority = o.priority;
+  if (!(o.recurrence === "none" || o.recurrence === "daily" || o.recurrence === "weekly" || o.recurrence === "monthly")) {
+    throw new Error("localTask action requires a valid recurrence (none, daily, weekly, or monthly).");
+  }
+  const recurrence = o.recurrence;
   if (recurrence !== "none" && !dueAt) {
     throw new Error("Recurring localTask actions require dueAt.");
   }

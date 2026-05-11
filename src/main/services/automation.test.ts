@@ -301,6 +301,60 @@ describe("automation service", () => {
     }
   });
 
+  it("listRules throws structured INVALID_STORED_CONFIG for invalid stored localTask priority", () => {
+    testDb
+      .prepare(
+        "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run(
+        "00000000-0000-4000-8000-000000000003",
+        "Bad Priority",
+        "time",
+        '{"at":"10:00"}',
+        "localTask",
+        '{"title":"Task","notes":"","dueAt":null,"priority":"urgent","recurrence":"none"}',
+        1
+      );
+
+    try {
+      listRules();
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "automation",
+        code: "INVALID_STORED_CONFIG",
+        retryable: false
+      });
+    }
+  });
+
+  it("listRules throws structured INVALID_STORED_CONFIG for invalid stored localTask recurrence", () => {
+    testDb
+      .prepare(
+        "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run(
+        "00000000-0000-4000-8000-000000000004",
+        "Bad Recurrence",
+        "time",
+        '{"at":"10:00"}',
+        "localTask",
+        '{"title":"Task","notes":"","dueAt":null,"priority":"normal","recurrence":"yearly"}',
+        1
+      );
+
+    try {
+      listRules();
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "automation",
+        code: "INVALID_STORED_CONFIG",
+        retryable: false
+      });
+    }
+  });
+
   describe("ACTION_TIMEOUT classification", () => {
     it("classifies timeout as ACTION_TIMEOUT with retryable=true", async () => {
       // Set test override to simulate timeout (exceeds AUTOMATION_ACTION_TIMEOUT_MS of 10_000)
@@ -505,10 +559,8 @@ describe("automation service", () => {
       const failedLog = logs.find((l) => l.status === "failed");
       expect(failedLog).toBeDefined();
       if (failedLog) {
-        // Current implementation: retry metadata is lost on error, defaults to 1 attempt, 0 retries
-        // This is a known limitation - withRetry returns metadata on success but not on failure
-        expect(failedLog.attemptCount).toBe(1);
-        expect(failedLog.retryCount).toBe(0);
+        expect(failedLog.attemptCount).toBe(3);
+        expect(failedLog.retryCount).toBe(2);
       }
     });
 
