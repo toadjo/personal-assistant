@@ -4,13 +4,11 @@ import {
   Palette,
   RotateCcw,
   Copy,
-  Save,
   Download,
   Upload,
   AlertTriangle
 } from "lucide-react";
 import {
-  TOKEN_CSS_VAR,
   THEME_PRESETS,
   type ThemeMode,
   type ThemeTokenKey,
@@ -18,6 +16,7 @@ import {
   resolveTokens
 } from "../../lib/theme/tokens";
 import { isContrastSafe } from "../../lib/theme/contrast";
+import type { DisplayPreferences, Density, PanelRadius } from "../../lib/display/types";
 import { IconButton } from "../ui/IconButton";
 
 const TOKEN_LABELS: Record<ThemeTokenKey, string> = {
@@ -63,6 +62,14 @@ const TOKEN_GROUPS: { label: string; keys: ThemeTokenKey[] }[] = [
 type Props = {
   theme: ThemeMode;
   custom: CustomTheme | undefined;
+  display: DisplayPreferences & {
+    setDensity: (density: Density) => void;
+    setPanelRadius: (radius: PanelRadius) => void;
+    setShadows: (value: boolean) => void;
+    setGlassBlur: (value: boolean) => void;
+    setDccShowAllSecondary: (value: boolean) => void;
+    resetDisplay: () => void;
+  };
   onPresetChange: (preset: ThemeMode) => void;
   onOverride: (key: ThemeTokenKey, value: string | undefined) => void;
   onReset: (preset?: ThemeMode) => void;
@@ -88,6 +95,7 @@ function hexFromColorInput(value: string): string {
 export function AppearancePanel({
   theme,
   custom,
+  display,
   onPresetChange,
   onOverride,
   onReset,
@@ -198,9 +206,68 @@ export function AppearancePanel({
         </div>
       </div>
 
+      <div className="appearanceSection">
+        <label className="muted">Density</label>
+        <div className="row appearancePresetRow">
+          {(["comfortable", "compact", "spacious"] as Density[]).map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={`pillButton ${display.density === d ? "pillButtonActive" : ""}`}
+              onClick={() => display.setDensity(d)}
+            >
+              {d.charAt(0).toUpperCase() + d.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="appearanceSection">
+        <label className="muted">Panel radius</label>
+        <div className="row appearancePresetRow">
+          {(["sharp", "soft", "rounded"] as PanelRadius[]).map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`pillButton ${display.panelRadius === r ? "pillButtonActive" : ""}`}
+              onClick={() => display.setPanelRadius(r)}
+            >
+              {r.charAt(0).toUpperCase() + r.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="appearanceSection appearanceToggles">
+        <label className="appearanceToggle">
+          <input
+            type="checkbox"
+            checked={display.shadows}
+            onChange={(e) => display.setShadows(e.target.checked)}
+          />
+          Shadows
+        </label>
+        <label className="appearanceToggle">
+          <input
+            type="checkbox"
+            checked={display.glassBlur}
+            onChange={(e) => display.setGlassBlur(e.target.checked)}
+          />
+          Glass blur
+        </label>
+        <label className="appearanceToggle">
+          <input
+            type="checkbox"
+            checked={display.dccShowAllSecondary}
+            onChange={(e) => display.setDccShowAllSecondary(e.target.checked)}
+          />
+          Show all DCC sections
+        </label>
+      </div>
+
       <div className="appearanceActions">
         <button type="button" className="ghostButton" onClick={() => onReset(activePreset)}>
-          <RotateCcw size={14} /> Reset
+          <RotateCcw size={14} /> Reset theme
         </button>
         <button type="button" className="ghostButton" onClick={duplicatePreset}>
           <Copy size={14} /> Duplicate
@@ -220,6 +287,9 @@ export function AppearancePanel({
             }}
           />
         </label>
+        <button type="button" className="ghostButton" onClick={display.resetDisplay}>
+          <RotateCcw size={14} /> Reset layout
+        </button>
       </div>
 
       {contrastIssues.length > 0 && (

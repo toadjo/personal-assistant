@@ -17,6 +17,7 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
 import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow } from "../types";
 import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../lib/theme/tokens";
+import type { Density, PanelRadius, DisplayPreferences } from "../lib/display/types";
 import type { CalendarCell } from "../lib/calendar";
 import type { OnboardingState, OnboardingStep } from "../types/onboarding";
 import type { SuccessMessage } from "./ui/usePersistentSuccess";
@@ -43,6 +44,14 @@ export type AssistantWorkspace = {
     showSuccess: (message: string) => void;
     dismissSuccess: (id: string) => void;
     dismissAllSuccesses: () => void;
+  };
+  display: DisplayPreferences & {
+    setDensity: (density: Density) => void;
+    setPanelRadius: (radius: PanelRadius) => void;
+    setShadows: (value: boolean) => void;
+    setGlassBlur: (value: boolean) => void;
+    setDccShowAllSecondary: (value: boolean) => void;
+    resetDisplay: () => void;
   };
   data: {
     query: string;
@@ -230,6 +239,15 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       showSuccess: ui.showSuccess,
       dismissSuccess: ui.dismissSuccess,
       dismissAllSuccesses: ui.dismissAllSuccesses
+    },
+    display: {
+      ...ui.display,
+      setDensity: ui.display.setDensity,
+      setPanelRadius: ui.display.setPanelRadius,
+      setShadows: ui.display.setShadows,
+      setGlassBlur: ui.display.setGlassBlur,
+      setDccShowAllSecondary: ui.display.setDccShowAllSecondary,
+      resetDisplay: ui.display.resetDisplay
     },
     data: {
       query: data.query,

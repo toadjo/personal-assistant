@@ -25,7 +25,7 @@ import type { DailyCommandCenter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 
 export function AssistantShell(): JSX.Element {
-  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk } = useAssistantWorkspace();
+  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const focusBriefRef = useRef<BriefItem[]>([]);
@@ -158,6 +158,7 @@ export function AssistantShell(): JSX.Element {
         <AppearancePanel
           theme={ui.theme}
           custom={ui.custom}
+          display={display}
           onPresetChange={ui.setTheme}
           onOverride={ui.setCustomOverride}
           onReset={ui.resetCustomOverrides}
@@ -226,6 +227,7 @@ export function AssistantShell(): JSX.Element {
 
       <DailyCommandCenterPanel
         data={dailyCommandCenter}
+        showAllSecondary={display.dccShowAllSecondary}
         onCompleteTask={tasks.completeById}
         onCompleteReminder={reminders.completeById}
         onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}

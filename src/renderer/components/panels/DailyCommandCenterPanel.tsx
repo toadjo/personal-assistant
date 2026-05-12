@@ -9,6 +9,7 @@ import "./DailyCommandCenterPanel.css";
 
 type Props = {
   data: DailyCommandCenter;
+  showAllSecondary?: boolean;
   onCompleteTask: (id: string) => void;
   onCompleteReminder: (id: string) => void;
   onSnoozeReminder: (id: string) => void;
@@ -91,6 +92,7 @@ function getTaskFilterForUrgency(urgency: BriefItem["urgency"]): TaskFilter {
 
 export function DailyCommandCenterPanel({
   data,
+  showAllSecondary = false,
   onCompleteTask,
   onCompleteReminder,
   onSnoozeReminder,
@@ -206,11 +208,13 @@ export function DailyCommandCenterPanel({
           )}
         </article>
 
-        {/* Single secondary section — priority: Away → Attention → Context */}
+        {/* Secondary sections — one or all depending on preference */}
         {(() => {
+          const sections: JSX.Element[] = [];
+
           if (awayItems.length > 0) {
-            return (
-              <article className="dccCard dccAway">
+            sections.push(
+              <article key="away" className="dccCard dccAway">
                 <div className="dccAwayHeader">
                   <h3>Since You Were Away</h3>
                   <IconButton icon={X} size={16} onClick={onMarkSeen} label="Mark as seen" className="dccAwayDismiss" />
@@ -235,9 +239,10 @@ export function DailyCommandCenterPanel({
               </article>
             );
           }
+
           if (attentionItems.length > 0) {
-            return (
-              <article className="dccCard dccAttention">
+            sections.push(
+              <article key="attention" className="dccCard dccAttention">
                 <h3>Attention</h3>
                 <ul className="dccList">
                   {attentionItems.map((item) => {
@@ -325,9 +330,10 @@ export function DailyCommandCenterPanel({
               </article>
             );
           }
+
           if (contextItems.length > 0) {
-            return (
-              <article className="dccCard dccContext">
+            sections.push(
+              <article key="context" className="dccCard dccContext">
                 <h3>Context</h3>
                 <ul className="dccList">
                   {contextItems.map((item) => {
@@ -371,7 +377,10 @@ export function DailyCommandCenterPanel({
               </article>
             );
           }
-          return null;
+          if (showAllSecondary) {
+            return <>{sections}</>;
+          }
+          return sections[0] ?? null;
         })()}
 
         {/* Empty state when nothing at all */}

@@ -20,7 +20,9 @@ import type { SuccessMessage } from "../ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../../constants/storageKeys";
 import { useWorkspaceMessages } from "../ui/useWorkspaceMessages";
 import { useThemePreference } from "../ui/useThemePreference";
+import { useDisplayPreferences } from "../ui/useDisplayPreferences";
 import { useOnboardingProgress } from "../useOnboardingProgress";
+import type { DisplayPreferences, Density, PanelRadius } from "../../lib/display/types";
 
 export type DeskUiState = {
   theme: ThemeMode;
@@ -50,6 +52,14 @@ export type DeskUiState = {
     markHomeAssistantConnected: () => void;
     skipHomeAssistant: () => void;
   };
+  display: DisplayPreferences & {
+    setDensity: (density: Density) => void;
+    setPanelRadius: (radius: PanelRadius) => void;
+    setShadows: (value: boolean) => void;
+    setGlassBlur: (value: boolean) => void;
+    setDccShowAllSecondary: (value: boolean) => void;
+    resetDisplay: () => void;
+  };
   desk: {
     hideWindow: () => void;
   };
@@ -57,6 +67,7 @@ export type DeskUiState = {
 
 export function useDeskUiState(): DeskUiState {
   const { theme, custom, setTheme, setCustomOverride, resetCustomOverrides } = useThemePreference();
+  const display = useDisplayPreferences();
   const { status, setStatus, error, setError, reportError, persistentSuccess } = useWorkspaceMessages();
 
   // v1.2.7 guided onboarding
@@ -93,6 +104,15 @@ export function useDeskUiState(): DeskUiState {
       markReminderCreated: onboardingProgress.markReminderCreated,
       markHomeAssistantConnected: onboardingProgress.markHomeAssistantConnected,
       skipHomeAssistant: onboardingProgress.skipHomeAssistant
+    },
+    display: {
+      ...display.prefs,
+      setDensity: display.setDensity,
+      setPanelRadius: display.setPanelRadius,
+      setShadows: display.setShadows,
+      setGlassBlur: display.setGlassBlur,
+      setDccShowAllSecondary: display.setDccShowAllSecondary,
+      resetDisplay: display.reset
     },
     desk: {
       hideWindow: () => {
