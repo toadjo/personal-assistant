@@ -35,7 +35,7 @@ describe("DailyCommandCenterPanel", () => {
     expect(screen.getByText("Daily Command Center")).toBeInTheDocument();
     expect(screen.getByText("All clear - nothing needs attention right now.")).toBeInTheDocument();
     expect(
-      screen.getByText(/Nothing on your plate. Add tasks, reminders, or pin notes/)
+      screen.getByText(/Add tasks, reminders, or pin notes to populate your daily view/)
     ).toBeInTheDocument();
   });
 

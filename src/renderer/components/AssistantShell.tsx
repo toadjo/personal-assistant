@@ -13,6 +13,7 @@ import { AboutPanel } from "./panels/AboutPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
+import { TodayStrip } from "./layout/TodayStrip";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
@@ -224,6 +225,19 @@ export function AssistantShell(): JSX.Element {
           <AboutPanel version={appVersion} onClose={() => setShowAbout(false)} />
         </div>
       ) : null}
+
+      <TodayStrip
+        overdueCount={tasks.overdueOpen.length}
+        dueTodayCount={tasks.dueTodayOpen.length}
+        remindersCount={reminders.pending.length}
+        notesCount={data.notes.length}
+        automationsCount={data.rules.length}
+        onFilterOverdue={() => tasks.setFilter("overdue")}
+        onFilterDueToday={() => tasks.setFilter("open")}
+        onFilterReminders={() => reminders.setFilter("pending")}
+        onFilterNotes={() => data.setQuery("")}
+        onFilterAutomations={() => { /* automations don't have a panel filter, noop */ }}
+      />
 
       <DailyCommandCenterPanel
         data={dailyCommandCenter}

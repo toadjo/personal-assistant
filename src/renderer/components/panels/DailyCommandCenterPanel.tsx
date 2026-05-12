@@ -386,9 +386,7 @@ export function DailyCommandCenterPanel({
         {/* Empty state when nothing at all */}
         {!hasAnything && (
           <article className="dccCard dccEmpty">
-            <p className="dccEmptyState">
-              Nothing on your plate. Add tasks, reminders, or pin notes to build your daily command center.
-            </p>
+            <p className="dccEmptyState">Add tasks, reminders, or pin notes to populate your daily view.</p>
           </article>
         )}
       </div>
