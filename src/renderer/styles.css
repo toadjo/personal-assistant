@@ -1128,6 +1128,18 @@ button:disabled {
   background: color-mix(in srgb, var(--error-bg) 98%, transparent);
 }
 
+.dangerGhostButton {
+  background: color-mix(in srgb, var(--ghost-bg) 78%, transparent);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+
+.dangerGhostButton:hover {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--error-bg) 30%, var(--ghost-bg) 70%);
+  border-color: var(--error-border);
+}
+
 .miniActions {
   display: flex;
   gap: var(--space-1);

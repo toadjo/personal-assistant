@@ -187,7 +187,7 @@ installer-history\vX.Y.Z\PersonalAssistant Setup X.Y.Z.exe
 - Do not depend on GitHub Actions artifacts for Windows release packaging while artifact storage quota is unreliable.
 - If a GitHub Actions release run fails only at artifact upload, treat the manual Windows `.exe` release as the source of truth.
 
-## Current feature status (v1.6.5)
+## Current feature status (v1.7.0)
 
 **Local-first operating layer:**
 
@@ -196,6 +196,7 @@ installer-history\vX.Y.Z\PersonalAssistant Setup X.Y.Z.exe
 - Home Assistant remains optional and visually secondary.
 - Local automations can create reminders and tasks.
 - Automation logs show action labels and retry metadata.
+- Data backup and restore: export all data to JSON, import with full replace, reset all data.
 - About panel version comes from package metadata through the renderer build.
 
 **Away Brief feature (new in v1.5):**

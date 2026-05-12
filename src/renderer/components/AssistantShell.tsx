@@ -1,6 +1,7 @@
-import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette } from "lucide-react";
+import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
+import { useBackupActions } from "../hooks/workspace/useBackupActions";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
 import { OnboardingPanel } from "./panels/OnboardingPanel";
@@ -13,6 +14,7 @@ import { AboutPanel } from "./panels/AboutPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
+import { DataControlPanel } from "./panels/DataControlPanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
@@ -30,7 +32,9 @@ export function AssistantShell(): JSX.Element {
   const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
+  const [showData, setShowData] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -149,6 +153,14 @@ export function AssistantShell(): JSX.Element {
           >
             <Palette size={14} />
           </button>
+          <button
+            type="button"
+            className="ghostButton ghostButtonCompact"
+            title="Data backup and reset"
+            onClick={() => setShowData((s) => !s)}
+          >
+            <Database size={14} />
+          </button>
           <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-desk" />
         </div>
       </header>
@@ -217,6 +229,16 @@ export function AssistantShell(): JSX.Element {
           onOverride={ui.setCustomOverride}
           onReset={ui.resetCustomOverrides}
           onClose={() => setShowAppearance(false)}
+        />
+      )}
+      {showData && (
+        <DataControlPanel
+          onExport={backupActions.exportData}
+          onImport={backupActions.importData}
+          onReset={backupActions.resetData}
+          isExporting={backupActions.isExporting}
+          isImporting={backupActions.isImporting}
+          isResetting={backupActions.isResetting}
         />
       )}
 

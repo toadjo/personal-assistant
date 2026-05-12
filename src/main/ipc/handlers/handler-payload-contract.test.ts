@@ -32,6 +32,8 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.settingsGetAssistant,
   IpcInvoke.automationLogs,
   IpcInvoke.automationRulesList,
+  IpcInvoke.dataExport,
+  IpcInvoke.dataReset,
   IpcInvoke.appOpenHouseholdWindow,
   IpcInvoke.appFocusDeskWindow,
   IpcInvoke.appHideDeskWindow,
@@ -69,6 +71,7 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.automationRulesSetEnabled ||
         ch === IpcInvoke.automationRulesDuplicate ||
         ch === IpcInvoke.automationRulesTestRun ||
+        ch === IpcInvoke.dataImport ||
         ch === IpcInvoke.rendererLogError;
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }

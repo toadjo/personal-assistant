@@ -77,6 +77,25 @@ declare global {
       setRuleEnabled: (id: string, enabled: boolean) => Promise<void>;
       duplicateRule: (id: string) => Promise<AutomationRule>;
       testRunRule: (id: string) => Promise<void>;
+      exportData: () => Promise<{
+        version: string;
+        exportedAt: string;
+        notes: unknown[];
+        reminders: unknown[];
+        tasks: unknown[];
+        automation_rules: unknown[];
+        app_settings: unknown[];
+      }>;
+      importData: (payload: {
+        version: string;
+        exportedAt: string;
+        notes: unknown[];
+        reminders: unknown[];
+        tasks: unknown[];
+        automation_rules: unknown[];
+        app_settings: unknown[];
+      }) => Promise<{ notes: number; reminders: number; tasks: number; automation_rules: number; app_settings: number }>;
+      resetData: () => Promise<void>;
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
       onRemindersUpdated: (cb: () => void) => () => void;
       onCommand: (cb: (_event: unknown, command: string) => void) => () => void;
