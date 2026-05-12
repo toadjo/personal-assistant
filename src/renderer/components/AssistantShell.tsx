@@ -14,6 +14,7 @@ import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
 import { TodayStrip } from "./layout/TodayStrip";
+import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
@@ -29,6 +30,7 @@ export function AssistantShell(): JSX.Element {
   const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
+  const [showPalette, setShowPalette] = useState(false);
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -46,6 +48,18 @@ export function AssistantShell(): JSX.Element {
     return () => {
       unsubscribe();
     };
+  }, []);
+
+  // v1.6.1: Command palette shortcut (Ctrl+K / Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setShowPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Compute daily command center when data changes
@@ -154,6 +168,36 @@ export function AssistantShell(): JSX.Element {
           onHideDeskIfInputEmpty={desk.hideWindow}
         />
       </div>
+
+      {showPalette && (
+        <CommandPalette
+          notes={data.notes}
+          tasks={data.tasks}
+          reminders={data.reminders}
+          rules={data.rules}
+          devices={data.devices}
+          onOpenNote={(id) => {
+            data.setQuery("");
+            ui.setStatus(`Note opened: ${id}`);
+          }}
+          onOpenTask={(id) => {
+            tasks.setFilter("all");
+            ui.setStatus(`Task opened: ${id}`);
+          }}
+          onOpenReminder={(id) => {
+            reminders.setFilter("all");
+            ui.setStatus(`Reminder opened: ${id}`);
+          }}
+          onOpenAutomation={(id) => {
+            ui.setStatus(`Automation opened: ${id}`);
+          }}
+          onToggleDevice={(entityId) => {
+            void ha.runDeviceToggle(entityId, entityId);
+          }}
+          onOpenAppearance={() => setShowAppearance(true)}
+          onClose={() => setShowPalette(false)}
+        />
+      )}
 
       {showAppearance && (
         <AppearancePanel
