@@ -14,7 +14,7 @@
  * to avoid circular dependencies with command state.
  */
 import { useState, type Dispatch, type SetStateAction } from "react";
-import type { ThemeMode } from "../../types";
+import type { ThemeMode } from "../../lib/theme/tokens";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../../constants/storageKeys";
@@ -24,7 +24,7 @@ import { useOnboardingProgress } from "../useOnboardingProgress";
 
 export type DeskUiState = {
   theme: ThemeMode;
-  setTheme: Dispatch<SetStateAction<ThemeMode>>;
+  setTheme: (preset: ThemeMode) => void;
   status: string;
   setStatus: (value: string) => void;
   error: string;

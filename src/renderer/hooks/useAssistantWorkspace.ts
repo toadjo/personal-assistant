@@ -29,7 +29,7 @@ import { useDeskCommandState } from "./composition/useDeskCommandState";
 export type AssistantWorkspace = {
   ui: {
     theme: ThemeMode;
-    setTheme: Dispatch<SetStateAction<ThemeMode>>;
+    setTheme: (preset: ThemeMode) => void;
     status: string;
     setStatus: (value: string) => void;
     error: string;

@@ -1,6 +1,6 @@
 import type { AutomationRule, ExecutionLog } from "../shared/types";
 
-export type ThemeMode = "glass" | "paper" | "obsidian" | "fog" | "deepblue";
+export type ThemeMode = "glass" | "paper" | "obsidian" | "fog" | "deepblue" | "corporate";
 
 export type HaDeviceRow = {
   entityId: string;

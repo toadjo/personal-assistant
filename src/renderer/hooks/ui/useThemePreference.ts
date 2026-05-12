@@ -1,30 +1,24 @@
-import { useEffect, useState } from "react";
-import { THEME_IDS } from "../../constants/themes";
-import { STORAGE_THEME } from "../../constants/storageKeys";
-import type { ThemeMode } from "../../types";
-
-const LEGACY_THEME: Record<string, ThemeMode> = {
-  light: "paper",
-  dark: "obsidian",
-  graphite: "fog",
-  midnight: "obsidian"
-};
-
-function readInitialTheme(): ThemeMode {
-  const raw = window.localStorage.getItem(STORAGE_THEME);
-  if (!raw) return "glass";
-  const v = raw.trim();
-  if (THEME_IDS.has(v as ThemeMode)) return v as ThemeMode;
-  return LEGACY_THEME[v] ?? "glass";
-}
+import { useEffect, useState, useCallback } from "react";
+import { applyPreset } from "../../lib/theme/applyTheme";
+import { readThemeState, writeThemeState } from "../../lib/theme/storage";
+import type { ThemeMode, ThemeState } from "../../lib/theme/tokens";
 
 export function useThemePreference() {
-  const [theme, setTheme] = useState<ThemeMode>(readInitialTheme);
+  const [state, setState] = useState<ThemeState>(readThemeState);
+  const theme = state.preset;
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem(STORAGE_THEME, theme);
-  }, [theme]);
+    applyPreset(state.preset, state.custom?.overrides);
+  }, [state]);
+
+  const setTheme = useCallback(
+    (preset: ThemeMode) => {
+      const next: ThemeState = { preset };
+      setState(next);
+      writeThemeState(next);
+    },
+    []
+  );
 
   return { theme, setTheme };
 }
