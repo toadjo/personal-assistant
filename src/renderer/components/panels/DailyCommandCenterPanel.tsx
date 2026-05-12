@@ -151,6 +151,7 @@ export function DailyCommandCenterPanel({
                             size={16}
                             onClick={() => onCompleteTask(item.sourceId)}
                             label={`Complete task: ${item.label}`}
+                            title="Done"
                             className="dccActionButton"
                           />
                           {onOpenTasks && (
@@ -159,6 +160,7 @@ export function DailyCommandCenterPanel({
                               size={16}
                               onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
                               label={`Open tasks: ${item.label}`}
+                              title="Open"
                               className="dccActionButton"
                             />
                           )}
@@ -171,6 +173,7 @@ export function DailyCommandCenterPanel({
                             size={16}
                             onClick={() => onCompleteReminder(item.sourceId)}
                             label={`Complete reminder: ${item.label}`}
+                            title="Done"
                             className="dccActionButton"
                           />
                           <IconButton
@@ -178,6 +181,7 @@ export function DailyCommandCenterPanel({
                             size={16}
                             onClick={() => onSnoozeReminder(item.sourceId)}
                             label={`Snooze reminder ten minutes: ${item.label}`}
+                            title="Snooze"
                             className="dccActionButton"
                           />
                           {onOpenReminders && (
@@ -186,6 +190,7 @@ export function DailyCommandCenterPanel({
                               size={16}
                               onClick={() => onOpenReminders("pending")}
                               label={`Open reminders: ${item.label}`}
+                              title="Open"
                               className="dccActionButton"
                             />
                           )}
@@ -197,7 +202,7 @@ export function DailyCommandCenterPanel({
               })}
             </ul>
           ) : (
-            <p className="dccEmptyState">No urgent actions right now. Check context below.</p>
+            <p className="dccEmptyState">No urgent actions right now. Check below.</p>
           )}
         </article>
 
@@ -257,6 +262,7 @@ export function DailyCommandCenterPanel({
                                 size={16}
                                 onClick={() => onCompleteTask(item.sourceId)}
                                 label={`Complete task: ${item.label}`}
+                                title="Done"
                                 className="dccActionButton"
                               />
                               {onOpenTasks && (
@@ -265,6 +271,7 @@ export function DailyCommandCenterPanel({
                                   size={16}
                                   onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
                                   label={`Open tasks: ${item.label}`}
+                                  title="Open"
                                   className="dccActionButton"
                                 />
                               )}
@@ -277,6 +284,7 @@ export function DailyCommandCenterPanel({
                                 size={16}
                                 onClick={() => onCompleteReminder(item.sourceId)}
                                 label={`Complete reminder: ${item.label}`}
+                                title="Done"
                                 className="dccActionButton"
                               />
                               <IconButton
@@ -284,6 +292,7 @@ export function DailyCommandCenterPanel({
                                 size={16}
                                 onClick={() => onSnoozeReminder(item.sourceId)}
                                 label={`Snooze reminder ten minutes: ${item.label}`}
+                                title="Snooze"
                                 className="dccActionButton"
                               />
                               {onOpenReminders && (
@@ -292,6 +301,7 @@ export function DailyCommandCenterPanel({
                                   size={16}
                                   onClick={() => onOpenReminders("pending")}
                                   label={`Open reminders: ${item.label}`}
+                                  title="Open"
                                   className="dccActionButton"
                                 />
                               )}
@@ -303,6 +313,7 @@ export function DailyCommandCenterPanel({
                               size={16}
                               onClick={() => onOpenNotes()}
                               label={`Open notes: ${item.label}`}
+                              title="Open"
                               className="dccActionButton"
                             />
                           )}
@@ -338,6 +349,7 @@ export function DailyCommandCenterPanel({
                               size={16}
                               onClick={() => onOpenNotes()}
                               label={`Open notes: ${item.label}`}
+                              title="Open"
                               className="dccActionButton"
                             />
                           )}
@@ -347,6 +359,7 @@ export function DailyCommandCenterPanel({
                               size={16}
                               onClick={() => onOpenReminders("pending")}
                               label={`Open reminders: ${item.label}`}
+                              title="Open"
                               className="dccActionButton"
                             />
                           )}

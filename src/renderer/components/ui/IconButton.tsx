@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 type Props = {
   icon: LucideIcon;
   label: string;
+  title?: string;
   onClick: () => void;
   disabled?: boolean;
   className?: string;
@@ -13,6 +14,7 @@ type Props = {
 export function IconButton({
   icon: Icon,
   label,
+  title,
   onClick,
   disabled,
   className,
@@ -28,7 +30,7 @@ export function IconButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      title={label}
+      title={title ?? label}
     >
       <Icon size={size} />
     </button>

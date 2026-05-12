@@ -107,7 +107,7 @@ export const CalendarPanel = memo(function CalendarPanel({
       </div>
       <div className="dayFocusTitle">
         <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
-        <p className="muted plannerHeading">Pending reminders for this day.</p>
+        <p className="muted plannerHeading">Scheduled for this day.</p>
       </div>
       <ul className="list" aria-label="Reminders for selected day">
         {dayAgenda.length ? (
