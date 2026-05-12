@@ -89,9 +89,14 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - v1.5.8: Layout and density preferences — Comfortable/Compact/Spacious, Sharp/Soft/Rounded radius, shadows/blur toggles, DCC section mode.
 - v1.5.9: Today strip with count chips and quick filters, shorter empty state copy.
 - v1.6.0: Version bump to 1.6.0, docs refresh, full verification, Windows installer build.
-- Files touched: theme module, display module, AppearancePanel, TodayStrip, DailyCommandCenterPanel, AssistantShell, useThemePreference, useDisplayPreferences, DeskUiState, AssistantWorkspace, styles.css, package.json, tests.
+- v1.6.1: Global search and command palette (Ctrl+K) with fuzzy search across notes, tasks, reminders, automations, devices, settings.
+- v1.6.2: Task bulk complete, priority editing from list, undo stack for complete/priority.
+- v1.6.3: Calendar agenda upgrade — combined reminders + tasks, Day/Today/Tomorrow/Week filters, click-to-create.
+- v1.6.4: Automation builder upgrade — duplicate rule, test run, last run status on rule list.
+- v1.6.5: Version bump to 1.6.5, docs refresh, full verification, Windows installer build.
+- Files touched: search engine, command palette, useTaskActions, TasksPanel, useCalendarState, CalendarPanel, automation service, IPC handlers, preload API, useAutomationRuleActions, AutomationRulesPanel, HouseholdShell, package.json, tests.
 - Checks run: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`
-- Next action: Build local Windows installer for v1.6.0 and publish `.exe` manually.
+- Next action: Build local Windows installer for v1.6.5 and publish `.exe` manually.
 
 ## 2026-05-12: Minimal Corporate Desk (v1.5.2–v1.5.5)
 
