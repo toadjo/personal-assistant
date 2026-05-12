@@ -17,7 +17,7 @@ type Props = {
 
 export function GuidedOnboardingPanel({
   currentStep,
-  onComplete, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onComplete: _onComplete,
   onCreateNote,
   onCreateReminder,
   onOpenHousehold,

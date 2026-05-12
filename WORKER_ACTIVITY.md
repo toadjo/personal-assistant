@@ -95,9 +95,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - v1.6.4: Automation builder upgrade — duplicate rule, test run, last run status on rule list.
 - v1.6.5: Version bump to 1.6.5, docs refresh, full verification, Windows installer build.
 - v1.7.0: Data control and backup — export notes/tasks/reminders/automations/settings to JSON, import with full replace, reset all data, DataControlPanel in desk UI.
-- Files touched: backup service, IPC handlers, preload API, useBackupActions, DataControlPanel, AssistantShell, styles.css, package.json, tests.
-- Checks run: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`
-- Next action: Build local Windows installer for v1.7.0 and publish `.exe` manually.
+- v1.7.1: Stabilization — rgba color input fix, Zod backup validation, import confirmation dialog, lint cleanup, ASCII punctuation in user-facing strings.
+- Files touched: AppearancePanel, backup handlers/schemas, useBackupActions, CommandPalette, GuidedOnboardingPanel, DataControlPanel, AssistantShell, Automation panels, Notes/Reminders panels, CalendarPanel, CommandPanel, HomeAssistantPanel, package.json, tests.
+- Checks run: `npm run typecheck`, `npm run lint`, `npm test`
+- Next action: v1.7.1 onboarding and first-run refresh.
 
 ## 2026-05-12: Minimal Corporate Desk (v1.5.2–v1.5.5)
 
