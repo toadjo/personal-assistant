@@ -39,26 +39,34 @@ describe("deriveDailyCommandCenter", () => {
   });
 
   it("places overdue items in attention before due-today items", () => {
-    const overdue = makeBriefItem({ urgency: "overdue", label: "Overdue", sourceId: "o1" });
-    const today = makeBriefItem({ urgency: "today", label: "Today", sourceId: "t1" });
+    const overdue1 = makeBriefItem({ urgency: "overdue", label: "Overdue A", sourceId: "o1" });
+    const overdue2 = makeBriefItem({ urgency: "overdue", label: "Overdue B", sourceId: "o2" });
+    const today1 = makeBriefItem({ urgency: "today", label: "Today A", sourceId: "t1" });
+    const today2 = makeBriefItem({ urgency: "today", label: "Today B", sourceId: "t2" });
 
     const result = deriveDailyCommandCenter({
-      focusBrief: [today, overdue],
+      focusBrief: [today2, today1, overdue2, overdue1],
       awayBrief: []
     });
 
-    expect(result.attentionItems).toHaveLength(2);
-    expect(result.attentionItems[0]?.urgency).toBe("overdue");
-    expect(result.attentionItems[1]?.urgency).toBe("today");
+    expect(result.nowItems).toHaveLength(3);
+    expect(result.nowItems[0]?.urgency).toBe("overdue");
+    expect(result.nowItems[1]?.urgency).toBe("overdue");
+    expect(result.nowItems[2]?.urgency).toBe("today");
+    expect(result.attentionItems).toHaveLength(1);
+    expect(result.attentionItems[0]?.urgency).toBe("today");
   });
 
   it("places due-today items in attention before upcoming/context", () => {
-    const today = makeBriefItem({ urgency: "today", label: "Today", sourceId: "t1" });
+    const today1 = makeBriefItem({ urgency: "today", label: "Today A", sourceId: "t1" });
+    const today2 = makeBriefItem({ urgency: "today", label: "Today B", sourceId: "t2" });
+    const today3 = makeBriefItem({ urgency: "today", label: "Today C", sourceId: "t3" });
+    const today4 = makeBriefItem({ urgency: "today", label: "Today D", sourceId: "t4" });
     const upcoming = makeBriefItem({ urgency: "upcoming", label: "Upcoming", sourceId: "u1" });
     const context = makeBriefItem({ urgency: "context", label: "Context", sourceId: "c1", kind: "note" });
 
     const result = deriveDailyCommandCenter({
-      focusBrief: [context, upcoming, today],
+      focusBrief: [context, upcoming, today4, today3, today2, today1],
       awayBrief: []
     });
 
@@ -152,7 +160,12 @@ describe("deriveDailyCommandCenter", () => {
   });
 
   it("produces clean summary when away brief is cleared but focus brief remains", () => {
-    const focusBrief = [makeBriefItem({ urgency: "overdue", sourceId: "o1", label: "Overdue" })];
+    const focusBrief = [
+      makeBriefItem({ urgency: "overdue", sourceId: "o1", label: "Overdue A" }),
+      makeBriefItem({ urgency: "overdue", sourceId: "o2", label: "Overdue B" }),
+      makeBriefItem({ urgency: "overdue", sourceId: "o3", label: "Overdue C" }),
+      makeBriefItem({ urgency: "overdue", sourceId: "o4", label: "Overdue D" })
+    ];
 
     const result = deriveDailyCommandCenter({
       focusBrief,
@@ -162,7 +175,27 @@ describe("deriveDailyCommandCenter", () => {
     expect(result.awayItems).toHaveLength(0);
     expect(result.summary).not.toContain("since you were away");
     expect(result.summary).toContain("overdue");
-    expect(result.nowItems).toHaveLength(1);
+    expect(result.nowItems).toHaveLength(3);
+    expect(result.attentionItems).toHaveLength(1);
+  });
+
+  it("does not duplicate nowItems in attentionItems", () => {
+    const items = Array.from({ length: 5 }, (_, i) =>
+      makeBriefItem({ urgency: "overdue", label: `Task ${i}`, sourceId: `t${i}` })
+    );
+
+    const result = deriveDailyCommandCenter({
+      focusBrief: items,
+      awayBrief: []
+    });
+
+    expect(result.nowItems).toHaveLength(3);
+    expect(result.attentionItems).toHaveLength(2);
+
+    const nowSourceIds = new Set(result.nowItems.map((item) => item.sourceId));
+    for (const item of result.attentionItems) {
+      expect(nowSourceIds.has(item.sourceId)).toBe(false);
+    }
   });
 
   it("counts pressure correctly across urgencies", () => {

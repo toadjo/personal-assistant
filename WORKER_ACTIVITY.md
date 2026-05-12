@@ -81,3 +81,11 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Files touched: `package.json`, `package-lock.json`, `README.md`, `WORKER_HANDOFF.md`, `WORKER_ACTIVITY.md`
 - Checks run: `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
 - Next action: Commit release prep, push branch, tag `v1.5.0`, and monitor release packaging after GitHub artifact quota is healthy.
+
+## 2026-05-12: Breathing Room and Manual Windows Release (v1.5.1)
+
+- Files touched: `src/renderer/components/AssistantShell.tsx`, `src/renderer/lib/derived/daily-command-center.ts`, `src/renderer/lib/derived/daily-command-center.test.ts`, `src/renderer/components/panels/DailyCommandCenterPanel.css`, `package.json`, `WORKER_HANDOFF.md`, `WORKER_ACTIVITY.md`
+- Changes: Moved Daily Command Center to full-width top section above the desk grid. Deduplicated Now items from Attention. Added card padding, larger section gaps, and responsive action wrapping in DCC styles. Added deduplication regression test. Bumped version to 1.5.1. Documented manual Windows release flow (local build, publish `.exe` only).
+- Checks run: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`
+- Visual QA: Confirmed layout at 1366x768 and 1920x1080, action buttons do not collide with text.
+- Next action: Build local Windows installer for v1.5.1 and publish `.exe` manually.

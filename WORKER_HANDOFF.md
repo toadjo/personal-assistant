@@ -158,6 +158,35 @@ Validation and mirroring rules:
 - Public release mirroring is skipped if `PUBLIC_RELEASE_TOKEN` is missing
 - Public mirror uses `gh release create` if release does not exist; otherwise `gh release upload --clobber`
 
+## Manual Windows release
+
+When GitHub Actions artifact storage is unreliable, Windows releases are built locally and published manually.
+
+**Required flow (Windows PowerShell):**
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd test
+npm.cmd run build
+npm.cmd run test:smoke
+npm.cmd run test:preload-electron
+npm.cmd run release:build -- -Version X.Y.Z -SkipVersionBump -ReplaceExisting
+```
+
+**Publish the installer manually from:**
+
+```text
+installer-history\vX.Y.Z\PersonalAssistant Setup X.Y.Z.exe
+```
+
+**Windows release asset rules:**
+
+- Upload **only** the `.exe` for the Windows release.
+- Exclude `latest.yml` and `.blockmap` unless explicitly requested for updater testing.
+- Do not depend on GitHub Actions artifacts for Windows release packaging while artifact storage quota is unreliable.
+- If a GitHub Actions release run fails only at artifact upload, treat the manual Windows `.exe` release as the source of truth.
+
 ## Current feature status (v1.5.0)
 
 **Local-first operating layer:**

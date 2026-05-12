@@ -55,7 +55,10 @@ export function deriveDailyCommandCenter(params: {
     .slice(0, 3)
     .map((item) => ({ ...item, action: getActionForItem(item) }));
 
-  const summary = buildSummary(attentionItems, contextItems, awayBrief);
+  const nowSourceIds = new Set(nowItems.map((item) => item.sourceId));
+  const dedupedAttentionItems = attentionItems.filter((item) => !nowSourceIds.has(item.sourceId));
+
+  const summary = buildSummary(dedupedAttentionItems, contextItems, awayBrief);
 
   const pressure = {
     overdue: focusBrief.filter((item) => item.urgency === "overdue").length,
@@ -66,7 +69,7 @@ export function deriveDailyCommandCenter(params: {
 
   return {
     nowItems,
-    attentionItems,
+    attentionItems: dedupedAttentionItems,
     contextItems,
     awayItems: awayBrief,
     summary,

@@ -203,18 +203,19 @@ export function AssistantShell(): JSX.Element {
         </div>
       ) : null}
 
+      <DailyCommandCenterPanel
+        data={dailyCommandCenter}
+        onCompleteTask={tasks.completeById}
+        onCompleteReminder={reminders.completeById}
+        onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+        onMarkSeen={handleMarkSeen}
+        onOpenTasks={tasks.setFilter}
+        onOpenReminders={reminders.setFilter}
+        onOpenNotes={() => data.setQuery("")}
+      />
+
       <div className="contentGrid">
         <div className="contentMain">
-          <DailyCommandCenterPanel
-            data={dailyCommandCenter}
-            onCompleteTask={tasks.completeById}
-            onCompleteReminder={reminders.completeById}
-            onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
-            onMarkSeen={handleMarkSeen}
-            onOpenTasks={tasks.setFilter}
-            onOpenReminders={reminders.setFilter}
-            onOpenNotes={() => data.setQuery("")}
-          />
           <div className="todayStrip">
             <CalendarPanel
               calendarCursor={calendar.calendarCursor}
