@@ -15,7 +15,8 @@
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
-import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
+import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow } from "../types";
+import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../lib/theme/tokens";
 import type { CalendarCell } from "../lib/calendar";
 import type { OnboardingState, OnboardingStep } from "../types/onboarding";
 import type { SuccessMessage } from "./ui/usePersistentSuccess";
@@ -29,7 +30,10 @@ import { useDeskCommandState } from "./composition/useDeskCommandState";
 export type AssistantWorkspace = {
   ui: {
     theme: ThemeMode;
+    custom: CustomTheme | undefined;
     setTheme: (preset: ThemeMode) => void;
+    setCustomOverride: (key: ThemeTokenKey, value: string | undefined) => void;
+    resetCustomOverrides: (preset?: ThemeMode) => void;
     status: string;
     setStatus: (value: string) => void;
     error: string;
@@ -213,7 +217,10 @@ export function useAssistantWorkspace(): AssistantWorkspace {
   return {
     ui: {
       theme: ui.theme,
+      custom: ui.custom,
       setTheme: ui.setTheme,
+      setCustomOverride: ui.setCustomOverride,
+      resetCustomOverrides: ui.resetCustomOverrides,
       status: ui.status,
       setStatus: ui.setStatus,
       error: ui.error,

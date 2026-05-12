@@ -14,3 +14,4 @@ export type {
 } from "./tokens";
 export { applyThemeTokens, applyPreset, clearThemeTokens } from "./applyTheme";
 export { readThemeState, writeThemeState, makeCustomTheme } from "./storage";
+export { getLuminance, contrastRatio, isContrastSafe } from "./contrast";

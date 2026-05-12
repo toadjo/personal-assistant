@@ -14,7 +14,7 @@
  * to avoid circular dependencies with command state.
  */
 import { useState, type Dispatch, type SetStateAction } from "react";
-import type { ThemeMode } from "../../lib/theme/tokens";
+import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../../lib/theme/tokens";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../../constants/storageKeys";
@@ -24,7 +24,10 @@ import { useOnboardingProgress } from "../useOnboardingProgress";
 
 export type DeskUiState = {
   theme: ThemeMode;
+  custom: CustomTheme | undefined;
   setTheme: (preset: ThemeMode) => void;
+  setCustomOverride: (key: ThemeTokenKey, value: string | undefined) => void;
+  resetCustomOverrides: (preset?: ThemeMode) => void;
   status: string;
   setStatus: (value: string) => void;
   error: string;
@@ -53,7 +56,7 @@ export type DeskUiState = {
 };
 
 export function useDeskUiState(): DeskUiState {
-  const { theme, setTheme } = useThemePreference();
+  const { theme, custom, setTheme, setCustomOverride, resetCustomOverrides } = useThemePreference();
   const { status, setStatus, error, setError, reportError, persistentSuccess } = useWorkspaceMessages();
 
   // v1.2.7 guided onboarding
@@ -65,7 +68,10 @@ export function useDeskUiState(): DeskUiState {
 
   return {
     theme,
+    custom,
     setTheme,
+    setCustomOverride,
+    resetCustomOverrides,
     status,
     setStatus,
     error,

@@ -1,10 +1,12 @@
-import type { ThemeMode } from "../../types";
+import { Palette } from "lucide-react";
+import type { ThemeMode } from "../../lib/theme/tokens";
 import { ThemeSelect } from "./ThemeSelect";
 import { WelcomeBar } from "./WelcomeBar";
 
 type Props = {
   theme: ThemeMode;
   onThemeChange: (theme: ThemeMode) => void;
+  onOpenAppearance: () => void;
   userPreferredName: string;
   userPreferredNameIsSet: boolean;
   onSaveUserPreferredName: (trimmed: string) => void | Promise<void>;
@@ -17,6 +19,7 @@ type Props = {
 export function AppHeader({
   theme,
   onThemeChange,
+  onOpenAppearance,
   userPreferredName,
   userPreferredNameIsSet,
   onSaveUserPreferredName,
@@ -49,6 +52,14 @@ export function AppHeader({
           onClick={() => void window.assistantApi.openHouseholdWindow()}
         >
           House <span className={`stat statAddOn ${haReady ? "statAddOnLive" : ""}`}>{haReady ? "linked" : "off"}</span>
+        </button>
+        <button
+          type="button"
+          className="ghostButton ghostButtonCompact"
+          title="Customize appearance"
+          onClick={onOpenAppearance}
+        >
+          <Palette size={14} />
         </button>
         <ThemeSelect theme={theme} onChange={onThemeChange} selectId="theme-select-desk" />
       </div>

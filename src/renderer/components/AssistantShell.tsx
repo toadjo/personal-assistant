@@ -1,4 +1,4 @@
-import { Home, StickyNote, Bell, AlertTriangle, ListTodo } from "lucide-react";
+import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { StatusBanner } from "./layout/StatusBanner";
@@ -12,6 +12,7 @@ import { RemindersPanel } from "./panels/RemindersPanel";
 import { AboutPanel } from "./panels/AboutPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
+import { AppearancePanel } from "./panels/AppearancePanel";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
@@ -26,6 +27,7 @@ import type { BriefItem } from "../types";
 export function AssistantShell(): JSX.Element {
   const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk } = useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
+  const [showAppearance, setShowAppearance] = useState(false);
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -115,6 +117,14 @@ export function AssistantShell(): JSX.Element {
             onClick={() => void window.assistantApi.openHouseholdWindow()}
             variant={ha.haReady ? "default" : "ghost"}
           />
+          <button
+            type="button"
+            className="ghostButton ghostButtonCompact"
+            title="Customize appearance"
+            onClick={() => setShowAppearance((s) => !s)}
+          >
+            <Palette size={14} />
+          </button>
           <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-desk" />
         </div>
       </header>
@@ -143,6 +153,17 @@ export function AssistantShell(): JSX.Element {
           onHideDeskIfInputEmpty={desk.hideWindow}
         />
       </div>
+
+      {showAppearance && (
+        <AppearancePanel
+          theme={ui.theme}
+          custom={ui.custom}
+          onPresetChange={ui.setTheme}
+          onOverride={ui.setCustomOverride}
+          onReset={ui.resetCustomOverrides}
+          onClose={() => setShowAppearance(false)}
+        />
+      )}
 
       {onboarding.show && !onboarding.isComplete ? (
         <div className="onboardingHero">
