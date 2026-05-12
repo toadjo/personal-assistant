@@ -149,7 +149,7 @@ export const TasksPanel = memo(function TasksPanel({
           <EmptyState
             icon={ListTodo}
             title="No tasks yet"
-            description="Create tasks to drive your day, even without Home Assistant."
+            description="Create tasks to organize your work."
           />
         )}
       </div>

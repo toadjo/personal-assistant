@@ -201,90 +201,147 @@ export function DailyCommandCenterPanel({
           )}
         </article>
 
-        {/* Since You Were Away */}
-        {awayItems.length > 0 && (
-          <article className="dccCard dccAway">
-            <div className="dccAwayHeader">
-              <h3>Since You Were Away</h3>
-              <IconButton icon={X} size={16} onClick={onMarkSeen} label="Mark as seen" className="dccAwayDismiss" />
-            </div>
-            <ul className="dccList">
-              {awayItems.slice(0, 5).map((item) => {
-                const Icon = getIconForReason(item.reason);
-                return (
-                  <li key={item.sourceId} className="dccListItem">
-                    <Icon size={16} className="dccListItemIcon" />
-                    <div className="dccListItemContent">
-                      <div className="dccItemLabel">{item.label}</div>
-                      {item.detail && <div className="dccItemDetail">{item.detail}</div>}
-                      <div className="dccItemMeta">
-                        {getReasonLabel(item.reason)} / {item.kind} / {formatChangedAt(item.changedAt)}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </article>
-        )}
-
-        {/* Attention */}
-        {attentionItems.length > 0 && (
-          <article className="dccCard dccAttention">
-            <h3>Attention</h3>
-            <ul className="dccList">
-              {attentionItems.map((item) => {
-                const Icon = getIconForUrgency(item.urgency);
-                return (
-                  <li key={item.sourceId} className="dccListItem">
-                    <Icon size={16} className="dccListItemIcon" />
-                    <div className="dccListItemContent">
-                      <div className={`dccItemLabel ${item.urgency === "overdue" ? "dccItemLabelOverdue" : ""}`}>
-                        {item.label}
-                      </div>
-                      {item.detail && <div className="dccItemDetail">{item.detail}</div>}
-                      <div className="dccItemMeta">
-                        {getUrgencyLabel(item.urgency)} / {item.kind}
-                      </div>
-                    </div>
-                    <div className="dccItemActions">
-                      {item.kind === "task" && (
-                        <>
-                          <IconButton
-                            icon={Check}
-                            size={16}
-                            onClick={() => onCompleteTask(item.sourceId)}
-                            label={`Complete task: ${item.label}`}
-                            className="dccActionButton"
-                          />
-                          {onOpenTasks && (
+        {/* Single secondary section — priority: Away → Attention → Context */}
+        {(() => {
+          if (awayItems.length > 0) {
+            return (
+              <article className="dccCard dccAway">
+                <div className="dccAwayHeader">
+                  <h3>Since You Were Away</h3>
+                  <IconButton icon={X} size={16} onClick={onMarkSeen} label="Mark as seen" className="dccAwayDismiss" />
+                </div>
+                <ul className="dccList">
+                  {awayItems.slice(0, 5).map((item) => {
+                    const Icon = getIconForReason(item.reason);
+                    return (
+                      <li key={item.sourceId} className="dccListItem">
+                        <Icon size={16} className="dccListItemIcon" />
+                        <div className="dccListItemContent">
+                          <div className="dccItemLabel">{item.label}</div>
+                          {item.detail && <div className="dccItemDetail">{item.detail}</div>}
+                          <div className="dccItemMeta">
+                            {getReasonLabel(item.reason)} / {item.kind} / {formatChangedAt(item.changedAt)}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            );
+          }
+          if (attentionItems.length > 0) {
+            return (
+              <article className="dccCard dccAttention">
+                <h3>Attention</h3>
+                <ul className="dccList">
+                  {attentionItems.map((item) => {
+                    const Icon = getIconForUrgency(item.urgency);
+                    return (
+                      <li key={item.sourceId} className="dccListItem">
+                        <Icon size={16} className="dccListItemIcon" />
+                        <div className="dccListItemContent">
+                          <div className={`dccItemLabel ${item.urgency === "overdue" ? "dccItemLabelOverdue" : ""}`}>
+                            {item.label}
+                          </div>
+                          {item.detail && <div className="dccItemDetail">{item.detail}</div>}
+                          <div className="dccItemMeta">
+                            {getUrgencyLabel(item.urgency)} / {item.kind}
+                          </div>
+                        </div>
+                        <div className="dccItemActions">
+                          {item.kind === "task" && (
+                            <>
+                              <IconButton
+                                icon={Check}
+                                size={16}
+                                onClick={() => onCompleteTask(item.sourceId)}
+                                label={`Complete task: ${item.label}`}
+                                className="dccActionButton"
+                              />
+                              {onOpenTasks && (
+                                <IconButton
+                                  icon={ExternalLink}
+                                  size={16}
+                                  onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
+                                  label={`Open tasks: ${item.label}`}
+                                  className="dccActionButton"
+                                />
+                              )}
+                            </>
+                          )}
+                          {(item.kind === "reminder" || item.kind === "agenda") && (
+                            <>
+                              <IconButton
+                                icon={Check}
+                                size={16}
+                                onClick={() => onCompleteReminder(item.sourceId)}
+                                label={`Complete reminder: ${item.label}`}
+                                className="dccActionButton"
+                              />
+                              <IconButton
+                                icon={Snooze}
+                                size={16}
+                                onClick={() => onSnoozeReminder(item.sourceId)}
+                                label={`Snooze reminder ten minutes: ${item.label}`}
+                                className="dccActionButton"
+                              />
+                              {onOpenReminders && (
+                                <IconButton
+                                  icon={ExternalLink}
+                                  size={16}
+                                  onClick={() => onOpenReminders("pending")}
+                                  label={`Open reminders: ${item.label}`}
+                                  className="dccActionButton"
+                                />
+                              )}
+                            </>
+                          )}
+                          {item.kind === "note" && onOpenNotes && (
                             <IconButton
                               icon={ExternalLink}
                               size={16}
-                              onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
-                              label={`Open tasks: ${item.label}`}
+                              onClick={() => onOpenNotes()}
+                              label={`Open notes: ${item.label}`}
                               className="dccActionButton"
                             />
                           )}
-                        </>
-                      )}
-                      {(item.kind === "reminder" || item.kind === "agenda") && (
-                        <>
-                          <IconButton
-                            icon={Check}
-                            size={16}
-                            onClick={() => onCompleteReminder(item.sourceId)}
-                            label={`Complete reminder: ${item.label}`}
-                            className="dccActionButton"
-                          />
-                          <IconButton
-                            icon={Snooze}
-                            size={16}
-                            onClick={() => onSnoozeReminder(item.sourceId)}
-                            label={`Snooze reminder ten minutes: ${item.label}`}
-                            className="dccActionButton"
-                          />
-                          {onOpenReminders && (
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            );
+          }
+          if (contextItems.length > 0) {
+            return (
+              <article className="dccCard dccContext">
+                <h3>Context</h3>
+                <ul className="dccList">
+                  {contextItems.map((item) => {
+                    const Icon = getIconForUrgency(item.urgency);
+                    return (
+                      <li key={item.sourceId} className="dccListItem">
+                        <Icon size={16} className="dccListItemIcon" />
+                        <div className="dccListItemContent">
+                          <div className="dccItemLabel">{item.label}</div>
+                          {item.detail && <div className="dccItemDetail">{item.detail}</div>}
+                          <div className="dccItemMeta">
+                            {getUrgencyLabel(item.urgency)} / {item.kind}
+                          </div>
+                        </div>
+                        <div className="dccItemActions">
+                          {item.kind === "note" && onOpenNotes && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenNotes()}
+                              label={`Open notes: ${item.label}`}
+                              className="dccActionButton"
+                            />
+                          )}
+                          {item.kind === "reminder" && onOpenReminders && (
                             <IconButton
                               icon={ExternalLink}
                               size={16}
@@ -293,68 +350,16 @@ export function DailyCommandCenterPanel({
                               className="dccActionButton"
                             />
                           )}
-                        </>
-                      )}
-                      {item.kind === "note" && onOpenNotes && (
-                        <IconButton
-                          icon={ExternalLink}
-                          size={16}
-                          onClick={() => onOpenNotes()}
-                          label={`Open notes: ${item.label}`}
-                          className="dccActionButton"
-                        />
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </article>
-        )}
-
-        {/* Context */}
-        {contextItems.length > 0 && (
-          <article className="dccCard dccContext">
-            <h3>Context</h3>
-            <ul className="dccList">
-              {contextItems.map((item) => {
-                const Icon = getIconForUrgency(item.urgency);
-                return (
-                  <li key={item.sourceId} className="dccListItem">
-                    <Icon size={16} className="dccListItemIcon" />
-                    <div className="dccListItemContent">
-                      <div className="dccItemLabel">{item.label}</div>
-                      {item.detail && <div className="dccItemDetail">{item.detail}</div>}
-                      <div className="dccItemMeta">
-                        {getUrgencyLabel(item.urgency)} / {item.kind}
-                      </div>
-                    </div>
-                    <div className="dccItemActions">
-                      {item.kind === "note" && onOpenNotes && (
-                        <IconButton
-                          icon={ExternalLink}
-                          size={16}
-                          onClick={() => onOpenNotes()}
-                          label={`Open notes: ${item.label}`}
-                          className="dccActionButton"
-                        />
-                      )}
-                      {item.kind === "reminder" && onOpenReminders && (
-                        <IconButton
-                          icon={ExternalLink}
-                          size={16}
-                          onClick={() => onOpenReminders("pending")}
-                          label={`Open reminders: ${item.label}`}
-                          className="dccActionButton"
-                        />
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </article>
-        )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            );
+          }
+          return null;
+        })()}
 
         {/* Empty state when nothing at all */}
         {!hasAnything && (
