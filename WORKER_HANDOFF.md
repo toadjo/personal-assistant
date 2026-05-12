@@ -187,7 +187,7 @@ installer-history\vX.Y.Z\PersonalAssistant Setup X.Y.Z.exe
 - Do not depend on GitHub Actions artifacts for Windows release packaging while artifact storage quota is unreliable.
 - If a GitHub Actions release run fails only at artifact upload, treat the manual Windows `.exe` release as the source of truth.
 
-## Current feature status (v1.5.0)
+## Current feature status (v1.5.5)
 
 **Local-first operating layer:**
 

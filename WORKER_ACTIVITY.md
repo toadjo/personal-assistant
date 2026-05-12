@@ -82,6 +82,16 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
 - Next action: Commit release prep, push branch, tag `v1.5.0`, and monitor release packaging after GitHub artifact quota is healthy.
 
+## 2026-05-12: Minimal Corporate Desk (v1.5.2–v1.5.5)
+
+- v1.5.2: DCC single secondary section (Away > Attention > Context), flatter CSS, shorter empty states, tighter panel spacing.
+- v1.5.3: Workplace command examples, concise DCC action titles with full aria-labels, cleaner Calendar copy.
+- v1.5.4: Automation panel polish — concise titles, validation copy, conditional retry summary in logs.
+- v1.5.5: Final visual pass (panel border-radius 12px, padding 14px, margin-top 14px), version bump to 1.5.5, updated handoff docs.
+- Files touched: `DailyCommandCenterPanel.tsx`, `DailyCommandCenterPanel.css`, `CommandExamples.tsx`, `CommandPanel.tsx`, `IconButton.tsx`, `CalendarPanel.tsx`, `AutomationRulesPanel.tsx`, `AutomationLogsPanel.tsx`, `RuleForm.tsx`, `styles.css`, `package.json`, `NotesPanel.tsx`, `RemindersPanel.tsx`, `TasksPanel.tsx`, plus test updates.
+- Checks run: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`
+- Next action: Build local Windows installer for v1.5.5 and publish `.exe` manually.
+
 ## 2026-05-12: Breathing Room and Manual Windows Release (v1.5.1)
 
 - Files touched: `src/renderer/components/AssistantShell.tsx`, `src/renderer/lib/derived/daily-command-center.ts`, `src/renderer/lib/derived/daily-command-center.test.ts`, `src/renderer/components/panels/DailyCommandCenterPanel.css`, `package.json`, `WORKER_HANDOFF.md`, `WORKER_ACTIVITY.md`
