@@ -165,6 +165,63 @@ export function setRuleEnabled(id: string, enabled: boolean): void {
   }
 }
 
+export function duplicateRule(id: string): AutomationRule {
+  const trimmed = typeof id === "string" ? id.trim() : "";
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM automation_rules WHERE id = ?").get(trimmed) as
+    | { id: string; name: string; triggerType: string; triggerConfig: string; actionType: string; actionConfig: string; enabled: number }
+    | undefined;
+  if (!row) {
+    throwAssistantInvoke({ domain: "automation", code: "RULE_NOT_FOUND", message: "Rule not found.", retryable: false });
+  }
+  const newId = randomUUID();
+  db.prepare(
+    "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (@id, @name, @triggerType, @triggerConfig, @actionType, @actionConfig, @enabled)"
+  ).run({
+    id: newId,
+    name: `${row.name} (copy)`,
+    triggerType: row.triggerType,
+    triggerConfig: row.triggerConfig,
+    actionType: row.actionType,
+    actionConfig: row.actionConfig,
+    enabled: 0
+  });
+  const created = db.prepare("SELECT * FROM automation_rules WHERE id = ?").get(newId) as Record<string, unknown>;
+  return mapAutomationRuleRow(created);
+}
+
+export async function testRunRule(id: string): Promise<void> {
+  const trimmed = typeof id === "string" ? id.trim() : "";
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM automation_rules WHERE id = ?").get(trimmed) as
+    | { id: string; name?: string; triggerConfig: string; actionType: string; actionConfig: string }
+    | undefined;
+  if (!row) {
+    throwAssistantInvoke({ domain: "automation", code: "RULE_NOT_FOUND", message: "Rule not found.", retryable: false });
+  }
+  const startedAt = new Date().toISOString();
+  try {
+    const actionType = validateActionType(row.actionType);
+    const rawActionConfig = safeParseObject(row.actionConfig, "automation actionConfig");
+    let spec: AutomationActionPayload;
+    if (actionType === "localReminder") {
+      spec = { actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) };
+    } else if (actionType === "localTask") {
+      spec = { actionType, actionConfig: validateLocalTaskConfig(rawActionConfig) };
+    } else {
+      spec = { actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
+    }
+    await executeAutomationAction(spec);
+    const endedAt = new Date().toISOString();
+    writeLog(trimmed, "success", startedAt, endedAt, undefined, { attemptsUsed: 1, retryCount: 0 });
+  } catch (error) {
+    const endedAt = new Date().toISOString();
+    const retryMeta = getRetryMetaFromError(error);
+    writeLog(trimmed, "failed", startedAt, endedAt, formatAutomationCycleError(error), retryMeta);
+    throw error;
+  }
+}
+
 export async function runAutomationCycle(): Promise<void> {
   const nowMs = Date.now();
   const rules = getDb()

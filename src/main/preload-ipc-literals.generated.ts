@@ -31,6 +31,8 @@ export const invokeChannelMap = {
   automationRulesCreate: "automation:rules:create",
   automationRulesDelete: "automation:rules:delete",
   automationRulesSetEnabled: "automation:rules:setEnabled",
+  automationRulesDuplicate: "automation:rules:duplicate",
+  automationRulesTestRun: "automation:rules:testRun",
   rendererLogError: "renderer:logError",
   appOpenHouseholdWindow: "app:openHouseholdWindow",
   appFocusDeskWindow: "app:focusDeskWindow",

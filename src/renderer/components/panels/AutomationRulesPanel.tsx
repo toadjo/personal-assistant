@@ -1,5 +1,5 @@
 import type { AutomationRuleListItem, HaDeviceRow } from "../../types";
-import { Timer, Pause, Play, Trash2, Zap } from "lucide-react";
+import { Timer, Pause, Play, Trash2, Zap, Copy, PlayCircle } from "lucide-react";
 import { RuleForm } from "../forms/RuleForm";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
@@ -14,6 +14,8 @@ type Props = {
   onShowSuccess?: (message: string) => void;
   onDeleteRule: (id: string, name: string) => void;
   onSetRuleEnabled: (id: string, enabled: boolean) => void;
+  onDuplicateRule?: (id: string) => void;
+  onTestRunRule?: (id: string) => void;
 };
 
 export function AutomationRulesPanel({
@@ -24,7 +26,9 @@ export function AutomationRulesPanel({
   onError,
   onShowSuccess,
   onDeleteRule,
-  onSetRuleEnabled
+  onSetRuleEnabled,
+  onDuplicateRule,
+  onTestRunRule
 }: Props): JSX.Element {
   return (
     <section className="panel addOnPanel">
@@ -40,8 +44,29 @@ export function AutomationRulesPanel({
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className={r.enabled ? "" : "muted"}>{r.enabled ? "" : "Paused: "}</span>
                 {r.name} at {r.triggerConfig.at} — {r.actionType === "haToggle" ? "toggle device" : r.actionType === "localTask" ? "create task" : "reminder"}
+                {r.lastExecutedAt ? (
+                  <span className="muted" style={{ marginLeft: "0.5rem" }}>
+                    · Last run: {new Date(r.lastExecutedAt).toLocaleString()}
+                  </span>
+                ) : null}
               </span>
               <div className="row" style={{ gap: "0.5rem", flexShrink: 0 }}>
+                <IconButton
+                  icon={PlayCircle}
+                  label={`Test run rule ${r.name}`}
+                  title="Test run"
+                  onClick={() => onTestRunRule?.(r.id)}
+                  variant="ghost"
+                  size={14}
+                />
+                <IconButton
+                  icon={Copy}
+                  label={`Duplicate rule ${r.name}`}
+                  title="Duplicate"
+                  onClick={() => onDuplicateRule?.(r.id)}
+                  variant="ghost"
+                  size={14}
+                />
                 <IconButton
                   icon={r.enabled ? Pause : Play}
                   label={r.enabled ? "Pause rule" : "Enable rule"}

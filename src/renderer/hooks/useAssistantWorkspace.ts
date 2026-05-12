@@ -146,6 +146,8 @@ export type AssistantWorkspace = {
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;
     setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
+    duplicateRuleById: (id: string) => Promise<void>;
+    testRunRuleById: (id: string) => Promise<void>;
   };
   memos: {
     deleteNote: (id: string, title: string) => Promise<void>;

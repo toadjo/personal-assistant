@@ -67,6 +67,8 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.automationRulesCreate ||
         ch === IpcInvoke.automationRulesDelete ||
         ch === IpcInvoke.automationRulesSetEnabled ||
+        ch === IpcInvoke.automationRulesDuplicate ||
+        ch === IpcInvoke.automationRulesTestRun ||
         ch === IpcInvoke.rendererLogError;
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }

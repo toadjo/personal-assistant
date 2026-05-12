@@ -75,6 +75,8 @@ declare global {
       createRule: (payload: Omit<AutomationRule, "id" | "triggerType">) => Promise<void>;
       deleteRule: (id: string) => Promise<void>;
       setRuleEnabled: (id: string, enabled: boolean) => Promise<void>;
+      duplicateRule: (id: string) => Promise<AutomationRule>;
+      testRunRule: (id: string) => Promise<void>;
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
       onRemindersUpdated: (cb: () => void) => () => void;
       onCommand: (cb: (_event: unknown, command: string) => void) => () => void;

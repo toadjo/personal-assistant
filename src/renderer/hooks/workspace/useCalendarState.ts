@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Reminder, Task } from "../../../shared/types";
-import { buildCalendarCells, toLocalDateKey, parseLocalDateKey } from "../../lib/calendar";
+import { buildCalendarCells, toLocalDateKey } from "../../lib/calendar";
 import { agendaForDateKey, remindersGroupedByLocalDate } from "../../lib/derived/reminders";
 
 export type AgendaFilter = "day" | "today" | "tomorrow" | "week";

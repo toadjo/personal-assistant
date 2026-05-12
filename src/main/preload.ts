@@ -64,6 +64,8 @@ contextBridge.exposeInMainWorld("assistantApi", {
   deleteRule: (id: string) => ipcRenderer.invoke(invoke.automationRulesDelete, id),
   setRuleEnabled: (id: string, enabled: boolean) =>
     ipcRenderer.invoke(invoke.automationRulesSetEnabled, { id, enabled }),
+  duplicateRule: (id: string) => ipcRenderer.invoke(invoke.automationRulesDuplicate, id),
+  testRunRule: (id: string) => ipcRenderer.invoke(invoke.automationRulesTestRun, id),
   logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) =>
     ipcRenderer.invoke(invoke.rendererLogError, payload),
   onRemindersUpdated: (cb: () => void) => {

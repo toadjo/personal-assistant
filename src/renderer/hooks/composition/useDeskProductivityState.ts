@@ -81,6 +81,8 @@ export type DeskProductivityState = {
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;
     setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
+    duplicateRuleById: (id: string) => Promise<void>;
+    testRunRuleById: (id: string) => Promise<void>;
   };
   memos: {
     deleteNote: (id: string, title: string) => Promise<void>;
@@ -134,7 +136,7 @@ export function useDeskProductivityState(args: {
     removeNoteById,
     fetchNotesOnly
   });
-  const { deleteRuleById, setRuleEnabledById } = useAutomationRuleActions(refreshAll, setStatus, setError);
+  const { deleteRuleById, setRuleEnabledById, duplicateRuleById, testRunRuleById } = useAutomationRuleActions(refreshAll, setStatus, setError);
   const { snoozeReminderMinutes, completeReminderById, deleteReminderById } = useReminderActions(
     setStatus,
     setError,
@@ -185,7 +187,9 @@ export function useDeskProductivityState(args: {
     },
     automation: {
       deleteRuleById,
-      setRuleEnabledById
+      setRuleEnabledById,
+      duplicateRuleById,
+      testRunRuleById
     },
     memos: {
       deleteNote,

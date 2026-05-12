@@ -4,8 +4,10 @@ import { getDb } from "../../db";
 import {
   createTimeRule,
   deleteRule,
+  duplicateRule,
   listRules,
   setRuleEnabled,
+  testRunRule,
   setTestAutomationActionOverride
 } from "../../services/automation";
 import { formatAutomationActionLabel } from "../automation/formatActionLabel";
@@ -74,6 +76,12 @@ export function registerAutomationHandlers(assertSender: AssertSender): void {
   registerInvoke(IpcInvoke.automationRulesSetEnabled, assertSender, (_event, payload) => {
     const { id, enabled } = ruleEnabledPayloadSchema.parse(payload);
     setRuleEnabled(id, enabled);
+  });
+  registerInvoke(IpcInvoke.automationRulesDuplicate, assertSender, (_event, id) => {
+    return duplicateRule(uuidSchema.parse(id));
+  });
+  registerInvoke(IpcInvoke.automationRulesTestRun, assertSender, async (_event, id) => {
+    await testRunRule(uuidSchema.parse(id));
   });
   /**
    * Test-only handler: allows Electron E2E tests to inject a fake automation action executor

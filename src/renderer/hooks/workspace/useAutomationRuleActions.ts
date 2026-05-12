@@ -25,5 +25,25 @@ export function useAutomationRuleActions(refreshAll: () => Promise<void>, setSta
     }
   }
 
-  return { deleteRuleById, setRuleEnabledById };
+  async function duplicateRuleById(id: string): Promise<void> {
+    try {
+      await window.assistantApi.duplicateRule(id);
+      setStatus("Rule duplicated.");
+      await refreshAll();
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }
+
+  async function testRunRuleById(id: string): Promise<void> {
+    try {
+      await window.assistantApi.testRunRule(id);
+      setStatus("Test run completed.");
+      await refreshAll();
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }
+
+  return { deleteRuleById, setRuleEnabledById, duplicateRuleById, testRunRuleById };
 }
