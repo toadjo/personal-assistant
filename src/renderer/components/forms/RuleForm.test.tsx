@@ -76,7 +76,7 @@ describe("RuleForm", () => {
       target: { value: "Review backlog" }
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /add rule/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
 
     // Wait for async click handler
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -115,12 +115,12 @@ describe("RuleForm", () => {
       target: { value: "daily" }
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /add rule/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(createRule).not.toHaveBeenCalled();
-    expect(onError).toHaveBeenCalledWith("Recurring tasks require a due date.");
+    expect(onError).toHaveBeenCalledWith("Recurring tasks need a due date.");
 
     delete (window as unknown as Record<string, unknown>).assistantApi;
   });

@@ -21,23 +21,29 @@ type Props = {
 export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element {
   return (
     <section className="panel addOnPanel">
-      <PanelHeader icon={Activity} title="Rule runs" />
+      <PanelHeader icon={Activity} title="Automation log" />
       <ul className="list">
         {isRefreshing ? (
           <li className="muted">Loading...</li>
         ) : logs.length ? (
           logs.map((l) => (
             <li key={l.id}>
-              <strong>{l.status.toUpperCase()}</strong> - {new Date(l.startedAt).toLocaleString()} -{" "}
-              {l.actionLabel || "Run automation action"} - {formatRetrySummary(l.attemptCount, l.retryCount)}
-              {l.error ? ` - ${formatLogError(l.error)}` : ""}
+              <span className={l.status === "success" ? "successText" : l.status === "failed" ? "errorText" : ""}>
+                {l.status.toUpperCase()}
+              </span>
+              {" — "}
+              {new Date(l.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {" — "}
+              {l.actionLabel || "Run action"}
+              {l.retryCount > 0 ? ` — ${formatRetrySummary(l.attemptCount, l.retryCount)}` : ""}
+              {l.error ? ` — ${formatLogError(l.error)}` : ""}
             </li>
           ))
         ) : (
           <EmptyState
             icon={Activity}
             title="No runs yet"
-            description="Rule runs appear here after automation rules execute. Create a rule to see its execution history."
+            description="Execution history appears here after a rule runs."
           />
         )}
       </ul>

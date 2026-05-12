@@ -53,12 +53,12 @@ export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JS
   }
 
   function validate(): string | null {
-    if (!name.trim()) return "Rule name is required.";
-    if (!at) return "Choose a time for this rule.";
+    if (!name.trim()) return "Name is required.";
+    if (!at) return "Time is required.";
     if (actionType === "localReminder" && !text.trim()) return "Reminder text is required.";
     if (actionType === "localTask") {
       if (!taskTitle.trim()) return "Task title is required.";
-      if (taskRecurrence !== "none" && !taskDueAt) return "Recurring tasks require a due date.";
+      if (taskRecurrence !== "none" && !taskDueAt) return "Recurring tasks need a due date.";
     }
     if (actionType === "haToggle" && !entityId) return "Select a device.";
     return null;
@@ -83,7 +83,7 @@ export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JS
           aria-label="Reminder text to create"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Reminder text to create"
+          placeholder="Reminder text"
         />
       )}
 
@@ -166,7 +166,7 @@ export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JS
           }
         }}
       >
-        {isSubmitting ? "Adding..." : "Add Rule"}
+        {isSubmitting ? "Adding..." : "Add"}
       </button>
     </div>
   );

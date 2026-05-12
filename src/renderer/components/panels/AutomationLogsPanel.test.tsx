@@ -35,8 +35,6 @@ describe("AutomationLogsPanel", () => {
     expect(row).toBeInTheDocument();
     // Should contain action label
     expect(screen.getByText(/Create reminder: Stretch/)).toBeInTheDocument();
-    // Should contain retry summary
-    expect(screen.getByText(/No retries/)).toBeInTheDocument();
   });
 
   it("renders failed log with error text", () => {
