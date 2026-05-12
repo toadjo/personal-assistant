@@ -611,16 +611,67 @@ h1 {
 }
 
 .panel {
-  margin-top: var(--space-4);
-  padding: var(--space-4);
-  border-radius: 16px;
+  margin-top: var(--panel-margin-top, var(--space-3, 14px));
+  padding: var(--panel-padding, 14px);
+  border-radius: var(--panel-radius, 12px);
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(10px);
+  box-shadow: var(--panel-shadow, 0 3px 14px rgba(0, 0, 0, 0.04));
+  backdrop-filter: var(--glass-blur, blur(10px));
   transition:
     box-shadow 0.18s ease,
     border-color 0.18s ease;
+}
+
+.todayStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 10px);
+  margin: var(--space-2, 10px) 0;
+  padding: 0 var(--space-3, 14px);
+}
+
+.todayStripChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  font-size: 13px;
+  color: var(--text);
+  cursor: default;
+}
+
+.todayStripChipClickable {
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.todayStripChipClickable:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.todayStripChipAttention {
+  border-color: var(--error-border);
+  background: var(--error-bg);
+}
+
+.todayStripLabel {
+  color: var(--muted);
+}
+
+.todayStripCount {
+  font-weight: 600;
+  color: var(--title);
+}
+
+.todayStripCountAttention {
+  color: var(--error-text);
 }
 
 .topNav {
@@ -842,6 +893,18 @@ button:disabled {
 .dangerButton:hover {
   box-shadow: none;
   background: color-mix(in srgb, var(--error-bg) 98%, transparent);
+}
+
+.dangerGhostButton {
+  background: color-mix(in srgb, var(--ghost-bg) 78%, transparent);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+
+.dangerGhostButton:hover {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--error-bg) 30%, var(--ghost-bg) 70%);
+  border-color: var(--error-border);
 }
 
 .miniActions {
@@ -1582,4 +1645,131 @@ button:disabled {
 
 .error-boundary-fallback__retry:hover {
   background: var(--primary-hover);
+}
+
+/* Command palette (v1.6.1) */
+.commandPaletteOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
+}
+
+.commandPalette {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 var(--space-3);
+  border-radius: var(--panel-radius, 12px);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.commandPaletteHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.commandPaletteSearchIcon {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.commandPaletteInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+}
+
+.commandPaletteInput::placeholder {
+  color: var(--muted);
+}
+
+.commandPaletteList {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.commandPaletteItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.commandPaletteItem:hover,
+.commandPaletteItemSelected {
+  background: var(--primary-soft);
+}
+
+.commandPaletteItemIcon {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.commandPaletteItemContent {
+  min-width: 0;
+}
+
+.commandPaletteItemTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commandPaletteItemSubtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.commandPaletteItemAction {
+  color: var(--primary);
+}
+
+.commandPaletteEmpty {
+  padding: var(--space-5) var(--space-3);
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.commandPaletteFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-1) var(--space-3);
+  border-top: 1px solid var(--panel-border);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.commandPaletteFooter kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+  background: var(--input-bg);
+  font-size: 10px;
+  font-family: inherit;
 }

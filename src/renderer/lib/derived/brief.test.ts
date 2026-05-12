@@ -251,9 +251,7 @@ describe("getBriefSummary", () => {
   });
 
   it("should count context items", () => {
-    const items = [
-      { kind: "note" as const, label: "Note", urgency: "context" as const, sourceId: "1" }
-    ];
+    const items = [{ kind: "note" as const, label: "Note", urgency: "context" as const, sourceId: "1" }];
     const result = getBriefSummary(items);
     expect(result).toBe("Focus: 1 context items.");
   });

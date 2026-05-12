@@ -72,4 +72,76 @@ describe("IPC Zod schemas", () => {
     });
     expect(ok.actionConfig.entityId).toBe("switch.porch");
   });
+
+  it("ruleCreateSchema accepts valid localTask with all fields", () => {
+    const ok = ruleCreateSchema.parse({
+      name: "Daily Standup Task",
+      triggerConfig: { at: "09:00" },
+      actionType: "localTask",
+      actionConfig: {
+        title: "Attend daily standup",
+        notes: "Check agenda first",
+        dueAt: "2026-05-11T09:30:00.000Z",
+        priority: "high",
+        recurrence: "daily"
+      },
+      enabled: true
+    });
+    expect(ok.actionType).toBe("localTask");
+    expect(ok.actionConfig.title).toBe("Attend daily standup");
+    expect(ok.actionConfig.priority).toBe("high");
+  });
+
+  it("ruleCreateSchema rejects localTask with missing title", () => {
+    expect(() =>
+      ruleCreateSchema.parse({
+        name: "Bad",
+        triggerConfig: { at: "09:00" },
+        actionType: "localTask",
+        actionConfig: {
+          notes: "Missing title",
+          dueAt: null,
+          priority: "normal",
+          recurrence: "none"
+        },
+        enabled: true
+      })
+    ).toThrow(/title/i);
+  });
+
+  it("ruleCreateSchema rejects recurring localTask without dueAt", () => {
+    expect(() =>
+      ruleCreateSchema.parse({
+        name: "Bad Recurring",
+        triggerConfig: { at: "09:00" },
+        actionType: "localTask",
+        actionConfig: {
+          title: "Recurring but no due date",
+          notes: "",
+          dueAt: null,
+          priority: "normal",
+          recurrence: "daily"
+        },
+        enabled: true
+      })
+    ).toThrow(/due date|dueAt/i);
+  });
+
+  it("ruleCreateSchema rejects localTask with invalid priority", () => {
+    expect(() =>
+      ruleCreateSchema.parse({
+        name: "Bad Priority",
+        triggerConfig: { at: "09:00" },
+        actionType: "localTask",
+        actionConfig: {
+          title: "Task",
+          notes: "",
+          dueAt: null,
+          priority: "urgent",
+          recurrence: "none"
+        },
+        enabled: true
+      })
+    ).toThrow();
+  });
 });

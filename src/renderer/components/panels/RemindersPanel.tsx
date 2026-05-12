@@ -40,7 +40,7 @@ export const RemindersPanel = memo(function RemindersPanel({
     <section className="panel" aria-labelledby="reminders-panel-heading">
       <PanelHeader
         icon={Bell}
-        title="Follow-ups"
+        title="Reminders"
         actions={
           <select
             aria-label="Filter reminders by status"
@@ -112,7 +112,7 @@ export const RemindersPanel = memo(function RemindersPanel({
           <EmptyState
             icon={Bell}
             title="No reminders yet"
-            description="Set reminders and get desktop notifications when they're due. Everything stays on your computer. Use the form above to create your first reminder."
+            description="Set follow-ups and get notified when they are due."
           />
         )}
       </div>

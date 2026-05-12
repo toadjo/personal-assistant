@@ -73,7 +73,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "brief" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Daily Command Center for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -81,7 +83,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "today" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Daily Command Center for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -89,7 +93,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "focus" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Daily Command Center for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -97,7 +103,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "what's next" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Daily Command Center for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -105,7 +113,9 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "whats next" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setQuery).toHaveBeenCalledWith("");
-    expect(deps.setStatus).toHaveBeenCalledWith("Here's your focus brief for today. See the Today panel for priorities.");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's your focus brief for today. See the Daily Command Center for priorities."
+    );
     expect(result.mutated).toBe(false);
   });
 
@@ -205,6 +215,50 @@ describe("executeAssistantCommand", () => {
     const result = await executeAssistantCommand(deps);
     expect(deps.refreshHomeAssistantEntities).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
+  });
+
+  it("handles catch me up command", async () => {
+    const deps = baseDeps({ rawInput: "catch me up" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setQuery).toHaveBeenCalledWith("");
+    expect(deps.setStatus).toHaveBeenCalledWith(
+      "Here's what changed while you were away. See the Daily Command Center for details."
+    );
+    expect(result.mutated).toBe(false);
+  });
+
+  it("help text lists local commands before Home Assistant", async () => {
+    const deps = baseDeps({ rawInput: "help" });
+    await executeAssistantCommand(deps);
+    const status = vi.mocked(deps.setStatus).mock.calls[0]?.[0] ?? "";
+    expect(status).toContain("add task");
+    expect(status).toContain("what's next");
+    expect(status).toContain("catch me up");
+    expect(status).toContain("After you link Home Assistant");
+  });
+
+  it("help text contains no mojibake ellipsis", async () => {
+    const deps = baseDeps({ rawInput: "help" });
+    await executeAssistantCommand(deps);
+    const status = vi.mocked(deps.setStatus).mock.calls[0]?.[0] ?? "";
+    expect(status).not.toContain("\u2026");
+    expect(status).not.toContain("\u00B7");
+  });
+
+  it("note success status uses plain ASCII punctuation", async () => {
+    const deps = baseDeps({ rawInput: "new note buy eggs" });
+    await executeAssistantCommand(deps);
+    const status = vi.mocked(deps.setStatus).mock.calls[0]?.[0] ?? "";
+    expect(status).toContain("Got it - memo saved.");
+    expect(status).not.toContain("\u2014");
+  });
+
+  it("reminder success status uses plain ASCII punctuation", async () => {
+    const deps = baseDeps({ rawInput: "remind call mom in 15m" });
+    await executeAssistantCommand(deps);
+    const status = vi.mocked(deps.setStatus).mock.calls[0]?.[0] ?? "";
+    expect(status).toContain("All set - reminder for");
+    expect(status).not.toContain("\u2014");
   });
 
   it("unknown command throws", async () => {

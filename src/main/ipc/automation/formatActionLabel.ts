@@ -10,6 +10,9 @@ export function formatAutomationActionLabel(actionType: string | null, actionCon
   if (actionType === "localReminder") {
     return `Create reminder${actionConfig.text ? `: ${actionConfig.text}` : ""}`;
   }
+  if (actionType === "localTask") {
+    return `Create task${actionConfig.title ? `: ${actionConfig.title}` : ""}`;
+  }
   if (actionType === "haToggle") {
     return `Toggle device${actionConfig.entityId ? `: ${actionConfig.entityId}` : ""}`;
   }

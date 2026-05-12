@@ -72,6 +72,8 @@ export function HouseholdShell(): JSX.Element {
               ui.showSuccess("Rule deleted");
             }}
             onSetRuleEnabled={(id, enabled) => void automation.setRuleEnabledById(id, enabled)}
+            onDuplicateRule={(id) => void automation.duplicateRuleById(id)}
+            onTestRunRule={(id) => void automation.testRunRuleById(id)}
           />
           <AutomationLogsPanel isRefreshing={data.isRefreshing} logs={data.logs} />
         </div>

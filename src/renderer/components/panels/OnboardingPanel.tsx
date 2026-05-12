@@ -34,9 +34,9 @@ export function OnboardingPanel({
         </div>
       </div>
       <p className="muted">
-        Welcome to PersonalAssistant. This app helps you capture notes, set reminders, and control your home - all from your
-        desktop. Everything stays on your computer. The app lives in your system tray - close the window and it keeps
-        running. Home Assistant is optional - connect whenever you're ready.
+        Welcome to PersonalAssistant. This app helps you capture notes, manage tasks, set reminders, and see your day at
+        a glance - all from your desktop. Everything stays on your computer. The app lives in your system tray; close
+        the window and it keeps running. Home Assistant is optional and can be added later.
       </p>
       <ul className="onboardingChecklist">
         <li className="onboardingChecklistItem">
@@ -58,6 +58,9 @@ export function OnboardingPanel({
       <div className="presetRow">
         <button type="button" className="ghostButton" onClick={() => onRunPreset("new note check water filter")}>
           Sample note
+        </button>
+        <button type="button" className="ghostButton" onClick={() => onRunPreset("add task plan groceries")}>
+          Sample task
         </button>
         <button type="button" className="ghostButton" onClick={() => onRunPreset("remind stretch in 10m")}>
           Sample reminder

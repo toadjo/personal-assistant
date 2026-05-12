@@ -4,18 +4,29 @@ import { getDb } from "../db";
 import { mainLog } from "../log";
 import { throwAssistantInvoke } from "./structuredInvokeError";
 import { createReminder } from "./reminders";
+import { createTask } from "./tasks";
 import { toggleEntity } from "./homeAssistant";
 import type { AutomationRule } from "../../shared/types";
 
 type AutomationActionPayload =
   | { actionType: "localReminder"; actionConfig: { text: string } }
+  | {
+      actionType: "localTask";
+      actionConfig: {
+        title: string;
+        notes: string;
+        dueAt: string | null;
+        priority: "low" | "normal" | "high";
+        recurrence: "none" | "daily" | "weekly" | "monthly";
+      };
+    }
   | { actionType: "haToggle"; actionConfig: { entityId: string } };
 
 /** IPC / Zod payload before `createTimeRule` normalizes `actionConfig`. */
 export type CreateTimeRulePayload = {
   name: string;
   triggerConfig: { at: string };
-  actionType: "localReminder" | "haToggle";
+  actionType: "localReminder" | "localTask" | "haToggle";
   actionConfig: Record<string, unknown>;
   enabled: boolean;
 };
@@ -77,6 +88,9 @@ function mapAutomationRuleRow(r: Record<string, unknown>): AutomationRule {
   if (actionType === "localReminder") {
     return { ...base, actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) };
   }
+  if (actionType === "localTask") {
+    return { ...base, actionType, actionConfig: validateLocalTaskConfig(rawActionConfig) };
+  }
   return { ...base, actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
 }
 
@@ -89,7 +103,9 @@ export function createTimeRule(input: CreateTimeRulePayload): AutomationRule {
   const actionConfig =
     actionType === "localReminder"
       ? validateLocalReminderConfig(input.actionConfig)
-      : validateHaToggleConfig(input.actionConfig);
+      : actionType === "localTask"
+        ? validateLocalTaskConfig(input.actionConfig)
+        : validateHaToggleConfig(input.actionConfig);
   const rule = {
     id,
     name,
@@ -158,6 +174,81 @@ export function setRuleEnabled(id: string, enabled: boolean): void {
   }
 }
 
+export function duplicateRule(id: string): AutomationRule {
+  const trimmed = typeof id === "string" ? id.trim() : "";
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM automation_rules WHERE id = ?").get(trimmed) as
+    | {
+        id: string;
+        name: string;
+        triggerType: string;
+        triggerConfig: string;
+        actionType: string;
+        actionConfig: string;
+        enabled: number;
+      }
+    | undefined;
+  if (!row) {
+    throwAssistantInvoke({
+      domain: "automation",
+      code: "RULE_NOT_FOUND",
+      message: "Rule not found.",
+      retryable: false
+    });
+  }
+  const newId = randomUUID();
+  db.prepare(
+    "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (@id, @name, @triggerType, @triggerConfig, @actionType, @actionConfig, @enabled)"
+  ).run({
+    id: newId,
+    name: `${row.name} (copy)`,
+    triggerType: row.triggerType,
+    triggerConfig: row.triggerConfig,
+    actionType: row.actionType,
+    actionConfig: row.actionConfig,
+    enabled: 0
+  });
+  const created = db.prepare("SELECT * FROM automation_rules WHERE id = ?").get(newId) as Record<string, unknown>;
+  return mapAutomationRuleRow(created);
+}
+
+export async function testRunRule(id: string): Promise<void> {
+  const trimmed = typeof id === "string" ? id.trim() : "";
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM automation_rules WHERE id = ?").get(trimmed) as
+    | { id: string; name?: string; triggerConfig: string; actionType: string; actionConfig: string }
+    | undefined;
+  if (!row) {
+    throwAssistantInvoke({
+      domain: "automation",
+      code: "RULE_NOT_FOUND",
+      message: "Rule not found.",
+      retryable: false
+    });
+  }
+  const startedAt = new Date().toISOString();
+  try {
+    const actionType = validateActionType(row.actionType);
+    const rawActionConfig = safeParseObject(row.actionConfig, "automation actionConfig");
+    let spec: AutomationActionPayload;
+    if (actionType === "localReminder") {
+      spec = { actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) };
+    } else if (actionType === "localTask") {
+      spec = { actionType, actionConfig: validateLocalTaskConfig(rawActionConfig) };
+    } else {
+      spec = { actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
+    }
+    await executeAutomationAction(spec);
+    const endedAt = new Date().toISOString();
+    writeLog(trimmed, "success", startedAt, endedAt, undefined, { attemptsUsed: 1, retryCount: 0 });
+  } catch (error) {
+    const endedAt = new Date().toISOString();
+    const retryMeta = getRetryMetaFromError(error);
+    writeLog(trimmed, "failed", startedAt, endedAt, formatAutomationCycleError(error), retryMeta);
+    throw error;
+  }
+}
+
 export async function runAutomationCycle(): Promise<void> {
   const nowMs = Date.now();
   const rules = getDb()
@@ -190,10 +281,14 @@ export async function runAutomationCycle(): Promise<void> {
       }
       const actionType = validateActionType(rule.actionType);
       const rawActionConfig = safeParseObject(rule.actionConfig, "automation actionConfig");
-      const spec: AutomationActionPayload =
-        actionType === "localReminder"
-          ? { actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) }
-          : { actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
+      let spec: AutomationActionPayload;
+      if (actionType === "localReminder") {
+        spec = { actionType, actionConfig: validateLocalReminderConfig(rawActionConfig) };
+      } else if (actionType === "localTask") {
+        spec = { actionType, actionConfig: validateLocalTaskConfig(rawActionConfig) };
+      } else {
+        spec = { actionType, actionConfig: validateHaToggleConfig(rawActionConfig) };
+      }
       const retryMeta = await withRetry(() => executeAutomationAction(spec), AUTOMATION_RETRY_ATTEMPTS);
       const endedAt = new Date().toISOString();
       firedSuccess += 1;
@@ -264,6 +359,10 @@ async function executeAutomationAction(spec: AutomationActionPayload): Promise<v
     createReminder({ text, dueAt: new Date().toISOString(), recurrence: "none" });
     return;
   }
+  if (spec.actionType === "localTask") {
+    createTask(spec.actionConfig);
+    return;
+  }
   const { entityId } = spec.actionConfig;
   await toggleEntity(entityId);
 }
@@ -290,24 +389,25 @@ async function withRetry(fn: () => Promise<void> | void, attempts = 3): Promise<
       }
     }
   }
-  const attemptsUsed = safeAttempts;
-  const _retryCount = Math.max(0, attemptsUsed - 1);
-
   // Classify the final error for structured reporting
   const decoded = decodeAssistantInvokeFailure(lastError);
   if (decoded && decoded.code === "ACTION_TIMEOUT") {
-    // Already a structured timeout error, re-throw as-is
+    // Already a structured timeout error, re-throw as-is (timeout is terminal, retry meta is 1/0)
     throw lastError;
   }
 
-  // For non-timeout failures after retries, throw ACTION_FAILED
+  // For non-timeout failures after retries, throw ACTION_FAILED with preserved retry metadata
+  const retryMeta = { attemptsUsed: safeAttempts, retryCount: Math.max(0, safeAttempts - 1) };
   const isRetryable = isTransientError(lastError);
-  throw encodeAssistantInvokeFailure({
-    domain: "automation",
-    code: "ACTION_FAILED",
-    message: `Automation action failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`,
-    retryable: isRetryable
-  });
+  throw new AutomationRetryError(
+    encodeAssistantInvokeFailure({
+      domain: "automation",
+      code: "ACTION_FAILED",
+      message: `Automation action failed after ${safeAttempts} attempts: ${formatErrorMessage(lastError)}`,
+      retryable: isRetryable
+    }).message,
+    retryMeta
+  );
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -406,10 +506,14 @@ function isInvalidAutomationStoredConfigError(error: unknown): boolean {
   return (
     /^Invalid automation (triggerConfig|actionConfig):/.test(m) ||
     /Automation trigger time must use HH:MM format\./.test(m) ||
-    /Automation action type must be 'localReminder' or 'haToggle'\./.test(m) ||
+    /Automation action type must be 'localReminder', 'localTask', or 'haToggle'\./.test(m) ||
     /Automation action config must be an object\./.test(m) ||
     /localReminder action requires non-empty text\./.test(m) ||
-    /haToggle action requires a valid entityId\./.test(m)
+    /haToggle action requires a valid entityId\./.test(m) ||
+    /localTask action requires a non-empty title\./.test(m) ||
+    /localTask action requires a valid priority/.test(m) ||
+    /localTask action requires a valid recurrence/.test(m) ||
+    /Recurring localTask actions require dueAt\./.test(m)
   );
 }
 
@@ -479,9 +583,40 @@ function validateHaToggleConfig(actionConfig: unknown): { entityId: string } {
   return { entityId };
 }
 
-function validateActionType(value: unknown): "localReminder" | "haToggle" {
-  if (value === "localReminder" || value === "haToggle") return value;
-  throw new Error("Automation action type must be 'localReminder' or 'haToggle'.");
+function validateLocalTaskConfig(actionConfig: unknown): {
+  title: string;
+  notes: string;
+  dueAt: string | null;
+  priority: "low" | "normal" | "high";
+  recurrence: "none" | "daily" | "weekly" | "monthly";
+} {
+  if (!actionConfig || typeof actionConfig !== "object" || Array.isArray(actionConfig)) {
+    throw new Error("Automation action config must be an object.");
+  }
+  const o = actionConfig as Record<string, unknown>;
+  const title = typeof o.title === "string" ? o.title.trim() : "";
+  if (!title) throw new Error("localTask action requires a non-empty title.");
+  const notes = typeof o.notes === "string" ? o.notes : "";
+  const dueAt = typeof o.dueAt === "string" && o.dueAt ? o.dueAt : null;
+  if (!(o.priority === "low" || o.priority === "normal" || o.priority === "high")) {
+    throw new Error("localTask action requires a valid priority (low, normal, or high).");
+  }
+  const priority = o.priority;
+  if (
+    !(o.recurrence === "none" || o.recurrence === "daily" || o.recurrence === "weekly" || o.recurrence === "monthly")
+  ) {
+    throw new Error("localTask action requires a valid recurrence (none, daily, weekly, or monthly).");
+  }
+  const recurrence = o.recurrence;
+  if (recurrence !== "none" && !dueAt) {
+    throw new Error("Recurring localTask actions require dueAt.");
+  }
+  return { title, notes, dueAt, priority, recurrence };
+}
+
+function validateActionType(value: unknown): "localReminder" | "localTask" | "haToggle" {
+  if (value === "localReminder" || value === "localTask" || value === "haToggle") return value;
+  throw new Error("Automation action type must be 'localReminder', 'localTask', or 'haToggle'.");
 }
 
 function sleep(ms: number): Promise<void> {

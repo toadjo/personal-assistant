@@ -108,8 +108,8 @@ test.describe("Structured Retryable Failures", () => {
       return (
         typeof api.listNotes === "function" &&
         typeof api.createNote === "function" &&
-            typeof api.createReminder === "function" &&
-            typeof api.setTestHaFetchOverride === "function"
+        typeof api.createReminder === "function" &&
+        typeof api.setTestHaFetchOverride === "function"
       );
     });
 

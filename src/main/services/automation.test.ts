@@ -41,6 +41,7 @@ import {
   setTestAutomationActionOverride
 } from "./automation";
 import { listReminders } from "./reminders";
+import { listTasks } from "./tasks";
 
 describe("automation service", () => {
   beforeEach(() => {
@@ -172,6 +173,106 @@ describe("automation service", () => {
     expect(toggleEntity).toHaveBeenCalledWith("switch.test");
   });
 
+  it("createTimeRule inserts localTask and round-trips through listRules", () => {
+    const rule = createTimeRule({
+      name: "Daily Task",
+      triggerConfig: { at: "08:30" },
+      actionType: "localTask",
+      actionConfig: {
+        title: "Morning review",
+        notes: "Check calendar",
+        dueAt: null,
+        priority: "high",
+        recurrence: "none"
+      },
+      enabled: true
+    });
+    expect(rule.actionType).toBe("localTask");
+    expect((rule.actionConfig as { title: string }).title).toBe("Morning review");
+    expect((rule.actionConfig as { priority: string }).priority).toBe("high");
+    const rows = listRules();
+    expect(rows).toHaveLength(1);
+    const found = rows[0]!;
+    expect(found.actionType).toBe("localTask");
+    expect((found.actionConfig as { title: string }).title).toBe("Morning review");
+  });
+
+  it("runAutomationCycle runs due localTask and creates an open task", async () => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    createTimeRule({
+      name: "Task Automation",
+      triggerConfig: { at: `${hh}:${mm}` },
+      actionType: "localTask",
+      actionConfig: {
+        title: "Auto-created task",
+        notes: "From automation",
+        dueAt: null,
+        priority: "normal",
+        recurrence: "none"
+      },
+      enabled: true
+    });
+    await runAutomationCycle();
+    const tasks = listTasks();
+    expect(tasks.some((t) => t.title === "Auto-created task" && t.status === "open")).toBe(true);
+  });
+
+  it("runAutomationCycle runs due recurring localTask with dueAt", async () => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const dueAt = new Date().toISOString();
+    createTimeRule({
+      name: "Recurring Task",
+      triggerConfig: { at: `${hh}:${mm}` },
+      actionType: "localTask",
+      actionConfig: {
+        title: "Recurring automation task",
+        notes: "",
+        dueAt,
+        priority: "low",
+        recurrence: "daily"
+      },
+      enabled: true
+    });
+    await runAutomationCycle();
+    const tasks = listTasks();
+    const found = tasks.find((t) => t.title === "Recurring automation task");
+    expect(found).toBeDefined();
+    expect(found!.status).toBe("open");
+    expect(found!.recurrence).toBe("daily");
+    expect(found!.dueAt).toBe(dueAt);
+  });
+
+  it("listRules throws structured INVALID_STORED_CONFIG for malformed localTask stored row", () => {
+    testDb
+      .prepare(
+        "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run(
+        "00000000-0000-4000-8000-000000000002",
+        "Bad Task Rule",
+        "time",
+        '{"at":"10:00"}',
+        "localTask",
+        '{"title":""}',
+        1
+      );
+
+    try {
+      listRules();
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "automation",
+        code: "INVALID_STORED_CONFIG",
+        retryable: false
+      });
+    }
+  });
+
   it("listRules throws structured INVALID_STORED_CONFIG for malformed stored row", () => {
     // Insert a malformed row directly into the database
     testDb
@@ -185,6 +286,60 @@ describe("automation service", () => {
         "invalid json",
         "localReminder",
         '{"text":"test"}',
+        1
+      );
+
+    try {
+      listRules();
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "automation",
+        code: "INVALID_STORED_CONFIG",
+        retryable: false
+      });
+    }
+  });
+
+  it("listRules throws structured INVALID_STORED_CONFIG for invalid stored localTask priority", () => {
+    testDb
+      .prepare(
+        "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run(
+        "00000000-0000-4000-8000-000000000003",
+        "Bad Priority",
+        "time",
+        '{"at":"10:00"}',
+        "localTask",
+        '{"title":"Task","notes":"","dueAt":null,"priority":"urgent","recurrence":"none"}',
+        1
+      );
+
+    try {
+      listRules();
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+        domain: "automation",
+        code: "INVALID_STORED_CONFIG",
+        retryable: false
+      });
+    }
+  });
+
+  it("listRules throws structured INVALID_STORED_CONFIG for invalid stored localTask recurrence", () => {
+    testDb
+      .prepare(
+        "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run(
+        "00000000-0000-4000-8000-000000000004",
+        "Bad Recurrence",
+        "time",
+        '{"at":"10:00"}',
+        "localTask",
+        '{"title":"Task","notes":"","dueAt":null,"priority":"normal","recurrence":"yearly"}',
         1
       );
 
@@ -404,10 +559,8 @@ describe("automation service", () => {
       const failedLog = logs.find((l) => l.status === "failed");
       expect(failedLog).toBeDefined();
       if (failedLog) {
-        // Current implementation: retry metadata is lost on error, defaults to 1 attempt, 0 retries
-        // This is a known limitation - withRetry returns metadata on success but not on failure
-        expect(failedLog.attemptCount).toBe(1);
-        expect(failedLog.retryCount).toBe(0);
+        expect(failedLog.attemptCount).toBe(3);
+        expect(failedLog.retryCount).toBe(2);
       }
     });
 

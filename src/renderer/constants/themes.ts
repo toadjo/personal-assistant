@@ -1,11 +1,10 @@
+import { THEME_PRESETS, THEME_IDS } from "../lib/theme/tokens";
 import type { ThemeMode } from "../types";
 
-export const THEME_OPTIONS: { id: ThemeMode; label: string }[] = [
-  { id: "glass", label: "Glass / frosted" },
-  { id: "paper", label: "Paper / white" },
-  { id: "obsidian", label: "Obsidian / black" },
-  { id: "fog", label: "Fog / grey" },
-  { id: "deepblue", label: "Deep blue" }
-];
+export { THEME_PRESETS, THEME_IDS };
 
-export const THEME_IDS = new Set(THEME_OPTIONS.map((t) => t.id));
+/** Flat select options derived from presets. Kept for backward compatibility. */
+export const THEME_OPTIONS: { id: ThemeMode; label: string }[] = THEME_PRESETS.map((p) => ({
+  id: p.id,
+  label: p.label
+}));

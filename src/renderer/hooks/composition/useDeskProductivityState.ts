@@ -28,11 +28,12 @@ import {
   visibleReminders as remindersVisible
 } from "../../lib/derived/reminders";
 import { useCalendarState } from "../workspace/useCalendarState";
-import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions";
+import type { AgendaItem, AgendaFilter } from "../workspace/useCalendarState";
 import { useNoteActions } from "../workspace/useNoteActions";
+import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions";
 import { useReminderActions } from "../workspace/useReminderActions";
-import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
 import { useTaskActions } from "../workspace/useTaskActions";
+import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
 
 export type DeskProductivityState = {
   calendar: {
@@ -42,7 +43,9 @@ export type DeskProductivityState = {
     todayKey: string;
     calendarSelectedKey: string;
     setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
-    selectedDayAgenda: Reminder[];
+    agendaFilter: AgendaFilter;
+    setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
+    selectedDayAgenda: AgendaItem[];
   };
   reminders: {
     filter: ReminderFilter;
@@ -70,10 +73,16 @@ export type DeskProductivityState = {
       priority: "low" | "normal" | "high";
       recurrence: "none" | "daily" | "weekly" | "monthly";
     }) => Promise<void>;
+    bulkComplete: (ids: string[]) => Promise<void>;
+    updatePriority: (id: string, priority: "low" | "normal" | "high") => Promise<void>;
+    undo: () => Promise<void>;
+    canUndo: boolean;
   };
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;
     setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
+    duplicateRuleById: (id: string) => Promise<void>;
+    testRunRuleById: (id: string) => Promise<void>;
   };
   memos: {
     deleteNote: (id: string, title: string) => Promise<void>;
@@ -121,13 +130,17 @@ export function useDeskProductivityState(args: {
 
   const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
 
-  const calendar = useCalendarState(reminders);
+  const calendar = useCalendarState(reminders, tasks);
   const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
     mergeNote,
     removeNoteById,
     fetchNotesOnly
   });
-  const { deleteRuleById, setRuleEnabledById } = useAutomationRuleActions(refreshAll, setStatus, setError);
+  const { deleteRuleById, setRuleEnabledById, duplicateRuleById, testRunRuleById } = useAutomationRuleActions(
+    refreshAll,
+    setStatus,
+    setError
+  );
   const { snoozeReminderMinutes, completeReminderById, deleteReminderById } = useReminderActions(
     setStatus,
     setError,
@@ -148,6 +161,8 @@ export function useDeskProductivityState(args: {
       todayKey: calendar.todayKey,
       calendarSelectedKey: calendar.calendarSelectedKey,
       setCalendarSelectedKey: calendar.setCalendarSelectedKey,
+      agendaFilter: calendar.agendaFilter,
+      setAgendaFilter: calendar.setAgendaFilter,
       selectedDayAgenda: calendar.selectedDayAgenda
     },
     reminders: {
@@ -168,11 +183,17 @@ export function useDeskProductivityState(args: {
       dueTodayOpen: taskActions.dueTodayOpen,
       completeById: taskActions.completeById,
       deleteById: taskActions.deleteById,
-      saveTask: taskActions.saveTask
+      saveTask: taskActions.saveTask,
+      bulkComplete: taskActions.bulkComplete,
+      updatePriority: taskActions.updatePriority,
+      undo: taskActions.undo,
+      canUndo: taskActions.canUndo
     },
     automation: {
       deleteRuleById,
-      setRuleEnabledById
+      setRuleEnabledById,
+      duplicateRuleById,
+      testRunRuleById
     },
     memos: {
       deleteNote,

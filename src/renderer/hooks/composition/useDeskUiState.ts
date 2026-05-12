@@ -14,17 +14,22 @@
  * to avoid circular dependencies with command state.
  */
 import { useState, type Dispatch, type SetStateAction } from "react";
-import type { ThemeMode } from "../../types";
+import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../../lib/theme/tokens";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../../constants/storageKeys";
 import { useWorkspaceMessages } from "../ui/useWorkspaceMessages";
 import { useThemePreference } from "../ui/useThemePreference";
+import { useDisplayPreferences } from "../ui/useDisplayPreferences";
 import { useOnboardingProgress } from "../useOnboardingProgress";
+import type { DisplayPreferences, Density, PanelRadius } from "../../lib/display/types";
 
 export type DeskUiState = {
   theme: ThemeMode;
-  setTheme: Dispatch<SetStateAction<ThemeMode>>;
+  custom: CustomTheme | undefined;
+  setTheme: (preset: ThemeMode) => void;
+  setCustomOverride: (key: ThemeTokenKey, value: string | undefined) => void;
+  resetCustomOverrides: (preset?: ThemeMode) => void;
   status: string;
   setStatus: (value: string) => void;
   error: string;
@@ -47,13 +52,22 @@ export type DeskUiState = {
     markHomeAssistantConnected: () => void;
     skipHomeAssistant: () => void;
   };
+  display: DisplayPreferences & {
+    setDensity: (density: Density) => void;
+    setPanelRadius: (radius: PanelRadius) => void;
+    setShadows: (value: boolean) => void;
+    setGlassBlur: (value: boolean) => void;
+    setDccShowAllSecondary: (value: boolean) => void;
+    resetDisplay: () => void;
+  };
   desk: {
     hideWindow: () => void;
   };
 };
 
 export function useDeskUiState(): DeskUiState {
-  const { theme, setTheme } = useThemePreference();
+  const { theme, custom, setTheme, setCustomOverride, resetCustomOverrides } = useThemePreference();
+  const display = useDisplayPreferences();
   const { status, setStatus, error, setError, reportError, persistentSuccess } = useWorkspaceMessages();
 
   // v1.2.7 guided onboarding
@@ -65,7 +79,10 @@ export function useDeskUiState(): DeskUiState {
 
   return {
     theme,
+    custom,
     setTheme,
+    setCustomOverride,
+    resetCustomOverrides,
     status,
     setStatus,
     error,
@@ -87,6 +104,15 @@ export function useDeskUiState(): DeskUiState {
       markReminderCreated: onboardingProgress.markReminderCreated,
       markHomeAssistantConnected: onboardingProgress.markHomeAssistantConnected,
       skipHomeAssistant: onboardingProgress.skipHomeAssistant
+    },
+    display: {
+      ...display.prefs,
+      setDensity: display.setDensity,
+      setPanelRadius: display.setPanelRadius,
+      setShadows: display.setShadows,
+      setGlassBlur: display.setGlassBlur,
+      setDccShowAllSecondary: display.setDccShowAllSecondary,
+      resetDisplay: display.reset
     },
     desk: {
       hideWindow: () => {

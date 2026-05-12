@@ -1,13 +1,12 @@
 # Personal Assistant
 
-Windows-first tray personal assistant MVP built with Electron + React + TypeScript.
+Local-first desktop personal assistant built with Electron + React + TypeScript.
 
-## Install the app (Windows, Linux, macOS, no Git/Node)
+## Install the app (Windows, no Git/Node)
 
 1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
    - Windows: `Setup` `.exe`
    - Linux: `.AppImage` (AppImage-only support in this pass)
-   - macOS: `.dmg` or `.zip`
 2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
@@ -92,14 +91,14 @@ When debugging failures, follow this sequence to narrow the layer:
 
 Pull requests and pushes to `main`/`master` run the full verification sequence in GitHub Actions (see `.github/workflows/ci.yml`): lint, typecheck, unit tests with coverage, build, preload smoke, Playwright browser installation, browser E2E, and Electron E2E. The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
 
-**Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` with three jobs:
+**Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` with four jobs:
 
 - `package-windows` builds NSIS artifacts and uploads versioned installer history artifacts.
 - `package-linux` builds Linux AppImage artifacts and uploads `release/` outputs.
 - `package-macos` builds macOS DMG/zip artifacts and uploads `release/` outputs.
-- `publish-releases` downloads all three artifact sets, validates required `.exe` + `.AppImage` + `.dmg` + `.zip` presence, publishes the private release, then mirrors release assets only to **[toadjo/Personal-Assistant-R Releases](https://github.com/toadjo/Personal-Assistant-R/releases)**.
+- `publish-releases` downloads all platform artifact sets, validates required `.exe`, `.AppImage`, and `.dmg` assets, publishes the private release, then mirrors release assets only to **[toadjo/Personal-Assistant-R Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** when public mirroring is configured.
 
-Public mirroring requires `PUBLIC_RELEASE_TOKEN`. If the secret is missing, the publish job skips mirroring (does not fail). Source code is not pushed or synced to the public repo; only release assets (`.exe`, `.blockmap`, `.yml`, `.AppImage`, `.dmg`, `.zip`, optional `.AppImage.zsync`) are uploaded.
+Public mirroring requires `PUBLIC_RELEASE_TOKEN`. If the secret is missing, public mirroring is skipped and the private release still publishes. Source code is not pushed or synced to the public repo; only release assets (`.exe`, `.blockmap`, `.yml`, `.AppImage`, `.dmg`, `.zip`, optional `.AppImage.zsync`) are uploaded. Workflow artifacts use short retention so temporary package handoff files do not fill GitHub Actions storage.
 
 **Dependabot** is enabled for npm (`.github/dependabot.yml`).
 
@@ -135,11 +134,12 @@ Outputs renderer assets to `dist/renderer/` and compiles main/preload to `dist/m
 
 ## Features
 
-- System tray app with command launcher hints
-- Local notes and reminders stored in SQLite
-- Desktop notifications for due reminders
-- Home Assistant settings, connectivity test, entity sync, and toggle actions
-- Time-based automation rules with execution logs
+- Daily Command Center with a top "Now" queue, attention items, context, and since-you-were-away changes
+- Local notes, tasks, reminders, and personal automation rules stored in SQLite
+- Desktop notifications for due reminders and tasks
+- Local automations that can create reminders or tasks without Home Assistant
+- Optional Home Assistant settings, connectivity test, entity sync, and toggle actions
+- Time-based automation rules with readable execution logs and retry metadata
 
 ## Run
 
@@ -148,7 +148,7 @@ npm install
 npm run dev
 ```
 
-## Release Packaging (Windows, Linux AppImage, macOS)
+## Release Packaging (Windows + Linux AppImage)
 
 Versioned packaging outputs now live under:
 
@@ -247,6 +247,18 @@ npm run dist
 - Remaining gap: auto-generated `.ico` uses one source PNG, so quality can be weaker at very small sizes (16x16/24x24). Practical workaround: replace `assets/app-icon.ico` with a designer-exported multi-size `.ico` (16/24/32/48/64/128/256) and keep the same filename.
 
 ## Release Notes
+
+### v1.5.0
+
+**Local-first operating layer** - The desk now centers on Daily Command Center instead of a Home Assistant-led workflow:
+
+- Added Daily Command Center with Summary, Now, Since You Were Away, Attention, and Context sections
+- Added quick actions for completing tasks, completing reminders, snoozing reminders, marking away changes seen, and opening relevant local panels
+- Added local task automations with full task fields, alongside local reminder automations
+- Improved automation reliability with preserved retry metadata and clearer rule-run logs
+- Refreshed onboarding, command examples, and help/status copy so notes, tasks, reminders, and local automations work as the core experience
+- Kept Home Assistant optional and visually secondary
+- Hardened release packaging with short artifact retention, macOS artifact validation, and package-version-driven About display
 
 ### v1.3.0
 

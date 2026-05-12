@@ -1,9 +1,140 @@
 # Worker Handoff
 
+## Current branch status
+
+- Branch: `release/linux-appimage-audit`
+- Purpose: Linux AppImage audit and dependency security cleanup
+- HEAD commit: Check with `git log --oneline -1`
+- Working tree: Check with git status
+
+## Recent commit history
+
+```
+88c2aba fix: stabilize v1.7.1 source sync [skip ci]
+fd4398b v1.7.0: Data control and backup
+5df5ddc v1.6.5: Windows installer release
+5bbd6df v1.6.4: Automation builder upgrade
+f54083e v1.6.3: Calendar and agenda upgrade
+31af29f v1.6.2: Notes and tasks quality of life
+00a3d79 v1.6.1: Global search and command palette
+244e83b v1.6.0: Windows installer release
+```
+
+**Recent work summary:**
+
+- v1.7.1 stabilization: synced package-lock.json to 1.7.1, fixed Appearance editor rgba-to-hex handling, added Zod backup import validation, added import confirmation dialog, cleaned lint warnings, replaced em dashes/ellipses with ASCII in user-facing strings
+- v1.7.0: Data backup and restore — export all data to JSON, import with full replace, reset all data, DataControlPanel in desk UI
+- v1.6.5: Windows installer release with v1.6.1-1.6.4 features
+- v1.6.4: Automation builder upgrade — duplicate rule, test run, last run status
+- v1.6.3: Calendar agenda upgrade — combined reminders + tasks, Day/Today/Tomorrow/Week filters, click-to-create
+- v1.6.2: Notes and tasks quality of life — bulk complete, priority editing, undo
+- v1.6.1: Global search and command palette (Ctrl+K) with fuzzy search
+- All features include focused tests (357 tests across 51 files)
+
 ## Repo and environment
 
+- Working repo: `C:\Users\ITPC4\Desktop\project 430`
 - On Windows PowerShell, use `npm.cmd` (not bare `npm`)
-- Quick state check command: `npm.cmd run handoff`
+- Node.js: Use `node` command directly
+- Git: Use `git` command directly
+
+## Development setup
+
+**Initial setup:**
+
+```bash
+npm install
+```
+
+**Development mode:**
+
+```bash
+npm run dev
+```
+
+- Starts Vite dev server for renderer process
+- Starts Electron main process in watch mode
+- Hot reload enabled for renderer changes
+
+**Key scripts:**
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run test` - Run unit tests
+- `npm run check:preload-ipc` - Check preload IPC literals are up to date
+- `npm run test:smoke` - Run smoke tests
+- `npm run test:preload-electron` - Run preload Electron smoke tests
+- `npm run test:e2e` - Run E2E tests
+- `npm run test:e2e:electron` - Run Electron E2E tests
+- `npm run handoff` - Show worker handoff info
+- `npm run activity` - Show worker activity log and repo state
+
+## Architecture overview
+
+**Process architecture:**
+
+- Main process: Electron main process (`src/main/main.ts`)
+- Renderer process: React/Vite UI (`src/renderer/`)
+- Preload script: Secure IPC bridge (`src/main/preload.ts`)
+
+**Key directories:**
+
+- `src/main/` - Electron main process code
+  - `ipc/` - IPC handlers and schemas
+  - `services/` - Business logic (notes, reminders, tasks, home assistant)
+  - `db/` - Database migrations and access
+  - `automation/` - Automation rule execution
+- `src/renderer/` - React UI code
+  - `components/` - React components
+  - `hooks/` - Custom React hooks
+  - `lib/` - Utility functions
+  - `command/` - Command parsing and execution
+- `tests/` - E2E tests
+- `scripts/` - Build and utility scripts
+
+**Database:**
+
+- SQLite database stored in `%APPDATA%\PersonalAssistant\assistant.db`
+- Migrations in `src/main/db/migrations/`
+- Uses `better-sqlite3` for synchronous database access
+
+**IPC architecture:**
+
+- All renderer-to-main communication goes through `contextBridge` in preload
+- IPC handlers registered in `src/main/ipc/register-handlers.ts`
+- All mutations validated with Zod schemas in `src/main/ipc/schemas.ts`
+- Sender validation via `assertTrustedIpcSender` in `src/main/security.ts`
+
+## Test coverage
+
+**Unit tests (Vitest):**
+
+- 316 tests passing across 47 test files
+- Coverage areas:
+  - IPC handlers and payload validation
+  - Services (notes, reminders, tasks, home assistant, automation)
+  - Command parsing and execution
+  - Derived data (brief, away-brief)
+  - Security (navigation validation, sender validation)
+  - Database migrations
+
+**E2E tests (Playwright):**
+
+- Electron E2E tests in `tests/e2e-electron/`
+- Web E2E tests in `tests/e2e/`
+- Test areas:
+  - First-run onboarding
+  - IPC validation
+  - Automation failures (structured errors)
+  - Structured retryable/non-retryable errors
+
+**Test execution:**
+
+- Run unit tests: `npm test`
+- Run E2E tests: `npm run test:e2e` (requires built app)
+- Run Electron E2E tests: `npm run test:e2e:electron` (requires built app)
 
 ## Release workflow assumptions
 
@@ -21,10 +152,109 @@
 
 Validation and mirroring rules:
 
-- Required before publish: at least one `.exe`, at least one `.AppImage`, at least one `.dmg`, and at least one `.zip`
-- Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`
-- Public release mirroring skips if `PUBLIC_RELEASE_TOKEN` is unset (does not fail)
+- Required before publish: at least one `.exe`, at least one `.AppImage`, and at least one `.dmg`
+- Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`, `.zip`
+- Public release mirroring is skipped if `PUBLIC_RELEASE_TOKEN` is missing
 - Public mirror uses `gh release create` if release does not exist; otherwise `gh release upload --clobber`
+
+## Manual Windows release
+
+When GitHub Actions artifact storage is unreliable, Windows releases are built locally and published manually.
+
+**Required flow (Windows PowerShell):**
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd test
+npm.cmd run build
+npm.cmd run test:smoke
+npm.cmd run test:preload-electron
+npm.cmd run release:build -- -Version X.Y.Z -SkipVersionBump -ReplaceExisting
+```
+
+**Publish the installer manually from:**
+
+```text
+installer-history\vX.Y.Z\PersonalAssistant Setup X.Y.Z.exe
+```
+
+**Windows release asset rules:**
+
+- Upload **only** the `.exe` for the Windows release.
+- Exclude `latest.yml` and `.blockmap` unless explicitly requested for updater testing.
+- Do not depend on GitHub Actions artifacts for Windows release packaging while artifact storage quota is unreliable.
+- If a GitHub Actions release run fails only at artifact upload, treat the manual Windows `.exe` release as the source of truth.
+
+## Current feature status (v1.7.0)
+
+**Local-first operating layer:**
+
+- Daily Command Center is the primary desk surface.
+- Local notes, tasks, reminders, and automations are useful with no Home Assistant configured.
+- Home Assistant remains optional and visually secondary.
+- Local automations can create reminders and tasks.
+- Automation logs show action labels and retry metadata.
+- Data backup and restore: export all data to JSON, import with full replace, reset all data.
+- About panel version comes from package metadata through the renderer build.
+
+**Away Brief feature (new in v1.5):**
+
+- Local-first "Since You Were Away" brief shows tasks, reminders, and notes changed since last seen
+- Uses localStorage key `assistant-desk-last-seen-at` to track last seen timestamp
+- Excludes completed tasks and done reminders from overdue/due items
+- Defensive timestamp parsing prevents bogus items from invalid dates
+- Command aliases: `catch me up`, `what changed`, `since I was away`
+- Panel integrated above Focus Brief in desk view
+- Tests: 16/16 passing (13 helper tests, 3 panel tests)
+
+## Security audit summary (May 2026)
+
+**Electron boundaries:**
+
+- All IPC handlers use `assertTrustedIpcSender` to validate sender is a trusted window
+- Navigation validation via `isTrustedNavigationTarget` only allows file:// URLs or dev server URLs
+- Test-only APIs (`setTestHaFetchOverride`, `setTestAutomationActionOverride`) gated by `ELECTRON_E2E_TEST_MODE`
+
+**IPC validation:**
+
+- All renderer-to-main mutations have Zod schemas in `src/main/ipc/schemas.ts`
+- Schema validation maps to stable `ipc_validation` errors via `invoke-handle.ts`
+- Payload shapes tested in `handler-payload-contract.test.ts`
+
+**SQL injection:**
+
+- All SQL queries use prepared statements with parameter binding (verified in notes.ts, reminders.ts)
+- No string interpolation with user input found
+
+**Home Assistant URL policy:**
+
+- `assertHomeAssistantBaseUrl` enforces HTTPS for public hosts
+- HTTP only allowed for localhost/private LAN (RFC1918, .local, ::1, fe80:/fc/fd ranges)
+- Logs warning when HTTP is used on local networks
+
+**Secrets handling:**
+
+- Home Assistant token stored via Electron's `safeStorage` when available
+- Fallback to plaintext with warning when encryption unavailable
+- Encrypted tokens prefixed with `sse1:` for identification
+
+## Dependency Risk Register
+
+| Package          | Current Version | Vulnerability                 | Toolchain Area  | Blocker                                   | Next Retry Condition                                                  |
+| ---------------- | --------------- | ----------------------------- | --------------- | ----------------------------------------- | --------------------------------------------------------------------- |
+| electron         | 35.0.0          | 10 high vulnerabilities       | Build/runtime   | better-sqlite3 v11.8.1 incompatibility    | Test latest better-sqlite3, then retry Electron 42 in separate branch |
+| electron-builder | 25.1.8          | 2 low vulnerabilities         | Build packaging | Dependent on Electron upgrade             | Retry after Electron upgrade succeeds                                 |
+| tar              | 6.2.1           | Multiple high vulnerabilities | Build toolchain | Transitive dependency of electron-builder | Will resolve with Electron/electron-builder upgrade                   |
+
+**Known vulnerabilities:**
+
+- `npm audit --audit-level=high` reports 12 vulnerabilities in build dependencies (electron, tar, electron-builder)
+- These are in the build toolchain, not in app runtime dependencies
+- Electron 42 upgrade attempted but failed due to better-sqlite3 native module incompatibility
+- better-sqlite3 v11.8.1 cannot be rebuilt against Electron 42 (v8 API changes)
+- Reverted to electron@35.0.0 and electron-builder@25.1.8
+- package-lock.json reverted to cc691de to remove failed upgrade churn
 
 ## Full audit command sequence (Windows)
 
@@ -38,6 +268,7 @@ npm.cmd run test:smoke
 npm.cmd run test:preload-electron
 npm.cmd run test:e2e
 npm.cmd run test:e2e:electron
+npm.cmd audit --audit-level=high
 ```
 
 ## Stop/report rule
@@ -47,7 +278,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 - Exact command used
 - Relevant environment values (`PUBLIC_RELEASE_TOKEN` set/unset)
 - Validated asset list selected for publish
-- Missing required file classes (`.exe`, `.AppImage`, `.dmg`, and/or `.zip`)
+- Missing required file classes (`.exe`, `.AppImage`, and/or `.dmg`)
 - Electron version and embedded Node version if failure involves preload/electron launch
 
 ## macOS support status (v1.5)
@@ -79,81 +310,137 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 5. ~~Generate `assets/app-icon.icns` and commit to repository~~ (done)
 6. Validate `npm run dist:mac` reaches electron-builder successfully
 
-## Continuation instructions after cleanup slice (2026-05-07)
+## Line ending policy
 
-**Completed cleanup work:**
+**Repository-wide LF enforcement:**
 
-- Fixed mojibake strings (replaced em dashes with ASCII hyphens in UI/dialog strings across 17 source files)
-- Audited and cleaned src/renderer/styles.css (removed duplicate CSS blocks, ~50 unused classes including welcome-related classes)
-- Reviewed AssistantShell and global styles (no visual clutter reduction needed)
-- Reviewed Electron boundary code (security hardening is well-implemented: IPC sender validation, navigation allowlist, CSP, preload exposure)
-- Confirmed security tests are in place (security.test.ts, preload-channels.test.ts)
-- Updated WORKER_HANDOFF.md to remove machine-specific paths
-- Removed unused components (AppHeader.tsx, WelcomeBar.tsx)
-- Removed unused CSS classes (.statAddOn, .statAddOnLive, .welcomeRow, .welcomeText, .welcomeNameForm, .welcomeNameInput, .welcomeSave, .welcomeClear, .welcomeHint)
-- All static checks passed (lint, typecheck, check:preload-ipc, test: 215 tests passed)
-- Preload IPC file is clean (check:preload-ipc passed)
-- Build and smoke checks passed (build, test:smoke, test:preload-electron)
-- Visual QA passed (no regressions found at 1400px, 1024px, narrow widths; toolbar does not overflow; all panels look professional)
-- Cleanup baseline committed as `6826393 chore: clean up ui baseline`
-- UI text normalization completed as `24fd0fb chore: normalize ui text` (replaced non-ASCII characters with ASCII equivalents across 14 files, fixed React act warnings in TasksPanel.test.tsx)
+- `.gitattributes` at repo root enforces LF line endings for all text files
+- Windows batch/cmd/PowerShell scripts keep CRLF for native execution
+- Binary assets (images, icons, archives, databases) marked as binary to prevent normalization
+- Future Windows workers should not fight CRLF status noise manually
+- Before staging, run `git status --short --branch` and `git diff --stat` to confirm real content changes only
 
-**Current state:**
+## Next product direction
 
-- Branch: `main`
-- Tracking branch: `origin/main`
-- HEAD: `635c937`
-- Package version: `1.4.2`
-- Working tree: clean
+**Goal:** Make Personal Assistant feel like a local-first personal operating layer, not a Home Assistant shell with a better UI.
 
-**Next actions:**
+**Priority 1: Daily Command Center (DONE)**
 
-1. ~~Visual QA pass - launch app locally and inspect desktop widths (1400px, 1024px, mobile/narrow)~~ (completed - no regressions found)
-2. ~~Confirm toolbar does not overflow with all status chips visible~~ (completed - no overflow)
-3. ~~Confirm panels look professional after CSS deletion (notes, reminders, tasks, today dashboard, calendar, onboarding, about)~~ (completed - all panels look professional)
-4. ~~Fix only visible layout regressions, spacing problems, clipping, or inconsistent button/card styling~~ (not needed - no regressions)
-5. ~~Second dead-code pass - search for unused renderer components, hooks, CSS classes, constants~~ (completed - removed AppHeader.tsx, WelcomeBar.tsx, and associated CSS)
-6. ~~Security confidence pass - run `npm audit --audit-level=high`~~ (completed)
-7. ~~If visual or CSS changes made: run `npm.cmd run build`, `npm.cmd run test:smoke`, `npm.cmd run test:preload-electron`~~ (completed - all passed)
-8. ~~Commit cleanup baseline~~ (completed - `6826393 chore: clean up ui baseline`)
-9. ~~Push cleanup baseline to `origin/main`~~ (completed)
-10. ~~Fix handoff documentation accuracy~~ (completed - updated HEAD, date, removed "Ready for commit")
-11. ~~Reconcile release docs with workflow behavior~~ (completed - README.md now includes macOS, corrected PUBLIC_RELEASE_TOKEN behavior)
-12. ~~Commit and push docs changes~~ (completed - `635c937`)
-13. ~~Require .zip artifact in release validation~~ (completed - `59fba2a`)
-14. ~~Normalize remaining non-ASCII UI text to ASCII equivalents~~ (completed - `24fd0fb`)
+- ~~Build this first.~~ Done in `70db8d0`.
+- ~~Replace the current top-of-desk brief stack with a new `DailyCommandCenterPanel`.~~ Done.
+- ~~Combine Focus Brief priorities, Away Brief changes, overdue and due-today tasks, pending reminders, pinned notes, and a small "Now" queue with the top 3 actions.~~ Done.
+- ~~Add a derived helper that returns stable typed sections.~~ Done in `src/renderer/lib/derived/daily-command-center.ts`.
+- ~~Add quick actions for already-supported mutations.~~ Done.
+- ~~Keep Home Assistant optional and visually secondary.~~ Done.
 
-**Security audit findings (npm audit --audit-level=high):**
+**Priority 2: Worker Sync Log (DONE)**
 
-12 vulnerabilities (2 low, 10 high) - all in build-tool dependencies, not runtime app:
+- ~~Add a repo-local human handoff log.~~ Done: `WORKER_ACTIVITY.md` exists.
+- ~~Add an npm script.~~ Done: `npm run activity`.
+- ~~Document the activity entry rule.~~ Done.
 
-- electron@35.0.0: 16 high-severity CVEs (current version is below vulnerable threshold <=39.8.4)
-- @tootallnate/once: Incorrect Control Flow Scoping (electron-builder transitive dependency)
-- tar: Arbitrary File Creation/Overwrite vulnerabilities (electron-builder transitive dependency)
+**Priority 3: Personal Automations (DONE)**
 
-These are build-tool chain vulnerabilities (electron-builder, electron) that do not affect the runtime application. The app uses Electron 35.0.0 which has known CVEs but these are Electron framework issues, not application code issues. Upgrading Electron to 42.0.0 would require significant testing. Documented separately from runtime app risk.
+- ~~Add one local-first automation capability.~~ Done in `9c0bc26`: `localTask` with full task fields.
+- ~~Expose in existing automation UI with clear wording.~~ Done.
+- ~~Add validation so malformed configs cannot cross IPC boundaries.~~ Done.
 
-**Local Windows checks before handing off again:**
+**Post-v1.4.9 next priorities:**
 
-```powershell
-npm.cmd run lint
-npm.cmd run typecheck
-npm.cmd run check:preload-ipc
-npm.cmd run test
-npm.cmd run build
-npm.cmd run test:smoke
-npm.cmd run test:preload-electron
-```
+1. **v1.5.0 release** - Push the accumulated release branch commits, tag `v1.5.0`, and monitor `Release package`.
+2. **macOS packaging validation** - Run `Validate macOS package` workflow after GitHub artifact quota recalculates.
+3. **Electron dependency upgrade retry** - Test latest `better-sqlite3` against Electron 42 in a branch.
 
-Browser and Electron E2E remain useful before shipping, but may require Playwright browsers and an Electron-capable local environment:
+## Known issues and blockers
 
-```powershell
-npm.cmd run test:e2e
-npm.cmd run test:e2e:electron
-```
+**Dependency security:**
 
-**Notes for the next worker:**
+- Electron 35.0.0 has 10 high vulnerabilities (blocked by better-sqlite3 incompatibility)
+- Electron 42 upgrade attempted but failed due to better-sqlite3 v11.8.1 native module incompatibility
+- See Dependency Risk Register for next retry condition
 
-- Release publishing now depends on Windows, Linux, and macOS package jobs in `.github/workflows/release.yml`.
-- Public release mirroring is guarded by `PUBLIC_RELEASE_TOKEN`; the workflow skips public mirroring when it is unset (does not fail).
-- Release asset validation now requires `.exe`, `.AppImage`, `.dmg`, and `.zip` artifacts. If any are missing, the publish job will fail with a clear error message.
+**macOS validation:**
+
+- `npm run dist:mac` not yet validated on macOS or GitHub Actions macOS runner
+- Use "Validate macOS package" workflow for safe validation-only runs
+
+**Generated files:**
+
+- `src/main/preload-ipc-literals.generated.ts` is auto-generated
+- If dirty with no content diff, restore with `git restore -- src/main/preload-ipc-literals.generated.ts`
+- If dirty with real content diff, run `npm run check:preload-ipc` to regenerate
+
+## Development workflow
+
+**Before committing:**
+
+1. Run `git status --short --branch` to see what's changed
+2. Run `git diff --stat` to see diff summary
+3. Run verification checks: `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`
+4. If `preload-ipc-literals.generated.ts` is dirty with no content diff, restore it
+5. Stage only intended changes
+6. Commit with descriptive message
+
+**Worker activity rule:**
+
+After every meaningful worker slice, add one short entry to `WORKER_ACTIVITY.md` with the goal, files touched, checks run, and next action. Do not include secrets, tokens, local absolute machine paths, or personal data.
+
+**Commit message format:**
+
+- Use conventional commit format: `type: description`
+- Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`
+- Example: `chore: enforce repository line endings`
+
+**Branching strategy:**
+
+- Main development: `main` branch
+- Feature branches: `feature/feature-name`
+- Release branches: `release/release-name`
+- Current branch: `release/linux-appimage-audit` (Linux AppImage audit and dependency security cleanup)
+
+## Key configuration files
+
+- `package.json` - Dependencies and scripts
+- `tsconfig.json` - TypeScript configuration
+- `vite.config.ts` - Vite build configuration
+- `electron-builder.yml` - Electron packaging configuration
+- `.editorconfig` - Editor configuration (LF line endings)
+- `.gitattributes` - Git line ending policy
+- `eslint.config.mjs` - ESLint configuration
+- `prettier.config.mjs` - Prettier configuration
+
+## Troubleshooting
+
+**TypeScript errors:**
+
+- Run `npm run typecheck` to see all TypeScript errors
+- Check `tsconfig.main.json` and `tsconfig.renderer.json` for configuration
+
+**Lint errors:**
+
+- Run `npm run lint` to see all lint errors
+- Check `eslint.config.mjs` for configuration
+
+**Test failures:**
+
+- Run `npm test` to see unit test failures
+- Run `npm run test:e2e` to see E2E test failures (requires built app)
+- Run `npm run test:e2e:electron` to see Electron E2E test failures (requires built app)
+
+**Build failures:**
+
+- Run `npm run build` to see build errors
+- Check Vite configuration in `vite.config.ts`
+- Check Electron configuration in `electron-builder.yml`
+
+**Database issues:**
+
+- Database location: `%APPDATA%\PersonalAssistant\assistant.db`
+- To reset database, delete the database file and restart the app
+- Migrations in `src/main/db/migrations/`
+
+**Electron issues:**
+
+- Check Electron version in `package.json`
+- Check preload script in `src/main/preload.ts`
+- Check main process in `src/main/main.ts`

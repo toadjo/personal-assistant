@@ -15,8 +15,11 @@
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
-import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow, ThemeMode } from "../types";
+import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow } from "../types";
+import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../lib/theme/tokens";
+import type { Density, PanelRadius, DisplayPreferences } from "../lib/display/types";
 import type { CalendarCell } from "../lib/calendar";
+import type { AgendaItem, AgendaFilter } from "../hooks/workspace/useCalendarState";
 import type { OnboardingState, OnboardingStep } from "../types/onboarding";
 import type { SuccessMessage } from "./ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
@@ -29,7 +32,10 @@ import { useDeskCommandState } from "./composition/useDeskCommandState";
 export type AssistantWorkspace = {
   ui: {
     theme: ThemeMode;
-    setTheme: Dispatch<SetStateAction<ThemeMode>>;
+    custom: CustomTheme | undefined;
+    setTheme: (preset: ThemeMode) => void;
+    setCustomOverride: (key: ThemeTokenKey, value: string | undefined) => void;
+    resetCustomOverrides: (preset?: ThemeMode) => void;
     status: string;
     setStatus: (value: string) => void;
     error: string;
@@ -39,6 +45,14 @@ export type AssistantWorkspace = {
     showSuccess: (message: string) => void;
     dismissSuccess: (id: string) => void;
     dismissAllSuccesses: () => void;
+  };
+  display: DisplayPreferences & {
+    setDensity: (density: Density) => void;
+    setPanelRadius: (radius: PanelRadius) => void;
+    setShadows: (value: boolean) => void;
+    setGlassBlur: (value: boolean) => void;
+    setDccShowAllSecondary: (value: boolean) => void;
+    resetDisplay: () => void;
   };
   data: {
     query: string;
@@ -94,7 +108,9 @@ export type AssistantWorkspace = {
     todayKey: string;
     calendarSelectedKey: string;
     setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
-    selectedDayAgenda: Reminder[];
+    agendaFilter: AgendaFilter;
+    setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
+    selectedDayAgenda: AgendaItem[];
   };
   reminders: {
     filter: ReminderFilter;
@@ -122,10 +138,16 @@ export type AssistantWorkspace = {
       priority: "low" | "normal" | "high";
       recurrence: "none" | "daily" | "weekly" | "monthly";
     }) => Promise<void>;
+    bulkComplete: (ids: string[]) => Promise<void>;
+    updatePriority: (id: string, priority: "low" | "normal" | "high") => Promise<void>;
+    undo: () => Promise<void>;
+    canUndo: boolean;
   };
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;
     setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
+    duplicateRuleById: (id: string) => Promise<void>;
+    testRunRuleById: (id: string) => Promise<void>;
   };
   memos: {
     deleteNote: (id: string, title: string) => Promise<void>;
@@ -213,7 +235,10 @@ export function useAssistantWorkspace(): AssistantWorkspace {
   return {
     ui: {
       theme: ui.theme,
+      custom: ui.custom,
       setTheme: ui.setTheme,
+      setCustomOverride: ui.setCustomOverride,
+      resetCustomOverrides: ui.resetCustomOverrides,
       status: ui.status,
       setStatus: ui.setStatus,
       error: ui.error,
@@ -223,6 +248,15 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       showSuccess: ui.showSuccess,
       dismissSuccess: ui.dismissSuccess,
       dismissAllSuccesses: ui.dismissAllSuccesses
+    },
+    display: {
+      ...ui.display,
+      setDensity: ui.display.setDensity,
+      setPanelRadius: ui.display.setPanelRadius,
+      setShadows: ui.display.setShadows,
+      setGlassBlur: ui.display.setGlassBlur,
+      setDccShowAllSecondary: ui.display.setDccShowAllSecondary,
+      resetDisplay: ui.display.resetDisplay
     },
     data: {
       query: data.query,
@@ -236,8 +270,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       isRefreshing: data.isRefreshing,
       refreshAll: data.refreshAll,
       fetchNotesOnly: data.fetchNotesOnly,
-      fetchRemindersOnly: data.fetchRemindersOnly
-      ,
+      fetchRemindersOnly: data.fetchRemindersOnly,
       fetchTasksOnly: data.fetchTasksOnly
     },
     ha: {

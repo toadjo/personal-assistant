@@ -27,7 +27,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, open household, open home. In the Household window (after you link HA): toggle ..., refresh devices."
+      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, what's next, catch me up, open household. After you link Home Assistant: toggle ..., refresh devices."
     );
     return { mutated: false };
   }
@@ -46,9 +46,20 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     deps.setStatus("Showing all memos.");
     return { mutated: false };
   }
-  if (lower === "brief" || lower === "today" || lower === "focus" || lower === "what's next" || lower === "whats next") {
+  if (
+    lower === "brief" ||
+    lower === "today" ||
+    lower === "focus" ||
+    lower === "what's next" ||
+    lower === "whats next"
+  ) {
     deps.setQuery("");
-    deps.setStatus("Here's your focus brief for today. See the Today panel for priorities.");
+    deps.setStatus("Here's your focus brief for today. See the Daily Command Center for priorities.");
+    return { mutated: false };
+  }
+  if (lower === "catch me up") {
+    deps.setQuery("");
+    deps.setStatus("Here's what changed while you were away. See the Daily Command Center for details.");
     return { mutated: false };
   }
   if (lower.startsWith("find ")) {

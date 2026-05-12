@@ -53,7 +53,7 @@ export function CommandPanel({
         <input
           ref={commandInputRef as Ref<HTMLInputElement>}
           className="fullWidth commandInputHero"
-          placeholder="What can I help with?"
+          placeholder="Type a command..."
           aria-label="Message the assistant"
           autoComplete="off"
           spellCheck={false}

@@ -1,8 +1,18 @@
 import { defineConfig } from "vite";
 import type { Plugin, UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { readFileSync } from "fs";
 
 const isProdLikeBundle = (mode: string): boolean => mode !== "development";
+
+function getAppVersion(): string {
+  try {
+    const pkg = JSON.parse(readFileSync("package.json", "utf-8")) as { version: string };
+    return pkg.version;
+  } catch {
+    return "0.0.0";
+  }
+}
 
 // Renderer bundle for Electron: relative asset paths, readable source maps for debugging packaged builds.
 export default defineConfig(async ({ mode }): Promise<UserConfig> => {
@@ -25,6 +35,9 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
 
   return {
     base: "./",
+    define: {
+      __APP_VERSION__: JSON.stringify(getAppVersion())
+    },
     plugins,
     build: {
       outDir: "dist/renderer",

@@ -3,24 +3,38 @@ import { PanelHeader } from "../ui/PanelHeader";
 
 type Props = {
   version: string;
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 export function AboutPanel({ version, onClose }: Props): JSX.Element {
   return (
     <section className="panel" aria-labelledby="about-panel-heading">
-      <PanelHeader icon={Info} title="About" actions={onClose ? <button type="button" className="ghostButton" onClick={onClose}>Close</button> : null} />
+      <PanelHeader
+        icon={Info}
+        title="About"
+        actions={
+          onClose ? (
+            <button type="button" className="ghostButton" onClick={onClose}>
+              Close
+            </button>
+          ) : null
+        }
+      />
       <div className="aboutContent">
         <h3>PersonalAssistant {version}</h3>
-        <p className="muted">A Windows desktop utility for notes, reminders, calendar, and household assistant workflows.</p>
-        
+        <p className="muted">
+          A desktop utility for notes, tasks, reminders, and optional household assistant workflows.
+        </p>
+
         <div className="aboutSection">
           <div className="aboutSectionHeader">
             <HardDrive size={16} />
             <h4>Data Storage</h4>
           </div>
           <p className="muted">Your notes, reminders, and settings are stored locally on your computer.</p>
-          <p className="muted small">Location: <code>%APPDATA%\PersonalAssistant</code></p>
+          <p className="muted small">
+            Location: <code>%APPDATA%\PersonalAssistant</code>
+          </p>
           <p className="muted small">To backup your data, copy this folder to a safe location.</p>
         </div>
 

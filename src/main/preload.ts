@@ -57,12 +57,35 @@ contextBridge.exposeInMainWorld("assistantApi", {
       enabled: boolean;
     } & (
       | { actionType: "localReminder"; actionConfig: { text: string } }
+      | {
+          actionType: "localTask";
+          actionConfig: {
+            title: string;
+            notes: string;
+            dueAt: string | null;
+            priority: "low" | "normal" | "high";
+            recurrence: "none" | "daily" | "weekly" | "monthly";
+          };
+        }
       | { actionType: "haToggle"; actionConfig: { entityId: string } }
     )
   ) => ipcRenderer.invoke(invoke.automationRulesCreate, payload),
   deleteRule: (id: string) => ipcRenderer.invoke(invoke.automationRulesDelete, id),
   setRuleEnabled: (id: string, enabled: boolean) =>
     ipcRenderer.invoke(invoke.automationRulesSetEnabled, { id, enabled }),
+  duplicateRule: (id: string) => ipcRenderer.invoke(invoke.automationRulesDuplicate, id),
+  testRunRule: (id: string) => ipcRenderer.invoke(invoke.automationRulesTestRun, id),
+  exportData: () => ipcRenderer.invoke(invoke.dataExport),
+  importData: (payload: {
+    version: string;
+    exportedAt: string;
+    notes: unknown[];
+    reminders: unknown[];
+    tasks: unknown[];
+    automation_rules: unknown[];
+    app_settings: unknown[];
+  }) => ipcRenderer.invoke(invoke.dataImport, payload),
+  resetData: () => ipcRenderer.invoke(invoke.dataReset),
   logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) =>
     ipcRenderer.invoke(invoke.rendererLogError, payload),
   onRemindersUpdated: (cb: () => void) => {

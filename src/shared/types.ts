@@ -44,12 +44,23 @@ export type AutomationRuleLocalReminder = AutomationRuleBase & {
   actionConfig: { text: string };
 };
 
+export type AutomationRuleLocalTask = AutomationRuleBase & {
+  actionType: "localTask";
+  actionConfig: {
+    title: string;
+    notes: string;
+    dueAt: string | null;
+    priority: "low" | "normal" | "high";
+    recurrence: "none" | "daily" | "weekly" | "monthly";
+  };
+};
+
 export type AutomationRuleHaToggle = AutomationRuleBase & {
   actionType: "haToggle";
   actionConfig: { entityId: string };
 };
 
-export type AutomationRule = AutomationRuleLocalReminder | AutomationRuleHaToggle;
+export type AutomationRule = AutomationRuleLocalReminder | AutomationRuleLocalTask | AutomationRuleHaToggle;
 
 export type DeviceCache = {
   id: string;

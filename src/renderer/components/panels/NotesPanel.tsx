@@ -175,7 +175,7 @@ export const NotesPanel = memo(function NotesPanel({
           <EmptyState
             icon={StickyNote}
             title="No notes yet"
-            description="Capture quick memos, ideas, or anything you want to remember. Everything stays on your computer. Use the form above to create your first note."
+            description="Capture memos and ideas. Create your first note above."
           />
         )}
       </div>

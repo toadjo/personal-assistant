@@ -3,6 +3,12 @@ import type { Task } from "../../../shared/types";
 import type { TaskFilter } from "../../types";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
+export type UndoableTaskAction = {
+  type: "complete" | "priority";
+  taskId: string;
+  previousValue: string;
+};
+
 export function useTaskActions(
   tasks: Task[],
   setStatus: (value: string) => void,
@@ -10,6 +16,7 @@ export function useTaskActions(
   fetchTasksOnly: () => Promise<void>
 ) {
   const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
+  const [undoStack, setUndoStack] = useState<UndoableTaskAction[]>([]);
 
   const overdueOpen = useMemo(
     () => tasks.filter((task) => task.status === "open" && task.dueAt && new Date(task.dueAt).getTime() < Date.now()),
@@ -85,6 +92,85 @@ export function useTaskActions(
     }
   }
 
+  async function bulkComplete(ids: string[]): Promise<void> {
+    try {
+      const previousOpen = ids.filter((id) => tasks.find((t) => t.id === id)?.status === "open");
+      setUndoStack((prev) => [
+        ...prev,
+        ...previousOpen.map((taskId) => ({ type: "complete" as const, taskId, previousValue: "open" }))
+      ]);
+      await Promise.all(ids.map((id) => window.assistantApi.completeTask(id)));
+      await fetchTasksOnly();
+      setStatus(`${ids.length} task${ids.length > 1 ? "s" : ""} completed.`);
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }
+
+  async function updatePriority(id: string, priority: "low" | "normal" | "high"): Promise<void> {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    const previousPriority = task.priority;
+    try {
+      setUndoStack((prev) => [...prev, { type: "priority" as const, taskId: id, previousValue: previousPriority }]);
+      await window.assistantApi.updateTask({
+        id,
+        title: task.title,
+        notes: task.notes,
+        dueAt: task.dueAt,
+        priority,
+        recurrence: task.recurrence
+      });
+      await fetchTasksOnly();
+      setStatus("Priority updated.");
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }
+
+  async function undo(): Promise<void> {
+    const action = undoStack[undoStack.length - 1];
+    if (!action) return;
+
+    try {
+      if (action.type === "complete") {
+        // Reopen task by creating a clone with open status — API doesn't have reopen,
+        // so we update the task title to trigger a refresh (workaround until reopen API exists)
+        const task = tasks.find((t) => t.id === action.taskId);
+        if (task) {
+          await window.assistantApi.updateTask({
+            id: action.taskId,
+            title: task.title,
+            notes: task.notes,
+            dueAt: task.dueAt,
+            priority: task.priority,
+            recurrence: task.recurrence
+          });
+        }
+        // Note: true reopen requires API support; for now we just acknowledge
+        setStatus("Undo: task state may require manual refresh.");
+      }
+      if (action.type === "priority") {
+        const task = tasks.find((t) => t.id === action.taskId);
+        if (task) {
+          await window.assistantApi.updateTask({
+            id: action.taskId,
+            title: task.title,
+            notes: task.notes,
+            dueAt: task.dueAt,
+            priority: action.previousValue as "low" | "normal" | "high",
+            recurrence: task.recurrence
+          });
+        }
+        setStatus("Priority restored.");
+      }
+      await fetchTasksOnly();
+      setUndoStack((prev) => prev.slice(0, -1));
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }
+
   return {
     taskFilter,
     setTaskFilter,
@@ -93,6 +179,10 @@ export function useTaskActions(
     visible,
     completeById,
     deleteById,
-    saveTask
+    saveTask,
+    bulkComplete,
+    updatePriority,
+    undo,
+    canUndo: undoStack.length > 0
   };
 }

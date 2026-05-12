@@ -24,7 +24,17 @@ export function useCommandExecution(args: {
   refreshAll: () => Promise<void>;
   runDeviceToggle: RunDeviceToggle;
 }) {
-  const { devices, haReady, setQuery, setReminderFilter, setTaskFilter, setStatus, setError, refreshAll, runDeviceToggle } = args;
+  const {
+    devices,
+    haReady,
+    setQuery,
+    setReminderFilter,
+    setTaskFilter,
+    setStatus,
+    setError,
+    refreshAll,
+    runDeviceToggle
+  } = args;
 
   const [commandInput, setCommandInput] = useState("");
   const [commandHistory, setCommandHistory] = useState(loadCommandHistory);

@@ -11,16 +11,16 @@ type Props = {
 };
 
 const BASE_EXAMPLES = [
-  { command: "new note meeting with team", label: "Create a note" },
-  { command: "remind standup in 30m", label: "Set a reminder" },
-  { command: "list reminders", label: "Show reminders" },
-  { command: "show notes", label: "Show all notes" }
+  { command: "new note project update", label: "New note" },
+  { command: "add task review budget", label: "Add task" },
+  { command: "remind follow-up in 1h", label: "Set reminder" },
+  { command: "show overdue tasks", label: "Overdue tasks" },
+  { command: "plan tomorrow", label: "Plan ahead" }
 ];
 
 const HA_EXAMPLES = [
-  { command: "turn on living room light", label: "Toggle a device" },
-  { command: "show devices", label: "List all devices" },
-  { command: "open household", label: "Open Household window" }
+  { command: "turn on desk light", label: "Toggle device" },
+  { command: "show devices", label: "Devices" }
 ];
 
 export function CommandExamples({ haReady, onRunPreset }: Props): JSX.Element {

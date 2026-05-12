@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "1.4.2",
+  "version": "1.7.1",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -41,7 +41,8 @@
     "test:preload-electron": "node scripts/run-preload-smoke.mjs",
     "test:e2e": "playwright test",
     "test:e2e:electron": "playwright test --config=playwright.electron.config.ts",
-    "handoff": "node scripts/handoff.mjs"
+    "handoff": "node scripts/handoff.mjs",
+    "activity": "node scripts/activity.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",
