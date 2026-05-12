@@ -13,15 +13,15 @@ function makeTask(id: string, title: string): Task {
   return { id, title, status: "open", notes: "", dueAt: null, priority: "normal", recurrence: "none", notifyChannel: "desktop", createdAt: "", updatedAt: "", lastCompletedAt: null };
 }
 
-function makeReminder(id: string, text: string): Reminder {
+function _makeReminder(id: string, text: string): Reminder {
   return { id, text, dueAt: "", recurrence: "none", status: "pending", notifyChannel: "desktop" };
 }
 
-function makeRule(id: string, name: string): AutomationRule {
+function _makeRule(id: string, name: string): AutomationRule {
   return { id, name, triggerType: "time", triggerConfig: { at: "08:00" }, actionType: "localReminder", actionConfig: { text: "" }, enabled: true };
 }
 
-function makeDevice(entityId: string, friendlyName: string): HaDeviceRow {
+function _makeDevice(entityId: string, friendlyName: string): HaDeviceRow {
   return { entityId, friendlyName, state: "off" };
 }
 

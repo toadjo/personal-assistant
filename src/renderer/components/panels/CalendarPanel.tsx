@@ -144,7 +144,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                 <>
                   <ListTodo size={14} className="agendaListItemIcon" />
                   <span className="agendaListItemTime">
-                    {item.dueAt ? new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                    {item.dueAt ? new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
                   </span>
                   <span className="agendaListItemText">{item.title}</span>
                   <span className={`pill ${item.priority === "high" ? "pillAttention" : ""}`}>{item.priority}</span>

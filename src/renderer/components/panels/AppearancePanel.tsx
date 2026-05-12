@@ -89,6 +89,15 @@ function hexFromColorInput(value: string): string {
       .join("");
     return `#${full}`;
   }
+  // Convert rgba(r,g,b,a) to hex. Color input does not support alpha.
+  const rgbaMatch = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*[\d.]+\s*)?\)$/.exec(trimmed);
+  if (rgbaMatch) {
+    const [, rawR, rawG, rawB] = rgbaMatch;
+    const r = parseInt(rawR ?? "0", 10).toString(16).padStart(2, "0");
+    const g = parseInt(rawG ?? "0", 10).toString(16).padStart(2, "0");
+    const b = parseInt(rawB ?? "0", 10).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}`;
+  }
   return trimmed;
 }
 

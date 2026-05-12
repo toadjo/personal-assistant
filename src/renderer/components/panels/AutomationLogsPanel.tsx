@@ -31,12 +31,12 @@ export function AutomationLogsPanel({ isRefreshing, logs }: Props): JSX.Element 
               <span className={l.status === "success" ? "successText" : l.status === "failed" ? "errorText" : ""}>
                 {l.status.toUpperCase()}
               </span>
-              {" — "}
+              {" - "}
               {new Date(l.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              {" — "}
+              {" - "}
               {l.actionLabel || "Run action"}
-              {l.retryCount > 0 ? ` — ${formatRetrySummary(l.attemptCount, l.retryCount)}` : ""}
-              {l.error ? ` — ${formatLogError(l.error)}` : ""}
+              {l.retryCount > 0 ? ` - ${formatRetrySummary(l.attemptCount, l.retryCount)}` : ""}
+              {l.error ? ` - ${formatLogError(l.error)}` : ""}
             </li>
           ))
         ) : (

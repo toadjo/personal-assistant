@@ -10,27 +10,26 @@
 ## Recent commit history
 
 ```
-02a94b4 docs: update handoff with v1.4.7-1.4.9 progress
-e834d71 chore: harden release packaging
-1cc8d64 feat: strengthen local-first desk experience
-007d5ee fix: improve automation retry logs
-39c007b feat: add local task automations
+88c2aba fix: stabilize v1.7.1 source sync [skip ci]
+fd4398b v1.7.0: Data control and backup
+5df5ddc v1.6.5: Windows installer release
+5bbd6df v1.6.4: Automation builder upgrade
+f54083e v1.6.3: Calendar and agenda upgrade
+31af29f v1.6.2: Notes and tasks quality of life
+00a3d79 v1.6.1: Global search and command palette
+244e83b v1.6.0: Windows installer release
 ```
 
 **Recent work summary:**
 
-- Added `.gitattributes` to enforce LF line endings across the repository
-- Cleaned up quality baseline with formatting improvements (22 files)
-- Documented Electron 42 upgrade failure and reverted to Electron 35
-- Added worker activity log (`WORKER_ACTIVITY.md`) and `npm run activity` script
-- Built Daily Command Center combining Focus Brief, Away Brief, tasks, reminders, and pinned notes
-- Added local personal automations (`localTask`) with full task fields and validation
-- Fixed automation retry metadata to preserve `attemptsUsed` and `retryCount` in logs
-- Improved Automation Logs Panel with action labels, ASCII separators, and retry summary
-- Strengthened local-first desk experience: refreshed command examples, onboarding copy, and status strings
-- Hardened release packaging: added 1-day artifact retention, cleaned workflow mojibake, wired app version via Vite define
-- All new features include focused tests (316 tests across 47 files)
-- Preparing v1.5.0 release package with version bump and release notes
+- v1.7.1 stabilization: synced package-lock.json to 1.7.1, fixed Appearance editor rgba-to-hex handling, added Zod backup import validation, added import confirmation dialog, cleaned lint warnings, replaced em dashes/ellipses with ASCII in user-facing strings
+- v1.7.0: Data backup and restore — export all data to JSON, import with full replace, reset all data, DataControlPanel in desk UI
+- v1.6.5: Windows installer release with v1.6.1-1.6.4 features
+- v1.6.4: Automation builder upgrade — duplicate rule, test run, last run status
+- v1.6.3: Calendar agenda upgrade — combined reminders + tasks, Day/Today/Tomorrow/Week filters, click-to-create
+- v1.6.2: Notes and tasks quality of life — bulk complete, priority editing, undo
+- v1.6.1: Global search and command palette (Ctrl+K) with fuzzy search
+- All features include focused tests (357 tests across 51 files)
 
 ## Repo and environment
 

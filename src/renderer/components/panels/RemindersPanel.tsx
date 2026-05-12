@@ -57,7 +57,7 @@ export const RemindersPanel = memo(function RemindersPanel({
       <ReminderForm onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} onCreated={onReminderCreated} />
       <div className="remindersGrid" aria-label="Reminders list">
         {isRefreshing ? (
-          <p className="muted">Loading…</p>
+          <p className="muted">Loading...</p>
         ) : visibleReminders.length ? (
           visibleReminders.map((r) => (
             <article

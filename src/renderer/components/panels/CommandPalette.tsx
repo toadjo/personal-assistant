@@ -64,35 +64,6 @@ export function CommandPalette({
     inputRef.current?.focus();
   }, []);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedIndex((prev) => Math.max(prev - 1, 0));
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const result = results[selectedIndex];
-        if (result) {
-          handleSelect(result);
-        }
-        return;
-      }
-    },
-    [results, selectedIndex, onClose]
-  );
-
   const handleSelect = useCallback(
     (result: SearchResult) => {
       const [type, rawId] = result.id.split(":", 2);
@@ -122,6 +93,35 @@ export function CommandPalette({
       onClose();
     },
     [onOpenNote, onOpenTask, onOpenReminder, onOpenAutomation, onToggleDevice, onOpenAppearance, onClose]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const result = results[selectedIndex];
+        if (result) {
+          handleSelect(result);
+        }
+        return;
+      }
+    },
+    [results, selectedIndex, onClose, handleSelect]
   );
 
   useEffect(() => {

@@ -37,16 +37,16 @@ export function AutomationRulesPanel({
       <RuleForm devices={devices} onDone={onRefresh} onError={onError} onShowSuccess={onShowSuccess} />
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading…</li>
+          <li className="muted">Loading...</li>
         ) : rules.length ? (
           rules.map((r) => (
             <li key={r.id} className="listRow">
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className={r.enabled ? "" : "muted"}>{r.enabled ? "" : "Paused: "}</span>
-                {r.name} at {r.triggerConfig.at} — {r.actionType === "haToggle" ? "toggle device" : r.actionType === "localTask" ? "create task" : "reminder"}
+                {r.name} at {r.triggerConfig.at} - {r.actionType === "haToggle" ? "toggle device" : r.actionType === "localTask" ? "create task" : "reminder"}
                 {r.lastExecutedAt ? (
                   <span className="muted" style={{ marginLeft: "0.5rem" }}>
-                    · Last run: {new Date(r.lastExecutedAt).toLocaleString()}
+                    | Last run: {new Date(r.lastExecutedAt).toLocaleString()}
                   </span>
                 ) : null}
               </span>

@@ -44,7 +44,7 @@ export function DataControlPanel({
           disabled={isExporting}
         >
           <Download size={14} />
-          {isExporting ? "Exporting…" : "Export backup"}
+          {isExporting ? "Exporting..." : "Export backup"}
         </button>
 
         <button
@@ -54,7 +54,7 @@ export function DataControlPanel({
           disabled={isImporting}
         >
           <Upload size={14} />
-          {isImporting ? "Importing…" : "Import backup"}
+          {isImporting ? "Importing..." : "Import backup"}
         </button>
         <input
           ref={fileInputRef}
@@ -73,7 +73,7 @@ export function DataControlPanel({
           disabled={isResetting}
         >
           <Trash2 size={14} />
-          {isResetting ? "Resetting…" : "Delete all data"}
+          {isResetting ? "Resetting..." : "Delete all data"}
         </button>
       </div>
     </section>

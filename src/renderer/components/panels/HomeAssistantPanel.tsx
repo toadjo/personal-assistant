@@ -126,7 +126,7 @@ export function HomeAssistantPanel({
       ) : null}
       <div className="row">
         <button type="button" disabled={isSavingHa || !canSaveHa} onClick={() => void onSave()}>
-          {isSavingHa ? "Saving…" : "Save"}
+          {isSavingHa ? "Saving..." : "Save"}
         </button>
         <button type="button" disabled={!haReady} onClick={() => void onTest()}>
           Test
@@ -142,7 +142,7 @@ export function HomeAssistantPanel({
       </div>
       <ul className="list">
         {isRefreshing ? (
-          <li className="muted">Loading…</li>
+          <li className="muted">Loading...</li>
         ) : devices.length ? (
           devices.map((d) => (
             <li key={d.entityId} className="listRow">

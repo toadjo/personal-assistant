@@ -1,5 +1,4 @@
 import { getDb } from "../db";
-import { randomUUID } from "node:crypto";
 
 export type BackupPayload = {
   version: string;

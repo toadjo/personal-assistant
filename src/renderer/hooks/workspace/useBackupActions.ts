@@ -39,6 +39,9 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   }
 
   async function importData(file: File): Promise<BackupResult | null> {
+    if (!window.confirm("This will replace all current data. Continue?")) {
+      return null;
+    }
     setIsImporting(true);
     try {
       const text = await file.text();

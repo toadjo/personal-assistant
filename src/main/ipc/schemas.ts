@@ -164,3 +164,63 @@ export const ruleCreateSchema = z
       });
     }
   });
+
+const backupNoteSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  content: z.string(),
+  tags: z.string(),
+  pinned: z.number(),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1)
+});
+
+const backupReminderSchema = z.object({
+  id: z.string().min(1),
+  text: z.string(),
+  dueAt: z.string().min(1),
+  recurrence: z.string(),
+  status: z.string(),
+  notifyChannel: z.string()
+});
+
+const backupTaskSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  notes: z.string(),
+  dueAt: z.string().nullable(),
+  priority: z.string(),
+  status: z.string(),
+  recurrence: z.string(),
+  notifyChannel: z.string(),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+  lastCompletedAt: z.string().nullable()
+});
+
+const backupAutomationRuleSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  triggerType: z.string(),
+  triggerConfig: z.string(),
+  actionType: z.string(),
+  actionConfig: z.string(),
+  enabled: z.number(),
+  lastFiredAt: z.string().nullable()
+});
+
+const backupAppSettingSchema = z.object({
+  key: z.string().min(1),
+  value: z.string(),
+  updatedAt: z.string().min(1)
+});
+
+export const backupPayloadSchema = z.object({
+  version: z.string().min(1),
+  exportedAt: z.string().min(1),
+  notes: z.array(backupNoteSchema),
+  reminders: z.array(backupReminderSchema),
+  tasks: z.array(backupTaskSchema),
+  automation_rules: z.array(backupAutomationRuleSchema),
+  app_settings: z.array(backupAppSettingSchema)
+});
