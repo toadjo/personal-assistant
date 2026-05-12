@@ -339,6 +339,10 @@ export function AssistantShell(): JSX.Element {
             onSaveTask={tasks.saveTask}
             onComplete={tasks.completeById}
             onDelete={tasks.deleteById}
+            onBulkComplete={tasks.bulkComplete}
+            onUpdatePriority={tasks.updatePriority}
+            onUndo={tasks.undo}
+            canUndo={tasks.canUndo}
           />
         </div>
       </div>

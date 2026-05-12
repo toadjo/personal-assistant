@@ -135,6 +135,10 @@ export type AssistantWorkspace = {
       priority: "low" | "normal" | "high";
       recurrence: "none" | "daily" | "weekly" | "monthly";
     }) => Promise<void>;
+    bulkComplete: (ids: string[]) => Promise<void>;
+    updatePriority: (id: string, priority: "low" | "normal" | "high") => Promise<void>;
+    undo: () => Promise<void>;
+    canUndo: boolean;
   };
   automation: {
     deleteRuleById: (id: string, name: string) => Promise<void>;

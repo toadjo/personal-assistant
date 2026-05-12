@@ -4,11 +4,11 @@ import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types
 import type { HaDeviceRow } from "../../types";
 
 function makeNote(id: string, title: string, content = ""): Note {
-  return { id, title, content, pinned: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" };
+  return { id, title, content, tags: [], pinned: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" };
 }
 
 function makeTask(id: string, title: string, status: "open" | "done" = "open"): Task {
-  return { id, title, status, notes: "", dueAt: null, priority: "normal", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" };
+  return { id, title, status, notes: "", dueAt: null, priority: "normal", recurrence: "none", notifyChannel: "desktop", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z", lastCompletedAt: null };
 }
 
 function makeReminder(id: string, text: string, status: "pending" | "done" = "pending"): Reminder {
@@ -16,14 +16,7 @@ function makeReminder(id: string, text: string, status: "pending" | "done" = "pe
 }
 
 function makeRule(id: string, name: string): AutomationRule {
-  return {
-    id,
-    name,
-    triggerConfig: { at: "08:00" },
-    actionType: "localReminder",
-    actionConfig: { text: "test" },
-    enabled: true
-  };
+  return { id, name, triggerType: "time", triggerConfig: { at: "08:00" }, actionType: "localReminder", actionConfig: { text: "" }, enabled: true };
 }
 
 function makeDevice(entityId: string, friendlyName: string, state = "off"): HaDeviceRow {
@@ -63,8 +56,8 @@ describe("searchEngine", () => {
       []
     );
     const results = search("rent", index);
-    expect(results[0].id).toBe("task:t1");
-    expect(results[1].id).toBe("note:n1");
+    expect(results[0]!.id).toBe("task:t1");
+    expect(results[1]!.id).toBe("note:n1");
   });
 
   it("matches partial words case-insensitively", () => {
@@ -77,7 +70,7 @@ describe("searchEngine", () => {
     );
     const results = search("meet", index);
     expect(results.length).toBe(1);
-    expect(results[0].id).toBe("note:n1");
+    expect(results[0]!.id).toBe("note:n1");
   });
 
   it("returns empty when nothing matches", () => {
