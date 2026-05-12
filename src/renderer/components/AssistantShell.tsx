@@ -69,7 +69,16 @@ export function AssistantShell(): JSX.Element {
       overdueTasks: tasks.overdueOpen,
       dueTodayTasks: tasks.dueTodayOpen,
       upcomingReminders: reminders.pending,
-      selectedDayAgenda: calendar.selectedDayAgenda,
+      selectedDayAgenda: calendar.selectedDayAgenda
+        .filter((item): item is import("../hooks/workspace/useCalendarState").AgendaItem & { type: "reminder" } => item.type === "reminder")
+        .map((item) => ({
+          id: item.id,
+          text: item.text,
+          dueAt: item.dueAt,
+          recurrence: "none" as const,
+          status: "pending" as const,
+          notifyChannel: "desktop" as const
+        })),
       pinnedNotes: data.notes.filter((note) => note.pinned)
     });
     const awayBrief = deriveAwayBrief({
@@ -306,6 +315,14 @@ export function AssistantShell(): JSX.Element {
               selectedDateKey={calendar.calendarSelectedKey}
               onSelectDateKey={calendar.setCalendarSelectedKey}
               dayAgenda={calendar.selectedDayAgenda}
+              agendaFilter={calendar.agendaFilter}
+              setAgendaFilter={calendar.setAgendaFilter}
+              onCreateReminder={(dateKey) => {
+                ui.setStatus(`Create reminder for ${dateKey} (not yet implemented).`);
+              }}
+              onCreateTask={(dateKey) => {
+                ui.setStatus(`Create task for ${dateKey} (not yet implemented).`);
+              }}
             />
           </div>
         </div>

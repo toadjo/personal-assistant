@@ -1,10 +1,10 @@
 import { memo } from "react";
-import type { Reminder } from "../../../shared/types";
 import type { CalendarCell } from "../../lib/calendar";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, ListTodo, Bell } from "lucide-react";
 import { parseLocalDateKey, toLocalDateKey } from "../../lib/calendar";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
+import type { AgendaItem, AgendaFilter } from "../../hooks/workspace/useCalendarState";
 
 type Props = {
   calendarCursor: Date;
@@ -13,7 +13,11 @@ type Props = {
   todayKey: string;
   selectedDateKey: string;
   onSelectDateKey: (dateKey: string) => void;
-  dayAgenda: Reminder[];
+  dayAgenda: AgendaItem[];
+  agendaFilter: AgendaFilter;
+  setAgendaFilter: (f: AgendaFilter) => void;
+  onCreateReminder?: (dateKey: string) => void;
+  onCreateTask?: (dateKey: string) => void;
 };
 
 function selectedDayHeading(selectedKey: string, todayKey: string): string {
@@ -29,7 +33,11 @@ export const CalendarPanel = memo(function CalendarPanel({
   todayKey,
   selectedDateKey,
   onSelectDateKey,
-  dayAgenda
+  dayAgenda,
+  agendaFilter,
+  setAgendaFilter,
+  onCreateReminder,
+  onCreateTask
 }: Props): JSX.Element {
   return (
     <section className="panel secretaryCalendar" aria-labelledby="calendar-panel-heading">
@@ -107,19 +115,59 @@ export const CalendarPanel = memo(function CalendarPanel({
       </div>
       <div className="dayFocusTitle">
         <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
-        <p className="muted plannerHeading">Scheduled for this day.</p>
+        <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+          {(["day", "today", "tomorrow", "week"] as AgendaFilter[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`pillButton ${agendaFilter === f ? "pillButtonActive" : ""}`}
+              onClick={() => setAgendaFilter(f)}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
-      <ul className="list" aria-label="Reminders for selected day">
+      <ul className="list" aria-label="Agenda for selected day">
         {dayAgenda.length ? (
-          dayAgenda.map((r) => (
-            <li key={r.id}>
-              {new Date(r.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} — {r.text}
+          dayAgenda.map((item) => (
+            <li key={`${item.type}-${item.id}`} className="agendaListItem">
+              {item.type === "reminder" ? (
+                <>
+                  <Bell size={14} className="agendaListItemIcon" />
+                  <span className="agendaListItemTime">
+                    {new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <span className="agendaListItemText">{item.text}</span>
+                </>
+              ) : (
+                <>
+                  <ListTodo size={14} className="agendaListItemIcon" />
+                  <span className="agendaListItemTime">
+                    {item.dueAt ? new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                  </span>
+                  <span className="agendaListItemText">{item.title}</span>
+                  <span className={`pill ${item.priority === "high" ? "pillAttention" : ""}`}>{item.priority}</span>
+                </>
+              )}
             </li>
           ))
         ) : (
-          <li className="muted">Nothing scheduled for this day.</li>
+          <li className="muted">Nothing scheduled.</li>
         )}
       </ul>
+      <div className="row" style={{ gap: "0.5rem", padding: "var(--space-2) 0" }}>
+        {onCreateReminder && (
+          <button type="button" className="ghostButton" onClick={() => onCreateReminder(selectedDateKey)}>
+            <Bell size={14} /> Add reminder
+          </button>
+        )}
+        {onCreateTask && (
+          <button type="button" className="ghostButton" onClick={() => onCreateTask(selectedDateKey)}>
+            <ListTodo size={14} /> Add task
+          </button>
+        )}
+      </div>
     </section>
   );
 });

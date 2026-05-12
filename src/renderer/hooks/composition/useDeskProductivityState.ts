@@ -28,11 +28,12 @@ import {
   visibleReminders as remindersVisible
 } from "../../lib/derived/reminders";
 import { useCalendarState } from "../workspace/useCalendarState";
-import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions";
+import type { AgendaItem, AgendaFilter } from "../workspace/useCalendarState";
 import { useNoteActions } from "../workspace/useNoteActions";
+import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions";
 import { useReminderActions } from "../workspace/useReminderActions";
-import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
 import { useTaskActions } from "../workspace/useTaskActions";
+import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
 
 export type DeskProductivityState = {
   calendar: {
@@ -42,7 +43,9 @@ export type DeskProductivityState = {
     todayKey: string;
     calendarSelectedKey: string;
     setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
-    selectedDayAgenda: Reminder[];
+    agendaFilter: AgendaFilter;
+    setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
+    selectedDayAgenda: AgendaItem[];
   };
   reminders: {
     filter: ReminderFilter;
@@ -125,7 +128,7 @@ export function useDeskProductivityState(args: {
 
   const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
 
-  const calendar = useCalendarState(reminders);
+  const calendar = useCalendarState(reminders, tasks);
   const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
     mergeNote,
     removeNoteById,
@@ -152,6 +155,8 @@ export function useDeskProductivityState(args: {
       todayKey: calendar.todayKey,
       calendarSelectedKey: calendar.calendarSelectedKey,
       setCalendarSelectedKey: calendar.setCalendarSelectedKey,
+      agendaFilter: calendar.agendaFilter,
+      setAgendaFilter: calendar.setAgendaFilter,
       selectedDayAgenda: calendar.selectedDayAgenda
     },
     reminders: {

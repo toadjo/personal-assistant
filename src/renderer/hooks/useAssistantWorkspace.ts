@@ -19,6 +19,7 @@ import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow } from ".
 import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../lib/theme/tokens";
 import type { Density, PanelRadius, DisplayPreferences } from "../lib/display/types";
 import type { CalendarCell } from "../lib/calendar";
+import type { AgendaItem, AgendaFilter } from "../hooks/workspace/useCalendarState";
 import type { OnboardingState, OnboardingStep } from "../types/onboarding";
 import type { SuccessMessage } from "./ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
@@ -107,7 +108,9 @@ export type AssistantWorkspace = {
     todayKey: string;
     calendarSelectedKey: string;
     setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
-    selectedDayAgenda: Reminder[];
+    agendaFilter: AgendaFilter;
+    setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
+    selectedDayAgenda: AgendaItem[];
   };
   reminders: {
     filter: ReminderFilter;
