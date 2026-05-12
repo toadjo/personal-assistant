@@ -82,6 +82,17 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
 - Next action: Commit release prep, push branch, tag `v1.5.0`, and monitor release packaging after GitHub artifact quota is healthy.
 
+## 2026-05-12: Appearance System And Desk Polish (v1.5.6–v1.6.0)
+
+- v1.5.6: Theme token foundation — typed ThemeTokenKey, ThemePreset, CustomTheme; 6 presets including Corporate; apply via CSS variables; legacy migration.
+- v1.5.7: Custom theme editor — color inputs for all tokens, preset pills, reset/duplicate/export/import, contrast warnings.
+- v1.5.8: Layout and density preferences — Comfortable/Compact/Spacious, Sharp/Soft/Rounded radius, shadows/blur toggles, DCC section mode.
+- v1.5.9: Today strip with count chips and quick filters, shorter empty state copy.
+- v1.6.0: Version bump to 1.6.0, docs refresh, full verification, Windows installer build.
+- Files touched: theme module, display module, AppearancePanel, TodayStrip, DailyCommandCenterPanel, AssistantShell, useThemePreference, useDisplayPreferences, DeskUiState, AssistantWorkspace, styles.css, package.json, tests.
+- Checks run: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`
+- Next action: Build local Windows installer for v1.6.0 and publish `.exe` manually.
+
 ## 2026-05-12: Minimal Corporate Desk (v1.5.2–v1.5.5)
 
 - v1.5.2: DCC single secondary section (Away > Attention > Context), flatter CSS, shorter empty states, tighter panel spacing.
