@@ -178,7 +178,7 @@ export function CommandPalette({
         )}
 
         <div className="commandPaletteFooter">
-          <kbd>↑↓</kbd> Navigate · <kbd>Enter</kbd> Open · <kbd>Esc</kbd> Close
+          <kbd>Up/Down</kbd> Navigate | <kbd>Enter</kbd> Open | <kbd>Esc</kbd> Close
         </div>
       </div>
     </div>

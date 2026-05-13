@@ -1,13 +1,16 @@
 import { useState, useCallback, useMemo } from "react";
-import { X, Palette, RotateCcw, Copy, Download, Upload, AlertTriangle } from "lucide-react";
+import { X, Palette, RotateCcw, Copy, Download, Upload, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import {
   THEME_PRESETS,
+  SAFE_ACCENTS,
+  ACCENT_TOKEN_KEYS,
   type ThemeMode,
   type ThemeTokenKey,
   type CustomTheme,
+  type AccentPreset,
   resolveTokens
 } from "../../lib/theme/tokens";
-import { isContrastSafe } from "../../lib/theme/contrast";
+import { contrastRatio, isContrastSafe } from "../../lib/theme/contrast";
 import type { DisplayPreferences, Density, PanelRadius } from "../../lib/display/types";
 import { IconButton } from "../ui/IconButton";
 
@@ -112,20 +115,15 @@ export function AppearancePanel({
   onClose
 }: Props): JSX.Element {
   const [activePreset, setActivePreset] = useState<ThemeMode>(theme);
+  const [advanced, setAdvanced] = useState(false);
 
   const currentTokens = useMemo(() => resolveTokens(theme, custom?.overrides), [theme, custom]);
 
   const contrastIssues = useMemo(() => {
     const issues: { label: string; ratio: number }[] = [];
     const check = (fg: string, bg: string, label: string) => {
-      const ratio = isContrastSafe(fg, bg) ? 0 : 1; // rough: only flag unsafe
-      if (ratio > 0) {
-        // Compute actual ratio for display
-        const r = isContrastSafe(fg, bg);
-        if (!r) {
-          // import contrastRatio lazily or inline — skip detailed calc for now
-          issues.push({ label, ratio: 0 });
-        }
+      if (!isContrastSafe(fg, bg)) {
+        issues.push({ label, ratio: Number(contrastRatio(fg, bg).toFixed(2)) });
       }
     };
     check(currentTokens.text, currentTokens.bg, "Text on background");
@@ -185,6 +183,26 @@ export function AppearancePanel({
     });
   }, [activePreset, onOverride]);
 
+  const applyAccent = useCallback(
+    (accent: AccentPreset) => {
+      const def = SAFE_ACCENTS[accent];
+      if (!def) return;
+      for (const key of ACCENT_TOKEN_KEYS) {
+        onOverride(key, def.overrides[key]);
+      }
+    },
+    [onOverride]
+  );
+
+  const isAccentActive = useCallback(
+    (accent: AccentPreset): boolean => {
+      const def = SAFE_ACCENTS[accent];
+      if (!def) return false;
+      return ACCENT_TOKEN_KEYS.every((key) => custom?.overrides?.[key] === def.overrides[key]);
+    },
+    [custom]
+  );
+
   return (
     <div className="panel appearancePanel">
       <div className="appearancePanelHeader">
@@ -208,6 +226,22 @@ export function AppearancePanel({
               }}
             >
               {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="appearanceSection">
+        <label className="muted">Accent</label>
+        <div className="row appearancePresetRow">
+          {(Object.keys(SAFE_ACCENTS) as AccentPreset[]).map((a) => (
+            <button
+              key={a}
+              type="button"
+              className={`pillButton ${isAccentActive(a) ? "pillButtonActive" : ""}`}
+              onClick={() => applyAccent(a)}
+            >
+              {SAFE_ACCENTS[a].label}
             </button>
           ))}
         </div>
@@ -268,24 +302,6 @@ export function AppearancePanel({
         <button type="button" className="ghostButton" onClick={() => onReset(activePreset)}>
           <RotateCcw size={14} /> Reset theme
         </button>
-        <button type="button" className="ghostButton" onClick={duplicatePreset}>
-          <Copy size={14} /> Duplicate
-        </button>
-        <button type="button" className="ghostButton" onClick={handleExport}>
-          <Download size={14} /> Export
-        </button>
-        <label className="ghostButton fileButton">
-          <Upload size={14} /> Import
-          <input
-            type="file"
-            accept="application/json"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImport(file);
-              e.currentTarget.value = "";
-            }}
-          />
-        </label>
         <button type="button" className="ghostButton" onClick={display.resetDisplay}>
           <RotateCcw size={14} /> Reset layout
         </button>
@@ -298,49 +314,77 @@ export function AppearancePanel({
         </div>
       )}
 
-      <div className="appearanceTokens">
-        {TOKEN_GROUPS.map((group) => (
-          <div key={group.label} className="appearanceGroup">
-            <h4 className="appearanceGroupLabel">{group.label}</h4>
-            <div className="appearanceGroupGrid">
-              {group.keys.map((key) => {
-                const value = currentTokens[key];
-                const overridden = custom?.overrides?.[key] !== undefined;
-                return (
-                  <div key={key} className={`appearanceTokenRow ${overridden ? "appearanceTokenOverridden" : ""}`}>
-                    <label className="appearanceTokenLabel">{TOKEN_LABELS[key]}</label>
-                    <div className="appearanceTokenInputRow">
-                      <input
-                        type="color"
-                        value={hexFromColorInput(value)}
-                        onChange={(e) => onOverride(key, e.target.value)}
-                        aria-label={`${TOKEN_LABELS[key]} color`}
-                      />
-                      <input
-                        type="text"
-                        value={value}
-                        onChange={(e) => onOverride(key, e.target.value)}
-                        className="appearanceTokenText"
-                        aria-label={`${TOKEN_LABELS[key]} value`}
-                      />
-                      {overridden && (
-                        <IconButton
-                          icon={RotateCcw}
-                          label={`Reset ${TOKEN_LABELS[key]}`}
-                          title="Reset"
-                          onClick={() => onOverride(key, undefined)}
-                          variant="ghost"
-                          size={14}
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      <button type="button" className="appearanceAdvancedToggle ghostButton" onClick={() => setAdvanced((s) => !s)}>
+        {advanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Advanced
+      </button>
+
+      {advanced && (
+        <div className="appearanceAdvancedSection">
+          <div className="appearanceActions">
+            <button type="button" className="ghostButton" onClick={duplicatePreset}>
+              <Copy size={14} /> Duplicate
+            </button>
+            <button type="button" className="ghostButton" onClick={handleExport}>
+              <Download size={14} /> Export
+            </button>
+            <label className="ghostButton fileButton">
+              <Upload size={14} /> Import
+              <input
+                type="file"
+                accept="application/json"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImport(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
           </div>
-        ))}
-      </div>
+
+          <div className="appearanceTokens">
+            {TOKEN_GROUPS.map((group) => (
+              <div key={group.label} className="appearanceGroup">
+                <h4 className="appearanceGroupLabel">{group.label}</h4>
+                <div className="appearanceGroupGrid">
+                  {group.keys.map((key) => {
+                    const value = currentTokens[key];
+                    const overridden = custom?.overrides?.[key] !== undefined;
+                    return (
+                      <div key={key} className={`appearanceTokenRow ${overridden ? "appearanceTokenOverridden" : ""}`}>
+                        <label className="appearanceTokenLabel">{TOKEN_LABELS[key]}</label>
+                        <div className="appearanceTokenInputRow">
+                          <input
+                            type="color"
+                            value={hexFromColorInput(value)}
+                            onChange={(e) => onOverride(key, e.target.value)}
+                            aria-label={`${TOKEN_LABELS[key]} color`}
+                          />
+                          <input
+                            type="text"
+                            value={value}
+                            onChange={(e) => onOverride(key, e.target.value)}
+                            className="appearanceTokenText"
+                            aria-label={`${TOKEN_LABELS[key]} value`}
+                          />
+                          {overridden && (
+                            <IconButton
+                              icon={RotateCcw}
+                              label={`Reset ${TOKEN_LABELS[key]} to preset`}
+                              onClick={() => onOverride(key, undefined)}
+                              variant="ghost"
+                              size={14}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

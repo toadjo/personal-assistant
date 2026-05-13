@@ -66,9 +66,9 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current.data).toHaveProperty("rules");
     expect(result.current.data).toHaveProperty("isRefreshing");
     expect(result.current.data).toHaveProperty("refreshAll");
-    expect(result.current.data).toHaveProperty("fetchNotesOnly");
-    expect(result.current.data).toHaveProperty("fetchRemindersOnly");
-    expect(result.current.data).toHaveProperty("fetchTasksOnly");
+    expect(result.current.data).toHaveProperty("refreshNotes");
+    expect(result.current.data).toHaveProperty("refreshReminders");
+    expect(result.current.data).toHaveProperty("refreshTasks");
   });
 
   it("ha section has credentials, readiness, and device toggle", () => {

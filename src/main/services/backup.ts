@@ -1,3 +1,4 @@
+import { app } from "electron";
 import { getDb } from "../db";
 
 export type BackupPayload = {
@@ -58,7 +59,7 @@ export function exportBackup(): BackupPayload {
   const automation_rules = db.prepare("SELECT * FROM automation_rules").all() as BackupPayload["automation_rules"];
   const app_settings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
   return {
-    version: "1.7.0",
+    version: app.getVersion(),
     exportedAt: new Date().toISOString(),
     notes,
     reminders,

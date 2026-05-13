@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { Info, HardDrive, MessageSquare } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 
@@ -7,6 +8,22 @@ type Props = {
 };
 
 export function AboutPanel({ version, onClose }: Props): JSX.Element {
+  const [bugError, setBugError] = useState<string | null>(null);
+
+  const handleBugReport = useCallback(() => {
+    setBugError(null);
+    const api = window.assistantApi;
+    if (!api?.openBugReport) {
+      setBugError("Bug reporting is not available in this build.");
+      return;
+    }
+    void api.openBugReport().catch(() => {
+      setBugError(
+        "Could not open GitHub issues. You can visit github.com/toadjo/Personal-Assistant-R/issues manually."
+      );
+    });
+  }, []);
+
   return (
     <section className="panel" aria-labelledby="about-panel-heading">
       <PanelHeader
@@ -44,14 +61,10 @@ export function AboutPanel({ version, onClose }: Props): JSX.Element {
             <h4>Feedback</h4>
           </div>
           <p className="muted">Found a bug or have a suggestion? Report it on GitHub.</p>
-          <a
-            href="https://github.com/toadjo/Personal-Assistant-R/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link"
-          >
-            Open an Issue
-          </a>
+          <button type="button" className="ghostButton" onClick={handleBugReport} aria-label="Report a bug">
+            Report a bug
+          </button>
+          {bugError ? <p className="aboutWarning">{bugError}</p> : null}
         </div>
       </div>
     </section>

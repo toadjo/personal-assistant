@@ -29,9 +29,12 @@ export type DeskDataState = {
   rules: AutomationRule[];
   isRefreshing: boolean;
   refreshAll: () => Promise<void>;
-  fetchNotesOnly: () => Promise<void>;
-  fetchRemindersOnly: () => Promise<void>;
-  fetchTasksOnly: () => Promise<void>;
+  refreshNotes: () => Promise<void>;
+  refreshReminders: () => Promise<void>;
+  refreshTasks: () => Promise<void>;
+  refreshDevices: () => Promise<void>;
+  refreshLogs: () => Promise<void>;
+  refreshRules: () => Promise<void>;
   // Optimistic update helpers
   mergeNote: (note: Note) => void;
   removeNoteById: (id: string) => void;
@@ -50,9 +53,12 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     rules,
     isRefreshing,
     refreshAll,
-    fetchNotesOnly,
-    fetchRemindersOnly,
-    fetchTasksOnly,
+    refreshNotes,
+    refreshReminders,
+    refreshTasks,
+    refreshDevices,
+    refreshLogs,
+    refreshRules,
     mergeNote,
     removeNoteById,
     setTasks
@@ -69,9 +75,12 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     rules,
     isRefreshing,
     refreshAll,
-    fetchNotesOnly,
-    fetchRemindersOnly,
-    fetchTasksOnly,
+    refreshNotes,
+    refreshReminders,
+    refreshTasks,
+    refreshDevices,
+    refreshLogs,
+    refreshRules,
     mergeNote,
     removeNoteById,
     setTasks

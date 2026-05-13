@@ -364,7 +364,7 @@ export function AssistantShell(): JSX.Element {
         </div>
         <div>
           <NotesPanel
-            onFetchNotes={data.fetchNotesOnly}
+            onFetchNotes={data.refreshNotes}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
             onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
@@ -376,7 +376,7 @@ export function AssistantShell(): JSX.Element {
             reminderFilter={reminders.filter}
             setReminderFilter={reminders.setFilter}
             visibleReminders={reminders.visible}
-            onRefresh={data.fetchRemindersOnly}
+            onRefresh={data.refreshReminders}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
             onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}

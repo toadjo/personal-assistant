@@ -1773,3 +1773,149 @@ button:disabled {
   font-size: 10px;
   font-family: inherit;
 }
+
+/* Appearance panel (v1.5.7 redesigned) */
+.appearancePanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.appearancePanelHeader .subheading {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.appearanceSection {
+  margin-bottom: var(--space-3);
+}
+
+.appearanceSection > .muted {
+  display: block;
+  font-size: 12px;
+  margin-bottom: var(--space-1);
+}
+
+.appearancePresetRow {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.appearanceToggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.appearanceToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.appearanceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+
+.appearanceWarning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--panel-radius, 8px);
+  border: 1px solid var(--error-border);
+  background: var(--error-bg);
+  color: var(--error-text);
+  font-size: 13px;
+  margin-bottom: var(--space-3);
+}
+
+.appearanceAdvancedToggle {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+.appearanceAdvancedSection {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--panel-border);
+}
+
+.appearanceTokens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.appearanceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.appearanceGroupLabel {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.appearanceGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-2);
+}
+
+.appearanceTokenRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.appearanceTokenOverridden {
+  padding: 4px;
+  border-radius: 6px;
+  background: var(--primary-soft);
+}
+
+.appearanceTokenLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.appearanceTokenInputRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.appearanceTokenInputRow input[type="color"] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.appearanceTokenText {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
+}

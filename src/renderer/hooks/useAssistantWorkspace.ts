@@ -13,173 +13,14 @@
  * logic in a dedicated composition hook before adding it here.
  */
 import { useEffect } from "react";
-import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
-import type { ReminderFilter, TaskFilter, ExecutionLogRow, HaDeviceRow } from "../types";
-import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../lib/theme/tokens";
-import type { Density, PanelRadius, DisplayPreferences } from "../lib/display/types";
-import type { CalendarCell } from "../lib/calendar";
-import type { AgendaItem, AgendaFilter } from "../hooks/workspace/useCalendarState";
-import type { OnboardingState, OnboardingStep } from "../types/onboarding";
-import type { SuccessMessage } from "./ui/usePersistentSuccess";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 import { useDeskUiState } from "./composition/useDeskUiState";
 import { useDeskDataState } from "./composition/useDeskDataState";
 import { useDeskHomeAssistantState } from "./composition/useDeskHomeAssistantState";
 import { useDeskProductivityState } from "./composition/useDeskProductivityState";
 import { useDeskCommandState } from "./composition/useDeskCommandState";
-
-export type AssistantWorkspace = {
-  ui: {
-    theme: ThemeMode;
-    custom: CustomTheme | undefined;
-    setTheme: (preset: ThemeMode) => void;
-    setCustomOverride: (key: ThemeTokenKey, value: string | undefined) => void;
-    resetCustomOverrides: (preset?: ThemeMode) => void;
-    status: string;
-    setStatus: (value: string) => void;
-    error: string;
-    reportError: (err: unknown) => void;
-    // v1.2.7 persistent success feedback
-    successes: SuccessMessage[];
-    showSuccess: (message: string) => void;
-    dismissSuccess: (id: string) => void;
-    dismissAllSuccesses: () => void;
-  };
-  display: DisplayPreferences & {
-    setDensity: (density: Density) => void;
-    setPanelRadius: (radius: PanelRadius) => void;
-    setShadows: (value: boolean) => void;
-    setGlassBlur: (value: boolean) => void;
-    setDccShowAllSecondary: (value: boolean) => void;
-    resetDisplay: () => void;
-  };
-  data: {
-    query: string;
-    setQuery: (value: string) => void;
-    notes: Note[];
-    reminders: Reminder[];
-    tasks: Task[];
-    devices: HaDeviceRow[];
-    logs: ExecutionLogRow[];
-    rules: AutomationRule[];
-    isRefreshing: boolean;
-    refreshAll: () => Promise<void>;
-    fetchNotesOnly: () => Promise<void>;
-    fetchRemindersOnly: () => Promise<void>;
-    fetchTasksOnly: () => Promise<void>;
-  };
-  ha: {
-    haUrl: string;
-    setHaUrl: (value: string) => void;
-    haToken: string;
-    setHaToken: (value: string) => void;
-    hasHaToken: boolean;
-    isRefreshingHa: boolean;
-    isSavingHa: boolean;
-    saveHomeAssistantConfig: () => Promise<void>;
-    testHomeAssistant: () => Promise<void>;
-    refreshHomeAssistantEntities: () => void;
-    haReady: boolean;
-    hasHaUrl: boolean;
-    canSaveHa: boolean;
-    haStatusText: string;
-    isEntityTogglePending: (entityId: string) => boolean;
-    runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
-  };
-  command: {
-    commandInput: string;
-    setCommandInput: (value: string) => void;
-    commandHistory: string[];
-    setCommandHistory: Dispatch<SetStateAction<string[]>>;
-    historyCursor: number;
-    setHistoryCursor: Dispatch<SetStateAction<number>>;
-    commandHints: string[];
-    isRunningCommand: boolean;
-    commandInputRef: RefObject<HTMLInputElement | null>;
-    runPresetCommand: (command: string) => void;
-    runCommandInternal: (rawInput: string) => Promise<void>;
-    clearCommandHistory: () => void;
-  };
-  calendar: {
-    calendarCursor: Date;
-    setCalendarCursor: Dispatch<SetStateAction<Date>>;
-    monthCells: CalendarCell[];
-    todayKey: string;
-    calendarSelectedKey: string;
-    setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
-    agendaFilter: AgendaFilter;
-    setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
-    selectedDayAgenda: AgendaItem[];
-  };
-  reminders: {
-    filter: ReminderFilter;
-    setFilter: (value: ReminderFilter) => void;
-    pending: Reminder[];
-    overdue: Reminder[];
-    visible: Reminder[];
-    snoozeMinutes: (id: string, minutes: number, okMessage: string) => Promise<void>;
-    completeById: (id: string) => Promise<void>;
-    deleteById: (id: string) => Promise<void>;
-  };
-  tasks: {
-    filter: TaskFilter;
-    setFilter: (value: TaskFilter) => void;
-    visible: Task[];
-    overdueOpen: Task[];
-    dueTodayOpen: Task[];
-    completeById: (id: string) => Promise<void>;
-    deleteById: (id: string) => Promise<void>;
-    saveTask: (payload: {
-      id?: string;
-      title: string;
-      notes: string;
-      dueAt: string | null;
-      priority: "low" | "normal" | "high";
-      recurrence: "none" | "daily" | "weekly" | "monthly";
-    }) => Promise<void>;
-    bulkComplete: (ids: string[]) => Promise<void>;
-    updatePriority: (id: string, priority: "low" | "normal" | "high") => Promise<void>;
-    undo: () => Promise<void>;
-    canUndo: boolean;
-  };
-  automation: {
-    deleteRuleById: (id: string, name: string) => Promise<void>;
-    setRuleEnabledById: (id: string, enabled: boolean) => Promise<void>;
-    duplicateRuleById: (id: string) => Promise<void>;
-    testRunRuleById: (id: string) => Promise<void>;
-  };
-  memos: {
-    deleteNote: (id: string, title: string) => Promise<void>;
-    updateNote: (payload: {
-      id: string;
-      title?: string;
-      content?: string;
-      tags?: string[];
-      pinned?: boolean;
-    }) => Promise<void>;
-  };
-  profile: {
-    userPreferredName: string;
-    userPreferredNameIsSet: boolean;
-    persistUserPreferredName: (name: string) => Promise<void>;
-  };
-  onboarding: {
-    show: boolean;
-    setShow: (value: boolean) => void;
-    // v1.2.7 guided onboarding
-    guidedState: OnboardingState;
-    currentStep: OnboardingStep | null;
-    isComplete: boolean;
-    markNoteCreated: () => void;
-    markReminderCreated: () => void;
-    markHomeAssistantConnected: () => void;
-    skipHomeAssistant: () => void;
-  };
-  desk: {
-    hideWindow: () => void;
-  };
-};
+import type { AssistantWorkspace } from "./workspace/workspaceTypes";
+export type { AssistantWorkspace } from "./workspace/workspaceTypes";
 
 export function useAssistantWorkspace(): AssistantWorkspace {
   // UI state - no dependencies, created first
@@ -188,8 +29,8 @@ export function useAssistantWorkspace(): AssistantWorkspace {
   // Data state - depends on setError from UI
   const data = useDeskDataState(ui.setError);
 
-  // HA state - depends on setStatus/setError from UI and refreshAll from data
-  const ha = useDeskHomeAssistantState(ui.setStatus, ui.setError, data.refreshAll);
+  // HA state - depends on setStatus/setError from UI, refreshAll for entity sync, refreshDevices for toggle
+  const ha = useDeskHomeAssistantState(ui.setStatus, ui.setError, data.refreshAll, data.refreshDevices);
 
   // Productivity state - depends on data slices and callbacks from UI and data
   const productivity = useDeskProductivityState({
@@ -200,9 +41,12 @@ export function useAssistantWorkspace(): AssistantWorkspace {
     setStatus: ui.setStatus,
     setError: ui.setError,
     refreshAll: data.refreshAll,
-    fetchNotesOnly: data.fetchNotesOnly,
-    fetchRemindersOnly: data.fetchRemindersOnly,
-    fetchTasksOnly: data.fetchTasksOnly,
+    refreshNotes: data.refreshNotes,
+    refreshReminders: data.refreshReminders,
+    refreshTasks: data.refreshTasks,
+    refreshDevices: data.refreshDevices,
+    refreshLogs: data.refreshLogs,
+    refreshRules: data.refreshRules,
     mergeNote: data.mergeNote,
     removeNoteById: data.removeNoteById
   });
@@ -243,7 +87,6 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       setStatus: ui.setStatus,
       error: ui.error,
       reportError: ui.reportError,
-      // v1.2.7 persistent success feedback
       successes: ui.successes,
       showSuccess: ui.showSuccess,
       dismissSuccess: ui.dismissSuccess,
@@ -269,9 +112,9 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       rules: data.rules,
       isRefreshing: data.isRefreshing,
       refreshAll: data.refreshAll,
-      fetchNotesOnly: data.fetchNotesOnly,
-      fetchRemindersOnly: data.fetchRemindersOnly,
-      fetchTasksOnly: data.fetchTasksOnly
+      refreshNotes: data.refreshNotes,
+      refreshReminders: data.refreshReminders,
+      refreshTasks: data.refreshTasks
     },
     ha: {
       haUrl: ha.haUrl,

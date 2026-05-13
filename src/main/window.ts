@@ -42,6 +42,15 @@ export function installDefaultContentSecurityPolicy(): void {
 
 export type AppWindowRole = "desk" | "household";
 
+export function applyWindowSecurityPolicy(webContents: Electron.WebContents): void {
+  webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  webContents.on("will-navigate", (event, targetUrl) => {
+    if (!isTrustedNavigationTarget(targetUrl)) {
+      event.preventDefault();
+    }
+  });
+}
+
 export function createWindow(role: AppWindowRole): BrowserWindow {
   const isHousehold = role === "household";
   const appIconPath = resolveAppIconPath();
@@ -60,12 +69,7 @@ export function createWindow(role: AppWindowRole): BrowserWindow {
     }
   });
 
-  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-  window.webContents.on("will-navigate", (event, targetUrl) => {
-    if (!isTrustedNavigationTarget(targetUrl)) {
-      event.preventDefault();
-    }
-  });
+  applyWindowSecurityPolicy(window.webContents);
 
   const devUrl = getConfiguredDevServerUrl();
   if (!app.isPackaged && process.env.ELECTRON_E2E_TEST_MODE !== "1") {

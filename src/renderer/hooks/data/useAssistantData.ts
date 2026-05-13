@@ -20,7 +20,10 @@ export function useAssistantData(setError: SetError) {
     isRefreshing,
     setNotes,
     setReminders,
-    setTasks
+    setTasks,
+    setDevices,
+    setLogs,
+    setRules
   } = useWorkspaceStore(
     useShallow((s) => ({
       query: s.query,
@@ -34,7 +37,10 @@ export function useAssistantData(setError: SetError) {
       isRefreshing: s.isRefreshing,
       setNotes: s.setNotes,
       setReminders: s.setReminders,
-      setTasks: s.setTasks
+      setTasks: s.setTasks,
+      setDevices: s.setDevices,
+      setLogs: s.setLogs,
+      setRules: s.setRules
     }))
   );
   const setFromFullRefresh = useWorkspaceStore((s) => s.setFromFullRefresh);
@@ -43,7 +49,7 @@ export function useAssistantData(setError: SetError) {
   const queryRef = useRef(query);
   queryRef.current = query;
 
-  const fetchNotesOnly = useCallback(async (): Promise<void> => {
+  const refreshNotes = useCallback(async (): Promise<void> => {
     const api = window.assistantApi;
     if (!api?.listNotes) return;
     try {
@@ -53,7 +59,7 @@ export function useAssistantData(setError: SetError) {
     }
   }, [setError, setNotes]);
 
-  const fetchRemindersOnly = useCallback(async (): Promise<void> => {
+  const refreshReminders = useCallback(async (): Promise<void> => {
     const api = window.assistantApi;
     if (!api?.listReminders) return;
     try {
@@ -63,7 +69,7 @@ export function useAssistantData(setError: SetError) {
     }
   }, [setError, setReminders]);
 
-  const fetchTasksOnly = useCallback(async (): Promise<void> => {
+  const refreshTasks = useCallback(async (): Promise<void> => {
     const api = window.assistantApi;
     if (!api?.listTasks) return;
     try {
@@ -72,6 +78,62 @@ export function useAssistantData(setError: SetError) {
       setError(getAssistantInvokeErrorMessage(err));
     }
   }, [setError, setTasks]);
+
+  const refreshDevices = useCallback(async (): Promise<void> => {
+    const api = window.assistantApi;
+    if (!api?.listDevices) return;
+    try {
+      setDevices(await api.listDevices());
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }, [setError, setDevices]);
+
+  const refreshLogs = useCallback(async (): Promise<void> => {
+    const api = window.assistantApi;
+    if (!api?.listExecutionLogs) return;
+    try {
+      const rows = await api.listExecutionLogs();
+      const transformed: ExecutionLog[] = rows.map(
+        (l: {
+          id: string;
+          ruleId: string;
+          status: string;
+          startedAt: string;
+          endedAt: string;
+          error?: string;
+          attemptCount: number;
+          retryCount: number;
+          ruleName?: string;
+          actionLabel?: string;
+        }) => ({
+          id: l.id,
+          ruleId: l.ruleId,
+          status: l.status as "success" | "failed",
+          startedAt: l.startedAt,
+          endedAt: l.endedAt,
+          error: l.error,
+          attemptCount: l.attemptCount,
+          retryCount: l.retryCount,
+          ruleName: l.ruleName,
+          actionLabel: l.actionLabel
+        })
+      );
+      setLogs(transformed);
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }, [setError, setLogs]);
+
+  const refreshRules = useCallback(async (): Promise<void> => {
+    const api = window.assistantApi;
+    if (!api?.listRules) return;
+    try {
+      setRules(await api.listRules());
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }, [setError, setRules]);
 
   const refreshAll = useCallback(async () => {
     const api = window.assistantApi;
@@ -150,9 +212,9 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setReminders]);
 
   useEffect(() => {
-    const id = window.setTimeout(() => void fetchNotesOnly(), QUERY_REFRESH_DEBOUNCE_MS);
+    const id = window.setTimeout(() => void refreshNotes(), QUERY_REFRESH_DEBOUNCE_MS);
     return () => window.clearTimeout(id);
-  }, [query, fetchNotesOnly]);
+  }, [query, refreshNotes]);
 
   const mergeNote = useCallback(
     (note: Note) => {
@@ -179,9 +241,12 @@ export function useAssistantData(setError: SetError) {
     rules,
     isRefreshing,
     refreshAll,
-    fetchNotesOnly,
-    fetchRemindersOnly,
-    fetchTasksOnly,
+    refreshNotes,
+    refreshReminders,
+    refreshTasks,
+    refreshDevices,
+    refreshLogs,
+    refreshRules,
     mergeNote,
     removeNoteById,
     setTasks

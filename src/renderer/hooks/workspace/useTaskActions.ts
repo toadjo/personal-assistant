@@ -4,7 +4,7 @@ import type { TaskFilter } from "../../types";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 export type UndoableTaskAction = {
-  type: "complete" | "priority";
+  type: "priority";
   taskId: string;
   previousValue: string;
 };
@@ -13,7 +13,7 @@ export function useTaskActions(
   tasks: Task[],
   setStatus: (value: string) => void,
   setError: (value: string) => void,
-  fetchTasksOnly: () => Promise<void>
+  refreshTasks: () => Promise<void>
 ) {
   const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
   const [undoStack, setUndoStack] = useState<UndoableTaskAction[]>([]);
@@ -46,7 +46,7 @@ export function useTaskActions(
   async function completeById(id: string): Promise<void> {
     try {
       await window.assistantApi.completeTask(id);
-      await fetchTasksOnly();
+      await refreshTasks();
       setStatus("Task updated.");
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -56,7 +56,7 @@ export function useTaskActions(
   async function deleteById(id: string): Promise<void> {
     try {
       await window.assistantApi.deleteTask(id);
-      await fetchTasksOnly();
+      await refreshTasks();
       setStatus("Task deleted.");
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -86,7 +86,7 @@ export function useTaskActions(
         await window.assistantApi.createTask(payload);
         setStatus("Task created.");
       }
-      await fetchTasksOnly();
+      await refreshTasks();
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
     }
@@ -94,13 +94,8 @@ export function useTaskActions(
 
   async function bulkComplete(ids: string[]): Promise<void> {
     try {
-      const previousOpen = ids.filter((id) => tasks.find((t) => t.id === id)?.status === "open");
-      setUndoStack((prev) => [
-        ...prev,
-        ...previousOpen.map((taskId) => ({ type: "complete" as const, taskId, previousValue: "open" }))
-      ]);
       await Promise.all(ids.map((id) => window.assistantApi.completeTask(id)));
-      await fetchTasksOnly();
+      await refreshTasks();
       setStatus(`${ids.length} task${ids.length > 1 ? "s" : ""} completed.`);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -121,7 +116,7 @@ export function useTaskActions(
         priority,
         recurrence: task.recurrence
       });
-      await fetchTasksOnly();
+      await refreshTasks();
       setStatus("Priority updated.");
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -133,38 +128,19 @@ export function useTaskActions(
     if (!action) return;
 
     try {
-      if (action.type === "complete") {
-        // Reopen task by creating a clone with open status — API doesn't have reopen,
-        // so we update the task title to trigger a refresh (workaround until reopen API exists)
-        const task = tasks.find((t) => t.id === action.taskId);
-        if (task) {
-          await window.assistantApi.updateTask({
-            id: action.taskId,
-            title: task.title,
-            notes: task.notes,
-            dueAt: task.dueAt,
-            priority: task.priority,
-            recurrence: task.recurrence
-          });
-        }
-        // Note: true reopen requires API support; for now we just acknowledge
-        setStatus("Undo: task state may require manual refresh.");
+      const task = tasks.find((t) => t.id === action.taskId);
+      if (task) {
+        await window.assistantApi.updateTask({
+          id: action.taskId,
+          title: task.title,
+          notes: task.notes,
+          dueAt: task.dueAt,
+          priority: action.previousValue as "low" | "normal" | "high",
+          recurrence: task.recurrence
+        });
       }
-      if (action.type === "priority") {
-        const task = tasks.find((t) => t.id === action.taskId);
-        if (task) {
-          await window.assistantApi.updateTask({
-            id: action.taskId,
-            title: task.title,
-            notes: task.notes,
-            dueAt: task.dueAt,
-            priority: action.previousValue as "low" | "normal" | "high",
-            recurrence: task.recurrence
-          });
-        }
-        setStatus("Priority restored.");
-      }
-      await fetchTasksOnly();
+      setStatus("Priority restored.");
+      await refreshTasks();
       setUndoStack((prev) => prev.slice(0, -1));
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
