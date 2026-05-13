@@ -1,6 +1,9 @@
+import { shell } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import { registerInvoke } from "../invoke-handle";
+
+const BUG_REPORT_URL = "https://github.com/toadjo/Personal-Assistant-R/issues";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
@@ -22,6 +25,10 @@ export function registerAppWindowHandlers(assertSender: AssertSender, actions: W
   });
   registerInvoke(IpcInvoke.appHideDeskWindow, assertSender, () => {
     actions.hideDeskWindow();
+    return true;
+  });
+  registerInvoke(IpcInvoke.appOpenBugReport, assertSender, () => {
+    void shell.openExternal(BUG_REPORT_URL);
     return true;
   });
 }

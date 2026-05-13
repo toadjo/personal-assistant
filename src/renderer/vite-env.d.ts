@@ -109,6 +109,7 @@ declare global {
       openHouseholdWindow: () => Promise<boolean>;
       focusDeskWindow: () => Promise<boolean>;
       hideDeskWindow: () => Promise<boolean>;
+      openBugReport: () => Promise<boolean>;
       /**
        * Test-only API: allows Electron E2E tests to inject a fake fetch implementation
        * to simulate Home Assistant failures without requiring a live server.

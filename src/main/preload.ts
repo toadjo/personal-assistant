@@ -103,6 +103,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
   openHouseholdWindow: () => ipcRenderer.invoke(invoke.appOpenHouseholdWindow),
   focusDeskWindow: () => ipcRenderer.invoke(invoke.appFocusDeskWindow),
   hideDeskWindow: () => ipcRenderer.invoke(invoke.appHideDeskWindow),
+  openBugReport: () => ipcRenderer.invoke(invoke.appOpenBugReport),
   /**
    * Test-only API: allows Electron E2E tests to inject a fake fetch implementation
    * to simulate Home Assistant failures without requiring a live server.

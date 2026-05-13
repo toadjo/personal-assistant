@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import {
   assistantNameSchema,
+  backupPayloadSchema,
   haConfigSchema,
   haEntityIdSchema,
   noteCreateSchema,
@@ -37,6 +38,7 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.appOpenHouseholdWindow,
   IpcInvoke.appFocusDeskWindow,
   IpcInvoke.appHideDeskWindow,
+  IpcInvoke.appOpenBugReport,
   // Test-only channels (guarded by ELECTRON_E2E_TEST_MODE)
   IpcInvoke.testSetHaFetchOverride,
   IpcInvoke.testSetAutomationActionOverride
@@ -162,5 +164,112 @@ describe("IPC handler payload contracts", () => {
 
   it("uuidSchema rejects non-uuid delete ids", () => {
     expect(() => uuidSchema.parse("not-a-uuid")).toThrow();
+  });
+
+  it("backupPayloadSchema accepts a valid export shape", () => {
+    const valid = {
+      version: "1.7.1",
+      exportedAt: new Date().toISOString(),
+      notes: [
+        {
+          id: "n1",
+          title: "Test note",
+          content: "content",
+          tags: "",
+          pinned: 0,
+          createdAt: "2024-01-01T00:00:00.000Z",
+          updatedAt: "2024-01-01T00:00:00.000Z"
+        }
+      ],
+      reminders: [
+        {
+          id: "r1",
+          text: "Remind me",
+          dueAt: "2024-01-01T00:00:00.000Z",
+          recurrence: "none",
+          status: "pending",
+          notifyChannel: "desktop"
+        }
+      ],
+      tasks: [
+        {
+          id: "t1",
+          title: "Task",
+          notes: "",
+          dueAt: null,
+          priority: "normal",
+          status: "open",
+          recurrence: "none",
+          notifyChannel: "desktop",
+          createdAt: "2024-01-01T00:00:00.000Z",
+          updatedAt: "2024-01-01T00:00:00.000Z",
+          lastCompletedAt: null
+        }
+      ],
+      automation_rules: [
+        {
+          id: "a1",
+          name: "Rule",
+          triggerType: "time",
+          triggerConfig: "{}",
+          actionType: "localReminder",
+          actionConfig: "{}",
+          enabled: 1,
+          lastFiredAt: null
+        }
+      ],
+      app_settings: [
+        {
+          key: "theme",
+          value: "glass",
+          updatedAt: "2024-01-01T00:00:00.000Z"
+        }
+      ]
+    };
+    const parsed = backupPayloadSchema.parse(valid);
+    expect(parsed.version).toBe("1.7.1");
+    expect(parsed.notes).toHaveLength(1);
+  });
+
+  it("backupPayloadSchema rejects empty version", () => {
+    expect(() =>
+      backupPayloadSchema.parse({
+        version: "",
+        exportedAt: "2024-01-01T00:00:00.000Z",
+        notes: [],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: []
+      })
+    ).toThrow();
+  });
+
+  it("backupPayloadSchema rejects malformed note row", () => {
+    expect(() =>
+      backupPayloadSchema.parse({
+        version: "1.7.1",
+        exportedAt: "2024-01-01T00:00:00.000Z",
+        notes: [{ id: "", title: "x", content: "", tags: "", pinned: 0, createdAt: "x", updatedAt: "x" }],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: []
+      })
+    ).toThrow();
+  });
+
+  it("backupPayloadSchema rejects missing top-level key", () => {
+    expect(() =>
+      backupPayloadSchema.parse({
+        version: "1.7.1",
+        exportedAt: "2024-01-01T00:00:00.000Z",
+        notes: [],
+        reminders: [],
+        tasks: [],
+        automation_rules: []
+        // app_settings intentionally omitted
+      })
+    ).toThrow();
   });
 });

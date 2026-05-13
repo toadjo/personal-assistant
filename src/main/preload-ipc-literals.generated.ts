@@ -40,6 +40,7 @@ export const invokeChannelMap = {
   appOpenHouseholdWindow: "app:openHouseholdWindow",
   appFocusDeskWindow: "app:focusDeskWindow",
   appHideDeskWindow: "app:hideDeskWindow",
+  appOpenBugReport: "app:openBugReport",
   testSetHaFetchOverride: "test:setHaFetchOverride",
   testSetAutomationActionOverride: "test:setAutomationActionOverride"
 } as const;
