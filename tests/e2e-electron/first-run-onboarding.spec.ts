@@ -164,35 +164,27 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
   test("command examples are shown in desk UI", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Check that base command example buttons are visible
-    const createNoteButton = await window.getByRole("button", { name: "Create a note" }).isVisible();
-    expect(createNoteButton).toBe(true);
+    const examples = window.locator(".command-examples");
 
-    const setReminderButton = await window.getByRole("button", { name: "Set a reminder" }).isVisible();
-    expect(setReminderButton).toBe(true);
-
-    const showRemindersButton = await window.getByRole("button", { name: "Show reminders" }).isVisible();
-    expect(showRemindersButton).toBe(true);
-
-    const showNotesButton = await window.getByRole("button", { name: "Show all notes" }).isVisible();
-    expect(showNotesButton).toBe(true);
+    // Base command example buttons are visible
+    await expect(examples.getByRole("button", { name: "New note", exact: true })).toBeVisible();
+    await expect(examples.getByRole("button", { name: "Add task", exact: true })).toBeVisible();
+    await expect(examples.getByRole("button", { name: "Set reminder", exact: true })).toBeVisible();
+    await expect(examples.getByRole("button", { name: "Overdue tasks", exact: true })).toBeVisible();
+    await expect(examples.getByRole("button", { name: "Plan ahead", exact: true })).toBeVisible();
   });
 
   test("HA-specific command examples are hidden when HA not configured", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
+    const examples = window.locator(".command-examples");
+
     // Base examples should be visible
-    const createNoteButton = await window.getByRole("button", { name: "Create a note" }).isVisible();
-    expect(createNoteButton).toBe(true);
+    await expect(examples.getByRole("button", { name: "New note", exact: true })).toBeVisible();
+    await expect(examples.getByRole("button", { name: "Add task", exact: true })).toBeVisible();
 
     // HA-specific examples should not be visible
-    const toggleDeviceButton = await window.getByRole("button", { name: "Toggle a device" }).isVisible();
-    expect(toggleDeviceButton).toBe(false);
-
-    const listDevicesButton = await window.getByRole("button", { name: "List all devices" }).isVisible();
-    expect(listDevicesButton).toBe(false);
-
-    const openHouseholdButton = await window.getByRole("button", { name: "Open Household window" }).isVisible();
-    expect(openHouseholdButton).toBe(false);
+    await expect(examples.getByRole("button", { name: "Toggle device", exact: true })).toHaveCount(0);
+    await expect(examples.getByRole("button", { name: "Devices", exact: true })).toHaveCount(0);
   });
 });
