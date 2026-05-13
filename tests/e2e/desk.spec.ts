@@ -7,11 +7,11 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript({ path: stubPath });
 });
 
-test("desk shell shows assistant command field and memo panel", async ({ page }) => {
+test("desk shell shows assistant command field and core panels", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("textbox", { name: /message the assistant/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /^memos$/i })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /^follow-ups$/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^reminders$/i })).toBeVisible();
 });
 
 test("household route loads household shell", async ({ page }) => {
