@@ -6,7 +6,8 @@ let testDb: Database.Database;
 
 vi.mock("electron", () => ({
   app: {
-    getPath: vi.fn(() => "/tmp")
+    getPath: vi.fn(() => "/tmp"),
+    getVersion: vi.fn(() => "1.7.1")
   }
 }));
 
@@ -27,7 +28,7 @@ describe("backup service", () => {
 
   it("exports empty data when no rows exist", () => {
     const result = exportBackup();
-    expect(result.version).toBe("1.7.0");
+    expect(result.version).toBe("1.7.1");
     expect(result.notes).toEqual([]);
     expect(result.reminders).toEqual([]);
     expect(result.tasks).toEqual([]);
