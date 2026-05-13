@@ -95,7 +95,7 @@ export function buildSearchIndex(
       id: `automation:${rule.id}`,
       category: "automation",
       title: rule.name,
-      subtitle: `${rule.triggerConfig.at} — ${rule.actionType}`,
+      subtitle: `${rule.triggerConfig.at} | ${rule.actionType}`,
       action: "Open automation",
       score: 0
     });
