@@ -27,13 +27,16 @@ async function listFilesRecursive(rootDir) {
   return out;
 }
 
-export function selectReleaseAssets(filePaths) {
-  const normalized = filePaths.map(normalize);
-  const selected = normalized.filter(isAllowedReleaseAsset);
+export function selectReleaseAssets({ windowsFiles, linuxFiles, macosFiles }) {
+  const windows = windowsFiles.map(normalize);
+  const linux = linuxFiles.map(normalize);
+  const macos = macosFiles.map(normalize);
+  const all = [...windows, ...linux, ...macos];
+  const selected = all.filter(isAllowedReleaseAsset);
   const exe = selected.filter((f) => f.endsWith(".exe"));
   const appImage = selected.filter((f) => f.endsWith(".AppImage"));
   const dmg = selected.filter((f) => f.endsWith(".dmg"));
-  const zip = selected.filter((f) => f.endsWith(".zip"));
+  const zip = macos.filter((f) => f.endsWith(".zip"));
   return {
     selected,
     required: { exe, appImage, dmg, zip }
@@ -96,7 +99,7 @@ export async function prepareValidatedReleaseAssets({ windowsDir, linuxDir, maco
     listFilesRecursive(linuxDir),
     listFilesRecursive(macosDir)
   ]);
-  const selection = selectReleaseAssets([...windowsFiles, ...linuxFiles, ...macosFiles]);
+  const selection = selectReleaseAssets({ windowsFiles, linuxFiles, macosFiles });
   validateReleaseAssets(selection);
   const copied = await copySelectedAssets(selection.selected, outDir);
   return { copied, selection };
