@@ -1,8 +1,16 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { TOKEN_CSS_VAR, THEME_PRESETS, THEME_IDS, getPresetTokens, resolveTokens } from "./tokens";
+import {
+  TOKEN_CSS_VAR,
+  THEME_PRESETS,
+  THEME_IDS,
+  SAFE_ACCENTS,
+  ACCENT_TOKEN_KEYS,
+  getPresetTokens,
+  resolveTokens
+} from "./tokens";
 import { applyThemeTokens, applyPreset, clearThemeTokens } from "./applyTheme";
 import { readThemeState, writeThemeState } from "./storage";
-import type { ThemeMode, ThemeTokenKey } from "./tokens";
+import type { ThemeMode, ThemeTokenKey, AccentPreset } from "./tokens";
 
 describe("Theme token system (v1.5.6)", () => {
   beforeEach(() => {
@@ -84,6 +92,38 @@ describe("Theme token system (v1.5.6)", () => {
     it("falls back to paper tokens for unknown preset", () => {
       const result = resolveTokens("unknown" as ThemeMode);
       expect(result).toEqual(getPresetTokens("paper"));
+    });
+  });
+
+  describe("SAFE_ACCENTS", () => {
+    it("includes all expected accent presets", () => {
+      const keys = Object.keys(SAFE_ACCENTS) as AccentPreset[];
+      expect(keys).toContain("blue");
+      expect(keys).toContain("green");
+      expect(keys).toContain("violet");
+      expect(keys).toContain("slate");
+    });
+
+    it("each accent defines all four accent tokens", () => {
+      for (const preset of Object.keys(SAFE_ACCENTS) as AccentPreset[]) {
+        const def = SAFE_ACCENTS[preset];
+        expect(def.label).toBeTruthy();
+        for (const key of ACCENT_TOKEN_KEYS) {
+          expect(def.overrides[key]).toBeDefined();
+          expect(typeof def.overrides[key]).toBe("string");
+          expect(def.overrides[key].length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it("accent overrides merge cleanly with base presets via resolveTokens", () => {
+      const accent = SAFE_ACCENTS.green.overrides;
+      const result = resolveTokens("paper", accent);
+      expect(result.primary).toBe(accent.primary);
+      expect(result.primaryHover).toBe(accent.primaryHover);
+      expect(result.primarySoft).toBe(accent.primarySoft);
+      expect(result.focusRing).toBe(accent.focusRing);
+      expect(result.bg).toBe(getPresetTokens("paper")!.bg);
     });
   });
 

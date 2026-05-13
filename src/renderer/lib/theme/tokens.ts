@@ -288,6 +288,60 @@ export const THEME_PRESETS: ThemePreset[] = [
 ];
 
 /** Set of valid preset IDs for quick membership checks. */
+/** Valid accent presets that apply grouped primary/focus overrides. */
+export type AccentPreset = "blue" | "green" | "violet" | "slate";
+
+/** The four accent tokens updated together by an accent preset. */
+export type AccentOverrides = {
+  primary: string;
+  primaryHover: string;
+  primarySoft: string;
+  focusRing: string;
+};
+
+/** Safe accent presets with human labels. */
+export const SAFE_ACCENTS: Record<AccentPreset, { label: string; overrides: AccentOverrides }> = {
+  blue: {
+    label: "Blue",
+    overrides: {
+      primary: "#0071e3",
+      primaryHover: "#005bb5",
+      primarySoft: "rgba(0, 113, 227, 0.08)",
+      focusRing: "rgba(0, 113, 227, 0.3)"
+    }
+  },
+  green: {
+    label: "Green",
+    overrides: {
+      primary: "#34c759",
+      primaryHover: "#248a3d",
+      primarySoft: "rgba(52, 199, 89, 0.1)",
+      focusRing: "rgba(52, 199, 89, 0.3)"
+    }
+  },
+  violet: {
+    label: "Violet",
+    overrides: {
+      primary: "#af52de",
+      primaryHover: "#8f3ab3",
+      primarySoft: "rgba(175, 82, 222, 0.1)",
+      focusRing: "rgba(175, 82, 222, 0.3)"
+    }
+  },
+  slate: {
+    label: "Slate",
+    overrides: {
+      primary: "#64748b",
+      primaryHover: "#475569",
+      primarySoft: "rgba(100, 116, 139, 0.1)",
+      focusRing: "rgba(100, 116, 139, 0.3)"
+    }
+  }
+};
+
+/** Ordered list of accent keys applied by an accent preset. */
+export const ACCENT_TOKEN_KEYS: (keyof AccentOverrides)[] = ["primary", "primaryHover", "primarySoft", "focusRing"];
+
 export const THEME_IDS = new Set<ThemeMode>(THEME_PRESETS.map((p) => p.id));
 
 /** Map preset ID to its full token set. */
