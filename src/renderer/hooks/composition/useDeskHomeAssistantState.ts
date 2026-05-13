@@ -40,10 +40,11 @@ export type DeskHomeAssistantState = {
 export function useDeskHomeAssistantState(
   setStatus: (value: string) => void,
   setError: (value: string) => void,
-  refreshAll: () => Promise<void>
+  refreshAll: () => Promise<void>,
+  refreshDevices: () => Promise<void>
 ): DeskHomeAssistantState {
   const ha = useHomeAssistantCredentials({ setStatus, setError });
-  const { isEntityTogglePending, runDeviceToggle } = useDeviceToggle(refreshAll, setStatus, setError);
+  const { isEntityTogglePending, runDeviceToggle } = useDeviceToggle(refreshDevices, setStatus, setError);
 
   const haUi = useMemo(
     () => homeAssistantUi(ha.haUrl, ha.haToken, ha.hasHaToken),

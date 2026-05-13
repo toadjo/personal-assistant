@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 export function useDeviceToggle(
-  refreshAll: () => Promise<void>,
+  refreshDevices: () => Promise<void>,
   setStatus: (value: string) => void,
   setError: (value: string) => void
 ) {
@@ -20,8 +20,8 @@ export function useDeviceToggle(
       setStatus(`Switching ${friendlyName}...`);
       setTogglingEntityIds((prev) => new Set(prev).add(entityId));
       await window.assistantApi.toggleDevice(entityId);
-      setStatus(`${friendlyName} updated - refreshing everything...`);
-      await refreshAll();
+      setStatus(`${friendlyName} updated - refreshing devices...`);
+      await refreshDevices();
       setStatus(`${friendlyName} is in sync now.`);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));

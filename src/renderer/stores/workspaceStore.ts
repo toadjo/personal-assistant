@@ -38,6 +38,9 @@ export type WorkspaceDataState = {
   setNotes: (value: Note[] | ((prev: Note[]) => Note[])) => void;
   setReminders: (value: Reminder[] | ((prev: Reminder[]) => Reminder[])) => void;
   setTasks: (value: Task[] | ((prev: Task[]) => Task[])) => void;
+  setDevices: (value: HaDeviceRow[] | ((prev: HaDeviceRow[]) => HaDeviceRow[])) => void;
+  setLogs: (value: ExecutionLogRow[] | ((prev: ExecutionLogRow[]) => ExecutionLogRow[])) => void;
+  setRules: (value: AutomationRule[] | ((prev: AutomationRule[]) => AutomationRule[])) => void;
 };
 
 export const useWorkspaceStore = create<WorkspaceDataState>((set) => ({
@@ -57,5 +60,11 @@ export const useWorkspaceStore = create<WorkspaceDataState>((set) => ({
   setReminders: (value: Reminder[] | ((prev: Reminder[]) => Reminder[])) =>
     set((s) => ({ reminders: typeof value === "function" ? value(s.reminders) : value })),
   setTasks: (value: Task[] | ((prev: Task[]) => Task[])) =>
-    set((s) => ({ tasks: typeof value === "function" ? value(s.tasks) : value }))
+    set((s) => ({ tasks: typeof value === "function" ? value(s.tasks) : value })),
+  setDevices: (value: HaDeviceRow[] | ((prev: HaDeviceRow[]) => HaDeviceRow[])) =>
+    set((s) => ({ devices: typeof value === "function" ? value(s.devices) : value })),
+  setLogs: (value: ExecutionLogRow[] | ((prev: ExecutionLogRow[]) => ExecutionLogRow[])) =>
+    set((s) => ({ logs: typeof value === "function" ? value(s.logs) : value })),
+  setRules: (value: AutomationRule[] | ((prev: AutomationRule[]) => AutomationRule[])) =>
+    set((s) => ({ rules: typeof value === "function" ? value(s.rules) : value }))
 }));

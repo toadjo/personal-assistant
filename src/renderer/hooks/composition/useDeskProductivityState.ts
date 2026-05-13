@@ -109,9 +109,12 @@ export function useDeskProductivityState(args: {
   setStatus: (value: string) => void;
   setError: (value: string) => void;
   refreshAll: () => Promise<void>;
-  fetchNotesOnly: () => Promise<void>;
-  fetchRemindersOnly: () => Promise<void>;
-  fetchTasksOnly: () => Promise<void>;
+  refreshNotes: () => Promise<void>;
+  refreshReminders: () => Promise<void>;
+  refreshTasks: () => Promise<void>;
+  refreshDevices: () => Promise<void>;
+  refreshLogs: () => Promise<void>;
+  refreshRules: () => Promise<void>;
   mergeNote: (note: Note) => void;
   removeNoteById: (id: string) => void;
 }): DeskProductivityState {
@@ -120,10 +123,13 @@ export function useDeskProductivityState(args: {
     tasks,
     setStatus,
     setError,
-    refreshAll,
-    fetchNotesOnly,
-    fetchRemindersOnly,
-    fetchTasksOnly,
+    refreshAll: _refreshAll,
+    refreshNotes,
+    refreshReminders,
+    refreshTasks,
+    refreshDevices: _refreshDevices,
+    refreshLogs,
+    refreshRules,
     mergeNote,
     removeNoteById
   } = args;
@@ -134,19 +140,20 @@ export function useDeskProductivityState(args: {
   const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
     mergeNote,
     removeNoteById,
-    fetchNotesOnly
+    refreshNotes
   });
   const { deleteRuleById, setRuleEnabledById, duplicateRuleById, testRunRuleById } = useAutomationRuleActions(
-    refreshAll,
+    refreshRules,
+    refreshLogs,
     setStatus,
     setError
   );
   const { snoozeReminderMinutes, completeReminderById, deleteReminderById } = useReminderActions(
     setStatus,
     setError,
-    fetchRemindersOnly
+    refreshReminders
   );
-  const taskActions = useTaskActions(tasks, setStatus, setError, fetchTasksOnly);
+  const taskActions = useTaskActions(tasks, setStatus, setError, refreshTasks);
   const profile = useUserProfileSettings(setError, setStatus);
 
   const pendingList = useMemo(() => remindersPending(reminders), [reminders]);
