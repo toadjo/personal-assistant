@@ -23,6 +23,7 @@ jobs:
     outputs:
       release_tag: ${{ steps.metadata.outputs.release_tag }}
       version: ${{ steps.metadata.outputs.version }}
+      already_published: ${{ steps.release.outputs.already_published }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,15 +53,18 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
 
       - name: Create clean draft release
+        id: release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ steps.metadata.outputs.release_tag }}"
+          echo "already_published=false" >> "$GITHUB_OUTPUT"
           if gh release view "$tag" --json isDraft --jq '.isDraft' >/tmp/release-is-draft 2>/dev/null; then
             if [ "$(cat /tmp/release-is-draft)" != "true" ]; then
-              echo "::error::Release $tag already exists and is not a draft."
-              exit 1
+              echo "Release $tag already exists and is published; skipping packaging."
+              echo "already_published=true" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
             gh release delete "$tag" --yes
           fi
@@ -74,6 +78,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     needs: create-draft-release
+    if: needs.create-draft-release.outputs.already_published != 'true'
     permissions:
       contents: write
     steps:
@@ -154,6 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: create-draft-release
+    if: needs.create-draft-release.outputs.already_published != 'true'
     permissions:
       contents: write
     steps:
@@ -200,6 +206,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     needs: create-draft-release
+    if: needs.create-draft-release.outputs.already_published != 'true'
     permissions:
       contents: write
     steps:
@@ -251,6 +258,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [create-draft-release, package-windows, package-linux, package-macos]
+    if: needs.create-draft-release.outputs.already_published != 'true'
     permissions:
       contents: write
     steps:
