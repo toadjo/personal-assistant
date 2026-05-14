@@ -9,7 +9,7 @@ export const ASSISTANT_INVOKE_ERROR_PREFIX = "assistant:invoke:v1:";
 /** Default copy when invoke payload validation fails (never expose raw Zod issues to the UI). */
 export const IPC_VALIDATION_DEFAULT_MESSAGE = "That request had invalid data. Please try again.";
 
-export const assistantInvokeDomains = ["home_assistant", "ipc_validation", "automation", "notes", "reminders"] as const;
+export const assistantInvokeDomains = ["home_assistant", "ipc_validation", "automation", "notes", "reminders", "team"] as const;
 
 /**
  * Automation failure codes and their retryability semantics.
@@ -24,6 +24,23 @@ export const automationFailureCodes = [
   "INVALID_STORED_CONFIG",
   "ACTION_TIMEOUT",
   "ACTION_FAILED"
+] as const;
+
+/**
+ * Team mode failure codes and their retryability semantics.
+ *
+ * NOT_CONFIGURED: Team mode is not configured (missing URL or anon key). Not retryable.
+ * NOT_AUTHENTICATED: Anonymous sign-in failed or session expired. Retryable.
+ * INVALID_KEY: Workspace key does not exist or is malformed. Not retryable.
+ * RLS_DENIED: Row-level security blocked the operation. Not retryable.
+ * NETWORK_FAILURE: Network error connecting to Supabase. Retryable.
+ */
+export const teamFailureCodes = [
+  "NOT_CONFIGURED",
+  "NOT_AUTHENTICATED",
+  "INVALID_KEY",
+  "RLS_DENIED",
+  "NETWORK_FAILURE"
 ] as const;
 
 export type AssistantInvokeDomain = (typeof assistantInvokeDomains)[number];

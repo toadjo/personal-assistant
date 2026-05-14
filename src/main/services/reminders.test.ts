@@ -12,14 +12,10 @@ vi.mock("../window", () => ({
   showMainWindow: vi.fn()
 }));
 
-vi.mock("electron", () => ({
-  Notification: class {
-    constructor(_opts: unknown) {}
-    on() {
-      return this;
-    }
-    show() {}
-  }
+const showNotificationSafeMock = vi.fn();
+
+vi.mock("../notification", () => ({
+  showNotificationSafe: (...args: unknown[]) => showNotificationSafeMock(...args)
 }));
 
 vi.mock("../log", () => ({
@@ -27,11 +23,13 @@ vi.mock("../log", () => ({
 }));
 
 import { decodeAssistantInvokeFailure } from "../../shared/invokeErrors";
-import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder } from "./reminders";
+import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, runReminderSchedulerTick } from "./reminders";
+import type { NotificationResult } from "../notification";
 
 describe("reminders service", () => {
   beforeEach(() => {
     testDb = createMemoryDatabase();
+    showNotificationSafeMock.mockReset();
   });
 
   afterEach(() => {
@@ -96,5 +94,73 @@ describe("reminders service", () => {
         retryable: false
       });
     }
+  });
+
+  describe("scheduler notification reliability", () => {
+    it("keeps one-time reminder pending when notification fails", () => {
+      const past = new Date(Date.now() - 60_000).toISOString();
+      createReminder({ text: "Buy milk", dueAt: past, recurrence: "none" });
+      showNotificationSafeMock.mockReturnValue("failed" as NotificationResult);
+
+      runReminderSchedulerTick(() => []);
+
+      const reminders = listReminders();
+      expect(reminders.length).toBe(1);
+      expect(reminders[0]?.status).toBe("pending");
+      expect(reminders[0]?.dueAt).toBe(past);
+    });
+
+    it("completes one-time reminder when notification succeeds", () => {
+      const past = new Date(Date.now() - 60_000).toISOString();
+      createReminder({ text: "Buy milk", dueAt: past, recurrence: "none" });
+      showNotificationSafeMock.mockReturnValue("shown" as NotificationResult);
+
+      runReminderSchedulerTick(() => []);
+
+      const reminders = listReminders();
+      expect(reminders.length).toBe(1);
+      expect(reminders[0]?.status).toBe("done");
+    });
+
+    it("advances recurring reminder when notification succeeds", () => {
+      const past = new Date(Date.now() - 60_000).toISOString();
+      createReminder({ text: "Daily pill", dueAt: past, recurrence: "daily" });
+      showNotificationSafeMock.mockReturnValue("shown" as NotificationResult);
+
+      runReminderSchedulerTick(() => []);
+
+      const reminders = listReminders();
+      expect(reminders.length).toBe(1);
+      expect(reminders[0]?.status).toBe("pending");
+      expect(new Date(reminders[0]!.dueAt).getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it("keeps recurring reminder pending when notification fails", () => {
+      const past = new Date(Date.now() - 60_000).toISOString();
+      createReminder({ text: "Daily pill", dueAt: past, recurrence: "daily" });
+      showNotificationSafeMock.mockReturnValue("failed" as NotificationResult);
+
+      runReminderSchedulerTick(() => []);
+
+      const reminders = listReminders();
+      expect(reminders.length).toBe(1);
+      expect(reminders[0]?.status).toBe("pending");
+      expect(reminders[0]?.dueAt).toBe(past);
+    });
+
+    it("does not tight-loop on repeated notification failures (cooldown)", () => {
+      const past = new Date(Date.now() - 60_000).toISOString();
+      createReminder({ text: "Buy milk", dueAt: past, recurrence: "none" });
+      showNotificationSafeMock.mockReturnValue("failed" as NotificationResult);
+
+      runReminderSchedulerTick(() => []);
+      const callCount1 = showNotificationSafeMock.mock.calls.length;
+
+      runReminderSchedulerTick(() => []);
+      const callCount2 = showNotificationSafeMock.mock.calls.length;
+
+      // Should not call again due to cooldown
+      expect(callCount2).toBe(callCount1);
+    });
   });
 });

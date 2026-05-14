@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type { BrowserWindow } from "electron";
-import { Notification } from "electron";
 import { showMainWindow } from "../window";
 import { IpcRendererEvent } from "../../shared/ipc-channels";
 import { getDb } from "../db";
@@ -8,6 +7,7 @@ import { safeWebContentsSend } from "../ipc-safe-send";
 import { mainLog } from "../log";
 import { throwAssistantInvoke } from "./structuredInvokeError";
 import { Reminder } from "../../shared/types";
+import { showNotificationSafe } from "../notification";
 
 /** Upper bound so a far-future reminder does not block the process for days. */
 const REMINDER_SCHEDULER_MAX_TIMER_MS = 6 * 60 * 60 * 1000;
@@ -16,6 +16,8 @@ const REMINDER_SCHEDULER_MIN_TIMER_MS = 500;
 /** Safety net if timers slip (laptop sleep, clock skew). */
 const REMINDER_SCHEDULER_SAFETY_INTERVAL_MS = 30 * 60 * 1000;
 const REMINDER_SCHEDULER_BATCH_LIMIT = 200;
+/** Cooldown period in ms to avoid log storms when notifications repeatedly fail. */
+const REMINDER_NOTIFICATION_FAILURE_COOLDOWN_MS = 60 * 1000;
 
 export function listReminders(): Reminder[] {
   return getDb()
@@ -112,30 +114,57 @@ function computeMsUntilNextReminderWake(): number {
   return Math.min(REMINDER_SCHEDULER_MAX_TIMER_MS, Math.max(REMINDER_SCHEDULER_MIN_TIMER_MS, delta + 25));
 }
 
-function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | null)[]): boolean {
+// In-memory cooldown tracking for failed notification attempts to avoid log storms
+const reminderNotificationFailures = new Map<string, number>();
+
+/**
+ * Runs one tick of the reminder scheduler.
+ * Exported for testing purposes only.
+ */
+export function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | null)[]): boolean {
   const now = new Date().toISOString();
+  const nowTime = Date.now();
   const due = getDb()
     .prepare("SELECT * FROM reminders WHERE status='pending' AND dueAt <= @now ORDER BY dueAt ASC LIMIT @limit")
     .all({ now, limit: REMINDER_SCHEDULER_BATCH_LIMIT }) as Reminder[];
   let hasReminderChanges = false;
   let processedOk = 0;
   let failed = 0;
+  let unsupported = 0;
+
+  // Clean up expired cooldown entries
+  for (const [id, timestamp] of reminderNotificationFailures.entries()) {
+    if (nowTime - timestamp > REMINDER_NOTIFICATION_FAILURE_COOLDOWN_MS) {
+      reminderNotificationFailures.delete(id);
+    }
+  }
+
   for (const item of due) {
-    try {
-      const notification = new Notification({ title: "Reminder", body: item.text });
-      notification.on("click", () => {
+    // Skip if in cooldown period after a recent failure
+    const lastFailureTime = reminderNotificationFailures.get(item.id);
+    if (lastFailureTime && nowTime - lastFailureTime < REMINDER_NOTIFICATION_FAILURE_COOLDOWN_MS) {
+      failed += 1;
+      continue;
+    }
+
+    const result = showNotificationSafe(
+      { title: "Reminder", body: item.text },
+      () => {
         for (const w of getWindows()) {
           if (w && !w.isDestroyed()) {
             showMainWindow(w);
             break;
           }
         }
-      });
-      notification.show();
+      }
+    );
+
+    if (result === "shown") {
+      // Clear any previous failure cooldown on success
+      reminderNotificationFailures.delete(item.id);
       if (item.recurrence === "daily") {
         const sourceDue = new Date(item.dueAt);
         const next = Number.isNaN(sourceDue.getTime()) ? new Date(now) : sourceDue;
-        const nowTime = Date.now();
         while (next.getTime() <= nowTime) {
           next.setDate(next.getDate() + 1);
         }
@@ -147,14 +176,20 @@ function runReminderSchedulerTick(getWindows: () => readonly (BrowserWindow | nu
       }
       hasReminderChanges = true;
       processedOk += 1;
-    } catch (error) {
+    } else {
+      // Notification failed or unsupported - keep reminder pending and track cooldown
+      reminderNotificationFailures.set(item.id, nowTime);
       failed += 1;
-      mainLog.warn(`Reminder scheduler failed for item ${item.id}: ${toErrorMessage(error)}`);
+      if (result === "unsupported") {
+        unsupported += 1;
+      }
+      // Refresh renderer so user can see overdue reminders
+      hasReminderChanges = true;
     }
   }
   if (due.length > 0) {
     mainLog.info(
-      `[scheduler:reminders] tick dueSelected=${due.length} processedOk=${processedOk} failed=${failed} notifyBroadcast=${hasReminderChanges ? 1 : 0}`
+      `[scheduler:reminders] tick dueSelected=${due.length} processedOk=${processedOk} failed=${failed} unsupported=${unsupported} notifyBroadcast=${hasReminderChanges ? 1 : 0}`
     );
   }
   if (hasReminderChanges) {

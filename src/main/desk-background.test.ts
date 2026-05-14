@@ -105,15 +105,41 @@ describe("tryCreateTray", () => {
     expect(warnMock).not.toHaveBeenCalled();
   });
 
-  it("returns false and logs a warning when tray creation throws (no crash)", () => {
-    createTrayMock.mockImplementationOnce(() => {
-      throw new Error("Tray host unavailable");
-    });
-    const result = tryCreateTray(trayOptions);
-    expect(result).toBe(false);
-    expect(warnMock).toHaveBeenCalledTimes(1);
-    const [message, error] = warnMock.mock.calls[0] ?? [];
-    expect(String(message)).toContain("minimize");
-    expect((error as Error).message).toBe("Tray host unavailable");
+  it("returns false and logs a Linux-specific warning when tray creation throws on Linux", () => {
+    const originalPlatform = process.platform;
+    try {
+      Object.defineProperty(process, "platform", { value: "linux", configurable: true });
+      createTrayMock.mockImplementationOnce(() => {
+        throw new Error("Tray host unavailable");
+      });
+      const result = tryCreateTray(trayOptions);
+      expect(result).toBe(false);
+      expect(warnMock).toHaveBeenCalledTimes(1);
+      const [message, error] = warnMock.mock.calls[0] ?? [];
+      expect(String(message)).toContain("minimize to the taskbar");
+      expect(String(message)).not.toContain("may not be recoverable");
+      expect((error as Error).message).toBe("Tray host unavailable");
+    } finally {
+      Object.defineProperty(process, "platform", { value: originalPlatform, configurable: true });
+    }
+  });
+
+  it("returns false and logs a non-Linux warning about potential unrecoverability when tray creation throws on Windows/macOS", () => {
+    const originalPlatform = process.platform;
+    try {
+      Object.defineProperty(process, "platform", { value: "win32", configurable: true });
+      createTrayMock.mockImplementationOnce(() => {
+        throw new Error("Tray host unavailable");
+      });
+      const result = tryCreateTray(trayOptions);
+      expect(result).toBe(false);
+      expect(warnMock).toHaveBeenCalledTimes(1);
+      const [message, error] = warnMock.mock.calls[0] ?? [];
+      expect(String(message)).toContain("may not be recoverable");
+      expect(String(message)).toContain("unexpectedly");
+      expect((error as Error).message).toBe("Tray host unavailable");
+    } finally {
+      Object.defineProperty(process, "platform", { value: originalPlatform, configurable: true });
+    }
   });
 });

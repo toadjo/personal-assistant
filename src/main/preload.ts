@@ -117,5 +117,48 @@ contextBridge.exposeInMainWorld("assistantApi", {
    * Only active when ELECTRON_E2E_TEST_MODE is set.
    */
   setTestAutomationActionOverride: (config: { mode: "timeout" | "failure" } | null) =>
-    ipcRenderer.invoke(invoke.testSetAutomationActionOverride, config)
+    ipcRenderer.invoke(invoke.testSetAutomationActionOverride, config),
+  // Team mode operations
+  teamSetConfig: (payload: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) =>
+    ipcRenderer.invoke(invoke.teamSetConfig, payload),
+  teamGetConfig: () => ipcRenderer.invoke(invoke.teamGetConfig),
+  teamClearConfig: () => ipcRenderer.invoke(invoke.teamClearConfig),
+  teamWorkspacesCreate: (payload: { name: string }) =>
+    ipcRenderer.invoke(invoke.teamWorkspacesCreate, payload),
+  teamWorkspacesJoin: (payload: { workspaceKey: string }) =>
+    ipcRenderer.invoke(invoke.teamWorkspacesJoin, payload),
+  teamWorkspacesList: () => ipcRenderer.invoke(invoke.teamWorkspacesList),
+  teamWorkspacesSetActive: (payload: { workspaceId: string | null }) =>
+    ipcRenderer.invoke(invoke.teamWorkspacesSetActive, payload),
+  teamProjectsCreate: (payload: { name: string }) =>
+    ipcRenderer.invoke(invoke.teamProjectsCreate, payload),
+  teamProjectsList: () => ipcRenderer.invoke(invoke.teamProjectsList),
+  teamTasksCreate: (payload: {
+    projectId: string;
+    title: string;
+    notes: string;
+    dueAt: string | null;
+    priority: "low" | "normal" | "high";
+    recurrence: "none" | "daily" | "weekly" | "monthly";
+    assigneeDisplayName: string | null;
+  }) => ipcRenderer.invoke(invoke.teamTasksCreate, payload),
+  teamTasksUpdate: (payload: {
+    id: string;
+    title?: string;
+    notes?: string;
+    dueAt?: string | null;
+    priority?: "low" | "normal" | "high";
+    status?: "open" | "done";
+    recurrence?: "none" | "daily" | "weekly" | "monthly";
+    assigneeDisplayName?: string | null;
+  }) => ipcRenderer.invoke(invoke.teamTasksUpdate, payload),
+  teamTasksList: () => ipcRenderer.invoke(invoke.teamTasksList),
+  teamRealtimeStart: () => ipcRenderer.invoke(invoke.teamRealtimeStart),
+  teamRealtimeStop: () => ipcRenderer.invoke(invoke.teamRealtimeStop),
+  onTeamDataUpdated: (
+    cb: (_event: unknown, payload: { workspaceId: string; tables: ("projects" | "tasks")[] }) => void
+  ) => {
+    ipcRenderer.on(push.teamDataUpdated, cb);
+    return () => ipcRenderer.removeListener(push.teamDataUpdated, cb);
+  }
 });

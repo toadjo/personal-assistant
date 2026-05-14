@@ -20,7 +20,7 @@ type Props = {
   onClearHistory: () => void;
   onClearNoteSearch: () => void;
   onPreset: (command: string) => void;
-  /** When the command field is empty, Escape hides the desk window (tray ergonomics). */
+  /** When the command field is empty, Escape hides the desk window (background behavior). */
   onHideDeskIfInputEmpty?: () => void;
 };
 
