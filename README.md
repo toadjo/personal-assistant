@@ -17,7 +17,7 @@ To **change or build** the app yourself, clone the repository and use **`dev.bat
 
 - **Node.js** **22.12+** LTS (**required:** `>=22.12.0` and `<26`, matching `package.json` `engines` and CI on **22.x**). **24+** is currently outside the documented support window for this project, and `engine-strict` in `.npmrc` will block `npm install` outside the declared range.
 - **npm**
-- **Windows** (tray behavior and build targets are Windows-first)
+- **Windows** (tray behavior and build targets are Windows-first; Linux falls back to minimize-to-taskbar when no system tray is available, macOS uses the menu bar)
 
 ### First-time setup
 
@@ -43,7 +43,7 @@ Native module **`better-sqlite3`** is rebuilt in `postinstall` for Electron. **`
 npm run dev
 ```
 
-This runs the Vite dev server for the React UI, compiles the Electron **main** and **preload** TypeScript in watch mode, and launches Electron when outputs are ready. The window loads `http://localhost:5173` in development; closing the window keeps the app in the system tray.
+This runs the Vite dev server for the React UI, compiles the Electron **main** and **preload** TypeScript in watch mode, and launches Electron when outputs are ready. The window loads `http://localhost:5173` in development. Closing the window keeps the app running: in the system tray on Windows and macOS, or minimized to the taskbar on Linux when no tray is available.
 
 ### Previewing the default theme during development
 

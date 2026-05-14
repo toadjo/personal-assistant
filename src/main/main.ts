@@ -15,7 +15,8 @@ import { startTaskScheduler } from "./services/tasks";
 import { createAssertSender, registerIpcHandlers } from "./ipc/register-handlers";
 import { registerAppWindowHandlers } from "./ipc/handlers/appWindow.handlers";
 import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } from "./window";
-import { createTray, type TrayOptions } from "./tray";
+import { type TrayOptions } from "./tray";
+import { routeDeskBackground, tryCreateTray } from "./desk-background";
 import { startAutomationScheduler } from "./automation-scheduler";
 import { mainLog } from "./log";
 import { IpcRendererEvent } from "../shared/ipc-channels";
@@ -28,6 +29,7 @@ let stopAutomationScheduler: (() => void) | null = null;
 let stopTaskScheduler: (() => void) | null = null;
 let isQuitting = false;
 let trayOptions: TrayOptions | null = null;
+let trayAvailable = false;
 
 function getTrustedWindows(): readonly (BrowserWindow | null)[] {
   return [deskWin, householdWin];
@@ -35,11 +37,7 @@ function getTrustedWindows(): readonly (BrowserWindow | null)[] {
 
 function recreateTrayFromStoredOptions(): void {
   if (!trayOptions) return;
-  try {
-    createTray(trayOptions);
-  } catch (error) {
-    mainLog.error("Tray recreation failed", error);
-  }
+  trayAvailable = tryCreateTray(trayOptions);
 }
 
 function openOrFocusHouseholdWindow(): void {
@@ -61,9 +59,7 @@ function focusDeskWindow(): void {
 }
 
 function hideDeskWindow(): void {
-  if (deskWin && !deskWin.isDestroyed()) {
-    deskWin.hide();
-  }
+  routeDeskBackground(deskWin, process.platform, trayAvailable);
 }
 
 function ensureDeskWindow(): void {
@@ -74,7 +70,7 @@ function ensureDeskWindow(): void {
     deskWin.on("close", (event) => {
       if (!isQuitting) {
         event.preventDefault();
-        deskWin?.hide();
+        routeDeskBackground(deskWin, process.platform, trayAvailable);
       }
     });
     if (deskWin) {
@@ -159,7 +155,7 @@ function startAppAfterDbOpen(): void {
   deskWin.on("close", (event) => {
     if (!isQuitting) {
       event.preventDefault();
-      deskWin?.hide();
+      routeDeskBackground(deskWin, process.platform, trayAvailable);
     }
   });
 
@@ -175,7 +171,7 @@ function startAppAfterDbOpen(): void {
           app.quit();
         }
       };
-      createTray(trayOptions);
+      trayAvailable = tryCreateTray(trayOptions);
     }
   }
 
