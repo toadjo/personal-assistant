@@ -134,7 +134,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   if (lower.startsWith("toggle ")) {
     if (!deps.haReady)
       throw new Error(
-        "Home Assistant is not linked yet. Open the Household window (House button, tray, or type open household), add your URL and token, then try again."
+        "Home Assistant is not linked yet. Open the Household window (House button, or type open household), add your URL and token, then try again."
       );
     const target = raw.slice(7).trim().toLowerCase();
     const matchingDevices = deps.devices.filter(

@@ -42,11 +42,26 @@ export const invokeChannelMap = {
   appHideDeskWindow: "app:hideDeskWindow",
   appOpenBugReport: "app:openBugReport",
   testSetHaFetchOverride: "test:setHaFetchOverride",
-  testSetAutomationActionOverride: "test:setAutomationActionOverride"
+  testSetAutomationActionOverride: "test:setAutomationActionOverride",
+  teamGetConfig: "team:getConfig",
+  teamSetConfig: "team:setConfig",
+  teamClearConfig: "team:clearConfig",
+  teamWorkspacesCreate: "team:workspaces:create",
+  teamWorkspacesJoin: "team:workspaces:join",
+  teamWorkspacesList: "team:workspaces:list",
+  teamWorkspacesSetActive: "team:workspaces:setActive",
+  teamProjectsCreate: "team:projects:create",
+  teamProjectsList: "team:projects:list",
+  teamTasksCreate: "team:tasks:create",
+  teamTasksList: "team:tasks:list",
+  teamTasksUpdate: "team:tasks:update",
+  teamRealtimeStart: "team:realtime:start",
+  teamRealtimeStop: "team:realtime:stop"
 } as const;
 
 export const pushChannelMap = {
   remindersUpdated: "reminders:updated",
   command: "command",
-  showAbout: "showAbout"
+  showAbout: "showAbout",
+  teamDataUpdated: "team:dataUpdated"
 } as const;

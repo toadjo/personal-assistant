@@ -15,6 +15,7 @@ import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
+import { ProjectsPanel } from "./panels/ProjectsPanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
@@ -131,6 +132,22 @@ export function AssistantShell(): JSX.Element {
       <header className="utilityToolbar">
         <div className="utilityToolbarLeft">
           <h1 className="appIdentity">Personal Assistant</h1>
+          <div className="deskModeSwitch">
+            <button
+              type="button"
+              className={`modeButton ${desk.mode === "personal" ? "modeButtonActive" : ""}`}
+              onClick={() => desk.setMode("personal")}
+            >
+              Personal
+            </button>
+            <button
+              type="button"
+              className={`modeButton ${desk.mode === "projects" ? "modeButtonActive" : ""}`}
+              onClick={() => desk.setMode("projects")}
+            >
+              Projects
+            </button>
+          </div>
         </div>
         <div className="utilityToolbarRight">
           <StatusChip icon={StickyNote} label="Memos" count={data.notes.length} />
@@ -181,224 +198,230 @@ export function AssistantShell(): JSX.Element {
 
       <SuccessBanner successes={ui.successes} onDismiss={ui.dismissSuccess} onDismissAll={ui.dismissAllSuccesses} />
 
-      <div className="commandHero">
-        <CommandPanel
-          commandInputRef={command.commandInputRef}
-          query={data.query}
-          reminderFilter={reminders.filter}
-          haReady={ha.haReady}
-          commandInput={command.commandInput}
-          setCommandInput={command.setCommandInput}
-          commandHints={command.commandHints}
-          commandHistory={command.commandHistory}
-          historyCursor={command.historyCursor}
-          setHistoryCursor={command.setHistoryCursor}
-          isRunningCommand={command.isRunningCommand}
-          onRunCommand={command.runCommandInternal}
-          onClearHistory={command.clearCommandHistory}
-          onClearNoteSearch={() => data.setQuery("")}
-          onPreset={command.runPresetCommand}
-          onHideDeskIfInputEmpty={desk.hideWindow}
-        />
-      </div>
-
-      {showPalette && (
-        <CommandPalette
-          notes={data.notes}
-          tasks={data.tasks}
-          reminders={data.reminders}
-          rules={data.rules}
-          devices={data.devices}
-          onOpenNote={(id) => {
-            data.setQuery("");
-            ui.setStatus(`Note opened: ${id}`);
-          }}
-          onOpenTask={(id) => {
-            tasks.setFilter("all");
-            ui.setStatus(`Task opened: ${id}`);
-          }}
-          onOpenReminder={(id) => {
-            reminders.setFilter("all");
-            ui.setStatus(`Reminder opened: ${id}`);
-          }}
-          onOpenAutomation={(id) => {
-            ui.setStatus(`Automation opened: ${id}`);
-          }}
-          onToggleDevice={(entityId) => {
-            void ha.runDeviceToggle(entityId, entityId);
-          }}
-          onOpenAppearance={() => setShowAppearance(true)}
-          onClose={() => setShowPalette(false)}
-        />
-      )}
-
-      {showAppearance && (
-        <AppearancePanel
-          theme={ui.theme}
-          custom={ui.custom}
-          display={display}
-          onPresetChange={ui.setTheme}
-          onOverride={ui.setCustomOverride}
-          onReset={ui.resetCustomOverrides}
-          onClose={() => setShowAppearance(false)}
-        />
-      )}
-      {showData && (
-        <DataControlPanel
-          onExport={backupActions.exportData}
-          onImport={backupActions.importData}
-          onReset={backupActions.resetData}
-          isExporting={backupActions.isExporting}
-          isImporting={backupActions.isImporting}
-          isResetting={backupActions.isResetting}
-        />
-      )}
-
-      {onboarding.show && !onboarding.isComplete ? (
-        <div className="onboardingHero">
-          <GuidedOnboardingPanel
-            currentStep={onboarding.currentStep}
-            onComplete={() => {
-              window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-              window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-              onboarding.setShow(false);
-              ui.setStatus("Welcome aboard - onboarding complete!");
-            }}
-            onCreateNote={() => {
-              data.setQuery("");
-              onboarding.markNoteCreated();
-              ui.setStatus("Great! Note created. Next: add a reminder.");
-            }}
-            onCreateReminder={() => {
-              onboarding.markReminderCreated();
-              ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
-            }}
-            onOpenHousehold={() => {
-              void window.assistantApi.openHouseholdWindow();
-            }}
-            onSkipHomeAssistant={() => {
-              onboarding.skipHomeAssistant();
-              window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-              window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-              onboarding.setShow(false);
-              ui.setStatus("Onboarding complete - you can connect Home Assistant anytime from Household.");
-            }}
-          />
-        </div>
-      ) : onboarding.show ? (
-        <div className="onboardingHero">
-          <OnboardingPanel
-            visible={onboarding.show}
-            haReady={ha.haReady}
-            commandHistoryLength={command.commandHistory.length}
-            onHideForNow={() => {
-              window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
-              onboarding.setShow(false);
-              ui.setStatus("Understood - we will skip the guided intro.");
-            }}
-            onFinishSetup={() => {
-              onboarding.setShow(false);
-              window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-              window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-              ui.setStatus("Welcome aboard - intro marked complete.");
-            }}
-            onRunPreset={command.runPresetCommand}
-          />
-        </div>
-      ) : null}
-
-      {showAbout ? (
-        <div className="onboardingHero">
-          <AboutPanel version={appVersion} onClose={() => setShowAbout(false)} />
-        </div>
-      ) : null}
-
-      <TodayStrip
-        overdueCount={tasks.overdueOpen.length}
-        dueTodayCount={tasks.dueTodayOpen.length}
-        remindersCount={reminders.pending.length}
-        notesCount={data.notes.length}
-        automationsCount={data.rules.length}
-        onFilterOverdue={() => tasks.setFilter("overdue")}
-        onFilterDueToday={() => tasks.setFilter("open")}
-        onFilterReminders={() => reminders.setFilter("pending")}
-        onFilterNotes={() => data.setQuery("")}
-        onFilterAutomations={() => {
-          /* automations don't have a panel filter, noop */
-        }}
-      />
-
-      <DailyCommandCenterPanel
-        data={dailyCommandCenter}
-        showAllSecondary={display.dccShowAllSecondary}
-        onCompleteTask={tasks.completeById}
-        onCompleteReminder={reminders.completeById}
-        onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
-        onMarkSeen={handleMarkSeen}
-        onOpenTasks={tasks.setFilter}
-        onOpenReminders={reminders.setFilter}
-        onOpenNotes={() => data.setQuery("")}
-      />
-
-      <div className="contentGrid">
-        <div className="contentMain">
-          <div className="todayStrip">
-            <CalendarPanel
-              calendarCursor={calendar.calendarCursor}
-              setCalendarCursor={calendar.setCalendarCursor}
-              monthCells={calendar.monthCells}
-              todayKey={calendar.todayKey}
-              selectedDateKey={calendar.calendarSelectedKey}
-              onSelectDateKey={calendar.setCalendarSelectedKey}
-              dayAgenda={calendar.selectedDayAgenda}
-              agendaFilter={calendar.agendaFilter}
-              setAgendaFilter={calendar.setAgendaFilter}
-              onCreateReminder={(dateKey) => {
-                ui.setStatus(`Create reminder for ${dateKey} (not yet implemented).`);
-              }}
-              onCreateTask={(dateKey) => {
-                ui.setStatus(`Create task for ${dateKey} (not yet implemented).`);
-              }}
+      {desk.mode === "projects" ? (
+        <ProjectsPanel />
+      ) : (
+        <>
+          <div className="commandHero">
+            <CommandPanel
+              commandInputRef={command.commandInputRef}
+              query={data.query}
+              reminderFilter={reminders.filter}
+              haReady={ha.haReady}
+              commandInput={command.commandInput}
+              setCommandInput={command.setCommandInput}
+              commandHints={command.commandHints}
+              commandHistory={command.commandHistory}
+              historyCursor={command.historyCursor}
+              setHistoryCursor={command.setHistoryCursor}
+              isRunningCommand={command.isRunningCommand}
+              onRunCommand={command.runCommandInternal}
+              onClearHistory={command.clearCommandHistory}
+              onClearNoteSearch={() => data.setQuery("")}
+              onPreset={command.runPresetCommand}
+              onHideDeskIfInputEmpty={desk.hideWindow}
             />
           </div>
-        </div>
-        <div>
-          <NotesPanel
-            onFetchNotes={data.refreshNotes}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-            onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
-            onUpdateNote={(payload) => void memos.updateNote(payload)}
-            onNoteCreated={() => onboarding.markNoteCreated()}
+
+          {showPalette && (
+            <CommandPalette
+              notes={data.notes}
+              tasks={data.tasks}
+              reminders={data.reminders}
+              rules={data.rules}
+              devices={data.devices}
+              onOpenNote={(id) => {
+                data.setQuery("");
+                ui.setStatus(`Note opened: ${id}`);
+              }}
+              onOpenTask={(id) => {
+                tasks.setFilter("all");
+                ui.setStatus(`Task opened: ${id}`);
+              }}
+              onOpenReminder={(id) => {
+                reminders.setFilter("all");
+                ui.setStatus(`Reminder opened: ${id}`);
+              }}
+              onOpenAutomation={(id) => {
+                ui.setStatus(`Automation opened: ${id}`);
+              }}
+              onToggleDevice={(entityId) => {
+                void ha.runDeviceToggle(entityId, entityId);
+              }}
+              onOpenAppearance={() => setShowAppearance(true)}
+              onClose={() => setShowPalette(false)}
+            />
+          )}
+
+          {showAppearance && (
+            <AppearancePanel
+              theme={ui.theme}
+              custom={ui.custom}
+              display={display}
+              onPresetChange={ui.setTheme}
+              onOverride={ui.setCustomOverride}
+              onReset={ui.resetCustomOverrides}
+              onClose={() => setShowAppearance(false)}
+            />
+          )}
+          {showData && (
+            <DataControlPanel
+              onExport={backupActions.exportData}
+              onImport={backupActions.importData}
+              onReset={backupActions.resetData}
+              isExporting={backupActions.isExporting}
+              isImporting={backupActions.isImporting}
+              isResetting={backupActions.isResetting}
+            />
+          )}
+
+          {onboarding.show && !onboarding.isComplete ? (
+            <div className="onboardingHero">
+              <GuidedOnboardingPanel
+                currentStep={onboarding.currentStep}
+                onComplete={() => {
+                  window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+                  window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+                  onboarding.setShow(false);
+                  ui.setStatus("Welcome aboard - onboarding complete!");
+                }}
+                onCreateNote={() => {
+                  data.setQuery("");
+                  onboarding.markNoteCreated();
+                  ui.setStatus("Great! Note created. Next: add a reminder.");
+                }}
+                onCreateReminder={() => {
+                  onboarding.markReminderCreated();
+                  ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
+                }}
+                onOpenHousehold={() => {
+                  void window.assistantApi.openHouseholdWindow();
+                }}
+                onSkipHomeAssistant={() => {
+                  onboarding.skipHomeAssistant();
+                  window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+                  window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+                  onboarding.setShow(false);
+                  ui.setStatus("Onboarding complete - you can connect Home Assistant anytime from Household.");
+                }}
+              />
+            </div>
+          ) : onboarding.show ? (
+            <div className="onboardingHero">
+              <OnboardingPanel
+                visible={onboarding.show}
+                haReady={ha.haReady}
+                commandHistoryLength={command.commandHistory.length}
+                onHideForNow={() => {
+                  window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
+                  onboarding.setShow(false);
+                  ui.setStatus("Understood - we will skip the guided intro.");
+                }}
+                onFinishSetup={() => {
+                  onboarding.setShow(false);
+                  window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+                  window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+                  ui.setStatus("Welcome aboard - intro marked complete.");
+                }}
+                onRunPreset={command.runPresetCommand}
+              />
+            </div>
+          ) : null}
+
+          {showAbout ? (
+            <div className="onboardingHero">
+              <AboutPanel version={appVersion} onClose={() => setShowAbout(false)} />
+            </div>
+          ) : null}
+
+          <TodayStrip
+            overdueCount={tasks.overdueOpen.length}
+            dueTodayCount={tasks.dueTodayOpen.length}
+            remindersCount={reminders.pending.length}
+            notesCount={data.notes.length}
+            automationsCount={data.rules.length}
+            onFilterOverdue={() => tasks.setFilter("overdue")}
+            onFilterDueToday={() => tasks.setFilter("open")}
+            onFilterReminders={() => reminders.setFilter("pending")}
+            onFilterNotes={() => data.setQuery("")}
+            onFilterAutomations={() => {
+              /* automations don't have a panel filter, noop */
+            }}
           />
-          <RemindersPanel
-            isRefreshing={data.isRefreshing}
-            reminderFilter={reminders.filter}
-            setReminderFilter={reminders.setFilter}
-            visibleReminders={reminders.visible}
-            onRefresh={data.refreshReminders}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-            onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
-            onSnooze60={(id) => void reminders.snoozeMinutes(id, 60, "Snoozed 1h.")}
-            onComplete={(id) => void reminders.completeById(id)}
-            onDelete={(id) => reminders.deleteById(id)}
-            onReminderCreated={() => onboarding.markReminderCreated()}
+
+          <DailyCommandCenterPanel
+            data={dailyCommandCenter}
+            showAllSecondary={display.dccShowAllSecondary}
+            onCompleteTask={tasks.completeById}
+            onCompleteReminder={reminders.completeById}
+            onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+            onMarkSeen={handleMarkSeen}
+            onOpenTasks={tasks.setFilter}
+            onOpenReminders={reminders.setFilter}
+            onOpenNotes={() => data.setQuery("")}
           />
-          <TasksPanel
-            filter={tasks.filter}
-            setFilter={tasks.setFilter}
-            tasks={tasks.visible}
-            onSaveTask={tasks.saveTask}
-            onComplete={tasks.completeById}
-            onDelete={tasks.deleteById}
-            onBulkComplete={tasks.bulkComplete}
-            onUpdatePriority={tasks.updatePriority}
-            onUndo={tasks.undo}
-            canUndo={tasks.canUndo}
-          />
-        </div>
-      </div>
+
+          <div className="contentGrid">
+            <div className="contentMain">
+              <div className="todayStrip">
+                <CalendarPanel
+                  calendarCursor={calendar.calendarCursor}
+                  setCalendarCursor={calendar.setCalendarCursor}
+                  monthCells={calendar.monthCells}
+                  todayKey={calendar.todayKey}
+                  selectedDateKey={calendar.calendarSelectedKey}
+                  onSelectDateKey={calendar.setCalendarSelectedKey}
+                  dayAgenda={calendar.selectedDayAgenda}
+                  agendaFilter={calendar.agendaFilter}
+                  setAgendaFilter={calendar.setAgendaFilter}
+                  onCreateReminder={(dateKey) => {
+                    ui.setStatus(`Create reminder for ${dateKey} (not yet implemented).`);
+                  }}
+                  onCreateTask={(dateKey) => {
+                    ui.setStatus(`Create task for ${dateKey} (not yet implemented).`);
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <NotesPanel
+                onFetchNotes={data.refreshNotes}
+                onError={ui.reportError}
+                onShowSuccess={ui.showSuccess}
+                onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
+                onUpdateNote={(payload) => void memos.updateNote(payload)}
+                onNoteCreated={() => onboarding.markNoteCreated()}
+              />
+              <RemindersPanel
+                isRefreshing={data.isRefreshing}
+                reminderFilter={reminders.filter}
+                setReminderFilter={reminders.setFilter}
+                visibleReminders={reminders.visible}
+                onRefresh={data.refreshReminders}
+                onError={ui.reportError}
+                onShowSuccess={ui.showSuccess}
+                onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+                onSnooze60={(id) => void reminders.snoozeMinutes(id, 60, "Snoozed 1h.")}
+                onComplete={(id) => void reminders.completeById(id)}
+                onDelete={(id) => reminders.deleteById(id)}
+                onReminderCreated={() => onboarding.markReminderCreated()}
+              />
+              <TasksPanel
+                filter={tasks.filter}
+                setFilter={tasks.setFilter}
+                tasks={tasks.visible}
+                onSaveTask={tasks.saveTask}
+                onComplete={tasks.completeById}
+                onDelete={tasks.deleteById}
+                onBulkComplete={tasks.bulkComplete}
+                onUpdatePriority={tasks.updatePriority}
+                onUndo={tasks.undo}
+                canUndo={tasks.canUndo}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }

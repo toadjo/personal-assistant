@@ -1919,3 +1919,286 @@ button:disabled {
   background: var(--input-bg);
   color: var(--input-text);
 }
+
+/* Projects panel styles */
+.panelContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.workspaceContext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+}
+
+.workspaceContextInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.workspaceContextLabel {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.workspaceContextName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.workspaceContextKey {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.workspaceSwitchForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-top: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+}
+
+.workspaceSwitchForm h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--title);
+}
+
+.workspaceSwitchItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+  background: var(--input-bg);
+}
+
+.workspaceSwitchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workspaceSwitchName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.workspaceSwitchKey {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.workspaceList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.workspaceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--input-bg);
+}
+
+.workspaceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.workspaceName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.workspaceKey {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.workspaceActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.projectListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.projectListHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.projectItem {
+  padding: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--input-bg);
+}
+
+.projectName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.teamTasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.teamTasksHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.teamTasksHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.teamTaskList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.teamTaskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--input-bg);
+}
+
+.taskInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.taskMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.taskProject,
+.taskAssignee {
+  color: var(--muted);
+}
+
+.taskStatus {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.taskStatus.open {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.taskStatus.done {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+}
+
+.taskCreateForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-top: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+}
+
+.taskCreateForm textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.buttonSmall {
+  padding: 6px 10px;
+  font-size: 12px;
+  min-height: 28px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

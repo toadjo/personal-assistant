@@ -1,9 +1,9 @@
 import type { Task } from "../../shared/types";
 import type { BrowserWindow } from "electron";
-import { Notification } from "electron";
 import { getDb } from "../db";
 import { mainLog } from "../log";
 import { showMainWindow } from "../window";
+import { showNotificationSafe } from "../notification";
 
 export function listTasks(query?: string): Task[] {
   const db = getDb();
@@ -209,41 +209,73 @@ function advanceDueDate(
 }
 
 const TASK_SCHEDULER_INTERVAL_MS = 60_000;
+/** Cooldown period in ms to avoid log storms when notifications repeatedly fail. */
+const TASK_NOTIFICATION_FAILURE_COOLDOWN_MS = 60 * 1000;
 
-export function startTaskScheduler(getWindows: () => readonly (BrowserWindow | null)[]): { stop: () => void } {
-  const alreadyNotified = new Set<string>();
+// In-memory state for task scheduler
+const alreadyNotified = new Set<string>();
+const taskNotificationFailures = new Map<string, number>();
 
-  const runTick = (): void => {
-    const due = listOverdueOpenTasks();
-    const dueIds = new Set(due.map((task) => task.id));
-    for (const id of [...alreadyNotified]) {
-      if (!dueIds.has(id)) alreadyNotified.delete(id);
+/**
+ * Runs one tick of the task scheduler.
+ * Exported for testing purposes only.
+ */
+export function runTaskSchedulerTick(getWindows: () => readonly (BrowserWindow | null)[]): void {
+  const nowTime = Date.now();
+  const due = listOverdueOpenTasks();
+  const dueIds = new Set(due.map((task) => task.id));
+  for (const id of [...alreadyNotified]) {
+    if (!dueIds.has(id)) {
+      alreadyNotified.delete(id);
+      taskNotificationFailures.delete(id);
+    }
+  }
+
+  // Clean up expired cooldown entries
+  for (const [id, timestamp] of taskNotificationFailures.entries()) {
+    if (nowTime - timestamp > TASK_NOTIFICATION_FAILURE_COOLDOWN_MS) {
+      taskNotificationFailures.delete(id);
+    }
+  }
+
+  for (const task of due) {
+    if (alreadyNotified.has(task.id)) continue;
+
+    // Skip if in cooldown period after a recent failure
+    const lastFailureTime = taskNotificationFailures.get(task.id);
+    if (lastFailureTime && nowTime - lastFailureTime < TASK_NOTIFICATION_FAILURE_COOLDOWN_MS) {
+      continue;
     }
 
-    for (const task of due) {
-      if (alreadyNotified.has(task.id)) continue;
-      alreadyNotified.add(task.id);
-      const notification = new Notification({
-        title: "Task due",
-        body: task.title
-      });
-      notification.on("click", () => {
+    const result = showNotificationSafe(
+      { title: "Task due", body: task.title },
+      () => {
         for (const w of getWindows()) {
           if (w && !w.isDestroyed()) {
             showMainWindow(w);
             break;
           }
         }
-      });
-      notification.show();
-    }
-    if (due.length > 0) {
-      mainLog.info(`[scheduler:tasks] due=${due.length} notified=${alreadyNotified.size}`);
-    }
-  };
+      }
+    );
 
-  runTick();
-  const timer = setInterval(runTick, TASK_SCHEDULER_INTERVAL_MS);
+    if (result === "shown") {
+      // Clear any previous failure cooldown on success
+      taskNotificationFailures.delete(task.id);
+      alreadyNotified.add(task.id);
+    } else {
+      // Notification failed or unsupported - track cooldown but don't mark as notified
+      taskNotificationFailures.set(task.id, nowTime);
+    }
+  }
+  if (due.length > 0) {
+    mainLog.info(`[scheduler:tasks] due=${due.length} notified=${alreadyNotified.size}`);
+  }
+}
+
+export function startTaskScheduler(getWindows: () => readonly (BrowserWindow | null)[]): { stop: () => void } {
+  runTaskSchedulerTick(getWindows);
+  const timer = setInterval(() => runTaskSchedulerTick(getWindows), TASK_SCHEDULER_INTERVAL_MS);
   timer.unref();
 
   return {

@@ -8,6 +8,8 @@ import type { AgendaItem, AgendaFilter } from "../workspace/useCalendarState";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
 
+export type DeskMode = "personal" | "projects";
+
 export type AssistantWorkspace = {
   ui: {
     theme: ThemeMode;
@@ -155,5 +157,7 @@ export type AssistantWorkspace = {
   };
   desk: {
     hideWindow: () => void;
+    mode: DeskMode;
+    setMode: (mode: DeskMode) => void;
   };
 };

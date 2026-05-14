@@ -8,14 +8,10 @@ vi.mock("../db", () => ({
   getDb: () => testDb
 }));
 
-vi.mock("electron", () => ({
-  Notification: class {
-    constructor(_opts: unknown) {}
-    on() {
-      return this;
-    }
-    show() {}
-  }
+const showNotificationSafeMock = vi.fn();
+
+vi.mock("../notification", () => ({
+  showNotificationSafe: (...args: unknown[]) => showNotificationSafeMock(...args)
 }));
 
 vi.mock("../log", () => ({
@@ -26,11 +22,13 @@ vi.mock("../window", () => ({
   showMainWindow: vi.fn()
 }));
 
-import { completeTask, createTask, deleteTask, listOverdueOpenTasks, listTasks, updateTask } from "./tasks";
+import { completeTask, createTask, deleteTask, listOverdueOpenTasks, listTasks, updateTask, runTaskSchedulerTick } from "./tasks";
+import type { NotificationResult } from "../notification";
 
 describe("tasks service", () => {
   beforeEach(() => {
     testDb = createMemoryDatabase();
+    showNotificationSafeMock.mockReset();
   });
 
   afterEach(() => {
@@ -133,5 +131,62 @@ describe("tasks service", () => {
     const rows = listOverdueOpenTasks();
     expect(rows.length).toBe(1);
     expect(rows[0]?.title).toBe("overdue open");
+  });
+
+  describe("scheduler notification reliability", () => {
+    it("marks task as notified only after successful notification", () => {
+      createTask({
+        title: "overdue task",
+        notes: "",
+        dueAt: new Date(Date.now() - 60_000).toISOString(),
+        priority: "normal",
+        recurrence: "none"
+      });
+      showNotificationSafeMock.mockReturnValue("shown" as NotificationResult);
+
+      runTaskSchedulerTick(() => []);
+
+      const callCount1 = showNotificationSafeMock.mock.calls.length;
+      expect(callCount1).toBe(1);
+
+      // Second tick should not notify again
+      runTaskSchedulerTick(() => []);
+      const callCount2 = showNotificationSafeMock.mock.calls.length;
+      expect(callCount2).toBe(callCount1);
+    });
+
+    it("does not mark task as notified when notification fails", () => {
+      createTask({
+        title: "overdue task",
+        notes: "",
+        dueAt: new Date(Date.now() - 60_000).toISOString(),
+        priority: "normal",
+        recurrence: "none"
+      });
+      showNotificationSafeMock.mockReturnValue("failed" as NotificationResult);
+
+      runTaskSchedulerTick(() => []);
+
+      const callCount1 = showNotificationSafeMock.mock.calls.length;
+      expect(callCount1).toBe(1);
+
+      // Second tick should not notify due to cooldown
+      runTaskSchedulerTick(() => []);
+      const callCount2 = showNotificationSafeMock.mock.calls.length;
+      expect(callCount2).toBe(callCount1);
+    });
+
+    it("logs notification failure without throwing", () => {
+      createTask({
+        title: "overdue task",
+        notes: "",
+        dueAt: new Date(Date.now() - 60_000).toISOString(),
+        priority: "normal",
+        recurrence: "none"
+      });
+      showNotificationSafeMock.mockReturnValue("failed" as NotificationResult);
+
+      expect(() => runTaskSchedulerTick(() => [])).not.toThrow();
+    });
   });
 });

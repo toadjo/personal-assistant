@@ -14,6 +14,7 @@ import { startReminderScheduler } from "./services/reminders";
 import { startTaskScheduler } from "./services/tasks";
 import { createAssertSender, registerIpcHandlers } from "./ipc/register-handlers";
 import { registerAppWindowHandlers } from "./ipc/handlers/appWindow.handlers";
+import { configureTeamRealtime, stopAllTeamRealtime } from "./team/realtime";
 import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } from "./window";
 import { type TrayOptions } from "./tray";
 import { routeDeskBackground, tryCreateTray } from "./desk-background";
@@ -133,6 +134,7 @@ function startAppAfterDbOpen(): void {
   }
 
   registerIpcHandlers(getTrustedWindows);
+  configureTeamRealtime(getTrustedWindows);
   registerAppWindowHandlers(createAssertSender(getTrustedWindows), {
     openHouseholdWindow: openOrFocusHouseholdWindow,
     focusDeskWindow,
@@ -261,6 +263,7 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
     stopAutomationScheduler = null;
     stopTaskScheduler?.();
     stopTaskScheduler = null;
+    void stopAllTeamRealtime();
   });
 
   app.on("activate", () => {

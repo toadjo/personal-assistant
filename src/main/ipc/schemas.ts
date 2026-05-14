@@ -224,3 +224,91 @@ export const backupPayloadSchema = z.object({
   automation_rules: z.array(backupAutomationRuleSchema),
   app_settings: z.array(backupAppSettingSchema)
 });
+
+// ---------------------------------------------------------------------------
+// Team-mode schemas (hosted Supabase backend; see docs/TEAM_PROJECTS_SETUP.md)
+// ---------------------------------------------------------------------------
+
+/** Display name shown to other workspace members. */
+export const teamDisplayNameSchema = z.string().trim().min(1).max(60);
+
+export const teamSetConfigSchema = z.object({
+  supabaseUrl: z.string().trim().url().max(2_048),
+  supabaseAnonKey: z.string().trim().min(20).max(4_096),
+  displayName: teamDisplayNameSchema
+});
+
+export const teamWorkspaceCreateSchema = z.object({
+  name: z.string().trim().min(1).max(120)
+});
+
+/**
+ * Loose IPC-side check; the service additionally calls
+ * `validateWorkspaceKey` for the strict format rule.
+ */
+export const teamWorkspaceJoinSchema = z.object({
+  workspaceKey: z.string().trim().min(1).max(64)
+});
+
+export const teamWorkspaceSetActiveSchema = z.object({
+  workspaceId: uuidSchema.nullable()
+});
+
+export const teamProjectCreateSchema = z.object({
+  name: z.string().trim().min(1).max(120)
+});
+
+export const teamTaskCreateSchema = z
+  .object({
+    projectId: uuidSchema,
+    title: z.string().trim().min(1).max(200),
+    notes: z.string().max(5000),
+    dueAt: z.string().datetime({ offset: true }).nullable(),
+    priority: z.enum(["low", "normal", "high"]),
+    recurrence: z.enum(["none", "daily", "weekly", "monthly"]),
+    assigneeDisplayName: teamDisplayNameSchema.nullable()
+  })
+  .superRefine((value, ctx) => {
+    if (value.recurrence !== "none" && !value.dueAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Recurring team tasks require dueAt.",
+        path: ["dueAt"]
+      });
+    }
+  });
+
+export const teamTaskUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    title: z.string().trim().min(1).max(200).optional(),
+    notes: z.string().max(5000).optional(),
+    dueAt: z.string().datetime({ offset: true }).nullable().optional(),
+    priority: z.enum(["low", "normal", "high"]).optional(),
+    status: z.enum(["open", "done"]).optional(),
+    recurrence: z.enum(["none", "daily", "weekly", "monthly"]).optional(),
+    assigneeDisplayName: teamDisplayNameSchema.nullable().optional()
+  })
+  .refine(
+    (v) =>
+      v.title !== undefined ||
+      v.notes !== undefined ||
+      v.dueAt !== undefined ||
+      v.priority !== undefined ||
+      v.status !== undefined ||
+      v.recurrence !== undefined ||
+      v.assigneeDisplayName !== undefined,
+    {
+      message:
+        "At least one of title, notes, dueAt, priority, status, recurrence, or assigneeDisplayName must be provided."
+    }
+  )
+  .superRefine((value, ctx) => {
+    if (value.recurrence && value.recurrence !== "none" && value.dueAt === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Recurring team tasks require dueAt.",
+        path: ["dueAt"]
+      });
+    }
+  });

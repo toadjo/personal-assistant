@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { haEntityIdSchema, reminderCreateSchema, ruleCreateSchema, userPreferredNameSchema } from "./schemas";
+import {
+  haEntityIdSchema,
+  reminderCreateSchema,
+  ruleCreateSchema,
+  userPreferredNameSchema,
+  teamProjectCreateSchema,
+  teamTaskCreateSchema
+} from "./schemas";
 
 describe("IPC Zod schemas", () => {
   it("reminderCreateSchema accepts valid ISO datetimes with offset", () => {
@@ -143,5 +150,71 @@ describe("IPC Zod schemas", () => {
         enabled: true
       })
     ).toThrow();
+  });
+
+  it("teamProjectCreateSchema accepts a name only payload", () => {
+    const parsed = teamProjectCreateSchema.parse({ name: "Q1 Campaign" });
+    expect(parsed.name).toBe("Q1 Campaign");
+  });
+
+  it("teamProjectCreateSchema rejects empty name", () => {
+    expect(() => teamProjectCreateSchema.parse({ name: "" })).toThrow();
+  });
+
+  it("teamTaskCreateSchema accepts the renderer payload shape", () => {
+    const payload = {
+      projectId: "11111111-1111-1111-1111-111111111111",
+      title: "Design logo",
+      notes: "Create a modern logo",
+      dueAt: "2026-05-02T14:00:00.000Z",
+      priority: "normal" as const,
+      recurrence: "none" as const,
+      assigneeDisplayName: "Alice"
+    };
+    const parsed = teamTaskCreateSchema.parse(payload);
+    expect(parsed).toEqual(payload);
+  });
+
+  it("teamTaskCreateSchema accepts null assigneeDisplayName and dueAt", () => {
+    const parsed = teamTaskCreateSchema.parse({
+      projectId: "11111111-1111-1111-1111-111111111111",
+      title: "Task",
+      notes: "",
+      dueAt: null,
+      priority: "low",
+      recurrence: "none",
+      assigneeDisplayName: null
+    });
+    expect(parsed.assigneeDisplayName).toBe(null);
+    expect(parsed.dueAt).toBe(null);
+  });
+
+  it("teamTaskCreateSchema rejects recurring task without dueAt", () => {
+    expect(() =>
+      teamTaskCreateSchema.parse({
+        projectId: "11111111-1111-1111-1111-111111111111",
+        title: "Daily standup",
+        notes: "",
+        dueAt: null,
+        priority: "normal",
+        recurrence: "daily",
+        assigneeDisplayName: null
+      })
+    ).toThrow();
+  });
+
+  it("teamTaskCreateSchema rejects extra workspaceId field via strict shape mismatch is allowed but ignored", () => {
+    // Zod object schemas strip unknown keys by default; ensure parsed result has no workspaceId.
+    const parsed = teamTaskCreateSchema.parse({
+      projectId: "11111111-1111-1111-1111-111111111111",
+      title: "Task",
+      notes: "",
+      dueAt: null,
+      priority: "normal",
+      recurrence: "none",
+      assigneeDisplayName: null,
+      workspaceId: "should-be-stripped"
+    } as unknown as Record<string, unknown>);
+    expect("workspaceId" in parsed).toBe(false);
   });
 });

@@ -5,7 +5,7 @@
  * - Command input and history state
  * - Command hints
  * - Command execution wiring
- * - Keyboard shortcuts and tray command handling
+ * - Keyboard shortcuts and external command handling
  *
  * Dependencies:
  * - devices: for device-related commands

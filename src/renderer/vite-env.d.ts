@@ -8,6 +8,7 @@ interface ImportMetaEnv {
 }
 
 import type { AssistantSettings, AutomationRule, Note, Reminder, Task } from "../shared/types";
+import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../shared/team/types";
 
 declare global {
   const __APP_VERSION__: string;
@@ -124,6 +125,41 @@ declare global {
        * Only active when ELECTRON_E2E_TEST_MODE is set.
        */
       setTestAutomationActionOverride: (config: { mode: "timeout" | "failure" } | null) => Promise<void>;
+      // Team mode operations
+      teamSetConfig: (payload: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) => Promise<void>;
+      teamGetConfig: () => Promise<TeamConfigStatus>;
+      teamClearConfig: () => Promise<void>;
+      teamWorkspacesCreate: (payload: { name: string }) => Promise<TeamWorkspace>;
+      teamWorkspacesJoin: (payload: { workspaceKey: string }) => Promise<TeamWorkspace>;
+      teamWorkspacesList: () => Promise<TeamWorkspace[]>;
+      teamWorkspacesSetActive: (payload: { workspaceId: string | null }) => Promise<void>;
+      teamProjectsCreate: (payload: { name: string }) => Promise<TeamProject>;
+      teamProjectsList: () => Promise<TeamProject[]>;
+      teamTasksCreate: (payload: {
+        projectId: string;
+        title: string;
+        notes: string;
+        dueAt: string | null;
+        priority: "low" | "normal" | "high";
+        recurrence: "none" | "daily" | "weekly" | "monthly";
+        assigneeDisplayName: string | null;
+      }) => Promise<TeamProjectTask>;
+      teamTasksUpdate: (payload: {
+        id: string;
+        title?: string;
+        notes?: string;
+        dueAt?: string | null;
+        priority?: "low" | "normal" | "high";
+        status?: "open" | "done";
+        recurrence?: "none" | "daily" | "weekly" | "monthly";
+        assigneeDisplayName?: string | null;
+      }) => Promise<TeamProjectTask>;
+      teamTasksList: () => Promise<TeamProjectTask[]>;
+      teamRealtimeStart: () => Promise<void>;
+      teamRealtimeStop: () => Promise<void>;
+      onTeamDataUpdated: (
+        cb: (event: unknown, payload: { workspaceId: string; tables: ("projects" | "tasks")[] }) => void
+      ) => () => void;
     };
   }
 }

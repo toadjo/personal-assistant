@@ -39,6 +39,14 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.appFocusDeskWindow,
   IpcInvoke.appHideDeskWindow,
   IpcInvoke.appOpenBugReport,
+  // Team mode zero-arg channels
+  IpcInvoke.teamGetConfig,
+  IpcInvoke.teamClearConfig,
+  IpcInvoke.teamWorkspacesList,
+  IpcInvoke.teamProjectsList,
+  IpcInvoke.teamTasksList,
+  IpcInvoke.teamRealtimeStart,
+  IpcInvoke.teamRealtimeStop,
   // Test-only channels (guarded by ELECTRON_E2E_TEST_MODE)
   IpcInvoke.testSetHaFetchOverride,
   IpcInvoke.testSetAutomationActionOverride
@@ -74,7 +82,15 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.automationRulesDuplicate ||
         ch === IpcInvoke.automationRulesTestRun ||
         ch === IpcInvoke.dataImport ||
-        ch === IpcInvoke.rendererLogError;
+        ch === IpcInvoke.rendererLogError ||
+        // Team mode schema-backed channels
+        ch === IpcInvoke.teamSetConfig ||
+        ch === IpcInvoke.teamWorkspacesCreate ||
+        ch === IpcInvoke.teamWorkspacesJoin ||
+        ch === IpcInvoke.teamWorkspacesSetActive ||
+        ch === IpcInvoke.teamProjectsCreate ||
+        ch === IpcInvoke.teamTasksCreate ||
+        ch === IpcInvoke.teamTasksUpdate;
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }
   });

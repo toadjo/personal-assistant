@@ -24,6 +24,8 @@ import { useDisplayPreferences } from "../ui/useDisplayPreferences";
 import { useOnboardingProgress } from "../useOnboardingProgress";
 import type { DisplayPreferences, Density, PanelRadius } from "../../lib/display/types";
 
+export type DeskMode = "personal" | "projects";
+
 export type DeskUiState = {
   theme: ThemeMode;
   custom: CustomTheme | undefined;
@@ -62,6 +64,8 @@ export type DeskUiState = {
   };
   desk: {
     hideWindow: () => void;
+    mode: DeskMode;
+    setMode: (mode: DeskMode) => void;
   };
 };
 
@@ -76,6 +80,8 @@ export function useDeskUiState(): DeskUiState {
   const [showOnboarding, setShowOnboarding] = useState(
     () => !window.localStorage.getItem(STORAGE_ONBOARDED) && !window.localStorage.getItem(STORAGE_ONBOARDING_DEFERRED)
   );
+
+  const [deskMode, setDeskMode] = useState<DeskMode>("personal");
 
   return {
     theme,
@@ -118,7 +124,9 @@ export function useDeskUiState(): DeskUiState {
       hideWindow: () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).assistantApi.hideDeskWindow();
-      }
+      },
+      mode: deskMode,
+      setMode: setDeskMode
     }
   };
 }
