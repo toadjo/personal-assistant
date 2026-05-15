@@ -55,6 +55,15 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`
 - Next action: None; feature complete and verified.
 
+## 2026-05-11: Pre-2.1 Team Projects Hardening
+
+- Files touched: `src/renderer/components/panels/ProjectsPanel.tsx`
+- Changes: Polished copy to use "Invite code" instead of "Key"; optimized performance by creating project lookup map to avoid repeated find calls; memoized filtered tasks and project lookup with useMemo.
+- Security verification: Confirmed normal hosted setup never exposes Supabase URL or anon key in UI; manual backend fields only appear in advanced self-hosted setup; renderer never receives anon key from teamGetConfig; team IPC handlers validate all mutating payloads with Zod; trusted sender checks cover all team IPC handlers; logs do not print Supabase anon keys, invite secrets, or task payloads unnecessarily.
+- Dependency audit: Ran npm audit --audit-level=high; found 12 vulnerabilities (10 high severity) all in Electron/build dependencies, not in app code.
+- Checks run: `npm test -- src/renderer/components/panels/ProjectsPanel.test.tsx`, `npm test -- src/renderer/hooks/team src/main/team src/main/ipc`, `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
+- Next action: None; hardening complete and verified.
+
 ## 2026-05-11: Local Personal Automations (v1.4.6)
 
 - Files touched: `src/shared/types.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/services/automation.ts`, `src/main/services/automation.test.ts`, `src/main/ipc/automation/formatActionLabel.ts`, `src/main/preload.ts`, `src/renderer/components/forms/RuleForm.tsx`, `src/renderer/components/forms/RuleForm.test.tsx`, `src/renderer/components/panels/AutomationRulesPanel.tsx`

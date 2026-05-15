@@ -5,7 +5,7 @@
  * Uses existing panel, button, select, and status banner patterns.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Users, Plus, Key, Loader2, CheckCircle2, Circle, Pencil } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { StatusBanner } from "../layout/StatusBanner";
@@ -312,11 +312,18 @@ export function ProjectsPanel(): JSX.Element {
   };
 
   // Filter tasks based on selected project and status
-  const filteredTasks = team.tasks.filter((task) => {
-    const projectMatch = selectedProjectId === "all" || task.projectId === selectedProjectId;
-    const statusMatch = selectedStatus === "all" || task.status === selectedStatus;
-    return projectMatch && statusMatch;
-  });
+  const filteredTasks = useMemo(() => {
+    return team.tasks.filter((task) => {
+      const projectMatch = selectedProjectId === "all" || task.projectId === selectedProjectId;
+      const statusMatch = selectedStatus === "all" || task.status === selectedStatus;
+      return projectMatch && statusMatch;
+    });
+  }, [team.tasks, selectedProjectId, selectedStatus]);
+
+  // Create project lookup map to avoid repeated find calls in task rendering
+  const projectMap = useMemo(() => {
+    return new Map(team.projects.map(p => [p.id, p]));
+  }, [team.projects]);
 
   // Setup state: team mode not configured
   if (!team.config?.configured) {
@@ -633,7 +640,7 @@ export function ProjectsPanel(): JSX.Element {
             <div className="workspaceContextInfo">
               <span className="workspaceContextLabel">Workspace:</span>
               <span className="workspaceContextName">{team.activeWorkspace?.name}</span>
-              <span className="workspaceContextKey">Key: {team.activeWorkspace?.workspaceKey}</span>
+              <span className="workspaceContextKey">Invite code: {team.activeWorkspace?.workspaceKey}</span>
             </div>
             <button
               type="button"
@@ -1080,7 +1087,7 @@ export function ProjectsPanel(): JSX.Element {
           ) : (
             <div className="teamTaskList">
               {filteredTasks.map((task) => {
-                const project = team.projects.find(p => p.id === task.projectId);
+                const project = projectMap.get(task.projectId);
                 return (
                   <div key={task.id} className="teamTaskItem">
                     <div className="taskInfo">
