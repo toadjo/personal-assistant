@@ -155,9 +155,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
   teamTasksList: () => ipcRenderer.invoke(invoke.teamTasksList),
   teamRealtimeStart: () => ipcRenderer.invoke(invoke.teamRealtimeStart),
   teamRealtimeStop: () => ipcRenderer.invoke(invoke.teamRealtimeStop),
-  onTeamDataUpdated: (
-    cb: (_event: unknown, payload: { workspaceId: string; tables: ("projects" | "tasks")[] }) => void
-  ) => {
+  onTeamDataUpdated: (cb: (...args: unknown[]) => void) => {
     ipcRenderer.on(push.teamDataUpdated, cb);
     return () => ipcRenderer.removeListener(push.teamDataUpdated, cb);
   }

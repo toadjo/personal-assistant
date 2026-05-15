@@ -117,3 +117,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`
 - Visual QA: Confirmed layout at 1366x768 and 1920x1080, action buttons do not collide with text.
 - Next action: Build local Windows installer for v1.5.1 and publish `.exe` manually.
+
+## 2026-05-15: v2.0.1 Team Projects contract cleanup
+
+- Files touched: `docs/TEAM_PROJECTS_SETUP.md`, `src/shared/ipc-channels.ts`, `src/main/preload.ts`, `src/renderer/vite-env.d.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/ipc/handlers/handler-payload-contract.test.ts`, `src/renderer/hooks/team/useTeamState.ts`, `src/renderer/hooks/team/useTeamState.test.ts`, `src/main/team/realtime.test.ts`
+- Changes: Fixed garbled text in Team Projects setup doc. Removed workspaceId from teamProjectCreateSchema and teamTaskCreateSchema (handlers get it from active config). Added assigneeDisplayName to teamTasksCreate ambient type. Removed unused list schemas. Added realtime IPC channels (teamRealtimeStart, teamRealtimeStop, teamDataUpdated) to enums, preload, and renderer ambient types. Fixed realtime test mock and handler-payload-contract test. Updated useTeamState and tests to not pass workspaceId.
+- Checks run: `npm run typecheck`, `npm run lint`, `npm test -- src/main/ipc src/main/preload-channels.test.ts`, `npm test -- src/main/team src/renderer/hooks/team src/renderer/components/panels/ProjectsPanel.test.tsx`
+- Next action: Commit and continue from clean main.

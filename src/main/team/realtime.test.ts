@@ -12,7 +12,9 @@ const getTeamConfigMock = vi.fn();
 const getAuthClientMock = vi.fn();
 
 vi.mock("../ipc-safe-send", () => ({
-  safeWebContentsSend: (...args: unknown[]) => safeSendMock(...args)
+  safeWebContentsSend: (webContents: unknown, channel: string, ...payload: unknown[]) => {
+    safeSendMock(webContents, channel, ...payload);
+  }
 }));
 
 vi.mock("./config", () => ({
@@ -157,7 +159,7 @@ describe("team realtime manager", () => {
       "team:dataUpdated",
       expect.objectContaining({
         workspaceId: "ws-1",
-        tables: expect.arrayContaining(["projects", "tasks"])
+        tables: ["projects", "tasks"]
       })
     );
   });

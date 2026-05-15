@@ -7,7 +7,7 @@ This guide explains how to set up the Team Projects feature using Supabase as th
 Team Projects V1 allows multiple users to collaborate on shared workspaces, projects, and tasks. The feature uses Supabase for:
 
 - Anonymous authentication
-- Refresh-bfs-dbased data upd(n( remltimpsp eh ye)
+- Realtime-based data updates via Postgres Changes subscriptions
 - Row-level security (RLS) for data isolation
 
 ## Prerequisites

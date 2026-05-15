@@ -45,11 +45,11 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.teamWorkspacesList,
   IpcInvoke.teamProjectsList,
   IpcInvoke.teamTasksList,
-  IpcInvoke.teamRealtimeStart,
-  IpcInvoke.teamRealtimeStop,
   // Test-only channels (guarded by ELECTRON_E2E_TEST_MODE)
   IpcInvoke.testSetHaFetchOverride,
-  IpcInvoke.testSetAutomationActionOverride
+  IpcInvoke.testSetAutomationActionOverride,
+  IpcInvoke.teamRealtimeStart,
+  IpcInvoke.teamRealtimeStop
 ];
 
 describe("IPC handler payload contracts", () => {

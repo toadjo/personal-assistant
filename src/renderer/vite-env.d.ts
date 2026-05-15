@@ -157,9 +157,7 @@ declare global {
       teamTasksList: () => Promise<TeamProjectTask[]>;
       teamRealtimeStart: () => Promise<void>;
       teamRealtimeStop: () => Promise<void>;
-      onTeamDataUpdated: (
-        cb: (event: unknown, payload: { workspaceId: string; tables: ("projects" | "tasks")[] }) => void
-      ) => () => void;
+      onTeamDataUpdated: (callback: (event: Electron.IpcRendererEvent, payload: { workspaceId: string; tables: Array<"projects" | "tasks"> }) => void) => () => void;
     };
   }
 }

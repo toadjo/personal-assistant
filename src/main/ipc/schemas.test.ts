@@ -167,8 +167,8 @@ describe("IPC Zod schemas", () => {
       title: "Design logo",
       notes: "Create a modern logo",
       dueAt: "2026-05-02T14:00:00.000Z",
-      priority: "normal" as const,
-      recurrence: "none" as const,
+      priority: "normal",
+      recurrence: "none",
       assigneeDisplayName: "Alice"
     };
     const parsed = teamTaskCreateSchema.parse(payload);
@@ -203,8 +203,8 @@ describe("IPC Zod schemas", () => {
     ).toThrow();
   });
 
-  it("teamTaskCreateSchema rejects extra workspaceId field via strict shape mismatch is allowed but ignored", () => {
-    // Zod object schemas strip unknown keys by default; ensure parsed result has no workspaceId.
+  it("teamTaskCreateSchema rejects extra unknown field via strict shape mismatch is allowed but ignored", () => {
+    // Zod object schemas strip unknown keys by default; ensure parsed result has no extra field.
     const parsed = teamTaskCreateSchema.parse({
       projectId: "11111111-1111-1111-1111-111111111111",
       title: "Task",
@@ -213,8 +213,8 @@ describe("IPC Zod schemas", () => {
       priority: "normal",
       recurrence: "none",
       assigneeDisplayName: null,
-      workspaceId: "should-be-stripped"
-    } as unknown as Record<string, unknown>);
-    expect("workspaceId" in parsed).toBe(false);
+      unknownField: "should be stripped"
+    });
+    expect(parsed).not.toHaveProperty("unknownField");
   });
 });
