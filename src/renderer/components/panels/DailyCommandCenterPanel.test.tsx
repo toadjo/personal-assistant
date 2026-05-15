@@ -11,6 +11,7 @@ function makeData(overrides: Partial<DailyCommandCenter> = {}): DailyCommandCent
     awayItems: [],
     summary: "All clear - nothing needs attention right now.",
     pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 },
+    filter: "all",
     ...overrides
   };
 }

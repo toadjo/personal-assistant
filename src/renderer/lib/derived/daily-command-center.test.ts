@@ -36,6 +36,7 @@ describe("deriveDailyCommandCenter", () => {
     expect(result.awayItems).toEqual([]);
     expect(result.summary).toBe("All clear - nothing needs attention right now.");
     expect(result.pressure).toEqual({ overdue: 0, dueToday: 0, upcoming: 0, context: 0 });
+    expect(result.filter).toBe("all");
   });
 
   it("places overdue items in attention before due-today items", () => {
@@ -213,6 +214,69 @@ describe("deriveDailyCommandCenter", () => {
     });
 
     expect(result.pressure).toEqual({ overdue: 2, dueToday: 1, upcoming: 1, context: 1 });
+  });
+
+  it("filters items by personal filter", () => {
+    const focusBrief = [
+      makeBriefItem({ kind: "task", urgency: "today", sourceId: "t1" }),
+      makeBriefItem({ kind: "reminder", urgency: "today", sourceId: "r1" }),
+      makeBriefItem({ kind: "note", urgency: "context", sourceId: "n1" }),
+      makeBriefItem({ kind: "team-task", urgency: "today", sourceId: "tt1" }),
+      makeBriefItem({ kind: "automation", urgency: "context", sourceId: "a1" })
+    ];
+
+    const result = deriveDailyCommandCenter({
+      focusBrief,
+      awayBrief: [],
+      filter: "personal"
+    });
+
+    expect(result.pressure).toEqual({ overdue: 0, dueToday: 2, upcoming: 0, context: 1 });
+    expect(result.filter).toBe("personal");
+  });
+
+  it("filters items by team filter", () => {
+    const focusBrief = [
+      makeBriefItem({ kind: "task", urgency: "today", sourceId: "t1" }),
+      makeBriefItem({ kind: "team-task", urgency: "today", sourceId: "tt1" }),
+      makeBriefItem({ kind: "team-task", urgency: "overdue", sourceId: "tt2" })
+    ];
+
+    const result = deriveDailyCommandCenter({
+      focusBrief,
+      awayBrief: [],
+      filter: "team"
+    });
+
+    expect(result.pressure).toEqual({ overdue: 1, dueToday: 1, upcoming: 0, context: 0 });
+    expect(result.filter).toBe("team");
+  });
+
+  it("filters items by household filter", () => {
+    const focusBrief = [
+      makeBriefItem({ kind: "task", urgency: "today", sourceId: "t1" }),
+      makeBriefItem({ kind: "automation", urgency: "context", sourceId: "a1" }),
+      makeBriefItem({ kind: "automation", urgency: "overdue", sourceId: "a2" })
+    ];
+
+    const result = deriveDailyCommandCenter({
+      focusBrief,
+      awayBrief: [],
+      filter: "household"
+    });
+
+    expect(result.pressure).toEqual({ overdue: 1, dueToday: 0, upcoming: 0, context: 1 });
+    expect(result.filter).toBe("household");
+  });
+
+  it("shows filter-specific summary when empty", () => {
+    const result = deriveDailyCommandCenter({
+      focusBrief: [],
+      awayBrief: [],
+      filter: "personal"
+    });
+
+    expect(result.summary).toBe("Personal: All clear.");
   });
 });
 

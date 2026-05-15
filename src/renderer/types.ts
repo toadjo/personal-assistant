@@ -21,7 +21,7 @@ export type AutomationRuleListItem = Omit<AutomationRule, "actionConfig"> & {
   lastExecutedAt?: string;
 };
 
-export type BriefItemKind = "task" | "reminder" | "note" | "agenda";
+export type BriefItemKind = "task" | "reminder" | "note" | "agenda" | "team-task" | "automation";
 export type BriefItemUrgency = "overdue" | "today" | "upcoming" | "context";
 export type BriefItem = {
   kind: BriefItemKind;

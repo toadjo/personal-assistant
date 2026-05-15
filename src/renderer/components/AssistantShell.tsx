@@ -44,7 +44,8 @@ export function AssistantShell(): JSX.Element {
     contextItems: [],
     awayItems: [],
     summary: "All clear - nothing needs attention right now.",
-    pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 }
+    pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 },
+    filter: "all"
   });
   const appVersion = __APP_VERSION__;
 
