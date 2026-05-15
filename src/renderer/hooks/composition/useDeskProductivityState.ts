@@ -7,6 +7,7 @@
  * - Note actions (delete, update)
  * - Automation rule actions (delete, set enabled)
  * - Profile settings (user preferred name)
+ * - Inbox state (unified work items)
  *
  * Dependencies:
  * - Data slices: notes, reminders, rules from useDeskDataState
@@ -34,6 +35,7 @@ import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions"
 import { useReminderActions } from "../workspace/useReminderActions";
 import { useTaskActions } from "../workspace/useTaskActions";
 import { useUserProfileSettings } from "../workspace/useUserProfileSettings";
+import { useInboxState } from "../workspace/useInboxState";
 
 export type DeskProductivityState = {
   calendar: {
@@ -99,6 +101,16 @@ export type DeskProductivityState = {
     userPreferredNameIsSet: boolean;
     persistUserPreferredName: (name: string) => Promise<void>;
   };
+  inbox: {
+    unifiedItems: import("../../lib/derived/unified-work").UnifiedWorkItem[];
+    needsSorting: import("../../lib/derived/unified-work").UnifiedWorkItem[];
+    createQuickNote: (title: string, content: string) => Promise<void>;
+    createQuickTask: (title: string, notes: string) => Promise<void>;
+    createQuickReminder: (text: string) => Promise<void>;
+    convertNoteToTask: (noteId: string) => Promise<void>;
+    convertNoteToReminder: (noteId: string) => Promise<void>;
+    sendTaskToTeam: (taskId: string, projectId: string) => Promise<void>;
+  };
 };
 
 export function useDeskProductivityState(args: {
@@ -117,6 +129,11 @@ export function useDeskProductivityState(args: {
   refreshRules: () => Promise<void>;
   mergeNote: (note: Note) => void;
   removeNoteById: (id: string) => void;
+  teamTasks?: import("../../../shared/team/types").TeamProjectTask[];
+  mergeTask?: (task: Task) => void;
+  mergeReminder?: (reminder: Reminder) => void;
+  mergeTeamTask?: (task: import("../../../shared/team/types").TeamProjectTask) => void;
+  refreshTeamTasks?: () => Promise<void>;
 }): DeskProductivityState {
   const {
     reminders,
@@ -131,7 +148,12 @@ export function useDeskProductivityState(args: {
     refreshLogs,
     refreshRules,
     mergeNote,
-    removeNoteById
+    removeNoteById,
+    teamTasks = [],
+    mergeTask,
+    mergeReminder,
+    mergeTeamTask,
+    refreshTeamTasks
   } = args;
 
   const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
@@ -155,6 +177,21 @@ export function useDeskProductivityState(args: {
   );
   const taskActions = useTaskActions(tasks, setStatus, setError, refreshTasks);
   const profile = useUserProfileSettings(setError, setStatus);
+
+  const inbox = useInboxState(setStatus, setError, {
+    notes: args.notes,
+    tasks,
+    reminders,
+    teamTasks,
+    mergeNote,
+    mergeTask: mergeTask || (() => {}),
+    mergeReminder: mergeReminder || (() => {}),
+    mergeTeamTask: mergeTeamTask || (() => {}),
+    refreshNotes,
+    refreshTasks,
+    refreshReminders,
+    refreshTeamTasks: refreshTeamTasks || (async () => {})
+  });
 
   const pendingList = useMemo(() => remindersPending(reminders), [reminders]);
   const overdueReminders = useMemo(() => overduePending(pendingList), [pendingList]);
@@ -210,6 +247,16 @@ export function useDeskProductivityState(args: {
       userPreferredName: profile.userPreferredName,
       userPreferredNameIsSet: profile.userPreferredNameIsSet,
       persistUserPreferredName: profile.persistUserPreferredName
+    },
+    inbox: {
+      unifiedItems: inbox.unifiedItems,
+      needsSorting: inbox.needsSorting,
+      createQuickNote: inbox.createQuickNote,
+      createQuickTask: inbox.createQuickTask,
+      createQuickReminder: inbox.createQuickReminder,
+      convertNoteToTask: inbox.convertNoteToTask,
+      convertNoteToReminder: inbox.convertNoteToReminder,
+      sendTaskToTeam: inbox.sendTaskToTeam
     }
   };
 }

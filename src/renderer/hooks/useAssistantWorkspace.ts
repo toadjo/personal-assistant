@@ -51,7 +51,12 @@ export function useAssistantWorkspace(
     refreshLogs: data.refreshLogs,
     refreshRules: data.refreshRules,
     mergeNote: data.mergeNote,
-    removeNoteById: data.removeNoteById
+    removeNoteById: data.removeNoteById,
+    teamTasks: [],
+    mergeTask: undefined,
+    mergeReminder: undefined,
+    mergeTeamTask: undefined,
+    refreshTeamTasks: undefined
   });
 
   // Command state - depends on data, ha, productivity, and callbacks from UI
@@ -159,6 +164,7 @@ export function useAssistantWorkspace(
     automation: productivity.automation,
     memos: productivity.memos,
     profile: productivity.profile,
+    inbox: productivity.inbox,
     onboarding: ui.onboarding,
     desk: ui.desk
   };

@@ -21,6 +21,7 @@ import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
+import { InboxPanel } from "./panels/InboxPanel";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
@@ -49,7 +50,7 @@ export function AssistantShell(): JSX.Element {
     setDailyCommandCenter((prev) => ({ ...prev, filter }));
   };
 
-  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display } =
+  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display, inbox } =
     useAssistantWorkspace(setDailyCommandCenterFilter);
 
   const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
@@ -368,6 +369,19 @@ export function AssistantShell(): JSX.Element {
             onOpenTasks={tasks.setFilter}
             onOpenReminders={reminders.setFilter}
             onOpenNotes={() => data.setQuery("")}
+          />
+
+          <InboxPanel
+            unifiedItems={inbox.unifiedItems}
+            needsSorting={inbox.needsSorting}
+            createQuickNote={inbox.createQuickNote}
+            createQuickTask={inbox.createQuickTask}
+            createQuickReminder={inbox.createQuickReminder}
+            convertNoteToTask={inbox.convertNoteToTask}
+            convertNoteToReminder={inbox.convertNoteToReminder}
+            sendTaskToTeam={inbox.sendTaskToTeam}
+            onShowSuccess={ui.showSuccess}
+            onError={ui.reportError}
           />
 
           <div className="contentGrid">

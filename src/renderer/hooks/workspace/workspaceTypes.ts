@@ -8,6 +8,7 @@ import type { AgendaItem, AgendaFilter } from "../workspace/useCalendarState";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
 import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
+import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
 
 export type DeskMode = "personal" | "projects";
 
@@ -145,6 +146,16 @@ export type AssistantWorkspace = {
     userPreferredName: string;
     userPreferredNameIsSet: boolean;
     persistUserPreferredName: (name: string) => Promise<void>;
+  };
+  inbox: {
+    unifiedItems: UnifiedWorkItem[];
+    needsSorting: UnifiedWorkItem[];
+    createQuickNote: (title: string, content: string) => Promise<void>;
+    createQuickTask: (title: string, notes: string) => Promise<void>;
+    createQuickReminder: (text: string) => Promise<void>;
+    convertNoteToTask: (noteId: string) => Promise<void>;
+    convertNoteToReminder: (noteId: string) => Promise<void>;
+    sendTaskToTeam: (taskId: string, projectId: string) => Promise<void>;
   };
   onboarding: {
     show: boolean;
