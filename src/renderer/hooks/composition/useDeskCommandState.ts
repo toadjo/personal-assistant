@@ -12,6 +12,8 @@
  * - haReady: for HA availability in commands
  * - setQuery: for query updates from commands
  * - setReminderFilter: for reminder filter updates from commands
+ * - setTaskFilter: for task filter updates from commands
+ * - setDailyCommandCenterFilter: for DCC filter updates from commands
  * - setStatus, setError: for UI feedback during execution
  * - refreshAll: for syncing after command execution
  * - runDeviceToggle: for device toggle commands
@@ -21,6 +23,7 @@
  */
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { ReminderFilter, TaskFilter, HaDeviceRow } from "../../types";
+import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
 import { useCommandExecution } from "../workspace/useCommandExecution";
 
 export type DeskCommandState = {
@@ -44,6 +47,7 @@ export function useDeskCommandState(args: {
   setQuery: (value: string) => void;
   setReminderFilter: (value: ReminderFilter) => void;
   setTaskFilter: (value: TaskFilter) => void;
+  setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void;
   setStatus: (value: string) => void;
   setError: (value: string) => void;
   refreshAll: () => Promise<void>;
@@ -55,6 +59,7 @@ export function useDeskCommandState(args: {
     setQuery,
     setReminderFilter,
     setTaskFilter,
+    setDailyCommandCenterFilter,
     setStatus,
     setError,
     refreshAll,
@@ -67,6 +72,7 @@ export function useDeskCommandState(args: {
     setQuery,
     setReminderFilter,
     setTaskFilter,
+    setDailyCommandCenterFilter,
     setStatus,
     setError,
     refreshAll,

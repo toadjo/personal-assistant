@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReminderFilter, TaskFilter } from "../../types";
+import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
 import { executeAssistantCommand } from "../../command/executeAssistantCommand";
 import { MAX_COMMAND_HISTORY, COMMAND_HINT_SAMPLES } from "../../constants/command";
 import { COMMAND_HISTORY_PERSIST_DEBOUNCE_MS } from "../../constants/timing";
@@ -19,6 +20,7 @@ export function useCommandExecution(args: {
   setQuery: (value: string) => void;
   setReminderFilter: (value: ReminderFilter) => void;
   setTaskFilter: (value: TaskFilter) => void;
+  setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void;
   setStatus: SetStatus;
   setError: SetError;
   refreshAll: () => Promise<void>;
@@ -30,6 +32,7 @@ export function useCommandExecution(args: {
     setQuery,
     setReminderFilter,
     setTaskFilter,
+    setDailyCommandCenterFilter,
     setStatus,
     setError,
     refreshAll,
@@ -105,6 +108,7 @@ export function useCommandExecution(args: {
         setQuery,
         setReminderFilter,
         setTaskFilter,
+        setDailyCommandCenterFilter,
         setStatus,
         refreshHomeAssistantEntities: async () => {
           await window.assistantApi?.refreshHomeAssistantEntities?.();

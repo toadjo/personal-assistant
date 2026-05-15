@@ -1,5 +1,6 @@
 import { normalizeCommandAlias, parseReminderCommand, parseReminderMeCommand, parseNoteAlias } from "../lib/commands";
 import type { HaDeviceRow, ReminderFilter, TaskFilter } from "../types";
+import type { DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 
 export type AssistantCommandDeps = {
   rawInput: string;
@@ -8,6 +9,7 @@ export type AssistantCommandDeps = {
   setQuery: (value: string) => void;
   setReminderFilter: (value: ReminderFilter) => void;
   setTaskFilter: (value: TaskFilter) => void;
+  setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void;
   setStatus: (value: string) => void;
   refreshHomeAssistantEntities: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
@@ -27,7 +29,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, what's next, catch me up, open household. After you link Home Assistant: toggle ..., refresh devices."
+      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, open household. After you link Home Assistant: toggle ..., refresh devices."
     );
     return { mutated: false };
   }
@@ -39,6 +41,26 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   if (lower === "show tasks") {
     deps.setTaskFilter("open");
     deps.setStatus("Showing your open tasks.");
+    return { mutated: false };
+  }
+  if (lower === "plan today" || lower === "show personal" || lower === "personal") {
+    deps.setDailyCommandCenterFilter?.("personal");
+    deps.setStatus("Showing your personal work items.");
+    return { mutated: false };
+  }
+  if (lower === "show team" || lower === "team") {
+    deps.setDailyCommandCenterFilter?.("team");
+    deps.setStatus("Showing team tasks.");
+    return { mutated: false };
+  }
+  if (lower === "show household" || lower === "household") {
+    deps.setDailyCommandCenterFilter?.("household");
+    deps.setStatus("Showing household items.");
+    return { mutated: false };
+  }
+  if (lower === "show all" || lower === "all") {
+    deps.setDailyCommandCenterFilter?.("all");
+    deps.setStatus("Showing all work items.");
     return { mutated: false };
   }
   if (lower === "clear notes search" || lower === "show notes") {

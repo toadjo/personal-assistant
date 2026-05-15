@@ -7,6 +7,7 @@ import type { CalendarCell } from "../../lib/calendar";
 import type { AgendaItem, AgendaFilter } from "../workspace/useCalendarState";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
+import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
 
 export type DeskMode = "personal" | "projects";
 
@@ -48,6 +49,7 @@ export type AssistantWorkspace = {
     refreshNotes: () => Promise<void>;
     refreshReminders: () => Promise<void>;
     refreshTasks: () => Promise<void>;
+    setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void;
   };
   ha: {
     haUrl: string;

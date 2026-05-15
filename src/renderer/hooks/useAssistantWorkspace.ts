@@ -20,9 +20,12 @@ import { useDeskHomeAssistantState } from "./composition/useDeskHomeAssistantSta
 import { useDeskProductivityState } from "./composition/useDeskProductivityState";
 import { useDeskCommandState } from "./composition/useDeskCommandState";
 import type { AssistantWorkspace } from "./workspace/workspaceTypes";
+import type { DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 export type { AssistantWorkspace } from "./workspace/workspaceTypes";
 
-export function useAssistantWorkspace(): AssistantWorkspace {
+export function useAssistantWorkspace(
+  setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void
+): AssistantWorkspace {
   // UI state - no dependencies, created first
   const ui = useDeskUiState();
 
@@ -58,6 +61,7 @@ export function useAssistantWorkspace(): AssistantWorkspace {
     setQuery: data.setQuery,
     setReminderFilter: productivity.reminders.setFilter,
     setTaskFilter: productivity.tasks.setFilter,
+    setDailyCommandCenterFilter,
     setStatus: ui.setStatus,
     setError: ui.setError,
     refreshAll: data.refreshAll,
@@ -114,7 +118,8 @@ export function useAssistantWorkspace(): AssistantWorkspace {
       refreshAll: data.refreshAll,
       refreshNotes: data.refreshNotes,
       refreshReminders: data.refreshReminders,
-      refreshTasks: data.refreshTasks
+      refreshTasks: data.refreshTasks,
+      setDailyCommandCenterFilter
     },
     ha: {
       haUrl: ha.haUrl,

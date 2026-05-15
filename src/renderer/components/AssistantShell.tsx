@@ -26,17 +26,14 @@ import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
-import type { DailyCommandCenter } from "../lib/derived/daily-command-center";
+import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 
 export function AssistantShell(): JSX.Element {
-  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display } =
-    useAssistantWorkspace();
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
-  const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -47,6 +44,15 @@ export function AssistantShell(): JSX.Element {
     pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 },
     filter: "all"
   });
+
+  const setDailyCommandCenterFilter = (filter: DailyCommandCenterFilter) => {
+    setDailyCommandCenter((prev) => ({ ...prev, filter }));
+  };
+
+  const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display } =
+    useAssistantWorkspace(setDailyCommandCenterFilter);
+
+  const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
   const appVersion = __APP_VERSION__;
 
   useEffect(() => {
@@ -99,7 +105,7 @@ export function AssistantShell(): JSX.Element {
       now: new Date()
     });
     focusBriefRef.current = focusBrief;
-    const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief });
+    const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief, filter: dailyCommandCenter.filter });
     setDailyCommandCenter(dcc);
   }, [
     data.tasks,
@@ -108,7 +114,8 @@ export function AssistantShell(): JSX.Element {
     tasks.overdueOpen,
     tasks.dueTodayOpen,
     reminders.pending,
-    calendar.selectedDayAgenda
+    calendar.selectedDayAgenda,
+    dailyCommandCenter.filter
   ]);
 
   // Update last-seen timestamp after initial data refresh and desk render
@@ -123,7 +130,8 @@ export function AssistantShell(): JSX.Element {
     setDailyCommandCenter(
       deriveDailyCommandCenter({
         focusBrief: focusBriefRef.current,
-        awayBrief: []
+        awayBrief: [],
+        filter: dailyCommandCenter.filter
       })
     );
   };

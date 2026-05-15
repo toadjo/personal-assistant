@@ -10,6 +10,7 @@ function baseDeps(overrides: Partial<Parameters<typeof executeAssistantCommand>[
     setQuery: vi.fn(),
     setReminderFilter: vi.fn(),
     setTaskFilter: vi.fn(),
+    setDailyCommandCenterFilter: vi.fn(),
     setStatus: vi.fn(),
     refreshHomeAssistantEntities: vi.fn().mockResolvedValue(undefined),
     runDeviceToggle: vi.fn().mockResolvedValue(undefined),
@@ -405,6 +406,62 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "show tasks" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setTaskFilter).toHaveBeenCalledWith("open");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("plan today sets DCC filter to personal", async () => {
+    const deps = baseDeps({ rawInput: "plan today" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("personal");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("show personal sets DCC filter to personal", async () => {
+    const deps = baseDeps({ rawInput: "show personal" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("personal");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("personal sets DCC filter to personal", async () => {
+    const deps = baseDeps({ rawInput: "personal" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("personal");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("show team sets DCC filter to team", async () => {
+    const deps = baseDeps({ rawInput: "show team" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("team");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("team sets DCC filter to team", async () => {
+    const deps = baseDeps({ rawInput: "team" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("team");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("show household sets DCC filter to household", async () => {
+    const deps = baseDeps({ rawInput: "show household" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("household");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("show all sets DCC filter to all", async () => {
+    const deps = baseDeps({ rawInput: "show all" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("all");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("all sets DCC filter to all", async () => {
+    const deps = baseDeps({ rawInput: "all" });
+    const result = await executeAssistantCommand(deps);
+    expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("all");
     expect(result.mutated).toBe(false);
   });
 });
