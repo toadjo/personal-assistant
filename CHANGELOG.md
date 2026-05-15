@@ -4,6 +4,30 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-05-15
+
+Team Projects UX and setup release. Friendly display-name-first setup, shared task editor, task board filters, realtime IPC cleanup, and visual hardening.
+
+### Added
+
+- Friendly Team Projects setup: display-name-first flow with optional advanced self-hosted backend configuration.
+- Hosted backend support via `TEAM_PROJECTS_SUPABASE_URL` and `TEAM_PROJECTS_SUPABASE_ANON_KEY` environment variables.
+- Shared task editor with full task fields (title, notes, due date, priority, recurrence, assignee).
+- Task board filters by project and status.
+- Realtime IPC cleanup with debounced refresh and per-workspace channel management.
+- `teamSetDisplayName` IPC method for display-name-only configuration.
+
+### Changed
+
+- Team Projects copy uses user-facing terms (workspace, invite code, shared tasks) instead of technical terms (Supabase, anon key, backend).
+- Performance optimization: project lookup map and memoized filtered tasks to avoid repeated find calls.
+- Visual hardening: added proper spacing to workspace items with dedicated CSS.
+- Security verification: confirmed no Supabase credentials exposed in normal UI; all team IPC handlers validate with Zod; trusted sender checks in place.
+
+### Fixed
+
+- Workspace items now have proper spacing between them.
+
 ## [2.0.0] - 2026-05-13
 
 First "stable" milestone after the rapid 1.4.x → 1.7.x iteration phase. No breaking user-facing behavior versus 1.7.1; the major bump signals the end of that exploration phase and the start of a more disciplined release cadence (see `RELEASING.md`). Skips over a stray `v2.1.8` test tag that was never publicly distributed.

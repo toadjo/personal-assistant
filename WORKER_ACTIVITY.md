@@ -64,6 +64,19 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npm test -- src/renderer/components/panels/ProjectsPanel.test.tsx`, `npm test -- src/renderer/hooks/team src/main/team src/main/ipc`, `npm run check:preload-ipc`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run test:smoke`, `npm run test:preload-electron`
 - Next action: None; hardening complete and verified.
 
+## 2026-05-11: Pre-2.1 Visual QA
+
+- Files touched: `src/renderer/components/panels/ProjectsPanel.tsx`, `src/renderer/components/panels/ProjectsPanel.css`
+- Changes: Added ProjectsPanel.css with proper spacing for workspace items, workspace context, workspace switch form, task list, and project list.
+- Checks run: `npm test -- src/renderer/components/panels/ProjectsPanel.test.tsx`, `npm run typecheck`, `npm run lint`
+- Next action: None; visual fix verified.
+
+## 2026-05-15: Prepare v2.1.0 Release
+
+- Files touched: `package.json`, `CHANGELOG.md`
+- Changes: Bumped version from 2.0.1 to 2.1.0; added v2.1.0 entry to CHANGELOG.md with Team Projects UX and setup highlights (friendly display-name-first setup, shared task editor, task board filters, realtime IPC cleanup, visual hardening).
+- Next action: Run release verification, commit, tag, and push.
+
 ## 2026-05-11: Local Personal Automations (v1.4.6)
 
 - Files touched: `src/shared/types.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/services/automation.ts`, `src/main/services/automation.test.ts`, `src/main/ipc/automation/formatActionLabel.ts`, `src/main/preload.ts`, `src/renderer/components/forms/RuleForm.tsx`, `src/renderer/components/forms/RuleForm.test.tsx`, `src/renderer/components/panels/AutomationRulesPanel.tsx`
