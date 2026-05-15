@@ -22,6 +22,7 @@ import { ThemeSelect } from "./layout/ThemeSelect";
 import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
 import { InboxPanel } from "./panels/InboxPanel";
+import { WorkItemDetailDrawer } from "./WorkItemDetailDrawer";
 import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
@@ -29,12 +30,14 @@ import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
+import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 
 export function AssistantShell(): JSX.Element {
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [selectedWorkItem, setSelectedWorkItem] = useState<UnifiedWorkItem | null>(null);
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -125,6 +128,16 @@ export function AssistantShell(): JSX.Element {
       setLastSeenAt(new Date().toISOString());
     }
   }, [data.isRefreshing]);
+
+  // Close drawer if selected item is no longer in inbox after data refresh
+  useEffect(() => {
+    if (selectedWorkItem) {
+      const itemExists = inbox.unifiedItems.some((item) => item.id === selectedWorkItem.id);
+      if (!itemExists) {
+        setSelectedWorkItem(null);
+      }
+    }
+  }, [inbox.unifiedItems, selectedWorkItem]);
 
   const handleMarkSeen = () => {
     setLastSeenAt(new Date().toISOString());
@@ -380,6 +393,7 @@ export function AssistantShell(): JSX.Element {
             convertNoteToTask={inbox.convertNoteToTask}
             convertNoteToReminder={inbox.convertNoteToReminder}
             sendTaskToTeam={inbox.sendTaskToTeam}
+            onOpenItem={setSelectedWorkItem}
             onShowSuccess={ui.showSuccess}
             onError={ui.reportError}
           />
@@ -444,6 +458,30 @@ export function AssistantShell(): JSX.Element {
             </div>
           </div>
         </>
+      )}
+
+      {selectedWorkItem && (
+        <WorkItemDetailDrawer
+          item={selectedWorkItem}
+          onClose={() => setSelectedWorkItem(null)}
+          onCompleteTask={tasks.completeById}
+          onCompleteReminder={reminders.completeById}
+          onSnoozeReminder={(id, minutes) => reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)}
+          onDeleteTask={tasks.deleteById}
+          onDeleteReminder={reminders.deleteById}
+          onDeleteNote={(id) => memos.deleteNote(id, "Item")}
+          onUpdateNote={(id, title, content) => memos.updateNote({ id, title, content })}
+          onUpdateTask={(id, title, notes) => tasks.saveTask({ id, title, notes, dueAt: null, priority: "normal", recurrence: "none" })}
+          onUpdateReminder={(_id, _text, _dueAt) => {
+            // Reminder update not currently exposed through workspace
+            ui.setStatus("Reminder editing not yet supported in unified drawer.");
+            return Promise.resolve();
+          }}
+          onConvertNoteToTask={inbox.convertNoteToTask}
+          onConvertNoteToReminder={inbox.convertNoteToReminder}
+          onShowSuccess={ui.showSuccess}
+          onError={ui.reportError}
+        />
       )}
     </main>
   );

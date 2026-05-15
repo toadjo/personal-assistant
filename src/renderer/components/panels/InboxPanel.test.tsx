@@ -129,4 +129,61 @@ describe("InboxPanel", () => {
     const convertButtons = buttons.filter((btn) => btn.getAttribute("aria-label")?.includes("Convert"));
     expect(convertButtons.length).toBeGreaterThan(0);
   });
+
+  it("clicking a visible item calls onOpenItem", () => {
+    const onOpenItem = vi.fn();
+    const needsSorting = [makeUnifiedItem({ source: "local-note", label: "Meeting notes" })];
+
+    render(
+      <InboxPanel
+        unifiedItems={[]}
+        needsSorting={needsSorting}
+        createQuickNote={vi.fn()}
+        createQuickTask={vi.fn()}
+        createQuickReminder={vi.fn()}
+        convertNoteToTask={vi.fn()}
+        convertNoteToReminder={vi.fn()}
+        sendTaskToTeam={vi.fn()}
+        onOpenItem={onOpenItem}
+      />
+    );
+
+    // Find the item row button and click it
+    const itemButtons = screen.getAllByRole("button");
+    const itemRowButton = itemButtons.find((btn) => btn.textContent?.includes("Meeting notes"));
+    expect(itemRowButton).toBeDefined();
+    itemRowButton?.click();
+
+    expect(onOpenItem).toHaveBeenCalledTimes(1);
+    expect(onOpenItem).toHaveBeenCalledWith(expect.objectContaining({ label: "Meeting notes" }));
+  });
+
+  it("convert action does not accidentally call onOpenItem", () => {
+    const onOpenItem = vi.fn();
+    const convertNoteToTask = vi.fn();
+    const needsSorting = [makeUnifiedItem({ source: "local-note", label: "Meeting notes" })];
+
+    render(
+      <InboxPanel
+        unifiedItems={[]}
+        needsSorting={needsSorting}
+        createQuickNote={vi.fn()}
+        createQuickTask={vi.fn()}
+        createQuickReminder={vi.fn()}
+        convertNoteToTask={convertNoteToTask}
+        convertNoteToReminder={vi.fn()}
+        sendTaskToTeam={vi.fn()}
+        onOpenItem={onOpenItem}
+      />
+    );
+
+    // Find the convert button and click it
+    const buttons = screen.getAllByRole("button");
+    const convertButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Convert to task");
+    expect(convertButton).toBeDefined();
+    convertButton?.click();
+
+    expect(convertNoteToTask).toHaveBeenCalledTimes(1);
+    expect(onOpenItem).not.toHaveBeenCalled();
+  });
 });

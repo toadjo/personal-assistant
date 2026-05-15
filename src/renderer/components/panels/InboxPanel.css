@@ -58,6 +58,23 @@
   border-bottom: none;
 }
 
+.itemRowButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.itemRowButton:hover {
+  background: var(--input-background);
+  border-radius: 4px;
+}
+
 .itemIcon {
   display: flex;
   align-items: center;

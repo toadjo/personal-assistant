@@ -28,6 +28,7 @@ type Props = {
   convertNoteToTask: (noteId: string) => Promise<void>;
   convertNoteToReminder: (noteId: string) => Promise<void>;
   sendTaskToTeam: (taskId: string, projectId: string) => Promise<void>;
+  onOpenItem?: (item: UnifiedWorkItem) => void;
   onShowSuccess?: (message: string) => void;
   onError?: (message: string) => void;
 };
@@ -41,6 +42,7 @@ export const InboxPanel = memo(function InboxPanel({
   convertNoteToTask,
   convertNoteToReminder,
   sendTaskToTeam: _sendTaskToTeam,
+  onOpenItem,
   onShowSuccess,
   onError
 }: Props): JSX.Element {
@@ -137,29 +139,35 @@ export const InboxPanel = memo(function InboxPanel({
                   const Icon = getIconForSource(item.source);
                   return (
                     <li key={item.id} className="itemRow">
-                      <div className="itemIcon"><Icon size={16} /></div>
-                    <div className="itemContent">
-                      <div className="itemLabel">{item.label}</div>
-                      <div className="itemMeta">
-                        {getSourceLabel(item.source)}
-                        {item.assigneeDisplayName && ` · ${item.assigneeDisplayName}`}
-                      </div>
-                    </div>
-                    {item.source === "local-note" && (
-                      <div className="itemActions">
-                        <IconButton
-                          icon={ListTodo}
-                          label="Convert to task"
-                          onClick={() => void convertNoteToTask(item.sourceId)}
-                        />
-                        <IconButton
-                          icon={Bell}
-                          label="Convert to reminder"
-                          onClick={() => void convertNoteToReminder(item.sourceId)}
-                        />
-                      </div>
-                    )}
-                  </li>
+                      <button
+                        type="button"
+                        className="itemRowButton"
+                        onClick={() => onOpenItem?.(item)}
+                      >
+                        <div className="itemIcon"><Icon size={16} /></div>
+                        <div className="itemContent">
+                          <div className="itemLabel">{item.label}</div>
+                          <div className="itemMeta">
+                            {getSourceLabel(item.source)}
+                            {item.assigneeDisplayName && ` · ${item.assigneeDisplayName}`}
+                          </div>
+                        </div>
+                      </button>
+                      {item.source === "local-note" && (
+                        <div className="itemActions">
+                          <IconButton
+                            icon={ListTodo}
+                            label="Convert to task"
+                            onClick={() => void convertNoteToTask(item.sourceId)}
+                          />
+                          <IconButton
+                            icon={Bell}
+                            label="Convert to reminder"
+                            onClick={() => void convertNoteToReminder(item.sourceId)}
+                          />
+                        </div>
+                      )}
+                    </li>
                   );
                 })}
               </ul>
@@ -175,16 +183,22 @@ export const InboxPanel = memo(function InboxPanel({
                   const Icon = getIconForSource(item.source);
                   return (
                     <li key={item.id} className="itemRow">
-                      <div className="itemIcon"><Icon size={16} /></div>
-                    <div className="itemContent">
-                      <div className="itemLabel">{item.label}</div>
-                      <div className="itemMeta">
-                        {getSourceLabel(item.source)}
-                        {item.priority !== "context" && ` · ${item.priority}`}
-                        {item.dueAt && ` · ${new Date(item.dueAt).toLocaleDateString()}`}
-                      </div>
-                    </div>
-                  </li>
+                      <button
+                        type="button"
+                        className="itemRowButton"
+                        onClick={() => onOpenItem?.(item)}
+                      >
+                        <div className="itemIcon"><Icon size={16} /></div>
+                        <div className="itemContent">
+                          <div className="itemLabel">{item.label}</div>
+                          <div className="itemMeta">
+                            {getSourceLabel(item.source)}
+                            {item.priority !== "context" && ` · ${item.priority}`}
+                            {item.dueAt && ` · ${new Date(item.dueAt).toLocaleDateString()}`}
+                          </div>
+                        </div>
+                      </button>
+                    </li>
                   );
                 })}
                 {unifiedItems.length > 10 && (
