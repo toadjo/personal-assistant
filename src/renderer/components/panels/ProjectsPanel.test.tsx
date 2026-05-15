@@ -732,6 +732,192 @@ describe("ProjectsPanel", () => {
     });
   });
 
+  describe("Task editor", () => {
+    const baseWorkspace: TeamWorkspace = {
+      id: "workspace-1",
+      name: "Marketing Team",
+      workspaceKey: "ABCD2345EFGH6789",
+      createdAt: "2024-01-01T00:00:00Z",
+      createdBy: "user-1"
+    };
+    const baseProjects: TeamProject[] = [
+      {
+        id: "project-1",
+        workspaceId: "workspace-1",
+        name: "Q1 Campaign",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1"
+      }
+    ];
+    const baseTask: TeamProjectTask = {
+      id: "task-1",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      title: "Design logo",
+      notes: "Create a modern logo",
+      dueAt: "2024-01-15T00:00:00Z",
+      priority: "high",
+      status: "open",
+      recurrence: "none",
+      assigneeDisplayName: "Alice",
+      createdAt: "2024-01-01T00:00:00Z",
+      createdBy: "user-1",
+      updatedAt: "2024-01-01T00:00:00Z",
+      updatedBy: "user-1"
+    };
+
+    beforeEach(() => {
+      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.activeWorkspace = baseWorkspace;
+      mockTeamState.projects = baseProjects;
+      mockTeamState.tasks = [baseTask];
+    });
+
+    it("clicking Edit opens the editor with existing task values", async () => {
+      render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      expect(screen.getByLabelText("Title")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("Design logo")).toBeInTheDocument();
+      expect(screen.getByLabelText("Notes")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("Create a modern logo")).toBeInTheDocument();
+    });
+
+    it("saving changed title and notes calls team.updateTask with the merged task", async () => {
+      render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      const titleInput = screen.getByLabelText("Title");
+      await userEvent.clear(titleInput);
+      await userEvent.type(titleInput, "Updated title");
+
+      const notesInput = screen.getByLabelText("Notes");
+      await userEvent.clear(notesInput);
+      await userEvent.type(notesInput, "Updated notes");
+
+      const saveButton = screen.getByText("Save");
+      await userEvent.click(saveButton);
+
+      expect(mockTeamState.updateTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Updated title",
+          notes: "Updated notes"
+        })
+      );
+    });
+
+    it("saving changed priority, recurrence, assignee, due date, and status sends the updated values", async () => {
+      render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      const prioritySelect = screen.getByLabelText("Priority");
+      await userEvent.selectOptions(prioritySelect, "low");
+
+      const recurrenceSelect = screen.getByLabelText("Recurrence");
+      await userEvent.selectOptions(recurrenceSelect, "daily");
+
+      const dueAtInput = screen.getByLabelText("Due Date");
+      await userEvent.clear(dueAtInput);
+      await userEvent.type(dueAtInput, "2024-02-01T10:00");
+
+      const assigneeInput = screen.getByLabelText("Assignee");
+      await userEvent.clear(assigneeInput);
+      await userEvent.type(assigneeInput, "Bob");
+
+      const statusSelect = screen.getByLabelText("Status");
+      await userEvent.selectOptions(statusSelect, "done");
+
+      const saveButton = screen.getByText("Save");
+      await userEvent.click(saveButton);
+
+      expect(mockTeamState.updateTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          priority: "low",
+          recurrence: "daily",
+          assigneeDisplayName: "Bob",
+          status: "done"
+        })
+      );
+    });
+
+    it("cancel closes the editor and does not call team.updateTask", async () => {
+      render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      const titleInput = screen.getByLabelText("Title");
+      await userEvent.clear(titleInput);
+      await userEvent.type(titleInput, "Changed title");
+
+      const cancelButton = screen.getByText("Cancel");
+      await userEvent.click(cancelButton);
+
+      expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+      expect(mockTeamState.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("empty title shows validation error and does not save", async () => {
+      render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      const titleInput = screen.getByLabelText("Title");
+      await userEvent.clear(titleInput);
+
+      const saveButton = screen.getByText("Save");
+      await userEvent.click(saveButton);
+
+      expect(screen.getByText("Task title is required")).toBeInTheDocument();
+      expect(mockTeamState.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("recurrence without due date shows validation error and does not save", async () => {
+      render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      const dueAtInput = screen.getByLabelText("Due Date");
+      await userEvent.clear(dueAtInput);
+
+      const recurrenceSelect = screen.getByLabelText("Recurrence");
+      await userEvent.selectOptions(recurrenceSelect, "daily");
+
+      const saveButton = screen.getByText("Save");
+      await userEvent.click(saveButton);
+
+      expect(screen.getByText("Recurring tasks require a due date")).toBeInTheDocument();
+      expect(mockTeamState.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("editor closes if the selected task is no longer present", async () => {
+      const { rerender } = render(<ProjectsPanel />);
+
+      const editButton = screen.getByTitle("Edit task");
+      await userEvent.click(editButton);
+
+      expect(screen.getByLabelText("Title")).toBeInTheDocument();
+
+      // Simulate task being removed
+      mockTeamState.tasks = [];
+      vi.mocked(useTeamState).mockReturnValue(mockTeamState);
+
+      // Re-render to trigger useEffect
+      rerender(<ProjectsPanel />);
+
+      // Editor should be closed
+      expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+    });
+  });
+
   describe("Realtime", () => {
     const baseWorkspace: TeamWorkspace = {
       id: "workspace-1",

@@ -131,3 +131,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Added project filter (All projects + project names) and status filter (Open, Done, All) with default to Open. Added task filtering logic. Improved task row rendering with project name, assignee, priority chip, due date, status chip. Added contextual empty states (no tasks vs no tasks match filters). Added project filter reset when selected project disappears. Added CSS for filters (taskFilters, taskFilter, inputSmall) and task metadata (taskPriority, taskDue). Added 7 filter tests.
 - Checks run: `npm test -- src/renderer/components/panels/ProjectsPanel.test.tsx`, `npm run typecheck`, `npm run lint`, `npm test`
 - Next action: Commit and continue from clean main.
+
+## 2026-05-15: Team Projects shared task editor
+
+- Files touched: `src/renderer/components/panels/ProjectsPanel.tsx`, `src/renderer/components/panels/ProjectsPanel.test.tsx`, `src/renderer/styles.css`, `WORKER_ACTIVITY.md`
+- Changes: Added compact in-panel editor for shared tasks with Edit button on each task row. Editor supports editing title, notes, due date, priority, recurrence, assignee display name, and status. Added editor state (editingTaskId, draft fields, isSaving, validation error). Implemented save handler with validation (title required, recurrence requires due date). Implemented cancel handler to discard changes. Added editor close logic when selected task disappears. Added CSS for taskEditForm and taskActions. Added 7 editor tests.
+- Checks run: `npm test -- src/renderer/components/panels/ProjectsPanel.test.tsx`, `npm run typecheck`, `npm run lint`, `npm test`
+- Next action: Commit and continue from clean main.

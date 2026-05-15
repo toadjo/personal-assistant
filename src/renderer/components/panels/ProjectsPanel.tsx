@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Users, Plus, Key, Loader2, CheckCircle2, Circle } from "lucide-react";
+import { Users, Plus, Key, Loader2, CheckCircle2, Circle, Pencil } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { StatusBanner } from "../layout/StatusBanner";
 import { EmptyState } from "../ui/EmptyState";
@@ -38,6 +38,16 @@ export function ProjectsPanel(): JSX.Element {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<"open" | "done" | "all">("open");
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState("");
+  const [editTaskNotes, setEditTaskNotes] = useState("");
+  const [editTaskDueAt, setEditTaskDueAt] = useState("");
+  const [editTaskPriority, setEditTaskPriority] = useState<"low" | "normal" | "high">("normal");
+  const [editTaskRecurrence, setEditTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
+  const [editTaskAssigneeDisplayName, setEditTaskAssigneeDisplayName] = useState("");
+  const [editTaskStatus, setEditTaskStatus] = useState<"open" | "done">("open");
+  const [isSaving, setIsSaving] = useState(false);
+  const [editValidationError, setEditValidationError] = useState<string | null>(null);
 
   // Load config on mount
   useEffect(() => {
@@ -69,6 +79,14 @@ export function ProjectsPanel(): JSX.Element {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [team.projects]);
+
+  // Close editor if selected task no longer exists
+  useEffect(() => {
+    if (editingTaskId && !team.tasks.find(t => t.id === editingTaskId)) {
+      setEditingTaskId(null);
+      setEditValidationError(null);
+    }
+  }, [team.tasks, editingTaskId]);
 
   // Start realtime when an active workspace is visible; debounce refreshes and stop on unmount.
   const realtimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -219,6 +237,62 @@ export function ProjectsPanel(): JSX.Element {
   const handleToggleTaskStatus = async (task: TeamProjectTask) => {
     const newStatus = task.status === "open" ? "done" : "open";
     await team.updateTask({ ...task, status: newStatus });
+  };
+
+  const handleEditTask = (task: TeamProjectTask) => {
+    setEditingTaskId(task.id);
+    setEditTaskTitle(task.title);
+    setEditTaskNotes(task.notes || "");
+    setEditTaskDueAt(task.dueAt ? new Date(task.dueAt).toISOString().slice(0, 16) : "");
+    setEditTaskPriority(task.priority);
+    setEditTaskRecurrence(task.recurrence);
+    setEditTaskAssigneeDisplayName(task.assigneeDisplayName || "");
+    setEditTaskStatus(task.status);
+    setEditValidationError(null);
+  };
+
+  const handleSaveEdit = async () => {
+    setEditValidationError(null);
+    const task = team.tasks.find(t => t.id === editingTaskId);
+    if (!task) return;
+
+    // Validate required fields
+    if (!editTaskTitle.trim()) {
+      setEditValidationError("Task title is required");
+      return;
+    }
+
+    // Validate recurrence requires due date
+    if (editTaskRecurrence !== "none" && !editTaskDueAt.trim()) {
+      setEditValidationError("Recurring tasks require a due date");
+      return;
+    }
+
+    // Convert datetime-local to ISO string if provided
+    const dueAtIso = editTaskDueAt.trim() ? new Date(editTaskDueAt).toISOString() : null;
+
+    setIsSaving(true);
+    try {
+      await team.updateTask({
+        ...task,
+        title: editTaskTitle,
+        notes: editTaskNotes,
+        dueAt: dueAtIso,
+        priority: editTaskPriority,
+        recurrence: editTaskRecurrence,
+        assigneeDisplayName: editTaskAssigneeDisplayName || null,
+        status: editTaskStatus
+      });
+      setEditingTaskId(null);
+      setEditValidationError(null);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setEditValidationError(null);
   };
 
   // Filter tasks based on selected project and status
@@ -662,6 +736,110 @@ export function ProjectsPanel(): JSX.Element {
               </div>
             </div>
           )}
+          {editingTaskId && (
+            <div className="taskEditForm">
+              {editValidationError && <StatusBanner status="" error={editValidationError} />}
+              <div className="formGroup">
+                <label htmlFor="editTaskTitle">Title</label>
+                <input
+                  id="editTaskTitle"
+                  type="text"
+                  placeholder="Task title"
+                  value={editTaskTitle}
+                  onChange={(e) => setEditTaskTitle(e.target.value)}
+                  className="input"
+                />
+              </div>
+              <div className="formGroup">
+                <label htmlFor="editTaskNotes">Notes</label>
+                <textarea
+                  id="editTaskNotes"
+                  placeholder="Task notes"
+                  value={editTaskNotes}
+                  onChange={(e) => setEditTaskNotes(e.target.value)}
+                  className="input"
+                />
+              </div>
+              <div className="formGroup">
+                <label htmlFor="editTaskDueAt">Due Date</label>
+                <input
+                  id="editTaskDueAt"
+                  type="datetime-local"
+                  value={editTaskDueAt}
+                  onChange={(e) => setEditTaskDueAt(e.target.value)}
+                  className="input"
+                />
+              </div>
+              <div className="formGroup">
+                <label htmlFor="editTaskPriority">Priority</label>
+                <select
+                  id="editTaskPriority"
+                  value={editTaskPriority}
+                  onChange={(e) => setEditTaskPriority(e.target.value as "low" | "normal" | "high")}
+                  className="input"
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div className="formGroup">
+                <label htmlFor="editTaskRecurrence">Recurrence</label>
+                <select
+                  id="editTaskRecurrence"
+                  value={editTaskRecurrence}
+                  onChange={(e) => setEditTaskRecurrence(e.target.value as "none" | "daily" | "weekly" | "monthly")}
+                  className="input"
+                >
+                  <option value="none">None</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              <div className="formGroup">
+                <label htmlFor="editTaskAssignee">Assignee</label>
+                <input
+                  id="editTaskAssignee"
+                  type="text"
+                  placeholder="Assignee name"
+                  value={editTaskAssigneeDisplayName}
+                  onChange={(e) => setEditTaskAssigneeDisplayName(e.target.value)}
+                  className="input"
+                />
+              </div>
+              <div className="formGroup">
+                <label htmlFor="editTaskStatus">Status</label>
+                <select
+                  id="editTaskStatus"
+                  value={editTaskStatus}
+                  onChange={(e) => setEditTaskStatus(e.target.value as "open" | "done")}
+                  className="input"
+                >
+                  <option value="open">Open</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+              <div className="formActions">
+                <button
+                  type="button"
+                  className="button buttonPrimary"
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                >
+                  {isSaving ? <Loader2 size={16} className="spin" /> : "Save"}
+                </button>
+                <button
+                  type="button"
+                  className="button buttonSecondary"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
           {showCreateTask && (
             <div className="taskCreateForm">
               <div className="formGroup">
@@ -789,14 +967,24 @@ export function ProjectsPanel(): JSX.Element {
                         <span className={`taskStatus ${task.status}`}>{task.status}</span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="button buttonSecondary buttonSmall"
-                      onClick={() => void handleToggleTaskStatus(task)}
-                      title={task.status === "open" ? "Mark as done" : "Mark as open"}
-                    >
-                      {task.status === "open" ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-                    </button>
+                    <div className="taskActions">
+                      <button
+                        type="button"
+                        className="button buttonSecondary buttonSmall"
+                        onClick={() => handleEditTask(task)}
+                        title="Edit task"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="button buttonSecondary buttonSmall"
+                        onClick={() => void handleToggleTaskStatus(task)}
+                        title={task.status === "open" ? "Mark as done" : "Mark as open"}
+                      >
+                        {task.status === "open" ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
