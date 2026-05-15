@@ -1,5 +1,5 @@
 /**
- * Command examples component (v1.2.7).
+ * Command examples component.
  * Shows "Try these commands" section with context-aware examples based on Home Assistant readiness.
  */
 

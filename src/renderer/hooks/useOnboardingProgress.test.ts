@@ -3,7 +3,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { useOnboardingProgress } from "./useOnboardingProgress";
 import { STORAGE_ONBOARDING_PROGRESS } from "../constants/storageKeys";
 
-describe("useOnboardingProgress (v1.2.7)", () => {
+describe("useOnboardingProgress", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CommandExamples } from "./CommandExamples";
 
-describe("CommandExamples (v1.2.7)", () => {
+describe("CommandExamples", () => {
   it("shows base examples when HA is not ready", () => {
     const onRunPreset = vi.fn();
     render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);

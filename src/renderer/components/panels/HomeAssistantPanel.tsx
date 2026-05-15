@@ -91,7 +91,7 @@ export function HomeAssistantPanel({
   return (
     <section className="panel addOnPanel">
       <PanelHeader icon={Home} title="Home Assistant" />
-      {/* v1.2.7 visible connection state summary */}
+      {/* visible connection state summary */}
       {(() => {
         const state = getConnectionState(hasHaUrl, haReady, devices);
         const summary = getConnectionSummary(state, devices);

@@ -1,5 +1,5 @@
 /**
- * Persistent success feedback banner (v1.2.7).
+ * Persistent success feedback banner.
  * Displays success messages that stay visible longer than transient status updates.
  */
 

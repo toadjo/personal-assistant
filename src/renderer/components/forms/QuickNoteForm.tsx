@@ -25,7 +25,7 @@ export function QuickNoteForm({ onDone, onError, onShowSuccess, onCreated }: Pro
       setTitle("");
       setContent("");
       await onDone();
-      // v1.2.7 persistent success feedback
+      // persistent success feedback
       onShowSuccess?.("Note created");
       onCreated?.();
     } catch (err) {

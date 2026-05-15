@@ -4,7 +4,7 @@
  * Ownership:
  * - Status/error messaging and auto-clear timing
  * - Theme preference
- * - Onboarding visibility (v1.2.7: guided first-run flow)
+ * - Onboarding visibility (guided first-run flow)
  * - Desk window actions (hide)
  *
  * Dependencies:
@@ -37,7 +37,7 @@ export type DeskUiState = {
   error: string;
   setError: (value: string) => void;
   reportError: (err: unknown) => void;
-  // v1.2.7 persistent success feedback
+  // persistent success feedback
   successes: SuccessMessage[];
   showSuccess: (message: string) => void;
   dismissSuccess: (id: string) => void;
@@ -45,7 +45,7 @@ export type DeskUiState = {
   onboarding: {
     show: boolean;
     setShow: Dispatch<SetStateAction<boolean>>;
-    // v1.2.7 guided onboarding
+    // guided onboarding
     guidedState: OnboardingState;
     currentStep: OnboardingStep | null;
     isComplete: boolean;
@@ -94,7 +94,7 @@ export function useDeskUiState(): DeskUiState {
     error,
     setError,
     reportError,
-    // v1.2.7 persistent success feedback
+    // persistent success feedback
     successes: persistentSuccess.successes,
     showSuccess: persistentSuccess.showSuccess,
     dismissSuccess: persistentSuccess.dismissSuccess,
@@ -102,7 +102,7 @@ export function useDeskUiState(): DeskUiState {
     onboarding: {
       show: showOnboarding,
       setShow: setShowOnboarding,
-      // v1.2.7 guided onboarding
+      // guided onboarding
       guidedState: onboardingProgress.state,
       currentStep: onboardingProgress.currentStep,
       isComplete: onboardingProgress.isComplete,

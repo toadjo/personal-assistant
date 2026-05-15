@@ -1,5 +1,5 @@
 /**
- * Guided first-run flow component (v1.2.7).
+ * Guided first-run flow component.
  * Walks users through creating their first note, reminder, and optionally connecting Home Assistant.
  */
 

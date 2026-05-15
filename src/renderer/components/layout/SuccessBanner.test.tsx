@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SuccessBanner } from "./SuccessBanner";
 
-describe("SuccessBanner (v1.2.7)", () => {
+describe("SuccessBanner", () => {
   it("renders nothing when no success messages", () => {
     const { container } = render(<SuccessBanner successes={[]} onDismiss={vi.fn()} onDismissAll={vi.fn()} />);
     expect(container.firstChild).toBeNull();

@@ -27,7 +27,7 @@ export function ReminderForm({ onDone, onError, onShowSuccess, onCreated }: Prop
       setText("");
       setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
       await onDone();
-      // v1.2.7 persistent success feedback
+      // persistent success feedback
       onShowSuccess?.("Reminder created");
       onCreated?.();
     } catch (err) {

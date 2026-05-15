@@ -1,5 +1,5 @@
 /**
- * Hook for managing persistent success feedback (v1.2.7).
+ * Hook for managing persistent success feedback.
  * Success messages that stay visible longer than transient status updates.
  */
 

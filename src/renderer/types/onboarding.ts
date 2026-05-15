@@ -1,5 +1,5 @@
 /**
- * Onboarding progress tracking for the guided first-run flow (v1.2.7).
+ * Onboarding progress tracking for the guided first-run flow.
  */
 
 export type OnboardingStep = "note" | "reminder" | "homeAssistant";

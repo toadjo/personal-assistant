@@ -2,13 +2,15 @@
 
 ## Overview
 
-Electron desktop app: **main** (Node/Electron) + **renderer** (React/Vite) + **SQLite** (local, `better-sqlite3`). Two windows: **Desk** (daily work) and **Household** (automation/HA).
+Electron desktop app: **main** (Node/Electron) + **renderer** (React/Vite) + **SQLite** (local, `better-sqlite3`). Two windows: **Desk** (daily work) and **Household** (automation/HA). Optional **Team Projects** mode for shared task collaboration via Supabase.
 
 ## Directory Map
 
 ```
 src/main          Electron main process: window, IPC handlers, security, DB services
+src/main/team     Team Projects: Supabase client, workspaces, projects, tasks, realtime, config, session storage
 src/renderer      React app: components, hooks, styles, pages
+src/renderer/components/panels/ProjectsPanel.tsx  Team Projects renderer panel
 src/shared        Types, IPC channels, Zod schemas used by both processes
 scripts           Build/preload IPC generation helpers
 tests             E2E tests (Playwright)
@@ -35,6 +37,15 @@ tests             E2E tests (Playwright)
 2. **Migrations** run on startup (`src/main/db/migrate.ts`)
 3. **Renderer hooks** (`src/renderer/hooks/data/`) fetch via IPC and cache in React state
 4. **Derived state** built in composition hooks (`useDeskDataState`, `useDeskHomeAssistantState`)
+
+## Team Projects
+
+Team Projects adds optional Supabase-based collaboration:
+
+- **Backend modes**: Hosted (environment-configured Supabase) or manual self-hosted (user-provided Supabase URL/anon key)
+- **Main-process services** (`src/main/team/`): Supabase client, workspace/project/task management, realtime subscriptions, config, session storage
+- **Renderer panel** (`src/renderer/components/panels/ProjectsPanel.tsx`): UI for setup, workspace/project/task management, filters, editor
+- **Security**: Supabase anon key never exposed to renderer; all team IPC handlers validate with Zod and trusted sender checks; session storage uses safeStorage when available
 
 ## UI Conventions
 

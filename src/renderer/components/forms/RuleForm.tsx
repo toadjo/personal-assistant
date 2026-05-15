@@ -157,7 +157,7 @@ export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JS
             } as Parameters<typeof window.assistantApi.createRule>[0]);
             resetForm();
             await onDone();
-            // v1.2.7 persistent success feedback
+            // persistent success feedback
             onShowSuccess?.("Rule created");
           } catch (err) {
             onError(getAssistantInvokeErrorMessage(err));

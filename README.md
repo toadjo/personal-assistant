@@ -49,7 +49,7 @@ This runs the Vite dev server for the React UI, compiles the Electron **main** a
 
 The app stores the selected theme in browser localStorage under `assistant-theme`.
 
-v1.3.0 defaults new users to the Glass theme, but existing dev machines may keep an older saved theme. To preview the new-user default, open DevTools in the Electron window and run:
+New users default to the Glass theme, but existing dev machines may keep an older saved theme. To preview the new-user default, open DevTools in the Electron window and run:
 
 ```js
 localStorage.removeItem("assistant-theme");

@@ -77,6 +77,17 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Bumped version from 2.0.1 to 2.1.0; added v2.1.0 entry to CHANGELOG.md with Team Projects UX and setup highlights (friendly display-name-first setup, shared task editor, task board filters, realtime IPC cleanup, visual hardening).
 - Next action: Run release verification, commit, tag, and push.
 
+## 2026-05-15: Whole App Health Audit
+
+- Files touched: `APP_AUDIT_2026-05-15.md` (created)
+- Changes: Conducted comprehensive health audit across baseline verification, security review, and performance review.
+- Baseline verification: All automated checks passed (check:preload-ipc, typecheck, lint, test: 567 tests, build, test:smoke, test:preload-electron); npm audit found 12 vulnerabilities (2 low, 10 high) all in Electron/build dependencies, not app code.
+- Security review: Confirmed all IPC handlers use registerInvoke with assertSender; preload.ts exposes only intended APIs; Team session and HA tokens use safeStorage when available; logs do not include sensitive data; backup import validates payloads.
+- Performance review: Team Projects already optimized in hardening pass; build size reasonable; no obvious new hotspots or quick wins identified.
+- Risk register: Documented P2 risks for Electron build dependencies (accepted), Team session plaintext fallback (accepted), HA token plaintext fallback (accepted).
+- Improvement backlog: P1 items for documentation updates (Team Projects docs, manual release fallback); P2 items for code cleanup and test coverage.
+- Next action: Implement recommended commits in priority order (documentation updates, code cleanup, test coverage).
+
 ## 2026-05-11: Local Personal Automations (v1.4.6)
 
 - Files touched: `src/shared/types.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/services/automation.ts`, `src/main/services/automation.test.ts`, `src/main/ipc/automation/formatActionLabel.ts`, `src/main/preload.ts`, `src/renderer/components/forms/RuleForm.tsx`, `src/renderer/components/forms/RuleForm.test.tsx`, `src/renderer/components/panels/AutomationRulesPanel.tsx`
