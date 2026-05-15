@@ -124,3 +124,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Fixed garbled text in Team Projects setup doc. Removed workspaceId from teamProjectCreateSchema and teamTaskCreateSchema (handlers get it from active config). Added assigneeDisplayName to teamTasksCreate ambient type. Removed unused list schemas. Added realtime IPC channels (teamRealtimeStart, teamRealtimeStop, teamDataUpdated) to enums, preload, and renderer ambient types. Fixed realtime test mock and handler-payload-contract test. Updated useTeamState and tests to not pass workspaceId.
 - Checks run: `npm run typecheck`, `npm run lint`, `npm test -- src/main/ipc src/main/preload-channels.test.ts`, `npm test -- src/main/team src/renderer/hooks/team src/renderer/components/panels/ProjectsPanel.test.tsx`
 - Next action: Commit and continue from clean main.
+
+## 2026-05-15: Team Projects task board filters
+
+- Files touched: `src/renderer/components/panels/ProjectsPanel.tsx`, `src/renderer/components/panels/ProjectsPanel.test.tsx`, `src/renderer/styles.css`, `WORKER_ACTIVITY.md`
+- Changes: Added project filter (All projects + project names) and status filter (Open, Done, All) with default to Open. Added task filtering logic. Improved task row rendering with project name, assignee, priority chip, due date, status chip. Added contextual empty states (no tasks vs no tasks match filters). Added project filter reset when selected project disappears. Added CSS for filters (taskFilters, taskFilter, inputSmall) and task metadata (taskPriority, taskDue). Added 7 filter tests.
+- Checks run: `npm test -- src/renderer/components/panels/ProjectsPanel.test.tsx`, `npm run typecheck`, `npm run lint`, `npm test`
+- Next action: Commit and continue from clean main.

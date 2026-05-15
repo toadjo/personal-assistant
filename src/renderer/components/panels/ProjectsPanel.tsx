@@ -36,6 +36,8 @@ export function ProjectsPanel(): JSX.Element {
   const [supabaseAnonKey, setSupabaseAnonKey] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<"open" | "done" | "all">("open");
 
   // Load config on mount
   useEffect(() => {
@@ -59,6 +61,14 @@ export function ProjectsPanel(): JSX.Element {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [team.activeWorkspace]);
+
+  // Reset project filter if selected project no longer exists
+  useEffect(() => {
+    if (selectedProjectId !== "all" && !team.projects.find(p => p.id === selectedProjectId)) {
+      setSelectedProjectId("all");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team.projects]);
 
   // Start realtime when an active workspace is visible; debounce refreshes and stop on unmount.
   const realtimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -210,6 +220,13 @@ export function ProjectsPanel(): JSX.Element {
     const newStatus = task.status === "open" ? "done" : "open";
     await team.updateTask({ ...task, status: newStatus });
   };
+
+  // Filter tasks based on selected project and status
+  const filteredTasks = team.tasks.filter((task) => {
+    const projectMatch = selectedProjectId === "all" || task.projectId === selectedProjectId;
+    const statusMatch = selectedStatus === "all" || task.status === selectedStatus;
+    return projectMatch && statusMatch;
+  });
 
   // Setup state: team mode not configured
   if (!team.config?.configured) {
@@ -614,6 +631,37 @@ export function ProjectsPanel(): JSX.Element {
               <Plus size={16} /> Add Task
             </button>
           </div>
+          {team.projects.length > 0 && (
+            <div className="taskFilters">
+              <div className="taskFilter">
+                <label htmlFor="projectFilter">Project:</label>
+                <select
+                  id="projectFilter"
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="input inputSmall"
+                >
+                  <option value="all">All projects</option>
+                  {team.projects.map((project) => (
+                    <option key={project.id} value={project.id}>{project.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="taskFilter">
+                <label htmlFor="statusFilter">Status:</label>
+                <select
+                  id="statusFilter"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value as "open" | "done" | "all")}
+                  className="input inputSmall"
+                >
+                  <option value="open">Open</option>
+                  <option value="done">Done</option>
+                  <option value="all">All</option>
+                </select>
+              </div>
+            </div>
+          )}
           {showCreateTask && (
             <div className="taskCreateForm">
               <div className="formGroup">
@@ -719,34 +767,39 @@ export function ProjectsPanel(): JSX.Element {
               </div>
             </div>
           )}
-          {team.tasks.length === 0 ? (
+          {filteredTasks.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="No Tasks"
-              description="Create tasks to collaborate with your team."
+              title={team.tasks.length === 0 ? "No Tasks" : "No Tasks Match Filters"}
+              description={team.tasks.length === 0 ? "Create tasks to collaborate with your team." : "No tasks match these filters."}
             />
           ) : (
             <div className="teamTaskList">
-              {team.tasks.map((task) => (
-                <div key={task.id} className="teamTaskItem">
-                  <div className="taskInfo">
-                    <div className="taskTitle">{task.title}</div>
-                    <div className="taskMeta">
-                      {task.projectId && <span className="taskProject">Project: {team.projects.find(p => p.id === task.projectId)?.name}</span>}
-                      {task.assigneeDisplayName && <span className="taskAssignee">Assignee: {task.assigneeDisplayName}</span>}
-                      <span className={`taskStatus ${task.status}`}>{task.status}</span>
+              {filteredTasks.map((task) => {
+                const project = team.projects.find(p => p.id === task.projectId);
+                return (
+                  <div key={task.id} className="teamTaskItem">
+                    <div className="taskInfo">
+                      <div className="taskTitle">{task.title}</div>
+                      <div className="taskMeta">
+                        {project && <span className="taskProject">{project.name}</span>}
+                        {task.assigneeDisplayName && <span className="taskAssignee">{task.assigneeDisplayName}</span>}
+                        <span className={`taskPriority ${task.priority}`}>{task.priority}</span>
+                        {task.dueAt && <span className="taskDue">{new Date(task.dueAt).toLocaleDateString()}</span>}
+                        <span className={`taskStatus ${task.status}`}>{task.status}</span>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      className="button buttonSecondary buttonSmall"
+                      onClick={() => void handleToggleTaskStatus(task)}
+                      title={task.status === "open" ? "Mark as done" : "Mark as open"}
+                    >
+                      {task.status === "open" ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="button buttonSecondary buttonSmall"
-                    onClick={() => void handleToggleTaskStatus(task)}
-                    title={task.status === "open" ? "Mark as done" : "Mark as open"}
-                  >
-                    {task.status === "open" ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

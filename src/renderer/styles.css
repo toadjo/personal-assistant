@@ -2168,6 +2168,65 @@ button:disabled {
   border: 1px solid var(--success-border);
 }
 
+.taskFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+}
+
+.taskFilter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.taskFilter label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--subtitle);
+  white-space: nowrap;
+}
+
+.inputSmall {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-height: 26px;
+}
+
+.taskPriority {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+  color: var(--muted);
+}
+
+.taskPriority.high {
+  background: color-mix(in srgb, var(--error-text) 10%, transparent);
+  color: var(--error-text);
+}
+
+.taskPriority.normal {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
+}
+
+.taskPriority.low {
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+  color: var(--muted);
+}
+
+.taskDue {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .taskCreateForm {
   display: flex;
   flex-direction: column;

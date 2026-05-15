@@ -488,7 +488,7 @@ describe("ProjectsPanel", () => {
       render(<ProjectsPanel />);
 
       expect(screen.getByText("Projects")).toBeInTheDocument();
-      expect(screen.getByText("Q1 Campaign")).toBeInTheDocument();
+      expect(screen.getAllByText("Q1 Campaign")).toHaveLength(2);
     });
 
     it("shows shared tasks when tasks exist", () => {
@@ -535,7 +535,7 @@ describe("ProjectsPanel", () => {
 
       expect(screen.getByText("Shared Tasks")).toBeInTheDocument();
       expect(screen.getByText("Design logo")).toBeInTheDocument();
-      expect(screen.getByText("Assignee: Alice")).toBeInTheDocument();
+      expect(screen.getByText("Alice")).toBeInTheDocument();
     });
 
     it("shows empty task state when no tasks", () => {
@@ -563,6 +563,172 @@ describe("ProjectsPanel", () => {
       render(<ProjectsPanel />);
 
       expect(screen.getByText("No Tasks")).toBeInTheDocument();
+    });
+  });
+
+  describe("Task board filters", () => {
+    const baseWorkspace: TeamWorkspace = {
+      id: "workspace-1",
+      name: "Marketing Team",
+      workspaceKey: "ABCD2345EFGH6789",
+      createdAt: "2024-01-01T00:00:00Z",
+      createdBy: "user-1"
+    };
+    const baseProjects: TeamProject[] = [
+      {
+        id: "project-1",
+        workspaceId: "workspace-1",
+        name: "Q1 Campaign",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1"
+      },
+      {
+        id: "project-2",
+        workspaceId: "workspace-1",
+        name: "Q2 Campaign",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1"
+      }
+    ];
+    const baseTasks: TeamProjectTask[] = [
+      {
+        id: "task-1",
+        workspaceId: "workspace-1",
+        projectId: "project-1",
+        title: "Design logo",
+        notes: "Create a modern logo",
+        dueAt: "2024-01-15T00:00:00Z",
+        priority: "high",
+        status: "open",
+        recurrence: "none",
+        assigneeDisplayName: "Alice",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedAt: "2024-01-01T00:00:00Z",
+        updatedBy: "user-1"
+      },
+      {
+        id: "task-2",
+        workspaceId: "workspace-1",
+        projectId: "project-1",
+        title: "Write copy",
+        notes: "Marketing copy for launch",
+        dueAt: "2024-01-20T00:00:00Z",
+        priority: "normal",
+        status: "done",
+        recurrence: "none",
+        assigneeDisplayName: "Bob",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedAt: "2024-01-01T00:00:00Z",
+        updatedBy: "user-1"
+      },
+      {
+        id: "task-3",
+        workspaceId: "workspace-1",
+        projectId: "project-2",
+        title: "Schedule launch",
+        notes: "Coordinate launch timeline",
+        dueAt: "2024-02-01T00:00:00Z",
+        priority: "high",
+        status: "open",
+        recurrence: "none",
+        assigneeDisplayName: "Charlie",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedAt: "2024-01-01T00:00:00Z",
+        updatedBy: "user-1"
+      }
+    ];
+
+    beforeEach(() => {
+      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.activeWorkspace = baseWorkspace;
+      mockTeamState.projects = baseProjects;
+      mockTeamState.tasks = baseTasks;
+    });
+
+    it("project and status filter controls render when projects exist", () => {
+      render(<ProjectsPanel />);
+
+      expect(screen.getByLabelText("Project:")).toBeInTheDocument();
+      expect(screen.getByLabelText("Status:")).toBeInTheDocument();
+    });
+
+    it("default status filter shows open tasks and hides done tasks", () => {
+      render(<ProjectsPanel />);
+
+      expect(screen.getByText("Design logo")).toBeInTheDocument();
+      expect(screen.getByText("Schedule launch")).toBeInTheDocument();
+      expect(screen.queryByText("Write copy")).not.toBeInTheDocument();
+    });
+
+    it("status filter Done shows done tasks", async () => {
+      render(<ProjectsPanel />);
+
+      const statusFilter = screen.getByLabelText("Status:");
+      await userEvent.selectOptions(statusFilter, "done");
+
+      expect(screen.queryByText("Design logo")).not.toBeInTheDocument();
+      expect(screen.queryByText("Schedule launch")).not.toBeInTheDocument();
+      expect(screen.getByText("Write copy")).toBeInTheDocument();
+    });
+
+    it("status filter All shows open and done tasks", async () => {
+      render(<ProjectsPanel />);
+
+      const statusFilter = screen.getByLabelText("Status:");
+      await userEvent.selectOptions(statusFilter, "all");
+
+      expect(screen.getByText("Design logo")).toBeInTheDocument();
+      expect(screen.getByText("Write copy")).toBeInTheDocument();
+      expect(screen.getByText("Schedule launch")).toBeInTheDocument();
+    });
+
+    it("project filter narrows tasks to the selected project", async () => {
+      render(<ProjectsPanel />);
+
+      const statusFilter = screen.getByLabelText("Status:");
+      await userEvent.selectOptions(statusFilter, "all");
+
+      const projectFilter = screen.getByLabelText("Project:");
+      await userEvent.selectOptions(projectFilter, "project-1");
+
+      expect(screen.getByText("Design logo")).toBeInTheDocument();
+      expect(screen.getByText("Write copy")).toBeInTheDocument();
+      expect(screen.queryByText("Schedule launch")).not.toBeInTheDocument();
+    });
+
+    it("filtered empty state appears when no task matches", async () => {
+      render(<ProjectsPanel />);
+
+      const projectFilter = screen.getByLabelText("Project:");
+      await userEvent.selectOptions(projectFilter, "project-2");
+
+      const statusFilter = screen.getByLabelText("Status:");
+      await userEvent.selectOptions(statusFilter, "done");
+
+      expect(screen.getByText("No Tasks Match Filters")).toBeInTheDocument();
+      expect(screen.getByText("No tasks match these filters.")).toBeInTheDocument();
+    });
+
+    it("selected project filter resets when that project is no longer available", async () => {
+      const { rerender } = render(<ProjectsPanel />);
+
+      const projectFilter = screen.getByLabelText("Project:");
+      await userEvent.selectOptions(projectFilter, "project-1");
+
+      expect(screen.getByDisplayValue("Q1 Campaign")).toBeInTheDocument();
+
+      // Simulate project being removed
+      mockTeamState.projects = [baseProjects[1]!];
+      vi.mocked(useTeamState).mockReturnValue(mockTeamState);
+
+      // Re-render to trigger useEffect
+      rerender(<ProjectsPanel />);
+
+      // Filter should reset to "All projects"
+      expect(screen.getByDisplayValue("All projects")).toBeInTheDocument();
     });
   });
 
