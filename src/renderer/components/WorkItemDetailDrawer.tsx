@@ -64,17 +64,19 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
       if (item.source === "local-note" && onUpdateNote) {
         await onUpdateNote(item.sourceId, editTitle, editContent);
         onShowSuccess?.("Note updated.");
+        onClose();
       } else if (item.source === "local-task" && onUpdateTask) {
         await onUpdateTask(item.sourceId, editTitle, editContent);
         onShowSuccess?.("Task updated.");
+        onClose();
       } else if (item.source === "local-reminder" && onUpdateReminder) {
         const dueAt = editDueAt ? new Date(editDueAt).toISOString() : item.dueAt || null;
         if (dueAt) {
           await onUpdateReminder(item.sourceId, editTitle, dueAt);
           onShowSuccess?.("Reminder updated.");
+          onClose();
         }
       }
-      setIsEditing(false);
     } catch {
       onError?.("Failed to update item.");
     }
@@ -195,13 +197,21 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                     <IconButton
                       icon={Check}
                       label="Complete task"
-                      onClick={() => onCompleteTask?.(item.sourceId)}
+                      onClick={async () => {
+                        await onCompleteTask?.(item.sourceId);
+                        onShowSuccess?.("Task completed.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                     <IconButton
                       icon={Trash2}
                       label="Delete task"
-                      onClick={() => onDeleteTask?.(item.sourceId)}
+                      onClick={async () => {
+                        await onDeleteTask?.(item.sourceId);
+                        onShowSuccess?.("Task deleted.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                   </>
@@ -211,19 +221,30 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                     <IconButton
                       icon={Clock}
                       label="Snooze 10m"
-                      onClick={() => onSnoozeReminder?.(item.sourceId, 10)}
+                      onClick={async () => {
+                        await onSnoozeReminder?.(item.sourceId, 10);
+                        onShowSuccess?.("Reminder snoozed 10m.");
+                      }}
                       variant="ghost"
                     />
                     <IconButton
                       icon={Check}
                       label="Complete reminder"
-                      onClick={() => onCompleteReminder?.(item.sourceId)}
+                      onClick={async () => {
+                        await onCompleteReminder?.(item.sourceId);
+                        onShowSuccess?.("Reminder completed.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                     <IconButton
                       icon={Trash2}
                       label="Delete reminder"
-                      onClick={() => onDeleteReminder?.(item.sourceId)}
+                      onClick={async () => {
+                        await onDeleteReminder?.(item.sourceId);
+                        onShowSuccess?.("Reminder deleted.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                   </>
@@ -233,25 +254,43 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                     <IconButton
                       icon={ListTodo}
                       label="Convert to task"
-                      onClick={() => onConvertNoteToTask?.(item.sourceId)}
+                      onClick={async () => {
+                        await onConvertNoteToTask?.(item.sourceId);
+                        onShowSuccess?.("Note converted to task.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                     <IconButton
                       icon={Bell}
                       label="Convert to reminder"
-                      onClick={() => onConvertNoteToReminder?.(item.sourceId)}
+                      onClick={async () => {
+                        await onConvertNoteToReminder?.(item.sourceId);
+                        onShowSuccess?.("Note converted to reminder.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                     <IconButton
                       icon={Trash2}
                       label="Delete note"
-                      onClick={() => onDeleteNote?.(item.sourceId)}
+                      onClick={async () => {
+                        await onDeleteNote?.(item.sourceId);
+                        onShowSuccess?.("Note deleted.");
+                        onClose();
+                      }}
                       variant="ghost"
                     />
                   </>
                 )}
               </div>
-              <button type="button" className="primaryButton" onClick={handleEdit}>
+              <button
+                type="button"
+                className="primaryButton"
+                onClick={handleEdit}
+                disabled={item.source === "local-reminder"}
+                title={item.source === "local-reminder" ? "Reminder editing not yet supported" : undefined}
+              >
                 Edit
               </button>
             </>
