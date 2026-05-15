@@ -1,0 +1,213 @@
+.workspaceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workspaceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.5rem;
+  background: var(--panel-background, #ffffff);
+}
+
+.workspaceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.workspaceName {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceKey {
+  font-size: 0.8125rem;
+  color: var(--muted, #6b6b76);
+}
+
+.workspaceContext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.workspaceContextInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.workspaceContextLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted, #6b6b76);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.workspaceContextName {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceContextKey {
+  font-size: 0.8125rem;
+  color: var(--muted, #6b6b76);
+}
+
+.workspaceSwitchForm {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  margin-top: 0.75rem;
+}
+
+.workspaceSwitchForm h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceSwitchItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.workspaceSwitchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.workspaceSwitchName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceSwitchKey {
+  font-size: 0.75rem;
+  color: var(--muted, #6b6b76);
+}
+
+.workspaceActions {
+  padding: 0.75rem 0;
+}
+
+.teamTaskList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.teamTaskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.375rem;
+  background: var(--panel-background, #ffffff);
+}
+
+.taskInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.taskMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.taskProject {
+  color: var(--subtitle, #5c5c66);
+}
+
+.taskAssignee {
+  color: var(--subtitle, #5c5c66);
+}
+
+.taskPriority {
+  color: var(--muted, #6b6b76);
+}
+
+.taskPriority.low {
+  color: var(--muted, #6b6b76);
+}
+
+.taskPriority.normal {
+  color: var(--subtitle, #5c5c66);
+}
+
+.taskPriority.high {
+  color: var(--error-text, #8f1f2b);
+}
+
+.taskDue {
+  color: var(--muted, #6b6b76);
+}
+
+.taskStatus {
+  color: var(--muted, #6b6b76);
+}
+
+.taskStatus.open {
+  color: var(--subtitle, #5c5c66);
+}
+
+.taskStatus.done {
+  color: var(--success-text, #1a5f3a);
+}
+
+.taskActions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.projectItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.375rem;
+  background: var(--panel-background, #ffffff);
+}
+
+.projectName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}

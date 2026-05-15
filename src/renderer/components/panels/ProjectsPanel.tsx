@@ -13,6 +13,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { useTeamState } from "../../hooks/team/useTeamState";
 import type { TeamProjectTask } from "../../../shared/team/types";
 import { validateWorkspaceKey } from "../../../shared/team/keyValidation";
+import "./ProjectsPanel.css";
 
 export function ProjectsPanel(): JSX.Element {
   const team = useTeamState();
