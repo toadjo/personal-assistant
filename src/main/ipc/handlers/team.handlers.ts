@@ -1,6 +1,6 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { IpcInvoke } from "../../../shared/ipc-channels";
-import { setTeamConfig, getTeamConfig, clearTeamConfig } from "../../team/config";
+import { setTeamConfig, getTeamConfig, clearTeamConfig, setTeamDisplayName } from "../../team/config";
 import {
   createWorkspace,
   joinWorkspace,
@@ -21,6 +21,7 @@ import { generateWorkspaceKey } from "../../../shared/team/keyValidation";
 import { mapTeamError } from "../../team/errors";
 import {
   teamSetConfigSchema,
+  teamSetDisplayNameSchema,
   teamWorkspaceSetActiveSchema,
   teamWorkspaceCreateSchema,
   teamWorkspaceJoinSchema,
@@ -36,6 +37,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
   // Config operations
   registerInvoke(IpcInvoke.teamSetConfig, assertSender, (_event, payload) => {
     return setTeamConfig(teamSetConfigSchema.parse(payload));
+  });
+  registerInvoke(IpcInvoke.teamSetDisplayName, assertSender, (_event, payload) => {
+    return setTeamDisplayName(teamSetDisplayNameSchema.parse(payload).displayName);
   });
   registerInvoke(IpcInvoke.teamGetConfig, assertSender, () => {
     return getTeamConfig();

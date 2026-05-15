@@ -53,12 +53,16 @@ export interface TeamProjectTask {
   updatedBy: string;
 }
 
+export type TeamBackendMode = "hosted" | "manual" | "unavailable";
+
 /**
  * Public team configuration status returned to the renderer.
  * Never includes the Supabase URL or anon key.
  */
 export interface TeamConfigStatus {
   configured: boolean;
+  backendConfigured: boolean;
+  backendMode: TeamBackendMode;
   displayName: string | null;
   activeWorkspaceId: string | null;
 }

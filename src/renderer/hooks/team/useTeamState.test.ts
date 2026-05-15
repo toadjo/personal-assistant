@@ -48,6 +48,8 @@ describe("useTeamState", () => {
     it("loads team config successfully", async () => {
       const mockConfig: TeamConfigStatus = {
         configured: true,
+        backendConfigured: true,
+        backendMode: "manual",
         displayName: "Alice",
         activeWorkspaceId: "workspace-123"
       };
@@ -92,6 +94,8 @@ describe("useTeamState", () => {
       };
       const mockConfig: TeamConfigStatus = {
         configured: true,
+        backendConfigured: true,
+        backendMode: "manual",
         displayName: "Alice",
         activeWorkspaceId: null
       };

@@ -5,7 +5,8 @@ import {
   ruleCreateSchema,
   userPreferredNameSchema,
   teamProjectCreateSchema,
-  teamTaskCreateSchema
+  teamTaskCreateSchema,
+  teamSetDisplayNameSchema
 } from "./schemas";
 
 describe("IPC Zod schemas", () => {
@@ -216,5 +217,19 @@ describe("IPC Zod schemas", () => {
       unknownField: "should be stripped"
     });
     expect(parsed).not.toHaveProperty("unknownField");
+  });
+
+  it("teamSetDisplayNameSchema accepts valid display name", () => {
+    const parsed = teamSetDisplayNameSchema.parse({ displayName: "Alice" });
+    expect(parsed.displayName).toBe("Alice");
+  });
+
+  it("teamSetDisplayNameSchema rejects empty display name", () => {
+    expect(() => teamSetDisplayNameSchema.parse({ displayName: "" })).toThrow();
+  });
+
+  it("teamSetDisplayNameSchema trims whitespace", () => {
+    const parsed = teamSetDisplayNameSchema.parse({ displayName: "  Alice  " });
+    expect(parsed.displayName).toBe("Alice");
   });
 });

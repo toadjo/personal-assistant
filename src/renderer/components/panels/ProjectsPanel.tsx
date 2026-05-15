@@ -32,6 +32,7 @@ export function ProjectsPanel(): JSX.Element {
   const [taskPriority, setTaskPriority] = useState<"low" | "normal" | "high">("normal");
   const [taskRecurrence, setTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
   const [taskAssigneeDisplayName, setTaskAssigneeDisplayName] = useState("");
+  const [showAdvancedSetup, setShowAdvancedSetup] = useState(false);
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseAnonKey, setSupabaseAnonKey] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -149,8 +150,23 @@ export function ProjectsPanel(): JSX.Element {
       setSupabaseUrl("");
       setSupabaseAnonKey("");
       setDisplayName("");
-    } catch {
-      // Error handled by team.error
+    } catch (error) {
+      setValidationError(error instanceof Error ? error.message : "Failed to save config");
+    }
+  };
+
+  const handleSaveDisplayName = async () => {
+    setValidationError(null);
+    if (!displayName.trim()) {
+      setValidationError("Display name is required");
+      return;
+    }
+    try {
+      await window.assistantApi.teamSetDisplayName({ displayName });
+      await team.loadConfig();
+      setShowSetupForm(false);
+    } catch (error) {
+      setValidationError(error instanceof Error ? error.message : "Failed to save display name");
     }
   };
 
@@ -304,6 +320,93 @@ export function ProjectsPanel(): JSX.Element {
 
   // Setup state: team mode not configured
   if (!team.config?.configured) {
+    // Unavailable state: no backend config
+    if (team.config?.backendMode === "unavailable") {
+      return (
+        <div className="panel">
+          <PanelHeader icon={Users} title="Team Projects" />
+          <div className="panelContent">
+            <EmptyState
+              icon={Users}
+              title="Team Projects is not available in this build"
+              description="Team Projects requires a hosted backend configuration."
+            />
+            {showAdvancedSetup && (
+              <div className="panelContent">
+                {validationError && <StatusBanner status="" error={validationError} />}
+                <div className="formGroup">
+                  <label htmlFor="supabaseUrl">Supabase URL</label>
+                  <input
+                    id="supabaseUrl"
+                    type="text"
+                    placeholder="https://your-project.supabase.co"
+                    value={supabaseUrl}
+                    onChange={(e) => setSupabaseUrl(e.target.value)}
+                    className="input"
+                  />
+                </div>
+                <div className="formGroup">
+                  <label htmlFor="supabaseAnonKey">Supabase Anon Key</label>
+                  <input
+                    id="supabaseAnonKey"
+                    type="password"
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={supabaseAnonKey}
+                    onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                    className="input"
+                  />
+                </div>
+                <div className="formGroup">
+                  <label htmlFor="displayName">Display Name</label>
+                  <input
+                    id="displayName"
+                    type="text"
+                    placeholder="Your name (e.g., Alice)"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="input"
+                  />
+                </div>
+                <div className="formActions">
+                  <button
+                    type="button"
+                    className="button buttonPrimary"
+                    onClick={handleSaveConfig}
+                    disabled={team.isLoadingConfig}
+                  >
+                    {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button buttonSecondary"
+                    onClick={() => {
+                      setShowAdvancedSetup(false);
+                      setShowSetupForm(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {!showAdvancedSetup && (
+              <button
+                type="button"
+                className="button buttonSecondary"
+                onClick={() => {
+                  setShowAdvancedSetup(true);
+                  setShowSetupForm(true);
+                }}
+              >
+                Advanced self-hosted backend
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Normal setup: display name only
     return (
       <div className="panel">
         <PanelHeader icon={Users} title="Team Projects" />
@@ -312,29 +415,7 @@ export function ProjectsPanel(): JSX.Element {
           <div className="panelContent">
             {validationError && <StatusBanner status="" error={validationError} />}
             <div className="formGroup">
-              <label htmlFor="supabaseUrl">Supabase URL</label>
-              <input
-                id="supabaseUrl"
-                type="text"
-                placeholder="https://your-project.supabase.co"
-                value={supabaseUrl}
-                onChange={(e) => setSupabaseUrl(e.target.value)}
-                className="input"
-              />
-            </div>
-            <div className="formGroup">
-              <label htmlFor="supabaseAnonKey">Supabase Anon Key</label>
-              <input
-                id="supabaseAnonKey"
-                type="password"
-                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                value={supabaseAnonKey}
-                onChange={(e) => setSupabaseAnonKey(e.target.value)}
-                className="input"
-              />
-            </div>
-            <div className="formGroup">
-              <label htmlFor="displayName">Display Name</label>
+              <label htmlFor="displayName">Your display name</label>
               <input
                 id="displayName"
                 type="text"
@@ -348,10 +429,10 @@ export function ProjectsPanel(): JSX.Element {
               <button
                 type="button"
                 className="button buttonPrimary"
-                onClick={handleSaveConfig}
+                onClick={handleSaveDisplayName}
                 disabled={team.isLoadingConfig}
               >
-                {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Save"}
+                {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Continue"}
               </button>
               <button
                 type="button"
@@ -361,20 +442,65 @@ export function ProjectsPanel(): JSX.Element {
                 Cancel
               </button>
             </div>
+            {showAdvancedSetup && (
+              <>
+                <div className="formGroup">
+                  <label htmlFor="supabaseUrl">Supabase URL</label>
+                  <input
+                    id="supabaseUrl"
+                    type="text"
+                    placeholder="https://your-project.supabase.co"
+                    value={supabaseUrl}
+                    onChange={(e) => setSupabaseUrl(e.target.value)}
+                    className="input"
+                  />
+                </div>
+                <div className="formGroup">
+                  <label htmlFor="supabaseAnonKey">Supabase Anon Key</label>
+                  <input
+                    id="supabaseAnonKey"
+                    type="password"
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={supabaseAnonKey}
+                    onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                    className="input"
+                  />
+                </div>
+                <div className="formActions">
+                  <button
+                    type="button"
+                    className="button buttonPrimary"
+                    onClick={handleSaveConfig}
+                    disabled={team.isLoadingConfig}
+                  >
+                    {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Save"}
+                  </button>
+                </div>
+              </>
+            )}
+            {!showAdvancedSetup && (
+              <button
+                type="button"
+                className="button buttonSecondary"
+                onClick={() => setShowAdvancedSetup(true)}
+              >
+                Advanced self-hosted backend
+              </button>
+            )}
           </div>
         ) : (
           <div className="panelContent">
             <EmptyState
               icon={Users}
-              title="Team Projects Not Configured"
-              description="Configure Supabase credentials to enable team collaboration on projects and tasks."
+              title="Team Projects"
+              description="Enter your display name to start collaborating on shared projects and tasks."
             />
             <button
               type="button"
               className="button buttonPrimary"
               onClick={() => setShowSetupForm(true)}
             >
-              Configure Team Mode
+              Continue
             </button>
           </div>
         )}
@@ -396,7 +522,7 @@ export function ProjectsPanel(): JSX.Element {
                 <div key={workspace.id} className="workspaceItem">
                   <div className="workspaceInfo">
                     <div className="workspaceName">{workspace.name}</div>
-                    <div className="workspaceKey">Key: {workspace.workspaceKey}</div>
+                    <div className="workspaceKey">Invite code: {workspace.workspaceKey}</div>
                   </div>
                   <button
                     type="button"

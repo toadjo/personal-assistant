@@ -49,6 +49,7 @@ export const IpcInvoke = {
   testSetAutomationActionOverride: "test:setAutomationActionOverride",
   teamGetConfig: "team:getConfig",
   teamSetConfig: "team:setConfig",
+  teamSetDisplayName: "team:setDisplayName",
   teamClearConfig: "team:clearConfig",
   teamWorkspacesCreate: "team:workspaces:create",
   teamWorkspacesJoin: "team:workspaces:join",

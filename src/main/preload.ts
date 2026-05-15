@@ -121,6 +121,8 @@ contextBridge.exposeInMainWorld("assistantApi", {
   // Team mode operations
   teamSetConfig: (payload: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) =>
     ipcRenderer.invoke(invoke.teamSetConfig, payload),
+  teamSetDisplayName: (payload: { displayName: string }) =>
+    ipcRenderer.invoke(invoke.teamSetDisplayName, payload),
   teamGetConfig: () => ipcRenderer.invoke(invoke.teamGetConfig),
   teamClearConfig: () => ipcRenderer.invoke(invoke.teamClearConfig),
   teamWorkspacesCreate: (payload: { name: string }) =>

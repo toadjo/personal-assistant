@@ -238,6 +238,10 @@ export const teamSetConfigSchema = z.object({
   displayName: teamDisplayNameSchema
 });
 
+export const teamSetDisplayNameSchema = z.object({
+  displayName: teamDisplayNameSchema
+});
+
 export const teamWorkspaceCreateSchema = z.object({
   name: z.string().trim().min(1).max(120)
 });

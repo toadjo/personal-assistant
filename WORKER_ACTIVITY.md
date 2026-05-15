@@ -48,6 +48,13 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`
 - Next action: Continue local automation and local-first desk experience work.
 
+## 2026-05-11: Friendly Supabase Team Projects Setup
+
+- Files touched: `src/shared/team/types.ts`, `src/shared/ipc-channels.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/team/config.ts`, `src/main/ipc/handlers/team.handlers.ts`, `src/main/ipc/handlers/handler-payload-contract.test.ts`, `src/main/preload.ts`, `src/renderer/vite-env.d.ts`, `src/renderer/components/panels/ProjectsPanel.tsx`, `src/renderer/components/panels/ProjectsPanel.test.tsx`
+- Changes: Extended TeamConfigStatus with backendMode and backendConfigured fields; added teamSetDisplayName IPC method; added hosted backend config support via TEAM_PROJECTS_SUPABASE_URL and TEAM_PROJECTS_SUPABASE_ANON_KEY environment variables; updated main process config logic to prefer manual config, fallback to hosted; updated ProjectsPanel UI to show display-name-only setup by default with collapsible advanced section for manual Supabase config; updated copy to use user-facing terms (workspace, invite code, shared tasks); added unavailable state when no backend config exists; updated all tests for new setup flow.
+- Checks run: `npm test`, `npm run typecheck`, `npm run lint`
+- Next action: None; feature complete and verified.
+
 ## 2026-05-11: Local Personal Automations (v1.4.6)
 
 - Files touched: `src/shared/types.ts`, `src/main/ipc/schemas.ts`, `src/main/ipc/schemas.test.ts`, `src/main/services/automation.ts`, `src/main/services/automation.test.ts`, `src/main/ipc/automation/formatActionLabel.ts`, `src/main/preload.ts`, `src/renderer/components/forms/RuleForm.tsx`, `src/renderer/components/forms/RuleForm.test.tsx`, `src/renderer/components/panels/AutomationRulesPanel.tsx`

@@ -6,7 +6,7 @@
  */
 
 import { deleteSetting, getSetting, setSetting } from "../services/settingsRepository";
-import type { TeamConfigStatus } from "../../shared/team/types";
+import type { TeamConfigStatus, TeamBackendMode } from "../../shared/team/types";
 
 const TEAM_CONFIG_KEY_PREFIX = "team.";
 
@@ -20,6 +20,10 @@ const TEAM_CONFIG_KEYS = {
   displayName: key("displayName"),
   activeWorkspaceId: key("activeWorkspaceId")
 } as const;
+
+// Hosted backend config from environment or build
+const HOSTED_SUPABASE_URL = process.env.TEAM_PROJECTS_SUPABASE_URL || null;
+const HOSTED_SUPABASE_ANON_KEY = process.env.TEAM_PROJECTS_SUPABASE_ANON_KEY || null;
 
 /** Basic HTTPS URL validation (no trailing slash). */
 function isValidSupabaseUrl(url: string): boolean {
@@ -40,10 +44,24 @@ function isValidSupabaseUrl(url: string): boolean {
 export function getTeamConfig(): TeamConfigStatus {
   const displayName = getSetting(TEAM_CONFIG_KEYS.displayName) ?? null;
   const activeWorkspaceId = getSetting(TEAM_CONFIG_KEYS.activeWorkspaceId) ?? null;
-  const hasUrl = !!getSetting(TEAM_CONFIG_KEYS.supabaseUrl);
-  const hasKey = !!getSetting(TEAM_CONFIG_KEYS.supabaseAnonKey);
-  const configured = hasUrl && hasKey;
-  return { configured, displayName, activeWorkspaceId };
+  const hasManualUrl = !!getSetting(TEAM_CONFIG_KEYS.supabaseUrl);
+  const hasManualKey = !!getSetting(TEAM_CONFIG_KEYS.supabaseAnonKey);
+  const hasHostedUrl = !!HOSTED_SUPABASE_URL;
+  const hasHostedKey = !!HOSTED_SUPABASE_ANON_KEY;
+
+  let backendMode: TeamBackendMode = "unavailable";
+  let backendConfigured = false;
+
+  if (hasManualUrl && hasManualKey) {
+    backendMode = "manual";
+    backendConfigured = true;
+  } else if (hasHostedUrl && hasHostedKey) {
+    backendMode = "hosted";
+    backendConfigured = true;
+  }
+
+  const configured = backendConfigured && !!displayName;
+  return { configured, backendConfigured, backendMode, displayName, activeWorkspaceId };
 }
 
 /**
@@ -78,6 +96,17 @@ export function setTeamConfig(input: {
 }
 
 /**
+ * Persists display name only. Used in hosted mode or when display name is set separately.
+ */
+export function setTeamDisplayName(displayName: string): void {
+  const trimmedName = displayName.trim();
+  if (!trimmedName || trimmedName.length > 60) {
+    throw new Error("Display name must be between 1 and 60 characters.");
+  }
+  setSetting(TEAM_CONFIG_KEYS.displayName, trimmedName);
+}
+
+/**
  * Clears all team configuration (URL, anon key, display name, and active workspace).
  */
 export function clearTeamConfig(): void {
@@ -100,11 +129,16 @@ export function setTeamActiveWorkspaceId(workspaceId: string | null): void {
 
 /**
  * Returns the raw Supabase URL and anon key for main-process use only.
- * Never exposed to the renderer.
+ * Never exposed to the renderer. Prefers manual config, falls back to hosted.
  */
 export function getTeamCredentials(): { supabaseUrl: string; supabaseAnonKey: string } | null {
-  const supabaseUrl = getSetting(TEAM_CONFIG_KEYS.supabaseUrl);
-  const supabaseAnonKey = getSetting(TEAM_CONFIG_KEYS.supabaseAnonKey);
-  if (!supabaseUrl || !supabaseAnonKey) return null;
-  return { supabaseUrl, supabaseAnonKey };
+  const manualUrl = getSetting(TEAM_CONFIG_KEYS.supabaseUrl);
+  const manualKey = getSetting(TEAM_CONFIG_KEYS.supabaseAnonKey);
+  if (manualUrl && manualKey) {
+    return { supabaseUrl: manualUrl, supabaseAnonKey: manualKey };
+  }
+  if (HOSTED_SUPABASE_URL && HOSTED_SUPABASE_ANON_KEY) {
+    return { supabaseUrl: HOSTED_SUPABASE_URL, supabaseAnonKey: HOSTED_SUPABASE_ANON_KEY };
+  }
+  return null;
 }

@@ -127,6 +127,7 @@ declare global {
       setTestAutomationActionOverride: (config: { mode: "timeout" | "failure" } | null) => Promise<void>;
       // Team mode operations
       teamSetConfig: (payload: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) => Promise<void>;
+      teamSetDisplayName: (payload: { displayName: string }) => Promise<void>;
       teamGetConfig: () => Promise<TeamConfigStatus>;
       teamClearConfig: () => Promise<void>;
       teamWorkspacesCreate: (payload: { name: string }) => Promise<TeamWorkspace>;

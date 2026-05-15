@@ -85,6 +85,7 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.rendererLogError ||
         // Team mode schema-backed channels
         ch === IpcInvoke.teamSetConfig ||
+        ch === IpcInvoke.teamSetDisplayName ||
         ch === IpcInvoke.teamWorkspacesCreate ||
         ch === IpcInvoke.teamWorkspacesJoin ||
         ch === IpcInvoke.teamWorkspacesSetActive ||

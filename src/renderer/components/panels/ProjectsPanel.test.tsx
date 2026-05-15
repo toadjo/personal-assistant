@@ -35,7 +35,8 @@ Object.defineProperty(window, "assistantApi", {
   value: {
     teamRealtimeStart: teamRealtimeStartMock,
     teamRealtimeStop: teamRealtimeStopMock,
-    onTeamDataUpdated: onTeamDataUpdatedMock
+    onTeamDataUpdated: onTeamDataUpdatedMock,
+    teamSetDisplayName: vi.fn().mockResolvedValue(undefined)
   },
   writable: true,
   configurable: true
@@ -100,7 +101,7 @@ describe("ProjectsPanel", () => {
           createdBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.workspaces = mockWorkspaces;
 
       render(<ProjectsPanel />);
@@ -121,7 +122,7 @@ describe("ProjectsPanel", () => {
         createdAt: "2024-01-01T00:00:00Z",
         createdBy: "user-1"
       };
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.activeWorkspace = null;
       mockTeamState.workspaces = [];
       vi.mocked(mockTeamState.createWorkspace).mockResolvedValue(mockWorkspace);
@@ -141,7 +142,7 @@ describe("ProjectsPanel", () => {
         createdAt: "2024-01-01T00:00:00Z",
         createdBy: "user-1"
       };
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.activeWorkspace = null;
       mockTeamState.workspaces = [];
       vi.mocked(mockTeamState.joinWorkspace).mockResolvedValue(mockWorkspace);
@@ -178,7 +179,7 @@ describe("ProjectsPanel", () => {
         createdAt: "2024-01-01T00:00:00Z",
         createdBy: "user-1"
       };
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.workspaces = [];
       mockTeamState.activeWorkspace = null;
       mockTeamState.projects = [];
@@ -216,7 +217,7 @@ describe("ProjectsPanel", () => {
         createdAt: "2024-01-01T00:00:00Z",
         createdBy: "user-1"
       };
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.workspaces = [];
       mockTeamState.activeWorkspace = null;
       mockTeamState.projects = [];
@@ -263,7 +264,7 @@ describe("ProjectsPanel", () => {
           createdBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = mockProjects;
       mockTeamState.tasks = [];
@@ -308,7 +309,7 @@ describe("ProjectsPanel", () => {
           updatedBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = mockProjects;
       mockTeamState.tasks = mockTasks;
@@ -336,7 +337,7 @@ describe("ProjectsPanel", () => {
           createdBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = mockProjects;
       mockTeamState.tasks = [];
@@ -373,7 +374,7 @@ describe("ProjectsPanel", () => {
     });
 
     it("blocks workspace join with invalid key", async () => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.workspaces = [];
       mockTeamState.activeWorkspace = null;
 
@@ -400,13 +401,54 @@ describe("ProjectsPanel", () => {
   });
 
   describe("Setup state: team mode not configured", () => {
-    it("shows setup form when not configured", () => {
-      mockTeamState.config = { configured: false, displayName: null, activeWorkspaceId: null };
+    it("shows display-name-only setup when backend is configured", () => {
+      mockTeamState.config = { configured: false, backendConfigured: true, backendMode: "hosted", displayName: null, activeWorkspaceId: null };
 
       render(<ProjectsPanel />);
 
-      expect(screen.getByText("Team Projects Not Configured")).toBeInTheDocument();
-      expect(screen.getByText("Configure Team Mode")).toBeInTheDocument();
+      expect(screen.getByText("Enter your display name to start collaborating on shared projects and tasks.")).toBeInTheDocument();
+      expect(screen.getByText("Continue")).toBeInTheDocument();
+      expect(screen.queryByText("Supabase URL")).not.toBeInTheDocument();
+      expect(screen.queryByText("Supabase Anon Key")).not.toBeInTheDocument();
+    });
+
+    it("shows unavailable state when backend is not configured", () => {
+      mockTeamState.config = { configured: false, backendConfigured: false, backendMode: "unavailable", displayName: null, activeWorkspaceId: null };
+
+      render(<ProjectsPanel />);
+
+      expect(screen.getByText("Team Projects is not available in this build")).toBeInTheDocument();
+      expect(screen.getByText("Advanced self-hosted backend")).toBeInTheDocument();
+    });
+
+    it("clicking Advanced self-hosted backend shows manual config form", async () => {
+      mockTeamState.config = { configured: false, backendConfigured: false, backendMode: "unavailable", displayName: null, activeWorkspaceId: null };
+
+      render(<ProjectsPanel />);
+
+      const advancedButton = screen.getByText("Advanced self-hosted backend");
+      await userEvent.click(advancedButton);
+
+      expect(screen.getByLabelText("Supabase URL")).toBeInTheDocument();
+      expect(screen.getByLabelText("Supabase Anon Key")).toBeInTheDocument();
+      expect(screen.getByLabelText("Display Name")).toBeInTheDocument();
+    });
+
+    it("clicking Continue saves display name only", async () => {
+      mockTeamState.config = { configured: false, backendConfigured: true, backendMode: "hosted", displayName: null, activeWorkspaceId: null };
+
+      render(<ProjectsPanel />);
+
+      const continueButton = screen.getByText("Continue");
+      await userEvent.click(continueButton);
+
+      const displayNameInput = screen.getByLabelText("Your display name");
+      await userEvent.type(displayNameInput, "Alice");
+
+      const saveButton = screen.getByText("Continue");
+      await userEvent.click(saveButton);
+
+      expect(window.assistantApi.teamSetDisplayName).toHaveBeenCalledWith({ displayName: "Alice" });
     });
   });
 
@@ -421,18 +463,18 @@ describe("ProjectsPanel", () => {
           createdBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.workspaces = mockWorkspaces;
 
       render(<ProjectsPanel />);
 
       expect(screen.getByText("Your Workspaces")).toBeInTheDocument();
       expect(screen.getByText("Marketing Team")).toBeInTheDocument();
-      expect(screen.getByText("Key: ABCD2345EFGH6789")).toBeInTheDocument();
+      expect(screen.getByText("Invite code: ABCD2345EFGH6789")).toBeInTheDocument();
     });
 
     it("shows empty state when no workspaces", () => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.activeWorkspace = null;
       mockTeamState.workspaces = [];
 
@@ -451,7 +493,7 @@ describe("ProjectsPanel", () => {
         createdAt: "2024-01-01T00:00:00Z",
         createdBy: "user-1"
       };
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = [];
 
@@ -481,7 +523,7 @@ describe("ProjectsPanel", () => {
           createdBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = mockProjects;
 
@@ -526,7 +568,7 @@ describe("ProjectsPanel", () => {
           updatedBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = mockProjects;
       mockTeamState.tasks = mockTasks;
@@ -555,7 +597,7 @@ describe("ProjectsPanel", () => {
           createdBy: "user-1"
         }
       ];
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = mockWorkspace;
       mockTeamState.projects = mockProjects;
       mockTeamState.tasks = [];
@@ -642,7 +684,7 @@ describe("ProjectsPanel", () => {
     ];
 
     beforeEach(() => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = baseWorkspace;
       mockTeamState.projects = baseProjects;
       mockTeamState.tasks = baseTasks;
@@ -767,7 +809,7 @@ describe("ProjectsPanel", () => {
     };
 
     beforeEach(() => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = baseWorkspace;
       mockTeamState.projects = baseProjects;
       mockTeamState.tasks = [baseTask];
@@ -935,7 +977,7 @@ describe("ProjectsPanel", () => {
     });
 
     it("starts realtime and subscribes when an active workspace exists", async () => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = baseWorkspace;
 
       render(<ProjectsPanel />);
@@ -947,7 +989,7 @@ describe("ProjectsPanel", () => {
     it("refreshes projects and tasks on matching workspace events", async () => {
       vi.useFakeTimers();
       try {
-        mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
         mockTeamState.activeWorkspace = baseWorkspace;
 
         render(<ProjectsPanel />);
@@ -969,7 +1011,7 @@ describe("ProjectsPanel", () => {
     it("ignores events for other workspaces", () => {
       vi.useFakeTimers();
       try {
-        mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
         mockTeamState.activeWorkspace = baseWorkspace;
 
         render(<ProjectsPanel />);
@@ -990,7 +1032,7 @@ describe("ProjectsPanel", () => {
     it("debounces repeated events into one refresh", () => {
       vi.useFakeTimers();
       try {
-        mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
         mockTeamState.activeWorkspace = baseWorkspace;
 
         render(<ProjectsPanel />);
@@ -1011,7 +1053,7 @@ describe("ProjectsPanel", () => {
     it("accumulates different tables during debounce and refreshes both", () => {
       vi.useFakeTimers();
       try {
-        mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
         mockTeamState.activeWorkspace = baseWorkspace;
 
         render(<ProjectsPanel />);
@@ -1033,7 +1075,7 @@ describe("ProjectsPanel", () => {
     });
 
     it("unsubscribes and stops realtime on unmount", () => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = baseWorkspace;
 
       const { unmount } = render(<ProjectsPanel />);
@@ -1044,7 +1086,7 @@ describe("ProjectsPanel", () => {
     });
 
     it("does not start realtime when no active workspace exists", () => {
-      mockTeamState.config = { configured: true, displayName: "Alice", activeWorkspaceId: null };
+      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
       mockTeamState.activeWorkspace = null;
 
       render(<ProjectsPanel />);
