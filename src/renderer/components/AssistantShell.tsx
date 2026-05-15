@@ -67,7 +67,7 @@ export function AssistantShell(): JSX.Element {
     };
   }, []);
 
-  // v1.6.1: Command palette shortcut (Ctrl+K / Cmd+K)
+  // Command palette shortcut (Ctrl+K / Cmd+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {

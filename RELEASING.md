@@ -44,3 +44,33 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 - The release workflow refuses to dispatch if `package.json` does not match the requested version, and refuses to overwrite an existing non-draft release.
 - If a draft is left behind from a failed run, delete it (`gh release delete vX.Y.Z --yes`) before re-running.
 - If a non-draft release is broken, prefer publishing a follow-up PATCH instead of deleting the broken one (preserves user-visible history).
+
+## Windows-only manual release
+
+When GitHub Actions budget is unavailable, releases can be done manually for Windows only:
+
+1. Run local verification:
+   - `npm run check:preload-ipc`
+   - `npm run typecheck`
+   - `npm run lint`
+   - `npm test`
+   - `npm run build`
+   - `npm run test:smoke`
+   - `npm run test:preload-electron`
+
+2. Build Windows release assets:
+   - `npm run release:build -- -Version X.Y.Z`
+
+3. Validate local outputs:
+   - Confirm `release/vX.Y.Z` exists.
+   - Confirm `installer-history/vX.Y.Z` exists.
+   - Confirm the Windows `.exe`, `.blockmap`, and `.yml` files exist.
+   - Confirm generated release artifacts are not committed.
+
+4. GitHub manual upload:
+   - Commit as `release: prepare vX.Y.Z`.
+   - Tag `vX.Y.Z`.
+   - Push `main` and the tag.
+   - Create or edit the GitHub Release manually.
+   - Upload only the Windows installer/update assets.
+   - Release notes must state this is a Windows manual release and that macOS/Linux assets are omitted due to Actions budget constraints.

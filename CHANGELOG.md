@@ -4,6 +4,28 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-05-15
+
+Personal OS v3 integration hardening and manual release reliability. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Added
+
+- Personal OS v3 integration: Unified Inbox panel with quick capture for notes, tasks, and reminders.
+- WorkItemDetailDrawer: unified detail drawer for viewing and editing work items from Inbox and Daily Command Center.
+- Daily Command Center drawer integration: clickable item labels open the unified detail drawer.
+- Windows-only manual release documentation in RELEASING.md.
+
+### Changed
+
+- Removed stale version-specific comments from codebase.
+- Updated README.md to clarify that GitHub Actions is not required for releases.
+- Updated APP_AUDIT_2026-05-15.md to reflect v3 stack and 616 tests passing.
+
+### Fixed
+
+- No mojibake found in user-facing text; only acceptable em-dashes in comments and theme names remain.
+- Layouts for DCC, Inbox, and detail drawer are properly responsive with no overflow issues.
+
 ## [2.1.0] - 2026-05-15
 
 Team Projects UX and setup release. Friendly display-name-first setup, shared task editor, task board filters, realtime IPC cleanup, and visual hardening.
@@ -215,7 +237,8 @@ Final minimal corporate pass. Version bump rolling up 1.5.2 – 1.5.4.
 
 History prior to 1.4.3 is in git log; no curated changelog exists for those versions. See `git log v1.4.2 --no-merges` for details.
 
-[2.0.0]: https://github.com/toadjo/personal-assistant/compare/v1.7.1...v2.0.0
+[2.1.1]: https://github.com/toadjo/personal-assistant/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/toadjo/personal-assistant/compare/v1.7.1...v2.1.0
 [1.7.1]: https://github.com/toadjo/personal-assistant/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/toadjo/personal-assistant/compare/v1.6.5...v1.7.0
 [1.6.5]: https://github.com/toadjo/personal-assistant/compare/v1.6.0...v1.6.5
