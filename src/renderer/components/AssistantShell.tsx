@@ -382,6 +382,24 @@ export function AssistantShell(): JSX.Element {
             onOpenTasks={tasks.setFilter}
             onOpenReminders={reminders.setFilter}
             onOpenNotes={() => data.setQuery("")}
+            onOpenWorkItem={(briefItem) => {
+              // Map BriefItem to UnifiedWorkItem using sourceId and kind
+              const kindToSource: Record<string, string> = {
+                task: "local-task",
+                reminder: "local-reminder",
+                note: "local-note",
+                "team-task": "team-task"
+              };
+              const source = kindToSource[briefItem.kind];
+              if (!source) return; // Don't map automation or agenda items
+
+              const unifiedItem = inbox.unifiedItems.find(
+                (item) => item.sourceId === briefItem.sourceId && item.source === source
+              );
+              if (unifiedItem) {
+                setSelectedWorkItem(unifiedItem);
+              }
+            }}
           />
 
           <InboxPanel

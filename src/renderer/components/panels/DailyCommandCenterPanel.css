@@ -97,6 +97,21 @@
   color: var(--text, #141418);
 }
 
+.dccItemLabelButton {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.dccItemLabelButton:hover {
+  text-decoration: underline;
+}
+
 .dccItemLabelOverdue {
   color: var(--error-text, #8f1f2b);
 }

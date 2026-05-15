@@ -28,6 +28,7 @@ type Props = {
   onOpenTasks?: (filter: TaskFilter) => void;
   onOpenReminders?: (filter: ReminderFilter) => void;
   onOpenNotes?: () => void;
+  onOpenWorkItem?: (item: BriefItem) => void;
 };
 
 function getIconForUrgency(urgency: BriefItem["urgency"]) {
@@ -110,7 +111,8 @@ export function DailyCommandCenterPanel({
   onMarkSeen,
   onOpenTasks,
   onOpenReminders,
-  onOpenNotes
+  onOpenNotes,
+  onOpenWorkItem
 }: Props): JSX.Element {
   const { nowItems, attentionItems, contextItems, awayItems, summary, pressure } = data;
 
@@ -145,9 +147,13 @@ export function DailyCommandCenterPanel({
                   <li key={item.sourceId} className="dccListItem">
                     <Icon size={16} className="dccListItemIcon" />
                     <div className="dccListItemContent">
-                      <div className={`dccItemLabel ${item.urgency === "overdue" ? "dccItemLabelOverdue" : ""}`}>
+                      <button
+                        type="button"
+                        className={`dccItemLabelButton ${item.urgency === "overdue" ? "dccItemLabelOverdue" : ""}`}
+                        onClick={() => onOpenWorkItem?.(item)}
+                      >
                         {item.label}
-                      </div>
+                      </button>
                       {item.detail && <div className="dccItemDetail">{item.detail}</div>}
                       <div className="dccItemMeta">
                         {getUrgencyLabel(item.urgency)} / {item.kind}
@@ -259,9 +265,13 @@ export function DailyCommandCenterPanel({
                       <li key={item.sourceId} className="dccListItem">
                         <Icon size={16} className="dccListItemIcon" />
                         <div className="dccListItemContent">
-                          <div className={`dccItemLabel ${item.urgency === "overdue" ? "dccItemLabelOverdue" : ""}`}>
+                          <button
+                            type="button"
+                            className={`dccItemLabelButton ${item.urgency === "overdue" ? "dccItemLabelOverdue" : ""}`}
+                            onClick={() => onOpenWorkItem?.(item)}
+                          >
                             {item.label}
-                          </div>
+                          </button>
                           {item.detail && <div className="dccItemDetail">{item.detail}</div>}
                           <div className="dccItemMeta">
                             {getUrgencyLabel(item.urgency)} / {item.kind}
@@ -350,7 +360,13 @@ export function DailyCommandCenterPanel({
                       <li key={item.sourceId} className="dccListItem">
                         <Icon size={16} className="dccListItemIcon" />
                         <div className="dccListItemContent">
-                          <div className="dccItemLabel">{item.label}</div>
+                          <button
+                            type="button"
+                            className="dccItemLabelButton"
+                            onClick={() => onOpenWorkItem?.(item)}
+                          >
+                            {item.label}
+                          </button>
                           {item.detail && <div className="dccItemDetail">{item.detail}</div>}
                           <div className="dccItemMeta">
                             {getUrgencyLabel(item.urgency)} / {item.kind}

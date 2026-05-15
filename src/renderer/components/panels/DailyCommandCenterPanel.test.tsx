@@ -370,4 +370,144 @@ describe("DailyCommandCenterPanel", () => {
     screen.getByLabelText(/Open notes: Pinned note/).click();
     expect(onOpenNotes).toHaveBeenCalledTimes(1);
   });
+
+  it("calls onOpenWorkItem when task label is clicked", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "task",
+          label: "Task to open",
+          urgency: "overdue",
+          sourceId: "t1",
+          action: "complete-task"
+        }
+      ],
+      attentionItems: [{ kind: "task", label: "Task to open", urgency: "overdue", sourceId: "t1" }],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    // Click the label button
+    const labelButtons = screen.getAllByRole("button");
+    const labelButton = labelButtons.find((btn) => btn.textContent === "Task to open");
+    expect(labelButton).toBeDefined();
+    labelButton?.click();
+
+    expect(onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "task",
+      label: "Task to open",
+      sourceId: "t1"
+    }));
+  });
+
+  it("calls onOpenWorkItem when reminder label is clicked", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "reminder",
+          label: "Reminder to open",
+          urgency: "today",
+          sourceId: "r1",
+          action: "complete-reminder"
+        }
+      ],
+      attentionItems: [{ kind: "reminder", label: "Reminder to open", urgency: "today", sourceId: "r1" }],
+      summary: "Now: 1 due today."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    // Click the label button
+    const labelButtons = screen.getAllByRole("button");
+    const labelButton = labelButtons.find((btn) => btn.textContent === "Reminder to open");
+    expect(labelButton).toBeDefined();
+    labelButton?.click();
+
+    expect(onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "reminder",
+      label: "Reminder to open",
+      sourceId: "r1"
+    }));
+  });
+
+  it("existing complete button still works when onOpenWorkItem is provided", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "task",
+          label: "Task to complete",
+          urgency: "overdue",
+          sourceId: "t1",
+          action: "complete-task"
+        }
+      ],
+      attentionItems: [{ kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    screen.getAllByLabelText(/Complete task: Task to complete/)[0]!.click();
+    expect(onCompleteTask).toHaveBeenCalledWith("t1");
+    expect(onOpenWorkItem).not.toHaveBeenCalled();
+  });
+
+  it("renders without error when onOpenWorkItem is not provided", () => {
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "task",
+          label: "Task without drawer",
+          urgency: "overdue",
+          sourceId: "t1",
+          action: "complete-task"
+        }
+      ],
+      attentionItems: [{ kind: "task", label: "Task without drawer", urgency: "overdue", sourceId: "t1" }],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+      />
+    );
+
+    expect(screen.getAllByText("Task without drawer").length).toBeGreaterThan(0);
+  });
 });
