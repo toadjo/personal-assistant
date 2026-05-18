@@ -3,6 +3,7 @@
  */
 
 import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 import type { HaDeviceRow } from "../../types";
 import type { SearchResult } from "./types";
 
@@ -53,7 +54,9 @@ export function buildSearchIndex(
   tasks: Task[],
   reminders: Reminder[],
   rules: AutomationRule[],
-  devices: HaDeviceRow[]
+  devices: HaDeviceRow[],
+  teamTasks: TeamProjectTask[] = [],
+  teamProjects: TeamProject[] = []
 ): SearchResult[] {
   const results: SearchResult[] = [];
 
@@ -108,6 +111,28 @@ export function buildSearchIndex(
       title: d.friendlyName,
       subtitle: d.state,
       action: "Toggle device",
+      score: 0
+    });
+  });
+
+  teamTasks.forEach((tt) => {
+    const project = teamProjects.find(p => p.id === tt.projectId);
+    const subtitleParts: string[] = [];
+    
+    if (tt.status === "done") subtitleParts.push("Done");
+    else subtitleParts.push("Open");
+    
+    if (project?.name) subtitleParts.push(project.name);
+    if (tt.assigneeDisplayName) subtitleParts.push(tt.assigneeDisplayName);
+    if (tt.dueAt) subtitleParts.push(new Date(tt.dueAt).toLocaleDateString());
+    if (tt.notes) subtitleParts.push(tt.notes.slice(0, 60)); // Include notes for searchability
+    
+    results.push({
+      id: `team-task:${tt.id}`,
+      category: "team-task",
+      title: tt.title,
+      subtitle: subtitleParts.join(" | "),
+      action: "Open team task",
       score: 0
     });
   });

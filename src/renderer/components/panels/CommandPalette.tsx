@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Search, X, FileText, ListTodo, Bell, Zap, Power, Settings } from "lucide-react";
+import { Search, X, FileText, ListTodo, Bell, Zap, Power, Settings, Users } from "lucide-react";
 import { buildSearchIndex, search } from "../../lib/search/searchEngine";
 import type { SearchResult } from "../../lib/search/types";
 import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 import type { HaDeviceRow } from "../../types";
 import { IconButton } from "../ui/IconButton";
 
@@ -12,7 +13,8 @@ const CATEGORY_ICONS: Record<SearchResult["category"], typeof FileText> = {
   reminder: Bell,
   automation: Zap,
   device: Power,
-  setting: Settings
+  setting: Settings,
+  "team-task": Users
 };
 
 type Props = {
@@ -21,11 +23,14 @@ type Props = {
   reminders: Reminder[];
   rules: AutomationRule[];
   devices: HaDeviceRow[];
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
   onOpenNote?: (noteId: string) => void;
   onOpenTask?: (taskId: string) => void;
   onOpenReminder?: (reminderId: string) => void;
   onOpenAutomation?: (ruleId: string) => void;
   onToggleDevice?: (entityId: string) => void;
+  onOpenTeamTask?: (teamTaskId: string) => void;
   onOpenAppearance?: () => void;
   onClose: () => void;
 };
@@ -36,11 +41,14 @@ export function CommandPalette({
   reminders,
   rules,
   devices,
+  teamTasks = [],
+  teamProjects = [],
   onOpenNote,
   onOpenTask,
   onOpenReminder,
   onOpenAutomation,
   onToggleDevice,
+  onOpenTeamTask,
   onOpenAppearance,
   onClose
 }: Props): JSX.Element {
@@ -50,8 +58,8 @@ export function CommandPalette({
   const listRef = useRef<HTMLUListElement>(null);
 
   const index = useMemo(
-    () => buildSearchIndex(notes, tasks, reminders, rules, devices),
-    [notes, tasks, reminders, rules, devices]
+    () => buildSearchIndex(notes, tasks, reminders, rules, devices, teamTasks, teamProjects),
+    [notes, tasks, reminders, rules, devices, teamTasks, teamProjects]
   );
 
   const results = useMemo(() => search(query, index), [query, index]);
@@ -84,6 +92,9 @@ export function CommandPalette({
         case "device":
           onToggleDevice?.(id);
           break;
+        case "team-task":
+          onOpenTeamTask?.(id);
+          break;
         case "setting":
           if (id === "theme" || id === "density") {
             onOpenAppearance?.();
@@ -92,7 +103,7 @@ export function CommandPalette({
       }
       onClose();
     },
-    [onOpenNote, onOpenTask, onOpenReminder, onOpenAutomation, onToggleDevice, onOpenAppearance, onClose]
+    [onOpenNote, onOpenTask, onOpenReminder, onOpenAutomation, onToggleDevice, onOpenTeamTask, onOpenAppearance, onClose]
   );
 
   const handleKeyDown = useCallback(
@@ -138,7 +149,7 @@ export function CommandPalette({
             ref={inputRef}
             type="text"
             className="commandPaletteInput"
-            placeholder="Search notes, tasks, reminders, automations, devices..."
+            placeholder="Search notes, tasks, reminders, automations, devices, team tasks..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}

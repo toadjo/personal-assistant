@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildSearchIndex, search } from "./searchEngine";
 import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 import type { HaDeviceRow } from "../../types";
 
 function makeNote(id: string, title: string, content = ""): Note {
@@ -49,6 +50,35 @@ function makeRule(id: string, name: string): AutomationRule {
 
 function makeDevice(entityId: string, friendlyName: string, state = "off"): HaDeviceRow {
   return { entityId, friendlyName, state };
+}
+
+function makeTeamTask(id: string, projectId: string, title: string, notes = "", status: "open" | "done" = "open", assigneeDisplayName: string | null = null): TeamProjectTask {
+  return {
+    id,
+    projectId,
+    workspaceId: "ws-1",
+    title,
+    notes,
+    dueAt: null,
+    priority: "normal",
+    recurrence: "none",
+    assigneeDisplayName,
+    status,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    createdBy: "user-1",
+    updatedBy: "user-1"
+  };
+}
+
+function makeTeamProject(id: string, name: string): TeamProject {
+  return {
+    id,
+    workspaceId: "ws-1",
+    name,
+    createdAt: "2026-01-01T00:00:00Z",
+    createdBy: "user-1"
+  };
 }
 
 describe("searchEngine", () => {
@@ -112,5 +142,133 @@ describe("searchEngine", () => {
     const index = buildSearchIndex([], [], [], [], []);
     expect(index.some((r) => r.id === "setting:theme" && r.title === "Appearance")).toBe(true);
     expect(index.some((r) => r.id === "setting:density" && r.title === "Layout")).toBe(true);
+  });
+
+  describe("team tasks", () => {
+    it("indexes team tasks with correct category and id", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Fix bug")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      expect(index.some((r) => r.id === "team-task:tt1")).toBe(true);
+      const teamTaskResult = index.find((r) => r.id === "team-task:tt1");
+      expect(teamTaskResult?.category).toBe("team-task");
+      expect(teamTaskResult?.title).toBe("Fix bug");
+    });
+
+    it("searches team tasks by title", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Implement feature")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const results = search("implement", index);
+      expect(results.length).toBe(1);
+      expect(results[0]?.id).toBe("team-task:tt1");
+    });
+
+    it("searches team tasks by project name", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Task")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const results = search("frontend", index);
+      expect(results.length).toBe(1);
+      expect(results[0]?.id).toBe("team-task:tt1");
+    });
+
+    it("searches team tasks by assignee", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Task", "", "open", "Alice")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const results = search("alice", index);
+      expect(results.length).toBe(1);
+      expect(results[0]?.id).toBe("team-task:tt1");
+    });
+
+    it("searches team tasks by notes", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Task", "Important notes about this task")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const results = search("important", index);
+      expect(results.length).toBe(1);
+      expect(results[0]?.id).toBe("team-task:tt1");
+    });
+
+    it("includes status in subtitle", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Task", "", "open")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const teamTaskResult = index.find((r) => r.id === "team-task:tt1");
+      expect(teamTaskResult?.subtitle).toContain("Open");
+    });
+
+    it("includes project name in subtitle when available", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Task")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const teamTaskResult = index.find((r) => r.id === "team-task:tt1");
+      expect(teamTaskResult?.subtitle).toContain("Frontend");
+    });
+
+    it("includes assignee in subtitle when available", () => {
+      const index = buildSearchIndex(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [makeTeamTask("tt1", "proj-1", "Task", "", "open", "Alice")],
+        [makeTeamProject("proj-1", "Frontend")]
+      );
+
+      const teamTaskResult = index.find((r) => r.id === "team-task:tt1");
+      expect(teamTaskResult?.subtitle).toContain("Alice");
+    });
   });
 });

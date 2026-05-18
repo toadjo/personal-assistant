@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CommandPalette } from "./CommandPalette";
 import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 import type { HaDeviceRow } from "../../types";
 
 function makeNote(id: string, title: string): Note {
@@ -43,6 +44,35 @@ function _makeRule(id: string, name: string): AutomationRule {
 
 function _makeDevice(entityId: string, friendlyName: string): HaDeviceRow {
   return { entityId, friendlyName, state: "off" };
+}
+
+function makeTeamTask(id: string, projectId: string, title: string): TeamProjectTask {
+  return {
+    id,
+    projectId,
+    workspaceId: "ws-1",
+    title,
+    notes: "",
+    dueAt: null,
+    priority: "normal",
+    recurrence: "none",
+    assigneeDisplayName: null,
+    status: "open",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    createdBy: "user-1",
+    updatedBy: "user-1"
+  };
+}
+
+function makeTeamProject(id: string, name: string): TeamProject {
+  return {
+    id,
+    workspaceId: "ws-1",
+    name,
+    createdAt: "2026-01-01T00:00:00Z",
+    createdBy: "user-1"
+  };
 }
 
 const noop = () => undefined;
@@ -130,5 +160,45 @@ describe("CommandPalette", () => {
     // First item should be selected by default, arrow down moves to second
     // Visual selection is class-based; we verify no errors are thrown
     expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
+  describe("team tasks", () => {
+    it("renders team task results", () => {
+      render(
+        <CommandPalette
+          notes={[]}
+          tasks={[]}
+          reminders={[]}
+          rules={[]}
+          devices={[]}
+          teamTasks={[makeTeamTask("tt1", "proj-1", "Fix bug")]}
+          teamProjects={[makeTeamProject("proj-1", "Frontend")]}
+          onClose={noop}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText(/Search/), { target: { value: "fix" } });
+      expect(screen.getByText("Fix bug")).toBeInTheDocument();
+      expect(screen.getByText("Open team task")).toBeInTheDocument();
+    });
+
+    it("calls onOpenTeamTask when team task result is clicked", () => {
+      const onOpenTeamTask = vi.fn();
+      render(
+        <CommandPalette
+          notes={[]}
+          tasks={[]}
+          reminders={[]}
+          rules={[]}
+          devices={[]}
+          teamTasks={[makeTeamTask("tt1", "proj-1", "Implement feature")]}
+          teamProjects={[makeTeamProject("proj-1", "Frontend")]}
+          onOpenTeamTask={onOpenTeamTask}
+          onClose={noop}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText(/Search/), { target: { value: "implement" } });
+      fireEvent.click(screen.getByText("Implement feature"));
+      expect(onOpenTeamTask).toHaveBeenCalledWith("tt1");
+    });
   });
 });

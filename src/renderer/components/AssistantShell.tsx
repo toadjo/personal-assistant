@@ -288,6 +288,8 @@ export function AssistantShell(): JSX.Element {
               reminders={data.reminders}
               rules={data.rules}
               devices={data.devices}
+              teamTasks={team.tasks}
+              teamProjects={team.projects}
               onOpenNote={(id) => {
                 data.setQuery("");
                 ui.setStatus(`Note opened: ${id}`);
@@ -305,6 +307,15 @@ export function AssistantShell(): JSX.Element {
               }}
               onToggleDevice={(entityId) => {
                 void ha.runDeviceToggle(entityId, entityId);
+              }}
+              onOpenTeamTask={(id) => {
+                const unifiedItem = inbox.unifiedItems.find(item => item.source === "team-task" && item.sourceId === id);
+                if (unifiedItem) {
+                  setSelectedWorkItem(unifiedItem);
+                  ui.setStatus("Team task opened.");
+                } else {
+                  ui.reportError("Team task not found in unified items.");
+                }
               }}
               onOpenAppearance={() => setShowAppearance(true)}
               onClose={() => setShowPalette(false)}
