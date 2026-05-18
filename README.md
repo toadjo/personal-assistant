@@ -6,14 +6,12 @@ Local-first desktop personal assistant built with Electron + React + TypeScript.
 
 1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
    - Windows: `Setup` `.exe`
-   - Linux: `.AppImage` (AppImage-only support in this pass)
-   - macOS: `.dmg` or `.zip`
-   - **Note:** Some releases may be Windows-only due to GitHub Actions budget constraints. macOS/Linux assets are omitted in those cases.
+   - **Current releases are Windows-only** due to GitHub Actions budget constraints. macOS/Linux assets are omitted until budget is restored.
 2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
 
-Releases are built locally and uploaded manually when GitHub Actions budget is unavailable. See [RELEASING.md](./RELEASING.md) for the full release process.
+Releases are built locally and uploaded manually while GitHub Actions budget is unavailable. See [RELEASING.md](./RELEASING.md) for the full release process.
 
 ## Working on the app
 

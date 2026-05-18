@@ -17,7 +17,39 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 - Avoid bumping more than one MINOR per day. If you previously shipped two minors back-to-back, a follow-up should be a PATCH.
 - Avoid releasing without a CHANGELOG entry. Each shipped tag must have a corresponding section in `CHANGELOG.md`.
 
-## Release flow
+## Release flow (Windows-only manual)
+
+When GitHub Actions budget is unavailable, releases ship Windows-only via local build and manual upload. macOS/Linux assets are omitted until budget is restored.
+
+1. Run local verification:
+   - `npm run check:preload-ipc`
+   - `npm run typecheck`
+   - `npm run lint`
+   - `npm test`
+   - `npm run build`
+   - `npm run test:smoke`
+   - `npm run test:preload-electron`
+
+2. Build Windows release assets:
+   - `npm run release:build -- -Version X.Y.Z -SkipVersionBump -ReplaceExisting`
+
+3. Validate local outputs:
+   - Confirm `release/vX.Y.Z` exists.
+   - Confirm `installer-history/vX.Y.Z` exists.
+   - Confirm the Windows `.exe`, `.blockmap`, and `yml` files exist.
+   - Confirm generated release artifacts are not committed.
+
+4. GitHub manual upload:
+   - Commit as `release: prepare vX.Y.Z`.
+   - Tag `vX.Y.Z`.
+   - Push `main` and the tag.
+   - Create or edit the GitHub Release manually.
+   - Upload only the Windows installer/update assets.
+   - Release notes must state this is a Windows-only release and that macOS/Linux assets are omitted due to Actions budget constraints.
+
+## GitHub Actions release flow (future, when budget restored)
+
+When GitHub Actions budget is restored, the automated multi-platform release flow can be used:
 
 1. Open a `release/vX.Y.Z` branch off `main`.
 2. Bump `package.json` to the target version.
@@ -30,9 +62,9 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 
 ## Asset rules
 
-- The release workflow uploads installers and update manifests directly to GitHub Release assets, **not** via `actions/upload-artifact`. This keeps the Actions storage quota free.
-- When GitHub Actions budget is unavailable, only Windows assets are produced via the local manual release flow below; macOS/Linux assets are intentionally omitted for those releases.
-- `latest.yml`, `latest-mac.yml`, `latest-linux.yml`, `.blockmap`, and `.zsync` files are required for electron-updater clients on existing installs.
+- Windows manual releases upload only the `.exe`, `.blockmap`, and `latest.yml` files to GitHub Release assets. macOS/Linux assets are omitted.
+- When GitHub Actions budget is restored, the automated workflow uploads installers and update manifests directly to GitHub Release assets, **not** via `actions/upload-artifact`. This keeps the Actions storage quota free.
+- For Windows manual releases, only `latest.yml` and `.blockmap` are required for electron-updater clients on existing Windows installs.
 
 ## Auto-update considerations
 
@@ -42,36 +74,7 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 
 ## When something goes wrong
 
-- The release workflow refuses to dispatch if `package.json` does not match the requested version, and refuses to overwrite an existing non-draft release.
-- If a draft is left behind from a failed run, delete it (`gh release delete vX.Y.Z --yes`) before re-running.
+- For Windows manual releases: if the local build fails, check the error output and fix the issue before retrying. If the GitHub Release already exists, edit it manually instead of creating a new one.
+- For GitHub Actions releases (when budget restored): the release workflow refuses to dispatch if `package.json` does not match the requested version, and refuses to overwrite an existing non-draft release.
+- If a draft is left behind from a failed Actions run, delete it (`gh release delete vX.Y.Z --yes`) before re-running.
 - If a non-draft release is broken, prefer publishing a follow-up PATCH instead of deleting the broken one (preserves user-visible history).
-
-## Windows-only manual release
-
-When GitHub Actions budget is unavailable, releases can be done manually for Windows only:
-
-1. Run local verification:
-   - `npm run check:preload-ipc`
-   - `npm run typecheck`
-   - `npm run lint`
-   - `npm test`
-   - `npm run build`
-   - `npm run test:smoke`
-   - `npm run test:preload-electron`
-
-2. Build Windows release assets:
-   - `npm run release:build -- -Version X.Y.Z`
-
-3. Validate local outputs:
-   - Confirm `release/vX.Y.Z` exists.
-   - Confirm `installer-history/vX.Y.Z` exists.
-   - Confirm the Windows `.exe`, `.blockmap`, and `.yml` files exist.
-   - Confirm generated release artifacts are not committed.
-
-4. GitHub manual upload:
-   - Commit as `release: prepare vX.Y.Z`.
-   - Tag `vX.Y.Z`.
-   - Push `main` and the tag.
-   - Create or edit the GitHub Release manually.
-   - Upload only the Windows installer/update assets.
-   - Release notes must state this is a Windows manual release and that macOS/Linux assets are omitted due to Actions budget constraints.

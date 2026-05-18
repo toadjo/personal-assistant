@@ -145,12 +145,16 @@ npm run dev
 
 ## Release workflow behavior
 
+**Note:** GitHub Actions workflows are currently blocked by budget exhaustion. Do not attempt to trigger or debug Actions release workflows. Use the Windows-only manual release flow documented in `RELEASING.md` and `docs/RELEASE_CHECKLIST.md`.
+
+When budget is restored, the automated multi-platform release flow will resume:
+
 - `package-windows`: builds NSIS artifacts and uploads `installer-history/vX.Y.Z/*`
 - `package-linux`: builds Linux AppImage artifacts and uploads `release/`
 - `package-macos`: builds macOS DMG/zip artifacts and uploads `release/`
 - `publish-releases`: downloads Windows, Linux, and macOS artifact sets, validates required assets, then publishes/mirrors
 
-Validation and mirroring rules:
+Validation and mirroring rules (when budget restored):
 
 - Required before publish: at least one `.exe`, at least one `.AppImage`, and at least one `.dmg`
 - Optional metadata files may be uploaded when present: `.blockmap`, `.yml`, `.AppImage.zsync`, `.zip`
