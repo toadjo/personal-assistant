@@ -1,4 +1,5 @@
 import { Monitor, Wifi, WifiOff } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { ThemeSelect } from "./layout/ThemeSelect";
 import { IconButton } from "./ui/IconButton";
@@ -6,9 +7,35 @@ import { StatusChip } from "./ui/StatusChip";
 import { HomeAssistantPanel } from "./panels/HomeAssistantPanel";
 import { AutomationLogsPanel } from "./panels/AutomationLogsPanel";
 import { AutomationRulesPanel } from "./panels/AutomationRulesPanel";
+import { getAutomationFocusIntent, clearAutomationFocusIntent } from "../lib/automation-focus-intent";
 
 export function HouseholdShell(): JSX.Element {
   const { ui, data, ha, automation } = useAssistantWorkspace();
+  const [focusedRuleId, setFocusedRuleId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read focus intent on mount
+    const ruleId = getAutomationFocusIntent();
+    if (ruleId) {
+      setFocusedRuleId(ruleId);
+      // Clear the intent after consuming it
+      clearAutomationFocusIntent();
+    }
+
+    // Listen for storage changes while window is open
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "assistant-automation-focus-intent") {
+        const newRuleId = getAutomationFocusIntent();
+        if (newRuleId) {
+          setFocusedRuleId(newRuleId);
+          clearAutomationFocusIntent();
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   return (
     <main className="container householdWindowLayout">
@@ -61,6 +88,7 @@ export function HouseholdShell(): JSX.Element {
 
         <div className="grid householdAutomationGrid">
           <AutomationRulesPanel
+            focusedRuleId={focusedRuleId}
             isRefreshing={data.isRefreshing}
             rules={data.rules}
             devices={data.devices}

@@ -29,7 +29,7 @@ type Props = {
   onOpenReminders?: (filter: ReminderFilter) => void;
   onOpenNotes?: () => void;
   onOpenWorkItem?: (item: BriefItem) => void;
-  onOpenAutomations?: () => void;
+  onOpenAutomations?: (item: BriefItem) => void;
 };
 
 function getIconForUrgency(urgency: BriefItem["urgency"]) {
@@ -399,7 +399,7 @@ export function DailyCommandCenterPanel({
                             <IconButton
                               icon={ExternalLink}
                               size={16}
-                              onClick={() => onOpenAutomations()}
+                              onClick={() => onOpenAutomations(item)}
                               label={`Open automations: ${item.label}`}
                               title="Open"
                               className="dccActionButton"

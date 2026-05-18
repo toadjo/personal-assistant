@@ -1,11 +1,13 @@
 import type { AutomationRuleListItem, HaDeviceRow } from "../../types";
 import { Timer, Pause, Play, Trash2, Zap, Copy, PlayCircle } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 import { RuleForm } from "../forms/RuleForm";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import { EmptyState } from "../ui/EmptyState";
 
 type Props = {
+  focusedRuleId?: string | null;
   isRefreshing: boolean;
   rules: AutomationRuleListItem[];
   devices: HaDeviceRow[];
@@ -19,6 +21,7 @@ type Props = {
 };
 
 export function AutomationRulesPanel({
+  focusedRuleId,
   isRefreshing,
   rules,
   devices,
@@ -30,6 +33,25 @@ export function AutomationRulesPanel({
   onDuplicateRule,
   onTestRunRule
 }: Props): JSX.Element {
+  const focusedRef = useRef<HTMLLIElement>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (focusedRuleId) {
+      setHighlightId(focusedRuleId);
+      // Clear the highlight after a short delay
+      const timeout = setTimeout(() => {
+        setHighlightId(null);
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [focusedRuleId]);
+
+  useEffect(() => {
+    if (highlightId && focusedRef.current) {
+      focusedRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightId]);
   return (
     <section className="panel addOnPanel">
       <PanelHeader icon={Timer} title="Automations" />
@@ -40,7 +62,11 @@ export function AutomationRulesPanel({
           <li className="muted">Loading...</li>
         ) : rules.length ? (
           rules.map((r) => (
-            <li key={r.id} className="listRow">
+            <li
+              key={r.id}
+              ref={r.id === highlightId ? focusedRef : undefined}
+              className={`listRow ${r.id === highlightId ? "listRowFocused" : ""}`}
+            >
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className={r.enabled ? "" : "muted"}>{r.enabled ? "" : "Paused: "}</span>
                 {r.name} at {r.triggerConfig.at} -{" "}

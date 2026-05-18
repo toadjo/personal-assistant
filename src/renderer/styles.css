@@ -1112,6 +1112,14 @@ button:disabled {
   padding-bottom: 0;
 }
 
+.listRowFocused {
+  background-color: var(--focus-bg);
+  border-left: 3px solid var(--focus-border);
+  transition:
+    background-color 2s ease-out,
+    border-left-color 2s ease-out;
+}
+
 .status {
   margin: 0 0 10px;
   color: var(--success-text);

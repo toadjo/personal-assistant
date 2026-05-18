@@ -31,6 +31,7 @@ import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
 import { findUnifiedWorkItem } from "../lib/unified-work-item-lookup";
+import { setAutomationFocusIntent } from "../lib/automation-focus-intent";
 import { getAssistantInvokeErrorMessage } from "../lib/errors";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
@@ -340,7 +341,8 @@ export function AssistantShell(): JSX.Element {
                 reminders.setFilter("all");
                 openUnifiedWorkItem("local-reminder", id);
               }}
-              onOpenAutomation={(_id) => {
+              onOpenAutomation={(id) => {
+                setAutomationFocusIntent(id);
                 window.assistantApi.openHouseholdWindow();
               }}
               onToggleDevice={(entityId) => {
@@ -467,7 +469,12 @@ export function AssistantShell(): JSX.Element {
             onOpenTasks={tasks.setFilter}
             onOpenReminders={reminders.setFilter}
             onOpenNotes={() => data.setQuery("")}
-            onOpenAutomations={() => window.assistantApi.openHouseholdWindow()}
+            onOpenAutomations={(briefItem) => {
+              if (briefItem.kind === "automation") {
+                setAutomationFocusIntent(briefItem.sourceId);
+              }
+              window.assistantApi.openHouseholdWindow();
+            }}
             onOpenWorkItem={(briefItem) => {
               // Map BriefItem to UnifiedWorkItem using sourceId and kind
               const kindToSource: Record<string, string> = {

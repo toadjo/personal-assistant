@@ -607,6 +607,10 @@ describe("DailyCommandCenterPanel", () => {
     expect(automationOpenButton).toBeDefined();
     automationOpenButton?.click();
 
-    expect(onOpenAutomations).toHaveBeenCalled();
+    expect(onOpenAutomations).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "automation",
+      label: "Morning reminder",
+      sourceId: "rule-1"
+    }));
   });
 });
