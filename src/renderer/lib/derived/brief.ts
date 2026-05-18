@@ -1,4 +1,4 @@
-import type { Note, Reminder, Task } from "../../../shared/types";
+import type { Note, Reminder, Task, AutomationRule } from "../../../shared/types";
 import type { BriefItem, BriefItemUrgency } from "../../types";
 import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
@@ -57,6 +57,7 @@ export function deriveFocusBrief(params: {
   pinnedNotes: Note[];
   teamTasks?: TeamProjectTask[];
   teamProjects?: TeamProject[];
+  automationRules?: AutomationRule[];
   now?: Date;
 }): BriefItem[] {
   const now = params.now || new Date();
@@ -64,6 +65,7 @@ export function deriveFocusBrief(params: {
   const seenSourceIds = new Set<string>();
   const teamTasks = params.teamTasks || [];
   const teamProjects = params.teamProjects || [];
+  const automationRules = params.automationRules || [];
 
   // Helper to create source-aware dedupe key
   const getDedupeKey = (kind: string, sourceId: string): string => `${kind}:${sourceId}`;
@@ -167,6 +169,31 @@ export function deriveFocusBrief(params: {
       detail: note.content ? note.content.slice(0, 100) : undefined,
       urgency: "context",
       sourceId: note.id
+    });
+  }
+
+  // Enabled automation rules (context, lowest priority)
+  for (const rule of automationRules) {
+    if (!rule.enabled) continue;
+    const key = getDedupeKey("automation", rule.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
+
+    // Format detail like "Runs at 08:00 | reminder" or "Runs at 08:00 | create task"
+    const actionTypeLabel: Record<AutomationRule["actionType"], string> = {
+      localReminder: "reminder",
+      localTask: "create task",
+      haToggle: "toggle device"
+    };
+    const actionLabel = actionTypeLabel[rule.actionType];
+    const detail = `Runs at ${rule.triggerConfig.at} | ${actionLabel}`;
+
+    items.push({
+      kind: "automation",
+      label: rule.name,
+      detail,
+      urgency: "context",
+      sourceId: rule.id
     });
   }
 

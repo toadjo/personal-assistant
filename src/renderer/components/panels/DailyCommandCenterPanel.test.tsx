@@ -21,6 +21,7 @@ describe("DailyCommandCenterPanel", () => {
   const onCompleteReminder = vi.fn();
   const onSnoozeReminder = vi.fn();
   const onMarkSeen = vi.fn();
+  const onOpenAutomations = vi.fn();
 
   it("renders summary and empty state when no items", () => {
     render(
@@ -544,5 +545,68 @@ describe("DailyCommandCenterPanel", () => {
       sourceId: "tt1"
     }));
     expect(onCompleteTask).not.toHaveBeenCalled();
+  });
+
+  it("renders automation items in context section", () => {
+    const data = makeData({
+      contextItems: [
+        {
+          kind: "automation",
+          label: "Morning reminder",
+          detail: "Runs at 08:00 | reminder",
+          urgency: "context",
+          sourceId: "rule-1"
+        }
+      ],
+      summary: "Focus: 1 context items."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+      />
+    );
+
+    expect(screen.getByText("Morning reminder")).toBeInTheDocument();
+    expect(screen.getByText("Runs at 08:00 | reminder")).toBeInTheDocument();
+  });
+
+  it("calls onOpenAutomations when automation Open action is clicked", () => {
+    const data = makeData({
+      contextItems: [
+        {
+          kind: "automation",
+          label: "Morning reminder",
+          detail: "Runs at 08:00 | reminder",
+          urgency: "context",
+          sourceId: "rule-1"
+        }
+      ],
+      summary: "Focus: 1 context items."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenAutomations={onOpenAutomations}
+      />
+    );
+
+    // Find the Open button for automation items
+    const openButtons = screen.getAllByTitle("Open");
+    // The automation Open button should be present
+    const automationOpenButton = openButtons.find((btn) => btn.getAttribute("aria-label")?.includes("automations"));
+    expect(automationOpenButton).toBeDefined();
+    automationOpenButton?.click();
+
+    expect(onOpenAutomations).toHaveBeenCalled();
   });
 });

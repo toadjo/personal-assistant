@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { deriveFocusBrief, getBriefSummary } from "./brief";
-import type { Note, Reminder, Task } from "../../../shared/types";
+import type { Note, Reminder, Task, AutomationRule } from "../../../shared/types";
 import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 describe("deriveFocusBrief", () => {
@@ -515,6 +515,153 @@ describe("deriveFocusBrief", () => {
       expect(result).toHaveLength(2);
       expect(result[0]?.kind).toBe("task");
       expect(result[1]?.kind).toBe("team-task");
+    });
+  });
+
+  describe("automation rules", () => {
+    it("should include enabled automation rules with context urgency", () => {
+      const rule: AutomationRule = {
+        id: "rule-1",
+        name: "Morning reminder",
+        triggerType: "time",
+        triggerConfig: { at: "08:00" },
+        actionType: "localReminder",
+        actionConfig: { text: "Wake up" },
+        enabled: true
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        automationRules: [rule],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.kind).toBe("automation");
+      expect(result[0]?.urgency).toBe("context");
+      expect(result[0]?.label).toBe("Morning reminder");
+      expect(result[0]?.detail).toBe("Runs at 08:00 | reminder");
+    });
+
+    it("should exclude disabled automation rules", () => {
+      const rule: AutomationRule = {
+        id: "rule-1",
+        name: "Disabled rule",
+        triggerType: "time",
+        triggerConfig: { at: "08:00" },
+        actionType: "localReminder",
+        actionConfig: { text: "Wake up" },
+        enabled: false
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        automationRules: [rule],
+        now
+      });
+
+      expect(result).toHaveLength(0);
+    });
+
+    it("should format detail for localTask action type", () => {
+      const rule: AutomationRule = {
+        id: "rule-1",
+        name: "Daily task",
+        triggerType: "time",
+        triggerConfig: { at: "09:00" },
+        actionType: "localTask",
+        actionConfig: {
+          title: "Check email",
+          notes: "",
+          dueAt: null,
+          priority: "normal",
+          recurrence: "none"
+        },
+        enabled: true
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        automationRules: [rule],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.detail).toBe("Runs at 09:00 | create task");
+    });
+
+    it("should format detail for haToggle action type", () => {
+      const rule: AutomationRule = {
+        id: "rule-1",
+        name: "Morning lights",
+        triggerType: "time",
+        triggerConfig: { at: "07:00" },
+        actionType: "haToggle",
+        actionConfig: { entityId: "light.kitchen" },
+        enabled: true
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        automationRules: [rule],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.detail).toBe("Runs at 07:00 | toggle device");
+    });
+
+    it("should sort automation rules in context section with other context items", () => {
+      const note: Note = {
+        id: "1",
+        title: "Pinned note",
+        content: "Important context",
+        tags: [],
+        pinned: true,
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z"
+      };
+
+      const rule: AutomationRule = {
+        id: "rule-1",
+        name: "Morning reminder",
+        triggerType: "time",
+        triggerConfig: { at: "08:00" },
+        actionType: "localReminder",
+        actionConfig: { text: "Wake up" },
+        enabled: true
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [note],
+        automationRules: [rule],
+        now
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result.every(item => item.urgency === "context")).toBe(true);
+      expect(result[0]?.kind).toBe("automation");
+      expect(result[1]?.kind).toBe("note");
     });
   });
 });

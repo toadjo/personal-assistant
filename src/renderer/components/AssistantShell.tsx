@@ -160,7 +160,8 @@ export function AssistantShell(): JSX.Element {
         })),
       pinnedNotes: data.notes.filter((note) => note.pinned),
       teamTasks: team.tasks.filter(t => t.status === "open"),
-      teamProjects: team.projects
+      teamProjects: team.projects,
+      automationRules: data.rules
     });
     const awayBrief = deriveAwayBrief({
       tasks: data.tasks,
@@ -173,13 +174,14 @@ export function AssistantShell(): JSX.Element {
     const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief, filter: dailyCommandCenter.filter });
     setDailyCommandCenter(dcc);
   }, [
-    data.tasks,
-    data.reminders,
-    data.notes,
     tasks.overdueOpen,
     tasks.dueTodayOpen,
     reminders.pending,
     calendar.selectedDayAgenda,
+    data.notes,
+    data.rules,
+    data.reminders,
+    data.tasks,
     team.tasks,
     team.projects,
     dailyCommandCenter.filter
@@ -338,8 +340,8 @@ export function AssistantShell(): JSX.Element {
                 reminders.setFilter("all");
                 openUnifiedWorkItem("local-reminder", id);
               }}
-              onOpenAutomation={(id) => {
-                ui.setStatus(`Automation opened: ${id}`);
+              onOpenAutomation={(_id) => {
+                window.assistantApi.openHouseholdWindow();
               }}
               onToggleDevice={(entityId) => {
                 void ha.runDeviceToggle(entityId, entityId);
@@ -446,7 +448,8 @@ export function AssistantShell(): JSX.Element {
             onFilterReminders={() => reminders.setFilter("pending")}
             onFilterNotes={() => data.setQuery("")}
             onFilterAutomations={() => {
-              /* automations don't have a panel filter, noop */
+              setDailyCommandCenterFilter("household");
+              ui.setStatus("Showing household automations.");
             }}
             onFilterTeam={() => {
               setDailyCommandCenterFilter("team");
@@ -464,6 +467,7 @@ export function AssistantShell(): JSX.Element {
             onOpenTasks={tasks.setFilter}
             onOpenReminders={reminders.setFilter}
             onOpenNotes={() => data.setQuery("")}
+            onOpenAutomations={() => window.assistantApi.openHouseholdWindow()}
             onOpenWorkItem={(briefItem) => {
               // Map BriefItem to UnifiedWorkItem using sourceId and kind
               const kindToSource: Record<string, string> = {

@@ -29,6 +29,7 @@ type Props = {
   onOpenReminders?: (filter: ReminderFilter) => void;
   onOpenNotes?: () => void;
   onOpenWorkItem?: (item: BriefItem) => void;
+  onOpenAutomations?: () => void;
 };
 
 function getIconForUrgency(urgency: BriefItem["urgency"]) {
@@ -112,7 +113,8 @@ export function DailyCommandCenterPanel({
   onOpenTasks,
   onOpenReminders,
   onOpenNotes,
-  onOpenWorkItem
+  onOpenWorkItem,
+  onOpenAutomations
 }: Props): JSX.Element {
   const { nowItems, attentionItems, contextItems, awayItems, summary, pressure } = data;
 
@@ -389,6 +391,16 @@ export function DailyCommandCenterPanel({
                               size={16}
                               onClick={() => onOpenNotes()}
                               label={`Open notes: ${item.label}`}
+                              title="Open"
+                              className="dccActionButton"
+                            />
+                          )}
+                          {item.kind === "automation" && onOpenAutomations && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenAutomations()}
+                              label={`Open automations: ${item.label}`}
                               title="Open"
                               className="dccActionButton"
                             />
