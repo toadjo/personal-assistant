@@ -31,6 +31,7 @@ import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
 import { findUnifiedWorkItem } from "../lib/unified-work-item-lookup";
+import { getAssistantInvokeErrorMessage } from "../lib/errors";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
@@ -511,11 +512,28 @@ export function AssistantShell(): JSX.Element {
                   dayAgenda={calendar.selectedDayAgenda}
                   agendaFilter={calendar.agendaFilter}
                   setAgendaFilter={calendar.setAgendaFilter}
-                  onCreateReminder={(dateKey) => {
-                    ui.setStatus(`Create reminder for ${dateKey} (not yet implemented).`);
+                  onCreateReminder={async (payload) => {
+                    try {
+                      await window.assistantApi.createReminder(payload);
+                      await data.refreshReminders();
+                      ui.showSuccess("Reminder created.");
+                    } catch (err) {
+                      ui.reportError(getAssistantInvokeErrorMessage(err));
+                    }
                   }}
-                  onCreateTask={(dateKey) => {
-                    ui.setStatus(`Create task for ${dateKey} (not yet implemented).`);
+                  onCreateTask={async (payload) => {
+                    try {
+                      await tasks.saveTask({
+                        title: payload.title,
+                        notes: payload.notes ?? "",
+                        dueAt: payload.dueAt ?? null,
+                        priority: payload.priority,
+                        recurrence: payload.recurrence
+                      });
+                      ui.showSuccess("Task created.");
+                    } catch (err) {
+                      ui.reportError(getAssistantInvokeErrorMessage(err));
+                    }
                   }}
                 />
               </div>

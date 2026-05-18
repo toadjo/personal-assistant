@@ -1,0 +1,71 @@
+.calendarCreateForm {
+  padding: var(--space-2);
+  background: var(--input-background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: var(--space-2);
+}
+
+.calendarCreateFormHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.calendarCreateFormTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calendarCreateFormBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarCreateFormInput {
+  padding: 8px;
+  background: var(--panel-background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.calendarCreateFormInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.calendarCreateFormInput::placeholder {
+  color: var(--muted);
+}
+
+.calendarCreateFormRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.calendarCreateFormSelect {
+  flex: 1;
+  padding: 8px;
+  background: var(--panel-background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.calendarCreateFormSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.calendarCreateFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
