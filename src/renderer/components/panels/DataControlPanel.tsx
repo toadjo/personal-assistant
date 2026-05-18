@@ -31,13 +31,15 @@ export function DataControlPanel({
     }
   }
 
+  const isBusy = isExporting || isImporting || isResetting;
+
   return (
     <section className="panel addOnPanel">
       <PanelHeader icon={Database} title="Data" />
       <p className="muted sectionIntro">Back up and restore your data, or start fresh.</p>
 
       <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap", padding: "var(--space-2) 0" }}>
-        <button type="button" className="ghostButton" onClick={() => void onExport()} disabled={isExporting}>
+        <button type="button" className="ghostButton" onClick={() => void onExport()} disabled={isBusy}>
           <Download size={14} />
           {isExporting ? "Exporting..." : "Export backup"}
         </button>
@@ -46,7 +48,7 @@ export function DataControlPanel({
           type="button"
           className="ghostButton"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isImporting}
+          disabled={isBusy}
         >
           <Upload size={14} />
           {isImporting ? "Importing..." : "Import backup"}
@@ -65,7 +67,7 @@ export function DataControlPanel({
           type="button"
           className="ghostButton dangerGhostButton"
           onClick={() => void onReset()}
-          disabled={isResetting}
+          disabled={isBusy}
         >
           <Trash2 size={14} />
           {isResetting ? "Resetting..." : "Delete all data"}
