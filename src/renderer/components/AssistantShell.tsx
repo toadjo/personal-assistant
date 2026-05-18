@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { useBackupActions } from "../hooks/workspace/useBackupActions";
 import { useTeamState } from "../hooks/team/useTeamState";
+import { useTeamRealtime } from "../hooks/team/useTeamRealtime";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
 import { OnboardingPanel } from "./panels/OnboardingPanel";
@@ -55,6 +56,9 @@ export function AssistantShell(): JSX.Element {
   };
 
   const team = useTeamState();
+
+  // Keep team data fresh across Personal mode surfaces
+  useTeamRealtime(team, { projects: true, tasks: true });
 
   // Load team config on mount
   useEffect(() => {

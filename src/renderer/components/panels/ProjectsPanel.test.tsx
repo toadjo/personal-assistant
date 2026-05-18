@@ -14,19 +14,25 @@ vi.mock("../../hooks/team/useTeamState", () => ({
   useTeamState: vi.fn()
 }));
 
+// Mock useTeamRealtime hook
+vi.mock("../../hooks/team/useTeamRealtime", () => ({
+  useTeamRealtime: vi.fn()
+}));
+
 import { useTeamState } from "../../hooks/team/useTeamState";
+import { useTeamRealtime } from "../../hooks/team/useTeamRealtime";
 
 // Mock window.assistantApi for realtime calls made directly from the panel.
 const teamRealtimeStartMock = vi.fn().mockResolvedValue(undefined);
 const teamRealtimeStopMock = vi.fn().mockResolvedValue(undefined);
-let teamDataUpdatedListener:
+let _teamDataUpdatedListener:
   | ((event: unknown, payload: { workspaceId: string; tables: ("projects" | "tasks")[] }) => void)
   | null = null;
 const onTeamDataUpdatedMock = vi.fn(
   (cb: (event: unknown, payload: { workspaceId: string; tables: ("projects" | "tasks")[] }) => void) => {
-    teamDataUpdatedListener = cb;
+    _teamDataUpdatedListener = cb;
     return () => {
-      teamDataUpdatedListener = null;
+      _teamDataUpdatedListener = null;
     };
   }
 );
@@ -41,10 +47,6 @@ Object.defineProperty(window, "assistantApi", {
   writable: true,
   configurable: true
 });
-
-function emitTeamDataUpdated(payload: { workspaceId: string; tables: ("projects" | "tasks")[] }): void {
-  teamDataUpdatedListener?.({}, payload);
-}
 
 describe("ProjectsPanel", () => {
   const mockTeamState = {
@@ -88,6 +90,7 @@ describe("ProjectsPanel", () => {
     mockTeamState.isLoadingTasks = false;
     mockTeamState.error = null;
     vi.mocked(useTeamState).mockReturnValue(mockTeamState);
+    vi.mocked(useTeamRealtime).mockClear();
   });
 
   describe("Workspace selection", () => {
@@ -973,126 +976,27 @@ describe("ProjectsPanel", () => {
       teamRealtimeStartMock.mockClear();
       teamRealtimeStopMock.mockClear();
       onTeamDataUpdatedMock.mockClear();
-      teamDataUpdatedListener = null;
+      _teamDataUpdatedListener = null;
+      vi.mocked(useTeamRealtime).mockClear();
     });
 
-    it("starts realtime and subscribes when an active workspace exists", async () => {
+    it("standalone mode (no externalTeam) calls useTeamRealtime", () => {
       mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
       mockTeamState.activeWorkspace = baseWorkspace;
 
       render(<ProjectsPanel />);
 
-      expect(teamRealtimeStartMock).toHaveBeenCalledTimes(1);
-      expect(onTeamDataUpdatedMock).toHaveBeenCalledTimes(1);
+      expect(useTeamRealtime).toHaveBeenCalledWith(mockTeamState, { projects: true, tasks: true, enabled: true });
     });
 
-    it("refreshes projects and tasks on matching workspace events", async () => {
-      vi.useFakeTimers();
-      try {
-        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
-        mockTeamState.activeWorkspace = baseWorkspace;
+    it("external team mode (externalTeam provided) calls useTeamRealtime with enabled: false", () => {
+      const externalTeamState = { ...mockTeamState };
+      externalTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
+      externalTeamState.activeWorkspace = baseWorkspace;
 
-        render(<ProjectsPanel />);
+      render(<ProjectsPanel team={externalTeamState as ReturnType<typeof useTeamState>} />);
 
-        // The initial active-workspace effect runs loadProjects/loadTasks once.
-        const initialLoadProjects = vi.mocked(mockTeamState.loadProjects).mock.calls.length;
-        const initialLoadTasks = vi.mocked(mockTeamState.loadTasks).mock.calls.length;
-
-        emitTeamDataUpdated({ workspaceId: "workspace-1", tables: ["projects", "tasks"] });
-        vi.advanceTimersByTime(250);
-
-        expect(vi.mocked(mockTeamState.loadProjects).mock.calls.length).toBe(initialLoadProjects + 1);
-        expect(vi.mocked(mockTeamState.loadTasks).mock.calls.length).toBe(initialLoadTasks + 1);
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it("ignores events for other workspaces", () => {
-      vi.useFakeTimers();
-      try {
-        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
-        mockTeamState.activeWorkspace = baseWorkspace;
-
-        render(<ProjectsPanel />);
-
-        const initialLoadProjects = vi.mocked(mockTeamState.loadProjects).mock.calls.length;
-        const initialLoadTasks = vi.mocked(mockTeamState.loadTasks).mock.calls.length;
-
-        emitTeamDataUpdated({ workspaceId: "other-workspace", tables: ["projects", "tasks"] });
-        vi.advanceTimersByTime(250);
-
-        expect(vi.mocked(mockTeamState.loadProjects).mock.calls.length).toBe(initialLoadProjects);
-        expect(vi.mocked(mockTeamState.loadTasks).mock.calls.length).toBe(initialLoadTasks);
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it("debounces repeated events into one refresh", () => {
-      vi.useFakeTimers();
-      try {
-        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
-        mockTeamState.activeWorkspace = baseWorkspace;
-
-        render(<ProjectsPanel />);
-
-        const initialLoadProjects = vi.mocked(mockTeamState.loadProjects).mock.calls.length;
-
-        emitTeamDataUpdated({ workspaceId: "workspace-1", tables: ["projects"] });
-        emitTeamDataUpdated({ workspaceId: "workspace-1", tables: ["projects"] });
-        emitTeamDataUpdated({ workspaceId: "workspace-1", tables: ["projects"] });
-        vi.advanceTimersByTime(250);
-
-        expect(vi.mocked(mockTeamState.loadProjects).mock.calls.length).toBe(initialLoadProjects + 1);
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it("accumulates different tables during debounce and refreshes both", () => {
-      vi.useFakeTimers();
-      try {
-        mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
-        mockTeamState.activeWorkspace = baseWorkspace;
-
-        render(<ProjectsPanel />);
-
-        const initialLoadProjects = vi.mocked(mockTeamState.loadProjects).mock.calls.length;
-        const initialLoadTasks = vi.mocked(mockTeamState.loadTasks).mock.calls.length;
-
-        // Send events for different tables within debounce window
-        emitTeamDataUpdated({ workspaceId: "workspace-1", tables: ["projects"] });
-        emitTeamDataUpdated({ workspaceId: "workspace-1", tables: ["tasks"] });
-        vi.advanceTimersByTime(250);
-
-        // Both should be refreshed
-        expect(vi.mocked(mockTeamState.loadProjects).mock.calls.length).toBe(initialLoadProjects + 1);
-        expect(vi.mocked(mockTeamState.loadTasks).mock.calls.length).toBe(initialLoadTasks + 1);
-      } finally {
-        vi.useRealTimers();
-      }
-    });
-
-    it("unsubscribes and stops realtime on unmount", () => {
-      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: "workspace-1" };
-      mockTeamState.activeWorkspace = baseWorkspace;
-
-      const { unmount } = render(<ProjectsPanel />);
-      unmount();
-
-      expect(teamRealtimeStopMock).toHaveBeenCalled();
-      expect(teamDataUpdatedListener).toBe(null);
-    });
-
-    it("does not start realtime when no active workspace exists", () => {
-      mockTeamState.config = { configured: true, backendConfigured: true, backendMode: "manual", displayName: "Alice", activeWorkspaceId: null };
-      mockTeamState.activeWorkspace = null;
-
-      render(<ProjectsPanel />);
-
-      expect(teamRealtimeStartMock).not.toHaveBeenCalled();
-      expect(onTeamDataUpdatedMock).not.toHaveBeenCalled();
+      expect(useTeamRealtime).toHaveBeenCalledWith(externalTeamState, { projects: true, tasks: true, enabled: false });
     });
   });
 });
