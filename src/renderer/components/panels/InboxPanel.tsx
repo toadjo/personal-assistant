@@ -149,7 +149,8 @@ export const InboxPanel = memo(function InboxPanel({
                           <div className="itemLabel">{item.label}</div>
                           <div className="itemMeta">
                             {getSourceLabel(item.source)}
-                            {item.assigneeDisplayName && ` · ${item.assigneeDisplayName}`}
+                            {item.projectName && ` | ${item.projectName}`}
+                            {item.assigneeDisplayName && ` | ${item.assigneeDisplayName}`}
                           </div>
                         </div>
                       </button>
@@ -193,8 +194,9 @@ export const InboxPanel = memo(function InboxPanel({
                           <div className="itemLabel">{item.label}</div>
                           <div className="itemMeta">
                             {getSourceLabel(item.source)}
-                            {item.priority !== "context" && ` · ${item.priority}`}
-                            {item.dueAt && ` · ${new Date(item.dueAt).toLocaleDateString()}`}
+                            {item.projectName && ` | ${item.projectName}`}
+                            {item.priority !== "context" && ` | ${item.priority}`}
+                            {item.dueAt && ` | ${new Date(item.dueAt).toLocaleDateString()}`}
                           </div>
                         </div>
                       </button>

@@ -12,11 +12,17 @@ import { StatusBanner } from "../layout/StatusBanner";
 import { EmptyState } from "../ui/EmptyState";
 import { useTeamState } from "../../hooks/team/useTeamState";
 import type { TeamProjectTask } from "../../../shared/team/types";
+import type { TeamState } from "../../hooks/team/useTeamState";
 import { validateWorkspaceKey } from "../../../shared/team/keyValidation";
 import "./ProjectsPanel.css";
 
-export function ProjectsPanel(): JSX.Element {
-  const team = useTeamState();
+type Props = {
+  team?: TeamState;
+};
+
+export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
+  const internalTeam = useTeamState();
+  const team = externalTeam ?? internalTeam;
   const [showSetupForm, setShowSetupForm] = useState(false);
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const [showJoinWorkspace, setShowJoinWorkspace] = useState(false);
@@ -51,28 +57,31 @@ export function ProjectsPanel(): JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [editValidationError, setEditValidationError] = useState<string | null>(null);
 
-  // Load config on mount
+  // Load config on mount (only if using internal team state)
   useEffect(() => {
+    if (externalTeam) return;
     void team.loadConfig();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [externalTeam]);
 
-  // Load workspaces when config is set
+  // Load workspaces when config is set (only if using internal team state)
   useEffect(() => {
+    if (externalTeam) return;
     if (team.config?.configured) {
       void team.loadWorkspaces();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team.config?.configured]);
+  }, [externalTeam, team.config?.configured]);
 
-  // Load projects when active workspace is set
+  // Load projects when active workspace is set (only if using internal team state)
   useEffect(() => {
+    if (externalTeam) return;
     if (team.activeWorkspace) {
       void team.loadProjects();
       void team.loadTasks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team.activeWorkspace]);
+  }, [externalTeam, team.activeWorkspace]);
 
   // Reset project filter if selected project no longer exists
   useEffect(() => {

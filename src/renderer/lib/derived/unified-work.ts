@@ -12,7 +12,7 @@
  */
 
 import type { Note, Reminder, Task } from "../../../shared/types";
-import type { TeamProjectTask } from "../../../shared/team/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 /**
  * Source of a unified work item.
@@ -62,6 +62,7 @@ export interface UnifiedWorkInput {
   localReminders: Reminder[];
   localNotes: Note[];
   teamTasks: TeamProjectTask[];
+  teamProjects: TeamProject[];
   now?: Date;
 }
 
@@ -125,6 +126,7 @@ export function deriveUnifiedWorkItems(input: UnifiedWorkInput): UnifiedWorkItem
   // Team tasks
   for (const teamTask of input.teamTasks) {
     const priority = getPriorityForTeamTask(teamTask, now);
+    const project = input.teamProjects.find(p => p.id === teamTask.projectId);
     items.push({
       id: `team-task-${teamTask.id}`,
       source: "team-task",
@@ -137,7 +139,7 @@ export function deriveUnifiedWorkItems(input: UnifiedWorkInput): UnifiedWorkItem
       createdAt: teamTask.createdAt,
       updatedAt: teamTask.updatedAt,
       assigneeDisplayName: teamTask.assigneeDisplayName || undefined,
-      projectName: undefined // Project name would need to be looked up from project ID
+      projectName: project?.name || undefined
     });
   }
 

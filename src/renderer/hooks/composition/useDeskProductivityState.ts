@@ -21,6 +21,8 @@
  */
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { Note, Reminder, AutomationRule, Task } from "../../../shared/types";
+import type { TeamProjectTask } from "../../../shared/team/types";
+import type { TeamProject } from "../../../shared/team/types";
 import type { ReminderFilter, TaskFilter } from "../../types";
 import type { CalendarCell } from "../../lib/calendar";
 import {
@@ -131,10 +133,11 @@ export function useDeskProductivityState(args: {
   refreshRules: () => Promise<void>;
   mergeNote: (note: Note) => void;
   removeNoteById: (id: string) => void;
-  teamTasks?: import("../../../shared/team/types").TeamProjectTask[];
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
   mergeTask?: (task: Task) => void;
   mergeReminder?: (reminder: Reminder) => void;
-  mergeTeamTask?: (task: import("../../../shared/team/types").TeamProjectTask) => void;
+  mergeTeamTask?: (task: TeamProjectTask) => void;
   refreshTeamTasks?: () => Promise<void>;
 }): DeskProductivityState {
   const {
@@ -152,6 +155,7 @@ export function useDeskProductivityState(args: {
     mergeNote,
     removeNoteById,
     teamTasks = [],
+    teamProjects = [],
     mergeTask,
     mergeReminder,
     mergeTeamTask,
@@ -185,6 +189,7 @@ export function useDeskProductivityState(args: {
     tasks,
     reminders,
     teamTasks,
+    teamProjects,
     mergeNote,
     mergeTask: mergeTask || (() => {}),
     mergeReminder: mergeReminder || (() => {}),

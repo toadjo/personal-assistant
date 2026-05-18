@@ -6,7 +6,7 @@ import {
   filterUnifiedWorkItemsByCompletion
 } from "./unified-work";
 import type { Task, Reminder, Note } from "../../../shared/types";
-import type { TeamProjectTask } from "../../../shared/team/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -76,7 +76,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [],
       localReminders: [],
       localNotes: [],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     expect(result).toEqual([]);
@@ -89,7 +90,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [task],
       localReminders: [],
       localNotes: [],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     expect(result).toHaveLength(1);
@@ -105,7 +107,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [],
       localReminders: [reminder],
       localNotes: [],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     expect(result).toHaveLength(1);
@@ -121,7 +124,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [],
       localReminders: [],
       localNotes: [note],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     expect(result).toHaveLength(1);
@@ -137,13 +141,63 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [],
       localReminders: [],
       localNotes: [],
-      teamTasks: [teamTask]
+      teamTasks: [teamTask],
+      teamProjects: []
     });
 
     expect(result).toHaveLength(1);
     expect(result[0]?.source).toBe("team-task");
     expect(result[0]?.label).toBe("Review PR");
     expect(result[0]?.assigneeDisplayName).toBe("Alice");
+    expect(result[0]?.projectName).toBeUndefined();
+  });
+
+  it("populates projectName when project is known", () => {
+    const teamTask = makeTeamTask({ title: "Review PR", projectId: "proj-1", assigneeDisplayName: "Alice" });
+    const teamProjects: TeamProject[] = [
+      {
+        id: "proj-1",
+        workspaceId: "ws-1",
+        name: "Frontend",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1"
+      }
+    ];
+
+    const result = deriveUnifiedWorkItems({
+      localTasks: [],
+      localReminders: [],
+      localNotes: [],
+      teamTasks: [teamTask],
+      teamProjects
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.projectName).toBe("Frontend");
+  });
+
+  it("renders without project name when project is missing", () => {
+    const teamTask = makeTeamTask({ title: "Review PR", projectId: "proj-1", assigneeDisplayName: "Alice" });
+    const teamProjects: TeamProject[] = [
+      {
+        id: "proj-2",
+        workspaceId: "ws-1",
+        name: "Backend",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1"
+      }
+    ];
+
+    const result = deriveUnifiedWorkItems({
+      localTasks: [],
+      localReminders: [],
+      localNotes: [],
+      teamTasks: [teamTask],
+      teamProjects
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.projectName).toBeUndefined();
   });
 
   it("sorts items by priority: overdue > today > upcoming > context", () => {
@@ -158,6 +212,7 @@ describe("deriveUnifiedWorkItems", () => {
       localReminders: [],
       localNotes: [note],
       teamTasks: [],
+      teamProjects: [],
       now
     });
 
@@ -176,7 +231,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [doneTask],
       localReminders: [doneReminder],
       localNotes: [],
-      teamTasks: [doneTeamTask]
+      teamTasks: [doneTeamTask],
+      teamProjects: []
     });
 
     expect(result.every((item) => item.priority === "context")).toBe(true);
@@ -192,7 +248,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [openTask, doneTask],
       localReminders: [openReminder, doneReminder],
       localNotes: [],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     const openTaskItem = result.find((item) => item.sourceId === openTask.id);
@@ -216,7 +273,8 @@ describe("deriveUnifiedWorkItems", () => {
       localTasks: [task],
       localReminders: [reminder],
       localNotes: [note],
-      teamTasks: [teamTask]
+      teamTasks: [teamTask],
+      teamProjects: []
     });
 
     const ids = new Set(result.map((item) => item.id));
@@ -239,7 +297,8 @@ describe("filterUnifiedWorkItemsBySource", () => {
       localTasks: [task],
       localReminders: [reminder],
       localNotes: [note],
-      teamTasks: [teamTask]
+      teamTasks: [teamTask],
+      teamProjects: []
     });
 
     expect(filterUnifiedWorkItemsBySource(items, "local-task")).toHaveLength(1);
@@ -253,7 +312,8 @@ describe("filterUnifiedWorkItemsBySource", () => {
       localTasks: [],
       localReminders: [],
       localNotes: [],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     expect(filterUnifiedWorkItemsBySource(items, "local-task")).toHaveLength(0);
@@ -273,6 +333,7 @@ describe("filterUnifiedWorkItemsByPriority", () => {
       localReminders: [],
       localNotes: [note],
       teamTasks: [],
+      teamProjects: [],
       now
     });
 
@@ -292,7 +353,8 @@ describe("filterUnifiedWorkItemsByCompletion", () => {
       localTasks: [openTask, doneTask],
       localReminders: [],
       localNotes: [],
-      teamTasks: []
+      teamTasks: [],
+      teamProjects: []
     });
 
     expect(filterUnifiedWorkItemsByCompletion(items, false)).toHaveLength(1);

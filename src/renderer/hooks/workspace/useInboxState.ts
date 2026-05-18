@@ -8,7 +8,7 @@
 import { useMemo } from "react";
 import { deriveUnifiedWorkItems } from "../../lib/derived/unified-work";
 import type { Note, Reminder, Task } from "../../../shared/types";
-import type { TeamProjectTask } from "../../../shared/team/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 type SetStatus = (value: string) => void;
 type SetError = (message: string) => void;
@@ -18,6 +18,7 @@ type InboxHelpers = {
   tasks: Task[];
   reminders: Reminder[];
   teamTasks: TeamProjectTask[];
+  teamProjects: TeamProject[];
   mergeNote: (note: Note) => void;
   mergeTask: (task: Task) => void;
   mergeReminder: (reminder: Reminder) => void;
@@ -34,6 +35,7 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
     tasks,
     reminders,
     teamTasks,
+    teamProjects,
     mergeNote,
     mergeTask,
     mergeReminder,
@@ -50,9 +52,10 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
       localTasks: tasks,
       localReminders: reminders,
       localNotes: notes,
-      teamTasks: teamTasks
+      teamTasks: teamTasks,
+      teamProjects: teamProjects
     });
-  }, [notes, tasks, reminders, teamTasks]);
+  }, [notes, tasks, reminders, teamTasks, teamProjects]);
 
   // Filter for "needs sorting" - items without due dates or context items
   const needsSorting = useMemo(() => {

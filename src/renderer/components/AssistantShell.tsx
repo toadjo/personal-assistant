@@ -2,6 +2,7 @@ import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database } fr
 import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { useBackupActions } from "../hooks/workspace/useBackupActions";
+import { useTeamState } from "../hooks/team/useTeamState";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
 import { OnboardingPanel } from "./panels/OnboardingPanel";
@@ -53,8 +54,38 @@ export function AssistantShell(): JSX.Element {
     setDailyCommandCenter((prev) => ({ ...prev, filter }));
   };
 
+  const team = useTeamState();
+
+  // Load team config on mount
+  useEffect(() => {
+    void team.loadConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load workspaces when config is set
+  useEffect(() => {
+    if (team.config?.configured) {
+      void team.loadWorkspaces();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team.config?.configured]);
+
+  // Load projects and tasks when active workspace is set
+  useEffect(() => {
+    if (team.activeWorkspace) {
+      void team.loadProjects();
+      void team.loadTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team.activeWorkspace]);
+
   const { ui, data, ha, command, calendar, reminders, tasks, memos, onboarding, desk, display, inbox } =
-    useAssistantWorkspace(setDailyCommandCenterFilter);
+    useAssistantWorkspace(setDailyCommandCenterFilter, {
+      teamTasks: team.tasks,
+      teamProjects: team.projects,
+      mergeTeamTask: () => {},
+      refreshTeamTasks: team.loadTasks
+    });
 
   const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
   const appVersion = __APP_VERSION__;
@@ -222,7 +253,7 @@ export function AssistantShell(): JSX.Element {
       <SuccessBanner successes={ui.successes} onDismiss={ui.dismissSuccess} onDismissAll={ui.dismissAllSuccesses} />
 
       {desk.mode === "projects" ? (
-        <ProjectsPanel />
+        <ProjectsPanel team={team} />
       ) : (
         <>
           <div className="commandHero">

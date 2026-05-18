@@ -21,10 +21,19 @@ import { useDeskProductivityState } from "./composition/useDeskProductivityState
 import { useDeskCommandState } from "./composition/useDeskCommandState";
 import type { AssistantWorkspace } from "./workspace/workspaceTypes";
 import type { DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
+import type { TeamProjectTask, TeamProject } from "../../shared/team/types";
 export type { AssistantWorkspace } from "./workspace/workspaceTypes";
 
+type TeamDataParams = {
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
+  mergeTeamTask?: (task: TeamProjectTask) => void;
+  refreshTeamTasks?: () => Promise<void>;
+};
+
 export function useAssistantWorkspace(
-  setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void
+  setDailyCommandCenterFilter?: (value: DailyCommandCenterFilter) => void,
+  teamDataParams?: TeamDataParams
 ): AssistantWorkspace {
   // UI state - no dependencies, created first
   const ui = useDeskUiState();
@@ -52,11 +61,12 @@ export function useAssistantWorkspace(
     refreshRules: data.refreshRules,
     mergeNote: data.mergeNote,
     removeNoteById: data.removeNoteById,
-    teamTasks: [],
+    teamTasks: teamDataParams?.teamTasks || [],
+    teamProjects: teamDataParams?.teamProjects || [],
     mergeTask: undefined,
     mergeReminder: undefined,
-    mergeTeamTask: undefined,
-    refreshTeamTasks: undefined
+    mergeTeamTask: teamDataParams?.mergeTeamTask || (() => {}),
+    refreshTeamTasks: teamDataParams?.refreshTeamTasks || (async () => {})
   });
 
   // Command state - depends on data, ha, productivity, and callbacks from UI
