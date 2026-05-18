@@ -200,3 +200,11 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npx prettier --check`, `npm run lint`, `npm run typecheck`, `npm test` (616/616), `npm run test:e2e` (3/3)
 - CI status: GitHub Actions run 26016001527 blocked by budget exhaustion — jobs not started, no execution logs. Classified as infrastructure/budget issue, not code regression. Local verification remains source of truth until budget restored.
 - Next action: Use Windows-only manual release fallback for any release work until Actions budget restored. Re-run CI for 7d083b1 when budget returns or push no-op docs commit if policy requires fresh run.
+
+## 2026-05-18: Make Windows manual release the active policy
+
+- Files touched: `RELEASING.md`, `docs/RELEASE_CHECKLIST.md`, `README.md`, `WORKER_HANDOFF.md`
+- Changes: Restructured RELEASING.md to make Windows-only manual release the primary flow with GitHub Actions as future backup; moved Windows-only section to top of RELEASE_CHECKLIST.md and marked as current operating path; updated README install section to clarify Windows-only is current norm; added note to WORKER_HANDOFF.md that Actions workflows are blocked and workers should not attempt to trigger them.
+- Checks run: `npx prettier --check`, `git diff --check`
+- CI status: GitHub Actions run 26016357304 blocked by budget exhaustion — jobs not started, same infrastructure issue as before.
+- Next action: Continue using Windows-only manual release flow until Actions budget restored.
