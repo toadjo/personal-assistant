@@ -4,6 +4,16 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.3] - 2026-05-18
+
+Team Projects setup hotfix. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Changed
+
+- Replaced the Team Projects unavailable dead end with a beginner-friendly in-app setup flow.
+- Added release-time hosted backend bundling so hosted Team Projects builds can ask users only for a display name.
+- Updated Team Projects setup documentation around hosted builds and app-guided setup.
+
 ## [2.1.2] - 2026-05-18
 
 Personal OS app workflow hardening. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
@@ -262,6 +272,7 @@ Final minimal corporate pass. Version bump rolling up 1.5.2 – 1.5.4.
 
 History prior to 1.4.3 is in git log; no curated changelog exists for those versions. See `git log v1.4.2 --no-merges` for details.
 
+[2.1.3]: https://github.com/toadjo/personal-assistant/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/toadjo/personal-assistant/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/toadjo/personal-assistant/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/toadjo/personal-assistant/compare/v1.7.1...v2.1.0
