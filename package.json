@@ -15,7 +15,7 @@
     "build": "npm run build:renderer && npm run build:main",
     "build:report": "vite build --mode report",
     "build:renderer": "vite build",
-    "build:main": "node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json",
+    "build:main": "node scripts/generate-team-hosted-backend.mjs && node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json",
     "check:preload-ipc": "node scripts/generate-preload-ipc.mjs --check",
     "icons:prepare": "node scripts/ensure-win-icon.mjs",
     "icons:prepare:linux": "node scripts/ensure-linux-icon.mjs",

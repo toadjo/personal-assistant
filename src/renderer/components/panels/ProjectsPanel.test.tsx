@@ -415,26 +415,50 @@ describe("ProjectsPanel", () => {
       expect(screen.queryByText("Supabase Anon Key")).not.toBeInTheDocument();
     });
 
-    it("shows unavailable state when backend is not configured", () => {
+    it("shows beginner setup when backend is not configured", () => {
       mockTeamState.config = { configured: false, backendConfigured: false, backendMode: "unavailable", displayName: null, activeWorkspaceId: null };
 
       render(<ProjectsPanel />);
 
-      expect(screen.getByText("Team Projects is not available in this build")).toBeInTheDocument();
-      expect(screen.getByText("Advanced self-hosted backend")).toBeInTheDocument();
+      expect(screen.getByText("Set up Team Projects")).toBeInTheDocument();
+      expect(screen.getByText("Start setup")).toBeInTheDocument();
+      expect(screen.queryByText("Team Projects is not available in this build")).not.toBeInTheDocument();
+      expect(screen.queryByText("Supabase URL")).not.toBeInTheDocument();
     });
 
-    it("clicking Advanced self-hosted backend shows manual config form", async () => {
+    it("clicking Start setup shows beginner connection form", async () => {
       mockTeamState.config = { configured: false, backendConfigured: false, backendMode: "unavailable", displayName: null, activeWorkspaceId: null };
 
       render(<ProjectsPanel />);
 
-      const advancedButton = screen.getByText("Advanced self-hosted backend");
-      await userEvent.click(advancedButton);
+      const setupButton = screen.getByText("Start setup");
+      await userEvent.click(setupButton);
 
-      expect(screen.getByLabelText("Supabase URL")).toBeInTheDocument();
-      expect(screen.getByLabelText("Supabase Anon Key")).toBeInTheDocument();
-      expect(screen.getByLabelText("Display Name")).toBeInTheDocument();
+      expect(screen.getByText("Connect Team Projects")).toBeInTheDocument();
+      expect(screen.getByLabelText("Your display name")).toBeInTheDocument();
+      expect(screen.getByLabelText("Team service URL")).toBeInTheDocument();
+      expect(screen.getByLabelText("Team service public key")).toBeInTheDocument();
+      expect(screen.getByText("Save and continue")).toBeInTheDocument();
+      expect(screen.queryByText("Supabase URL")).not.toBeInTheDocument();
+      expect(screen.queryByText("Supabase Anon Key")).not.toBeInTheDocument();
+    });
+
+    it("beginner connection form saves manual backend details", async () => {
+      mockTeamState.config = { configured: false, backendConfigured: false, backendMode: "unavailable", displayName: null, activeWorkspaceId: null };
+
+      render(<ProjectsPanel />);
+
+      await userEvent.click(screen.getByText("Start setup"));
+      await userEvent.type(screen.getByLabelText("Your display name"), "Alice");
+      await userEvent.type(screen.getByLabelText("Team service URL"), "https://example.supabase.co");
+      await userEvent.type(screen.getByLabelText("Team service public key"), "public-key");
+      await userEvent.click(screen.getByText("Save and continue"));
+
+      expect(mockTeamState.saveConfig).toHaveBeenCalledWith({
+        supabaseUrl: "https://example.supabase.co",
+        supabaseAnonKey: "public-key",
+        displayName: "Alice"
+      });
     });
 
     it("clicking Continue saves display name only", async () => {

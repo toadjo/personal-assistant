@@ -105,9 +105,8 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
 
   const handleSaveConfig = async () => {
     setValidationError(null);
-    // Validate required fields
     if (!supabaseUrl.trim() || !supabaseAnonKey.trim() || !displayName.trim()) {
-      setValidationError("All fields are required");
+      setValidationError("Enter your name, team service URL, and public key.");
       return;
     }
     try {
@@ -293,52 +292,54 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
 
   // Setup state: team mode not configured
   if (!team.config?.configured) {
-    // Unavailable state: no backend config
     if (team.config?.backendMode === "unavailable") {
       return (
         <div className="panel">
           <PanelHeader icon={Users} title="Team Projects" />
+          <StatusBanner status="" error={team.configError || team.error || ""} />
           <div className="panelContent">
-            <EmptyState
-              icon={Users}
-              title="Team Projects is not available in this build"
-              description="Team Projects requires a hosted backend configuration."
-            />
-            {showAdvancedSetup && (
-              <div className="panelContent">
+            {showSetupForm ? (
+              <div className="teamSetupGuide">
+                <EmptyState
+                  icon={Users}
+                  title="Connect Team Projects"
+                  description="Enter your name and the shared team service details. Ask the person who created the team space for these two connection values."
+                />
                 {validationError && <StatusBanner status="" error={validationError} />}
                 <div className="formGroup">
-                  <label htmlFor="supabaseUrl">Supabase URL</label>
-                  <input
-                    id="supabaseUrl"
-                    type="text"
-                    placeholder="https://your-project.supabase.co"
-                    value={supabaseUrl}
-                    onChange={(e) => setSupabaseUrl(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div className="formGroup">
-                  <label htmlFor="supabaseAnonKey">Supabase Anon Key</label>
-                  <input
-                    id="supabaseAnonKey"
-                    type="password"
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    value={supabaseAnonKey}
-                    onChange={(e) => setSupabaseAnonKey(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div className="formGroup">
-                  <label htmlFor="displayName">Display Name</label>
+                  <label htmlFor="displayName">Your display name</label>
                   <input
                     id="displayName"
                     type="text"
-                    placeholder="Your name (e.g., Alice)"
+                    placeholder="Your name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="input"
                   />
+                </div>
+                <div className="formGroup">
+                  <label htmlFor="supabaseUrl">Team service URL</label>
+                  <input
+                    id="supabaseUrl"
+                    type="text"
+                    placeholder="https://your-team-service.supabase.co"
+                    value={supabaseUrl}
+                    onChange={(e) => setSupabaseUrl(e.target.value)}
+                    className="input"
+                  />
+                  <p className="formHelp">This is the shared team service address.</p>
+                </div>
+                <div className="formGroup">
+                  <label htmlFor="supabaseAnonKey">Team service public key</label>
+                  <input
+                    id="supabaseAnonKey"
+                    type="password"
+                    placeholder="Paste the public key from your team service"
+                    value={supabaseAnonKey}
+                    onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                    className="input"
+                  />
+                  <p className="formHelp">This is safe for app users to enter. It is not an admin password.</p>
                 </div>
                 <div className="formActions">
                   <button
@@ -347,32 +348,58 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                     onClick={handleSaveConfig}
                     disabled={team.isLoadingConfig}
                   >
-                    {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Save"}
+                    {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Save and continue"}
                   </button>
                   <button
                     type="button"
                     className="button buttonSecondary"
                     onClick={() => {
-                      setShowAdvancedSetup(false);
                       setShowSetupForm(false);
+                      setValidationError(null);
                     }}
                   >
                     Cancel
                   </button>
                 </div>
+                <details className="teamSetupDetails">
+                  <summary>Setting up a new team service</summary>
+                  <ol>
+                    <li>Create a free Supabase project.</li>
+                    <li>Run the Team Projects schema from the app documentation.</li>
+                    <li>Paste the project URL and public anon key here.</li>
+                    <li>Create a workspace, then share its invite code with your team.</li>
+                  </ol>
+                </details>
               </div>
-            )}
-            {!showAdvancedSetup && (
-              <button
-                type="button"
-                className="button buttonSecondary"
-                onClick={() => {
-                  setShowAdvancedSetup(true);
-                  setShowSetupForm(true);
-                }}
-              >
-                Advanced self-hosted backend
-              </button>
+            ) : (
+              <>
+                <EmptyState
+                  icon={Users}
+                  title="Set up Team Projects"
+                  description="Create and join shared workspaces from this app. You will need your name and your team's shared service details."
+                />
+                <div className="teamSetupSteps" aria-label="Team Projects setup steps">
+                  <div className="teamSetupStep">
+                    <span className="teamSetupStepNumber">1</span>
+                    <span>Enter your display name.</span>
+                  </div>
+                  <div className="teamSetupStep">
+                    <span className="teamSetupStepNumber">2</span>
+                    <span>Paste the team service URL and public key from your team owner.</span>
+                  </div>
+                  <div className="teamSetupStep">
+                    <span className="teamSetupStepNumber">3</span>
+                    <span>Create a workspace or join one with an invite code.</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="button buttonPrimary"
+                  onClick={() => setShowSetupForm(true)}
+                >
+                  Start setup
+                </button>
+              </>
             )}
           </div>
         </div>

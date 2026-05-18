@@ -21,16 +21,16 @@ Use this path when Team Projects is available in the app without entering Supaba
 
 The display name is shown to other workspace members. It must be 1 to 60 characters.
 
-### Advanced self-hosted backend
+### App-guided backend setup
 
-Use this path only when you want the app to connect to your own Supabase project.
+Use this path when the build does not include the hosted backend values yet. The app labels these as team service details so a user does not need to understand the implementation.
 
 1. Open **Team Projects**.
-2. Select **Advanced self-hosted backend**.
-3. Enter the Supabase project URL. It must use `https://` and must not end with a trailing slash.
-4. Enter the Supabase anon key.
-5. Enter your display name.
-6. Save the setup.
+2. Select **Start setup**.
+3. Enter your display name.
+4. Enter the team service URL. This is the Supabase project URL. It must use `https://` and must not end with a trailing slash.
+5. Enter the team service public key. This is the Supabase anon public key, not an admin password.
+6. Select **Save and continue**.
 7. Create a workspace, or join one with a 16-character invite code.
 
 Manual credentials are stored in main-process settings. The Supabase anon key is not returned to the renderer.
@@ -44,9 +44,11 @@ $env:TEAM_PROJECTS_SUPABASE_URL="https://your-project.supabase.co"
 $env:TEAM_PROJECTS_SUPABASE_ANON_KEY="your-anon-key"
 ```
 
+The Windows release build runs `scripts/generate-team-hosted-backend.mjs` during `npm run build:main`. When both values are set on the release machine, the script writes `assets/generated/team-hosted-backend.json`, which is bundled into the installer and ignored by Git. If either value is missing, no hosted backend is bundled and the app falls back to the app-guided backend setup.
+
 If both hosted values are present and the user has no manual credentials saved, Team Projects asks only for a display name. If manual credentials are saved, they take priority over hosted credentials.
 
-If neither hosted nor manual credentials are available, the app shows Team Projects as unavailable in that build.
+If neither hosted nor manual credentials are available, Team Projects shows the beginner setup flow and asks for the team service URL and public key.
 
 ## Supabase Project Setup
 
@@ -159,9 +161,9 @@ Realtime updates are best effort. When a Team Projects panel is open with an act
 
 ## Troubleshooting
 
-### Team Projects is not available
+### Team Projects asks for team service details
 
-The build does not have hosted backend credentials and no manual backend has been configured. Use a hosted build, or configure an advanced self-hosted backend.
+The build does not have hosted backend credentials and no manual backend has been configured yet. Enter the team service URL and public key in the app, or rebuild the installer with `TEAM_PROJECTS_SUPABASE_URL` and `TEAM_PROJECTS_SUPABASE_ANON_KEY` set.
 
 ### Display name is rejected
 

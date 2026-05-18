@@ -7,6 +7,8 @@
 
 import { deleteSetting, getSetting, setSetting } from "../services/settingsRepository";
 import type { TeamConfigStatus, TeamBackendMode } from "../../shared/team/types";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 const TEAM_CONFIG_KEY_PREFIX = "team.";
 
@@ -21,9 +23,37 @@ const TEAM_CONFIG_KEYS = {
   activeWorkspaceId: key("activeWorkspaceId")
 } as const;
 
-// Hosted backend config from environment or build
-const HOSTED_SUPABASE_URL = process.env.TEAM_PROJECTS_SUPABASE_URL || null;
-const HOSTED_SUPABASE_ANON_KEY = process.env.TEAM_PROJECTS_SUPABASE_ANON_KEY || null;
+type HostedBackendConfig = {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+};
+
+function readBundledHostedBackendConfig(): HostedBackendConfig | null {
+  const configPath = resolve(__dirname, "../../../..", "assets", "generated", "team-hosted-backend.json");
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(configPath, "utf8")) as Partial<HostedBackendConfig>;
+    if (typeof parsed.supabaseUrl !== "string" || typeof parsed.supabaseAnonKey !== "string") {
+      return null;
+    }
+    const supabaseUrl = parsed.supabaseUrl.trim();
+    const supabaseAnonKey = parsed.supabaseAnonKey.trim();
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return null;
+    }
+    return { supabaseUrl, supabaseAnonKey };
+  } catch {
+    return null;
+  }
+}
+
+const BUNDLED_HOSTED_BACKEND = readBundledHostedBackendConfig();
+const HOSTED_SUPABASE_URL = process.env.TEAM_PROJECTS_SUPABASE_URL || BUNDLED_HOSTED_BACKEND?.supabaseUrl || null;
+const HOSTED_SUPABASE_ANON_KEY =
+  process.env.TEAM_PROJECTS_SUPABASE_ANON_KEY || BUNDLED_HOSTED_BACKEND?.supabaseAnonKey || null;
 
 /** Basic HTTPS URL validation (no trailing slash). */
 function isValidSupabaseUrl(url: string): boolean {
@@ -68,7 +98,7 @@ export function getTeamConfig(): TeamConfigStatus {
  * Checks whether team mode is configured (URL and anon key present).
  */
 export function isTeamConfigured(): boolean {
-  return !!getSetting(TEAM_CONFIG_KEYS.supabaseUrl) && !!getSetting(TEAM_CONFIG_KEYS.supabaseAnonKey);
+  return getTeamCredentials() !== null;
 }
 
 /**
