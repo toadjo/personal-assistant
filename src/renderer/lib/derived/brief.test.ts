@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { deriveFocusBrief, getBriefSummary } from "./brief";
 import type { Note, Reminder, Task } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 describe("deriveFocusBrief", () => {
   const now = new Date("2024-01-15T12:00:00Z");
@@ -221,8 +222,300 @@ describe("deriveFocusBrief", () => {
       now
     });
 
-    expect(result).toHaveLength(1);
-    expect(result[0]?.sourceId).toBe("1");
+    // With source-aware dedupe, reminder and agenda are different kinds, so both appear
+    expect(result).toHaveLength(2);
+    expect(result[0]?.kind).toBe("reminder");
+    expect(result[1]?.kind).toBe("agenda");
+  });
+
+  describe("team tasks", () => {
+    it("should include overdue team tasks with overdue urgency", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Overdue team task",
+        notes: "",
+        dueAt: "2024-01-01T00:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.kind).toBe("team-task");
+      expect(result[0]?.urgency).toBe("overdue");
+      expect(result[0]?.label).toBe("Overdue team task");
+    });
+
+    it("should include due today team tasks with today urgency", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Today team task",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.urgency).toBe("today");
+    });
+
+    it("should include upcoming team tasks with upcoming urgency", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Upcoming team task",
+        notes: "",
+        dueAt: "2024-01-16T12:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.urgency).toBe("upcoming");
+    });
+
+    it("should include unscheduled team tasks with context urgency", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Unscheduled team task",
+        notes: "",
+        dueAt: null,
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.urgency).toBe("context");
+    });
+
+    it("should exclude done team tasks", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Done team task",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "done",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(0);
+    });
+
+    it("should include project name in detail when available", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Team task with project",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const project: TeamProject = {
+        id: "proj-1",
+        workspaceId: "ws-1",
+        name: "Frontend",
+        createdAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [project],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.detail).toContain("Frontend");
+    });
+
+    it("should include assignee in detail when available", () => {
+      const teamTask: TeamProjectTask = {
+        id: "team-1",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Team task with assignee",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: "Alice",
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.detail).toContain("Alice");
+    });
+
+    it("should allow local task and team task with same id to both appear", () => {
+      const localTask: Task = {
+        id: "same-id",
+        title: "Local task",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        lastCompletedAt: null
+      };
+
+      const teamTask: TeamProjectTask = {
+        id: "same-id",
+        projectId: "proj-1",
+        workspaceId: "ws-1",
+        title: "Team task",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        recurrence: "none",
+        assigneeDisplayName: null,
+        status: "open",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        createdBy: "user-1",
+        updatedBy: "user-1"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [localTask],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        teamTasks: [teamTask],
+        teamProjects: [],
+        now
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result[0]?.kind).toBe("task");
+      expect(result[1]?.kind).toBe("team-task");
+    });
   });
 });
 

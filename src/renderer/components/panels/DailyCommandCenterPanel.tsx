@@ -300,6 +300,16 @@ export function DailyCommandCenterPanel({
                               )}
                             </>
                           )}
+                          {item.kind === "team-task" && (
+                            <IconButton
+                              icon={ExternalLink}
+                              size={16}
+                              onClick={() => onOpenWorkItem?.(item)}
+                              label={`Open team task: ${item.label}`}
+                              title="Open"
+                              className="dccActionButton"
+                            />
+                          )}
                           {(item.kind === "reminder" || item.kind === "agenda") && (
                             <>
                               <IconButton

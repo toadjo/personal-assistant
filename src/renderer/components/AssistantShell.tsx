@@ -130,7 +130,9 @@ export function AssistantShell(): JSX.Element {
           status: "pending" as const,
           notifyChannel: "desktop" as const
         })),
-      pinnedNotes: data.notes.filter((note) => note.pinned)
+      pinnedNotes: data.notes.filter((note) => note.pinned),
+      teamTasks: team.tasks.filter(t => t.status === "open"),
+      teamProjects: team.projects
     });
     const awayBrief = deriveAwayBrief({
       tasks: data.tasks,
@@ -150,6 +152,8 @@ export function AssistantShell(): JSX.Element {
     tasks.dueTodayOpen,
     reminders.pending,
     calendar.selectedDayAgenda,
+    team.tasks,
+    team.projects,
     dailyCommandCenter.filter
   ]);
 

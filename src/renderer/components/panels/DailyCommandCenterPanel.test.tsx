@@ -510,4 +510,39 @@ describe("DailyCommandCenterPanel", () => {
 
     expect(screen.getAllByText("Task without drawer").length).toBeGreaterThan(0);
   });
+
+  it("calls onOpenWorkItem when team task label is clicked and does not call onCompleteTask", () => {
+    onCompleteTask.mockClear();
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      attentionItems: [
+        { kind: "team-task", label: "Team task", urgency: "overdue", sourceId: "tt1" }
+      ],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    // Click the label button
+    const labelButtons = screen.getAllByRole("button");
+    const labelButton = labelButtons.find((btn) => btn.textContent === "Team task");
+    expect(labelButton).toBeDefined();
+    labelButton?.click();
+
+    expect(onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "team-task",
+      label: "Team task",
+      sourceId: "tt1"
+    }));
+    expect(onCompleteTask).not.toHaveBeenCalled();
+  });
 });

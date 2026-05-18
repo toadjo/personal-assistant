@@ -1,5 +1,6 @@
 import type { Note, Reminder, Task } from "../../../shared/types";
 import type { BriefItem, BriefItemUrgency } from "../../types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 function getTodayStartEnd(now: Date = new Date()): { start: Date; end: Date } {
   const start = new Date(now);
@@ -36,6 +37,14 @@ function getUrgencyForTask(task: Task, now: Date): BriefItemUrgency {
   return "upcoming";
 }
 
+function getUrgencyForTeamTask(teamTask: TeamProjectTask, now: Date): BriefItemUrgency {
+  if (teamTask.status === "done") return "context";
+  if (!teamTask.dueAt) return "context";
+  if (isOverdue(teamTask.dueAt, now)) return "overdue";
+  if (isToday(teamTask.dueAt, now)) return "today";
+  return "upcoming";
+}
+
 function formatDateTime(isoString: string): string {
   return new Date(isoString).toLocaleString();
 }
@@ -46,16 +55,24 @@ export function deriveFocusBrief(params: {
   upcomingReminders: Reminder[];
   selectedDayAgenda: Reminder[];
   pinnedNotes: Note[];
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
   now?: Date;
 }): BriefItem[] {
   const now = params.now || new Date();
   const items: BriefItem[] = [];
   const seenSourceIds = new Set<string>();
+  const teamTasks = params.teamTasks || [];
+  const teamProjects = params.teamProjects || [];
+
+  // Helper to create source-aware dedupe key
+  const getDedupeKey = (kind: string, sourceId: string): string => `${kind}:${sourceId}`;
 
   // Overdue tasks (highest priority)
   for (const task of params.overdueTasks) {
-    if (seenSourceIds.has(task.id)) continue;
-    seenSourceIds.add(task.id);
+    const key = getDedupeKey("task", task.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
     items.push({
       kind: "task",
       label: task.title,
@@ -67,8 +84,9 @@ export function deriveFocusBrief(params: {
 
   // Due today tasks
   for (const task of params.dueTodayTasks) {
-    if (seenSourceIds.has(task.id)) continue;
-    seenSourceIds.add(task.id);
+    const key = getDedupeKey("task", task.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
     items.push({
       kind: "task",
       label: task.title,
@@ -78,11 +96,42 @@ export function deriveFocusBrief(params: {
     });
   }
 
+  // Open team tasks (integrated with local tasks by urgency)
+  for (const teamTask of teamTasks) {
+    if (teamTask.status === "done") continue;
+    const key = getDedupeKey("team-task", teamTask.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
+    
+    const project = teamProjects.find(p => p.id === teamTask.projectId);
+    const urgency = getUrgencyForTeamTask(teamTask, now);
+    
+    const detailParts: string[] = [];
+    if (teamTask.dueAt) {
+      detailParts.push(formatDateTime(teamTask.dueAt));
+    }
+    if (project?.name) {
+      detailParts.push(project.name);
+    }
+    if (teamTask.assigneeDisplayName) {
+      detailParts.push(teamTask.assigneeDisplayName);
+    }
+    
+    items.push({
+      kind: "team-task",
+      label: teamTask.title,
+      detail: detailParts.length > 0 ? detailParts.join(" | ") : undefined,
+      urgency,
+      sourceId: teamTask.id
+    });
+  }
+
   // Upcoming reminders
   for (const reminder of params.upcomingReminders) {
     if (reminder.status === "pending") {
-      if (seenSourceIds.has(reminder.id)) continue;
-      seenSourceIds.add(reminder.id);
+      const key = getDedupeKey("reminder", reminder.id);
+      if (seenSourceIds.has(key)) continue;
+      seenSourceIds.add(key);
       items.push({
         kind: "reminder",
         label: reminder.text,
@@ -95,8 +144,9 @@ export function deriveFocusBrief(params: {
 
   // Selected day agenda
   for (const reminder of params.selectedDayAgenda) {
-    if (seenSourceIds.has(reminder.id)) continue;
-    seenSourceIds.add(reminder.id);
+    const key = getDedupeKey("agenda", reminder.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
     items.push({
       kind: "agenda",
       label: reminder.text,
@@ -108,8 +158,9 @@ export function deriveFocusBrief(params: {
 
   // Pinned notes (context, lowest priority)
   for (const note of params.pinnedNotes) {
-    if (seenSourceIds.has(note.id)) continue;
-    seenSourceIds.add(note.id);
+    const key = getDedupeKey("note", note.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
     items.push({
       kind: "note",
       label: note.title,
