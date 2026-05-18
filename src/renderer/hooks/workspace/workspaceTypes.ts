@@ -123,6 +123,7 @@ export type AssistantWorkspace = {
       recurrence: "none" | "daily" | "weekly" | "monthly";
     }) => Promise<void>;
     bulkComplete: (ids: string[]) => Promise<void>;
+    updateDetailsById: (id: string, title: string, notes: string) => Promise<void>;
     updatePriority: (id: string, priority: "low" | "normal" | "high") => Promise<void>;
     undo: () => Promise<void>;
     canUndo: boolean;

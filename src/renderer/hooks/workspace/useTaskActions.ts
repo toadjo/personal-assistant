@@ -92,6 +92,16 @@ export function useTaskActions(
     }
   }
 
+  async function updateDetailsById(id: string, title: string, notes: string): Promise<void> {
+    try {
+      await window.assistantApi.updateTask({ id, title, notes });
+      await refreshTasks();
+      setStatus("Task updated.");
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }
+
   async function bulkComplete(ids: string[]): Promise<void> {
     try {
       await Promise.all(ids.map((id) => window.assistantApi.completeTask(id)));
@@ -157,6 +167,7 @@ export function useTaskActions(
     deleteById,
     saveTask,
     bulkComplete,
+    updateDetailsById,
     updatePriority,
     undo,
     canUndo: undoStack.length > 0

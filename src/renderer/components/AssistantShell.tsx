@@ -489,7 +489,7 @@ export function AssistantShell(): JSX.Element {
           onDeleteReminder={reminders.deleteById}
           onDeleteNote={(id) => memos.deleteNote(id, "Item")}
           onUpdateNote={(id, title, content) => memos.updateNote({ id, title, content })}
-          onUpdateTask={(id, title, notes) => tasks.saveTask({ id, title, notes, dueAt: null, priority: "normal", recurrence: "none" })}
+          onUpdateTask={(id, title, notes) => tasks.updateDetailsById(id, title, notes)}
           onUpdateReminder={(id, text, dueAt) => reminders.updateById(id, text, dueAt)}
           onConvertNoteToTask={inbox.convertNoteToTask}
           onConvertNoteToReminder={inbox.convertNoteToReminder}

@@ -77,6 +77,7 @@ export type DeskProductivityState = {
       recurrence: "none" | "daily" | "weekly" | "monthly";
     }) => Promise<void>;
     bulkComplete: (ids: string[]) => Promise<void>;
+    updateDetailsById: (id: string, title: string, notes: string) => Promise<void>;
     updatePriority: (id: string, priority: "low" | "normal" | "high") => Promise<void>;
     undo: () => Promise<void>;
     canUndo: boolean;
@@ -231,6 +232,7 @@ export function useDeskProductivityState(args: {
       deleteById: taskActions.deleteById,
       saveTask: taskActions.saveTask,
       bulkComplete: taskActions.bulkComplete,
+      updateDetailsById: taskActions.updateDetailsById,
       updatePriority: taskActions.updatePriority,
       undo: taskActions.undo,
       canUndo: taskActions.canUndo
