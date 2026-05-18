@@ -11,6 +11,44 @@
     userPreferredNameIsSet: false
   };
 
+  const teamWorkspace = {
+    id: "workspace-marketing",
+    name: "Marketing Team",
+    workspaceKey: "ABCD2345EFGH6789",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    createdBy: "user-alice"
+  };
+  const teamProject = {
+    id: "project-q1",
+    workspaceId: teamWorkspace.id,
+    name: "Q1 Campaign",
+    createdAt: "2024-01-02T00:00:00.000Z",
+    createdBy: "user-alice"
+  };
+  const teamTask = {
+    id: "task-design-logo",
+    workspaceId: teamWorkspace.id,
+    projectId: teamProject.id,
+    title: "Design logo",
+    notes: "",
+    dueAt: null,
+    priority: "normal",
+    status: "open",
+    recurrence: "none",
+    assigneeDisplayName: "Alice",
+    createdAt: "2024-01-03T00:00:00.000Z",
+    createdBy: "user-alice",
+    updatedAt: "2024-01-03T00:00:00.000Z",
+    updatedBy: "user-alice"
+  };
+  const teamConfig = {
+    configured: true,
+    backendConfigured: true,
+    backendMode: "hosted",
+    displayName: "Alice",
+    activeWorkspaceId: teamWorkspace.id
+  };
+
   window.assistantApi = {
     listNotes: async () => [],
     createNote: async (payload) => ({
@@ -73,6 +111,22 @@
     openHouseholdWindow: async () => true,
     focusDeskWindow: async () => true,
     hideDeskWindow: async () => true,
-    openDataFolder: async () => {}
+    openDataFolder: async () => {},
+    teamGetConfig: async () => ({ ...teamConfig }),
+    teamSetConfig: async () => {},
+    teamSetDisplayName: async () => {},
+    teamClearConfig: async () => {},
+    teamWorkspacesList: async () => [{ ...teamWorkspace }],
+    teamWorkspacesCreate: async () => ({ ...teamWorkspace }),
+    teamWorkspacesJoin: async () => ({ ...teamWorkspace }),
+    teamWorkspacesSetActive: async () => {},
+    teamProjectsList: async () => [{ ...teamProject }],
+    teamProjectsCreate: async () => ({ ...teamProject }),
+    teamTasksList: async () => [{ ...teamTask }],
+    teamTasksCreate: async () => ({ ...teamTask }),
+    teamTasksUpdate: async () => ({ ...teamTask }),
+    teamRealtimeStart: async () => {},
+    teamRealtimeStop: async () => {},
+    onTeamDataUpdated: () => () => {}
   };
 })();

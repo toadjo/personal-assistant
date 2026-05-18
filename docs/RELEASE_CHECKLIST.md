@@ -11,6 +11,20 @@ The app behaves differently across platforms depending on system tray availabili
 - **Linux with tray**: Tray available, app hides to tray on background
 - **Linux without tray**: Tray unavailable, app minimizes to taskbar on background
 
+## Windows-Only Manual Release (Actions Budget Unavailable)
+
+Use this short path when GitHub Actions budget blocks platform builds and the release will ship Windows-only. macOS and Linux sections below can be skipped in that case. See `RELEASING.md` for the full local manual release flow.
+
+- [ ] Confirm the release will ship Windows-only and document this in release notes
+- [ ] Run `npm run lint`, `npm run typecheck`, `npm test`
+- [ ] Run `npm run build` and `npm run test:smoke`
+- [ ] Run `npm run release:build -- -Version X.Y.Z`
+- [ ] Verify `release/vX.Y.Z/` contains the Windows `.exe`, `.blockmap`, and `latest.yml`
+- [ ] Skip `npm run dist:mac` and `npm run dist:linux` checks below
+- [ ] Skip the macOS and Linux platform-specific testing sections below
+- [ ] Tag, push, and upload only Windows assets to the GitHub Release
+- [ ] Release notes explicitly state macOS/Linux assets are omitted due to Actions budget constraints
+
 ## Pre-Release Verification
 
 ### Build Verification

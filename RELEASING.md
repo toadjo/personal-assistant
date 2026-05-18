@@ -30,7 +30,8 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 
 ## Asset rules
 
-- The release workflow uploads installers and update manifests directly to GitHub Release assets — **not** via `actions/upload-artifact`. This keeps the Actions storage quota free.
+- The release workflow uploads installers and update manifests directly to GitHub Release assets, **not** via `actions/upload-artifact`. This keeps the Actions storage quota free.
+- When GitHub Actions budget is unavailable, only Windows assets are produced via the local manual release flow below; macOS/Linux assets are intentionally omitted for those releases.
 - `latest.yml`, `latest-mac.yml`, `latest-linux.yml`, `.blockmap`, and `.zsync` files are required for electron-updater clients on existing installs.
 
 ## Auto-update considerations

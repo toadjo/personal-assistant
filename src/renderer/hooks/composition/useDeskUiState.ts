@@ -74,7 +74,6 @@ export function useDeskUiState(): DeskUiState {
   const display = useDisplayPreferences();
   const { status, setStatus, error, setError, reportError, persistentSuccess } = useWorkspaceMessages();
 
-  // v1.2.7 guided onboarding
   const onboardingProgress = useOnboardingProgress();
 
   const [showOnboarding, setShowOnboarding] = useState(

@@ -43,6 +43,7 @@ tests             E2E tests (Playwright)
 Team Projects adds optional Supabase-based collaboration:
 
 - **Backend modes**: Hosted (environment-configured Supabase) or manual self-hosted (user-provided Supabase URL/anon key)
+- **Hosted backend variables**: `TEAM_PROJECTS_SUPABASE_URL` and `TEAM_PROJECTS_SUPABASE_ANON_KEY`
 - **Main-process services** (`src/main/team/`): Supabase client, workspace/project/task management, realtime subscriptions, config, session storage
 - **Renderer panel** (`src/renderer/components/panels/ProjectsPanel.tsx`): UI for setup, workspace/project/task management, filters, editor
 - **Security**: Supabase anon key never exposed to renderer; all team IPC handlers validate with Zod and trusted sender checks; session storage uses safeStorage when available

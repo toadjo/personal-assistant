@@ -1,227 +1,210 @@
-# Team Projects V1 Setup Guide
+# Team Projects Setup Guide
 
-This guide explains how to set up the Team Projects feature using Supabase as the backend.
+Team Projects lets multiple people share workspaces, projects, and project tasks. Personal notes, reminders, local tasks, automations, and Home Assistant settings remain local-first in SQLite.
 
-## Overview
+The app supports two backend modes:
 
-Team Projects V1 allows multiple users to collaborate on shared workspaces, projects, and tasks. The feature uses Supabase for:
+- Hosted backend: Supabase URL and anon key are provided by the build environment. Users only enter a display name.
+- Advanced self-hosted backend: users provide their own Supabase URL and anon key in the app.
 
-- Anonymous authentication
-- Realtime-based data updates via Postgres Changes subscriptions
-- Row-level security (RLS) for data isolation
+## User Setup
 
-## Prerequisites
+### Hosted backend build
 
-1. A Supabase account (free tier is sufficient for testing)
-2. The Personal Assistant Electron app built from source
+Use this path when Team Projects is available in the app without entering Supabase credentials.
 
-## Step 1: Create a Supabase Project
+1. Open **Team Projects**.
+2. Select **Continue**.
+3. Enter your display name.
+4. Create a workspace, or join one with a 16-character invite code.
+5. Create projects and tasks inside the active workspace.
 
-1. Go to [supabase.com](https://supabase.com) and sign in
-2. Click "New Project"
-3. Choose a name (e.g., `personal-assistant-team`)
-4. Choose a database password (store it securely)
-5. Select a region closest to your users
-6. Click "Create new project"
+The display name is shown to other workspace members. It must be 1 to 60 characters.
 
-Wait for the project to be provisioned (typically 1-2 minutes).
+### Advanced self-hosted backend
 
-## Step 2: Get Your Supabase Credentials
+Use this path only when you want the app to connect to your own Supabase project.
 
-Once your project is ready:
+1. Open **Team Projects**.
+2. Select **Advanced self-hosted backend**.
+3. Enter the Supabase project URL. It must use `https://` and must not end with a trailing slash.
+4. Enter the Supabase anon key.
+5. Enter your display name.
+6. Save the setup.
+7. Create a workspace, or join one with a 16-character invite code.
 
-1. Go to **Settings > API**
-2. Copy the **Project URL** (looks like `https://xyz.supabase.co`)
-3. Copy the **anon public key** (looks like a long random string)
-4. Keep these values handy for the next step
+Manual credentials are stored in main-process settings. The Supabase anon key is not returned to the renderer.
 
-## Step 3: Set Up the Database Schema
+## Hosted Build Configuration
 
-1. In the Supabase dashboard, go to **SQL Editor**
-2. Click "New Query"
-3. Copy the contents of `docs/TEAM_SCHEMA.sql` from this repository
-4. Paste it into the SQL editor
-5. Click **Run** to execute the schema creation
+Hosted mode is enabled when both environment variables are present at runtime or build time:
 
-This will create the following tables:
+```powershell
+$env:TEAM_PROJECTS_SUPABASE_URL="https://your-project.supabase.co"
+$env:TEAM_PROJECTS_SUPABASE_ANON_KEY="your-anon-key"
+```
 
-- `team_workspaces` - Shared workspaces
-- `team_workspace_members` - Workspace membership
-- `team_projects` - Projects within workspaces
-- `team_project_tasks` - Tasks within projects
+If both hosted values are present and the user has no manual credentials saved, Team Projects asks only for a display name. If manual credentials are saved, they take priority over hosted credentials.
 
-The schema includes:
+If neither hosted nor manual credentials are available, the app shows Team Projects as unavailable in that build.
 
-- Row Level Security (RLS) policies to ensure users can only access data from workspaces they are members of
-- RPC functions for secure workspace operations:
-  - `create_team_workspace(name, workspace_key, display_name)` - Creates a workspace and adds the creator as a member
-  - `join_workspace_by_key(workspace_key, display_name)` - Joins a workspace using the invite key
-- RPC functions use `SECURITY DEFINER` to bypass RLS for controlled operations
+## Supabase Project Setup
 
-## Step 4: Configure the App
+Use this section for a hosted backend operator or an advanced self-hosted user.
 
-1. Launch the Personal Assistant app
-2. Navigate to **Settings** (the gear icon in the top toolbar)
-3. Find the **Team Mode** section
-4. Enter your Supabase credentials:
-   - **Supabase URL**: The Project URL from Step 2
-   - **Supabase Anon Key**: The anon public key from Step 2
-   - **Display Name**: Your name as shown to other workspace members
-5. Click **Save**
+1. Go to [supabase.com](https://supabase.com) and sign in.
+2. Create a new project.
+3. Choose a database password and store it securely.
+4. Select the region closest to the team.
+5. Wait for provisioning to finish.
+6. Open **Settings > API**.
+7. Copy the **Project URL** and **anon public key**.
+8. Open **SQL Editor**.
+9. Run the full contents of `docs/TEAM_SCHEMA.sql`.
 
-The app will:
+The schema creates:
 
-- Validate the Supabase URL and anon key format
-- Store credentials securely in the main process settings
-- Perform anonymous sign-in with Supabase
-- Persist the session locally (encrypted or plaintext based on OS support)
+- `team_workspaces`
+- `team_workspace_members`
+- `team_projects`
+- `team_project_tasks`
 
-## Step 5: Create a Workspace
+It also creates RPC functions used by the app:
 
-After configuring team mode:
+- `create_team_workspace(name, workspace_key, display_name)`
+- `join_workspace_by_key(workspace_key, display_name)`
 
-1. In the Team Mode section, click **Create Workspace**
-2. Enter a workspace name (e.g., "Marketing Team")
-3. The app will generate a 16-character workspace key
-4. Share this workspace key with team members (they can join using this key)
+Row-level security keeps users scoped to workspaces they have joined. The RPC functions use `SECURITY DEFINER` for controlled workspace creation and joining.
 
-## Step 6: Invite Team Members
+## Workspace Flow
 
-To invite team members to your workspace:
+### Create a workspace
 
-1. Share the **workspace key** with them (16-character code)
-2. Have them configure their app with the same Supabase credentials
-3. Have them click **Join Workspace** and enter the workspace key
-4. They will appear in the workspace member list
+1. Open **Team Projects**.
+2. Select **Create Workspace**.
+3. Enter a workspace name.
+4. Share the generated 16-character invite code with collaborators.
 
-## Step 7: Create Projects and Tasks
+If there is no active workspace yet, the new workspace becomes active automatically.
 
-Once you have a workspace with members:
+### Join a workspace
 
-1. Click **Create Project** to add a project to the workspace
-2. Click **Create Task** to add tasks to a project
-3. Tasks can be assigned to members using the **Assignee** field
-4. Changes are automatically reflected in real-time across all connected clients when an active workspace is selected
+1. Open **Team Projects**.
+2. Select **Join Workspace**.
+3. Enter the 16-character invite code.
+4. Open the joined workspace from the workspace list if needed.
+
+If there is no active workspace yet, the joined workspace becomes active automatically.
+
+### Work with projects and tasks
+
+1. Create a project in the active workspace.
+2. Create tasks inside that project.
+3. Optionally set due date, priority, recurrence, status, notes, and assignee display name.
+4. Switch workspace when you need a different shared project area.
+
+Realtime updates are best effort. When a Team Projects panel is open with an active workspace, the renderer starts a Supabase realtime subscription and debounces project/task refreshes.
 
 ## Data Model
 
 ### Workspaces
 
-- **id**: UUID (auto-generated)
-- **name**: 1-120 characters
-- **workspace_key**: 16-character invite code (unique)
-- **created_by**: Supabase user ID of creator
-- **created_at**: Timestamp
+- `id`: UUID
+- `name`: 1 to 120 characters
+- `workspace_key`: 16-character invite code
+- `created_by`: Supabase user ID of creator
+- `created_at`: timestamp
 
 ### Members
 
-- **workspace_id**: UUID (references workspaces)
-- **user_id**: Supabase user ID
-- **display_name**: 1-60 characters (shown to other members)
-- **joined_at**: Timestamp
+- `workspace_id`: UUID reference to a workspace
+- `user_id`: Supabase user ID
+- `display_name`: 1 to 60 characters
+- `joined_at`: timestamp
 
 ### Projects
 
-- **id**: UUID (auto-generated)
-- **workspace_id**: UUID (references workspaces)
-- **name**: 1-120 characters
-- **created_by**: Supabase user ID of creator
-- **created_at**: Timestamp
+- `id`: UUID
+- `workspace_id`: UUID reference to a workspace
+- `name`: 1 to 120 characters
+- `created_by`: Supabase user ID of creator
+- `created_at`: timestamp
 
 ### Tasks
 
-- **id**: UUID (auto-generated)
-- **workspace_id**: UUID (references workspaces)
-- **project_id**: UUID (references projects)
-- **title**: 1-200 characters
-- **notes**: Optional, up to 5000 characters
-- **due_at**: Optional timestamp
-- **priority**: "low", "normal", or "high"
-- **status**: "open" or "done"
-- **recurrence**: "none", "daily", "weekly", or "monthly"
-- **assignee_display_name**: Optional member name
-- **created_by**: Supabase user ID of creator
-- **created_at**: Timestamp
-- **updated_by**: Supabase user ID of last updater
-- **updated_at**: Timestamp
+- `id`: UUID
+- `workspace_id`: UUID reference to a workspace
+- `project_id`: UUID reference to a project
+- `title`: 1 to 200 characters
+- `notes`: optional, up to 5000 characters
+- `due_at`: optional timestamp
+- `priority`: `low`, `normal`, or `high`
+- `status`: `open` or `done`
+- `recurrence`: `none`, `daily`, `weekly`, or `monthly`
+- `assignee_display_name`: optional member display name
+- `created_by`: Supabase user ID of creator
+- `created_at`: timestamp
+- `updated_by`: Supabase user ID of last updater
+- `updated_at`: timestamp
 
-## Security
+## Security Notes
 
-- **Authentication**: Anonymous Supabase auth (no user accounts required)
-- **Authorization**: Row-level security ensures users only see data from workspaces they've joined
-- **RPC Security**: Workspace creation and joining use RPC functions with `SECURITY DEFINER` to bypass RLS for controlled operations
-- **Encryption**: Session tokens are encrypted using Electron's safeStorage (platform-dependent)
-- **Fallback**: If encryption is unavailable, session is stored as plaintext (logged with warning)
+- Authentication uses Supabase anonymous auth.
+- Authorization uses row-level security.
+- Team credentials stay in the main process.
+- `teamGetConfig` never returns the Supabase anon key to the renderer.
+- Team session storage uses Electron `safeStorage` when available.
+- If OS encryption is unavailable, the session falls back to plaintext storage and logs a warning.
+- Invite codes grant workspace access to anyone with the same backend configuration.
 
 ## Troubleshooting
 
-### "Team mode is not configured" error
+### Team Projects is not available
 
-- Ensure you've entered valid Supabase URL and anon key in settings
-- Check that the Supabase project is active and accessible
+The build does not have hosted backend credentials and no manual backend has been configured. Use a hosted build, or configure an advanced self-hosted backend.
 
-### "Invalid workspace key" error
+### Display name is rejected
 
-- Verify the workspace key is exactly 16 characters
-- Ensure you're using a valid key from an existing workspace
+Use a non-empty name up to 60 characters.
 
-### "Not authenticated" error
+### Supabase URL is rejected
 
-- Check that Supabase anonymous sign-in succeeded
-- Verify your network connection to Supabase
-- Check the main process logs for auth errors
+Use an HTTPS project URL with no trailing slash, for example:
 
-### Data not refreshing between devices
+```text
+https://your-project.supabase.co
+```
 
-- Ensure both devices are using the same Supabase project
-- Verify both devices have joined the same workspace
-- Check network connectivity
+### Invalid workspace key
 
-## Resetting Team Mode
+Verify the code is exactly 16 characters and belongs to the same Supabase backend.
 
-To clear team mode configuration:
+### Not authenticated
 
-1. Go to **Settings > Team Mode**
-2. Click **Clear Configuration**
-3. This will:
-   - Remove Supabase credentials from local storage
-   - Delete the persisted session
-   - Clear the active workspace selection
+Check network access to Supabase and confirm the anon key belongs to the project URL.
 
-The Supabase data remains intact; you can reconfigure later.
+### Data does not refresh between devices
 
-## Limitations (V1)
+Confirm both devices use the same backend, both have joined the same workspace, and the active workspace is open. Reopen the Team Projects panel if realtime appears stale.
 
-- No user account management (anonymous auth only)
-- No workspace permissions (all members have equal access)
-- No file attachments or rich text in task notes
-- No task comments or discussion threads
+## Resetting Team Projects
 
-These may be addressed in future versions.
+1. Open **Team Projects**.
+2. Use the available reset or clear configuration action.
+3. Reconfigure display name or backend credentials.
+
+Clearing local configuration does not delete Supabase data.
 
 ## Manual Smoke Test Checklist
 
-Use this checklist to verify team mode works correctly with a real Supabase project:
+Use this checklist with a real Supabase project.
 
-### Prerequisites
-
-- [ ] **Schema Smoke Test**: Open a fresh Supabase project SQL Editor and run the entire `docs/TEAM_SCHEMA.sql` file. Verify it completes without errors and creates all tables, indexes, and RPC functions.
-- [ ] Supabase project created and schema applied (from Step 3)
-- [ ] Two separate app profiles (e.g., separate user data directories or two different machines)
-
-### Test Flow
-
-- [ ] **Configure Supabase**: In Profile A, navigate to Settings > Team Mode and enter Supabase URL, anon key, and display name (e.g., "Alice"). Click Save.
-- [ ] **Create Workspace**: In Profile A, click "Create Workspace" and enter a name (e.g., "Marketing Team"). Verify a 16-character workspace key is generated.
-- [ ] **Join Workspace**: In Profile B, configure the same Supabase credentials with a different display name (e.g., "Bob"). Click "Join Workspace" and enter the workspace key from Profile A. Verify both users appear in the workspace.
-- [ ] **Create Project**: In Profile A, click "Create Project" and add a project to the workspace (e.g., "Q1 Campaign"). Verify the project appears in the project list.
-- [ ] **Create Task**: In Profile A, click "Create Task" and add a task to the project (e.g., "Design logo"). Verify the task appears in the task list.
-- [ ] **Update Task from Profile B**: In Profile B, update the task (e.g., change status to "done" or add notes). Verify the change is visible in Profile A after a refresh.
-- [ ] **Create Task from Profile B**: In Profile B, create another task. Verify it appears in Profile A.
-
-### Expected Results
-
-- Both profiles should see the same workspace, project, and tasks
-- Changes made by one profile should be visible to the other
-- Display names should correctly identify who created or modified items
-- No authentication errors should occur after initial configuration
+- [ ] Run `docs/TEAM_SCHEMA.sql` in a fresh Supabase project and confirm it completes.
+- [ ] Start Profile A and configure hosted or self-hosted Team Projects with display name `Alice`.
+- [ ] Create a workspace in Profile A and copy the invite code.
+- [ ] Start Profile B with the same backend and display name `Bob`.
+- [ ] Join Profile B to the workspace using the invite code.
+- [ ] Create a project in Profile A and confirm it appears in Profile B.
+- [ ] Create a task in Profile A and confirm it appears in Profile B.
+- [ ] Update the task from Profile B and confirm Profile A sees the change.
+- [ ] Switch active workspaces if multiple workspaces exist and confirm the task list changes.

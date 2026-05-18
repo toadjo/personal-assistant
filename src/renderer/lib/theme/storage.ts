@@ -30,7 +30,7 @@ function sanitizeOverrides(raw: unknown): Partial<Record<string, string>> {
 function parseStored(raw: string | null): ThemeState | null {
   if (!raw) return null;
 
-  // v1.5.6+ structured format
+  // Structured format with custom theme overrides.
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (typeof parsed.preset === "string" && THEME_IDS.has(parsed.preset as ThemeMode)) {
@@ -49,10 +49,10 @@ function parseStored(raw: string | null): ThemeState | null {
       return state;
     }
   } catch {
-    // not structured JSON — fall through to plain string handling
+    // Not structured JSON, so fall through to plain string handling.
   }
 
-  // Pre-v1.5.6 plain string format (e.g. "glass", "paper", "light", "dark")
+  // Legacy plain string format, for example "glass", "paper", "light", or "dark".
   const plain = raw.trim();
   if (THEME_IDS.has(plain as ThemeMode)) {
     return { preset: plain as ThemeMode };

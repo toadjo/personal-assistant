@@ -1,6 +1,4 @@
 /**
- * Theme token system (v1.5.6).
- *
  * All theme colors flow through typed tokens that map to CSS custom properties.
  * Presets define full token sets. Custom themes start from a preset and override
  * individual tokens. The renderer applies tokens by setting properties on

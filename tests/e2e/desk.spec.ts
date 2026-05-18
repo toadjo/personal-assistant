@@ -18,3 +18,12 @@ test("household route loads household shell", async ({ page }) => {
   await page.goto("/#household");
   await expect(page.getByRole("heading", { level: 1, name: /^Household$/ })).toBeVisible();
 });
+
+test("projects mode renders team task surface and matches snapshot", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /^Projects$/ }).click();
+  await expect(page.getByRole("heading", { name: /^Shared Tasks$/ })).toBeVisible();
+  await expect(page.getByText("Design logo")).toBeVisible();
+  const projectsPanel = page.locator(".panel").filter({ hasText: "Shared Tasks" });
+  await expect(projectsPanel).toHaveScreenshot("projects-panel.png");
+});

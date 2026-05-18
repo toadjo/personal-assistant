@@ -1647,7 +1647,7 @@ button:disabled {
   background: var(--primary-hover);
 }
 
-/* Command palette (v1.6.1) */
+/* Command palette */
 .commandPaletteOverlay {
   position: fixed;
   inset: 0;
@@ -1774,7 +1774,7 @@ button:disabled {
   font-family: inherit;
 }
 
-/* Appearance panel (v1.5.7 redesigned) */
+/* Appearance panel */
 .appearancePanelHeader {
   display: flex;
   align-items: center;

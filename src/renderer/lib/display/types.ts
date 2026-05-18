@@ -1,7 +1,3 @@
-/**
- * Display preference types (v1.5.8).
- */
-
 export type Density = "comfortable" | "compact" | "spacious";
 export type PanelRadius = "sharp" | "soft" | "rounded";
 
