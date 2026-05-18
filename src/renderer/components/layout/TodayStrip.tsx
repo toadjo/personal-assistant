@@ -1,4 +1,4 @@
-import { AlertCircle, Clock, Bell, StickyNote, Zap } from "lucide-react";
+import { AlertCircle, Clock, Bell, StickyNote, Zap, Users } from "lucide-react";
 
 type Props = {
   overdueCount: number;
@@ -6,11 +6,14 @@ type Props = {
   remindersCount: number;
   notesCount: number;
   automationsCount: number;
+  teamOpenCount?: number;
+  teamAttentionCount?: number;
   onFilterOverdue?: () => void;
   onFilterDueToday?: () => void;
   onFilterReminders?: () => void;
   onFilterNotes?: () => void;
   onFilterAutomations?: () => void;
+  onFilterTeam?: () => void;
 };
 
 function StripChip({
@@ -46,11 +49,14 @@ export function TodayStrip({
   remindersCount,
   notesCount,
   automationsCount,
+  teamOpenCount,
+  teamAttentionCount,
   onFilterOverdue,
   onFilterDueToday,
   onFilterReminders,
   onFilterNotes,
-  onFilterAutomations
+  onFilterAutomations,
+  onFilterTeam
 }: Props): JSX.Element {
   return (
     <div className="todayStrip">
@@ -65,6 +71,15 @@ export function TodayStrip({
       <StripChip icon={Bell} label="Reminders" count={remindersCount} onClick={onFilterReminders} />
       <StripChip icon={StickyNote} label="Notes" count={notesCount} onClick={onFilterNotes} />
       <StripChip icon={Zap} label="Automations" count={automationsCount} onClick={onFilterAutomations} />
+      {teamOpenCount !== undefined && teamOpenCount > 0 && (
+        <StripChip
+          icon={Users}
+          label="Team"
+          count={teamOpenCount}
+          attention={teamAttentionCount !== undefined && teamAttentionCount > 0}
+          onClick={onFilterTeam}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database } from "lucide-react";
+import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { useBackupActions } from "../hooks/workspace/useBackupActions";
@@ -59,6 +59,18 @@ export function AssistantShell(): JSX.Element {
 
   // Keep team data fresh across Personal mode surfaces
   useTeamRealtime(team, { projects: true, tasks: true });
+
+  // Compute team task status counts
+  const teamOpenTasks = team.tasks.filter(t => t.status === "open");
+  const teamOverdueTasks = teamOpenTasks.filter(t => t.dueAt && new Date(t.dueAt) < new Date(new Date().setHours(0, 0, 0, 0)));
+  const _teamDueTodayTasks = teamOpenTasks.filter(t => {
+    if (!t.dueAt) return false;
+    const dueDate = new Date(t.dueAt);
+    const today = new Date();
+    const todayStart = new Date(today.setHours(0, 0, 0, 0));
+    const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+    return dueDate >= todayStart && dueDate <= todayEnd;
+  });
 
   // Load team config on mount
   useEffect(() => {
@@ -228,6 +240,14 @@ export function AssistantShell(): JSX.Element {
               label="Task overdue"
               count={tasks.overdueOpen.length}
               variant="attention"
+            />
+          ) : null}
+          {team.config?.configured && teamOpenTasks.length > 0 ? (
+            <StatusChip
+              icon={Users}
+              label="Team"
+              count={teamOpenTasks.length}
+              variant={teamOverdueTasks.length > 0 ? "attention" : undefined}
             />
           ) : null}
           <IconButton
@@ -413,12 +433,18 @@ export function AssistantShell(): JSX.Element {
             remindersCount={reminders.pending.length}
             notesCount={data.notes.length}
             automationsCount={data.rules.length}
+            teamOpenCount={team.config?.configured ? teamOpenTasks.length : undefined}
+            teamAttentionCount={team.config?.configured ? teamOverdueTasks.length : undefined}
             onFilterOverdue={() => tasks.setFilter("overdue")}
             onFilterDueToday={() => tasks.setFilter("open")}
             onFilterReminders={() => reminders.setFilter("pending")}
             onFilterNotes={() => data.setQuery("")}
             onFilterAutomations={() => {
               /* automations don't have a panel filter, noop */
+            }}
+            onFilterTeam={() => {
+              setDailyCommandCenterFilter("team");
+              ui.setStatus("Showing team tasks.");
             }}
           />
 
