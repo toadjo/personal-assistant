@@ -111,6 +111,20 @@
   gap: 4px;
 }
 
+.projectSelector {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: var(--input-background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.projectSelector:hover {
+  border-color: var(--primary);
+}
+
 .showMore {
   padding: 8px 12px;
   font-size: 12px;

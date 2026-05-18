@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { InboxPanel } from "./InboxPanel";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
+import type { TeamProject } from "../../../shared/team/types";
 
 function makeUnifiedItem(overrides: Partial<UnifiedWorkItem> = {}): UnifiedWorkItem {
   return {
@@ -18,6 +19,17 @@ function makeUnifiedItem(overrides: Partial<UnifiedWorkItem> = {}): UnifiedWorkI
   };
 }
 
+function makeTeamProject(overrides: Partial<TeamProject> = {}): TeamProject {
+  return {
+    id: `project-${Math.random()}`,
+    workspaceId: "workspace-1",
+    name: "Project",
+    createdAt: "2024-01-01T00:00:00Z",
+    createdBy: "user-1",
+    ...overrides
+  };
+}
+
 describe("InboxPanel", () => {
   it("renders empty state when no items", () => {
     const onShowSuccess = vi.fn();
@@ -27,6 +39,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={[]}
         needsSorting={[]}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -47,6 +60,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={[]}
         needsSorting={[]}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -71,6 +85,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={[]}
         needsSorting={needsSorting}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -96,6 +111,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={unifiedItems}
         needsSorting={[]}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -115,6 +131,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={[]}
         needsSorting={needsSorting}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -138,6 +155,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={[]}
         needsSorting={needsSorting}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -167,6 +185,7 @@ describe("InboxPanel", () => {
       <InboxPanel
         unifiedItems={[]}
         needsSorting={needsSorting}
+        teamProjects={[]}
         createQuickNote={vi.fn()}
         createQuickTask={vi.fn()}
         createQuickReminder={vi.fn()}
@@ -185,5 +204,143 @@ describe("InboxPanel", () => {
 
     expect(convertNoteToTask).toHaveBeenCalledTimes(1);
     expect(onOpenItem).not.toHaveBeenCalled();
+  });
+
+  describe("Send to team", () => {
+    it("local task in Needs Sorting shows project selector and Send to team button when projects exist", () => {
+      const teamProjects = [makeTeamProject({ name: "Project A" }), makeTeamProject({ name: "Project B" })];
+      const needsSorting = [makeUnifiedItem({ source: "local-task", label: "Buy groceries" })];
+      const sendTaskToTeam = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={teamProjects}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={sendTaskToTeam}
+        />
+      );
+
+      expect(screen.getByRole("combobox")).toBeDefined();
+      expect(screen.getByLabelText("Send to team")).toBeDefined();
+    });
+
+    it("clicking Send to team calls sendTaskToTeam with the local task id and default project id", () => {
+      const teamProjects = [makeTeamProject({ name: "Project A" }), makeTeamProject({ name: "Project B" })];
+      const needsSorting = [makeUnifiedItem({ source: "local-task", label: "Buy groceries", sourceId: "task-123" })];
+      const sendTaskToTeam = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={teamProjects}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={sendTaskToTeam}
+        />
+      );
+
+      const sendButton = screen.getByLabelText("Send to team");
+      sendButton.click();
+
+      expect(sendTaskToTeam).toHaveBeenCalledTimes(1);
+      expect(sendTaskToTeam).toHaveBeenCalledWith("task-123", teamProjects[0]!.id);
+    });
+
+    it("no Team action renders when teamProjects is empty", () => {
+      const needsSorting = [makeUnifiedItem({ source: "local-task", label: "Buy groceries" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Send to team")).not.toBeInTheDocument();
+    });
+
+    it("no Team action renders for notes", () => {
+      const teamProjects = [makeTeamProject({ name: "Project A" })];
+      const needsSorting = [makeUnifiedItem({ source: "local-note", label: "Meeting notes" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={teamProjects}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Send to team")).not.toBeInTheDocument();
+    });
+
+    it("no Team action renders for reminders", () => {
+      const teamProjects = [makeTeamProject({ name: "Project A" })];
+      const needsSorting = [makeUnifiedItem({ source: "local-reminder", label: "Call mom" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={teamProjects}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Send to team")).not.toBeInTheDocument();
+    });
+
+    it("no Team action renders for team tasks", () => {
+      const teamProjects = [makeTeamProject({ name: "Project A" })];
+      const needsSorting = [makeUnifiedItem({ source: "team-task", label: "Team task" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={teamProjects}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Send to team")).not.toBeInTheDocument();
+    });
   });
 });

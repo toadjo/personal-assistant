@@ -11,17 +11,19 @@
  */
 
 import { memo, useState } from "react";
-import { Inbox, Plus, FileText, ListTodo, Bell } from "lucide-react";
+import { Inbox, Plus, FileText, ListTodo, Bell, Users } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import { EmptyState } from "../ui/EmptyState";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
 import type { LucideIcon } from "lucide-react";
+import type { TeamProject } from "../../../shared/team/types";
 import "./InboxPanel.css";
 
 type Props = {
   unifiedItems: UnifiedWorkItem[];
   needsSorting: UnifiedWorkItem[];
+  teamProjects: TeamProject[];
   createQuickNote: (title: string, content: string) => Promise<void>;
   createQuickTask: (title: string, notes: string) => Promise<void>;
   createQuickReminder: (text: string) => Promise<void>;
@@ -36,12 +38,13 @@ type Props = {
 export const InboxPanel = memo(function InboxPanel({
   unifiedItems,
   needsSorting,
+  teamProjects = [],
   createQuickNote,
   createQuickTask,
   createQuickReminder,
   convertNoteToTask,
   convertNoteToReminder,
-  sendTaskToTeam: _sendTaskToTeam,
+  sendTaskToTeam,
   onOpenItem,
   onShowSuccess,
   onError
@@ -49,6 +52,7 @@ export const InboxPanel = memo(function InboxPanel({
   const [captureMode, setCaptureMode] = useState<"none" | "note" | "task" | "reminder">("none");
   const [captureTitle, setCaptureTitle] = useState("");
   const [captureContent, setCaptureContent] = useState("");
+  const [selectedProjectIds, setSelectedProjectIds] = useState<Record<string, string>>({});
 
   async function handleCapture(): Promise<void> {
     if (!captureTitle.trim()) return;
@@ -67,6 +71,15 @@ export const InboxPanel = memo(function InboxPanel({
       onShowSuccess?.("Item captured.");
     } catch {
       onError?.("Failed to capture item.");
+    }
+  }
+
+  async function handleSendToTeam(itemId: string, projectId: string): Promise<void> {
+    try {
+      await sendTaskToTeam(itemId, projectId);
+      onShowSuccess?.("Task sent to team.");
+    } catch {
+      onError?.("Failed to send task to team.");
     }
   }
 
@@ -165,6 +178,36 @@ export const InboxPanel = memo(function InboxPanel({
                             icon={Bell}
                             label="Convert to reminder"
                             onClick={() => void convertNoteToReminder(item.sourceId)}
+                          />
+                        </div>
+                      )}
+                      {item.source === "local-task" && teamProjects.length > 0 && (
+                        <div className="itemActions">
+                          <select
+                            className="projectSelector"
+                            value={selectedProjectIds[item.id] || teamProjects[0]?.id || ""}
+                            onChange={(e) => {
+                              setSelectedProjectIds((prev) => ({
+                                ...prev,
+                                [item.id]: e.currentTarget.value
+                              }));
+                            }}
+                          >
+                            {teamProjects.map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.name}
+                              </option>
+                            ))}
+                          </select>
+                          <IconButton
+                            icon={Users}
+                            label="Send to team"
+                            onClick={() => {
+                              const projectId = selectedProjectIds[item.id] || teamProjects[0]?.id;
+                              if (projectId) {
+                                void handleSendToTeam(item.sourceId, projectId);
+                              }
+                            }}
                           />
                         </div>
                       )}

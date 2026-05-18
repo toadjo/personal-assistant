@@ -481,6 +481,7 @@ export function AssistantShell(): JSX.Element {
           <InboxPanel
             unifiedItems={inbox.unifiedItems}
             needsSorting={inbox.needsSorting}
+            teamProjects={team.projects}
             createQuickNote={inbox.createQuickNote}
             createQuickTask={inbox.createQuickTask}
             createQuickReminder={inbox.createQuickReminder}
