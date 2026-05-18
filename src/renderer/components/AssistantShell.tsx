@@ -490,11 +490,7 @@ export function AssistantShell(): JSX.Element {
           onDeleteNote={(id) => memos.deleteNote(id, "Item")}
           onUpdateNote={(id, title, content) => memos.updateNote({ id, title, content })}
           onUpdateTask={(id, title, notes) => tasks.saveTask({ id, title, notes, dueAt: null, priority: "normal", recurrence: "none" })}
-          onUpdateReminder={(_id, _text, _dueAt) => {
-            // Reminder update not currently exposed through workspace
-            ui.setStatus("Reminder editing not yet supported in unified drawer.");
-            return Promise.resolve();
-          }}
+          onUpdateReminder={(id, text, dueAt) => reminders.updateById(id, text, dueAt)}
           onConvertNoteToTask={inbox.convertNoteToTask}
           onConvertNoteToReminder={inbox.convertNoteToReminder}
           onShowSuccess={ui.showSuccess}

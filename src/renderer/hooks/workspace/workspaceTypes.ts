@@ -104,6 +104,7 @@ export type AssistantWorkspace = {
     snoozeMinutes: (id: string, minutes: number, okMessage: string) => Promise<void>;
     completeById: (id: string) => Promise<void>;
     deleteById: (id: string) => Promise<void>;
+    updateById: (id: string, text?: string, dueAt?: string) => Promise<void>;
   };
   tasks: {
     filter: TaskFilter;

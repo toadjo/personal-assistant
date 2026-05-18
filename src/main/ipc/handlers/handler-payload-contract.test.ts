@@ -10,6 +10,7 @@ import {
   optionalQuerySchema,
   positiveIntegerSchema,
   reminderCreateSchema,
+  reminderUpdateSchema,
   taskCreateSchema,
   taskUpdateSchema,
   rendererLogPayloadSchema,
@@ -64,6 +65,7 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.notesUpdate ||
         ch === IpcInvoke.notesDelete ||
         ch === IpcInvoke.remindersCreate ||
+        ch === IpcInvoke.remindersUpdate ||
         ch === IpcInvoke.remindersComplete ||
         ch === IpcInvoke.remindersDelete ||
         ch === IpcInvoke.remindersSnooze ||
@@ -98,6 +100,26 @@ describe("IPC handler payload contracts", () => {
 
   it("notesCreateSchema rejects empty title", () => {
     expect(() => noteCreateSchema.parse({ title: "   ", content: "", tags: [], pinned: false })).toThrow();
+  });
+
+  it("reminderUpdateSchema rejects empty payload", () => {
+    expect(() => reminderUpdateSchema.parse({ id: "123e4567-e89b-12d3-a456-426614174000" })).toThrow();
+  });
+
+  it("reminderUpdateSchema accepts text-only update", () => {
+    const result = reminderUpdateSchema.parse({
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      text: "Updated reminder"
+    });
+    expect(result.text).toBe("Updated reminder");
+  });
+
+  it("reminderUpdateSchema accepts dueAt-only update", () => {
+    const result = reminderUpdateSchema.parse({
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      dueAt: "2024-01-01T12:00:00Z"
+    });
+    expect(result.dueAt).toBe("2024-01-01T12:00:00Z");
   });
 
   it("notesList optional query accepts undefined and rejects non-string", () => {

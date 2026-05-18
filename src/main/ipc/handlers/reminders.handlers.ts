@@ -5,10 +5,11 @@ import {
   createReminder,
   deleteReminder,
   listReminders,
-  snoozeReminder
+  snoozeReminder,
+  updateReminder
 } from "../../services/reminders";
 import { registerInvoke } from "../invoke-handle";
-import { positiveIntegerSchema, reminderCreateSchema, uuidSchema } from "../schemas";
+import { positiveIntegerSchema, reminderCreateSchema, reminderUpdateSchema, uuidSchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
@@ -19,6 +20,10 @@ export function registerRemindersHandlers(assertSender: AssertSender): void {
   });
   registerInvoke(IpcInvoke.remindersCreate, assertSender, (_event, payload) => {
     return createReminder(reminderCreateSchema.parse(payload));
+  });
+  registerInvoke(IpcInvoke.remindersUpdate, assertSender, (_event, payload) => {
+    const parsed = reminderUpdateSchema.parse(payload);
+    return updateReminder(parsed.id, { text: parsed.text, dueAt: parsed.dueAt });
   });
   registerInvoke(IpcInvoke.remindersComplete, assertSender, (_event, id) => {
     return completeReminder(uuidSchema.parse(id));

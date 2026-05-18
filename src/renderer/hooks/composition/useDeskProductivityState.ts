@@ -58,6 +58,7 @@ export type DeskProductivityState = {
     snoozeMinutes: (id: string, minutes: number, okMessage: string) => Promise<void>;
     completeById: (id: string) => Promise<void>;
     deleteById: (id: string) => Promise<void>;
+    updateById: (id: string, text?: string, dueAt?: string) => Promise<void>;
   };
   tasks: {
     filter: TaskFilter;
@@ -170,7 +171,7 @@ export function useDeskProductivityState(args: {
     setStatus,
     setError
   );
-  const { snoozeReminderMinutes, completeReminderById, deleteReminderById } = useReminderActions(
+  const { snoozeReminderMinutes, completeReminderById, deleteReminderById, updateReminderById } = useReminderActions(
     setStatus,
     setError,
     refreshReminders
@@ -217,7 +218,8 @@ export function useDeskProductivityState(args: {
       visible: visibleReminders,
       snoozeMinutes: snoozeReminderMinutes,
       completeById: completeReminderById,
-      deleteById: deleteReminderById
+      deleteById: deleteReminderById,
+      updateById: updateReminderById
     },
     tasks: {
       filter: taskActions.taskFilter,

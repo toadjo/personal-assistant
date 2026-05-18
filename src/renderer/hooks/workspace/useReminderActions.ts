@@ -38,5 +38,16 @@ export function useReminderActions(setStatus: SetStatus, setError: SetError, ref
     }
   }
 
-  return { snoozeReminderMinutes, completeReminderById, deleteReminderById };
+  async function updateReminderById(id: string, text?: string, dueAt?: string): Promise<void> {
+    try {
+      await window.assistantApi.updateReminder({ id, text, dueAt });
+      setStatus("Reminder updated.");
+      await refreshReminders();
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+      await refreshReminders();
+    }
+  }
+
+  return { snoozeReminderMinutes, completeReminderById, deleteReminderById, updateReminderById };
 }

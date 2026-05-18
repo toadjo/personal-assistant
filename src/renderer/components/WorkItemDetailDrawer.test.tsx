@@ -190,4 +190,139 @@ describe("WorkItemDetailDrawer", () => {
     
     expect(onDeleteNote).toHaveBeenCalledWith("task-1");
   });
+
+  describe("reminder editing", () => {
+    it("shows enabled Edit button for reminder items", () => {
+      const item = makeUnifiedItem({ source: "local-reminder" });
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={vi.fn()}
+          onUpdateReminder={vi.fn()}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit") as HTMLButtonElement;
+      expect(editButton).toBeDefined();
+      expect(editButton.disabled).toBe(false);
+    });
+
+    it("opens edit form with reminder text and due date fields when Edit is clicked", () => {
+      const dueAt = new Date(Date.now() + 60_000).toISOString();
+      const item = makeUnifiedItem({ source: "local-reminder", dueAt, label: "Buy milk" });
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={vi.fn()}
+          onUpdateReminder={vi.fn()}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit");
+      fireEvent.click(editButton);
+      
+      expect(screen.getByLabelText("Title")).toBeDefined();
+      expect(screen.getByLabelText("Due Date")).toBeDefined();
+    });
+
+    it("calls onUpdateReminder with updated text and ISO due date on save", async () => {
+      const dueAt = new Date(Date.now() + 60_000).toISOString();
+      const item = makeUnifiedItem({ source: "local-reminder", dueAt, label: "Buy milk" });
+      const onUpdateReminder = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+      const onClose = vi.fn();
+      
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateReminder={onUpdateReminder}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit");
+      fireEvent.click(editButton);
+      
+      const titleInput = screen.getByLabelText("Title");
+      fireEvent.change(titleInput, { target: { value: "Buy bread" } });
+      
+      const dueDateInput = screen.getByLabelText("Due Date");
+      const newDue = new Date(Date.now() + 120_000);
+      const isoString = newDue.toISOString().slice(0, 16);
+      fireEvent.change(dueDateInput, { target: { value: isoString } });
+      
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await vi.waitFor(() => expect(onUpdateReminder).toHaveBeenCalled());
+      
+      const expectedDueAt = new Date(isoString).toISOString();
+      expect(onUpdateReminder).toHaveBeenCalledWith("task-1", "Buy bread", expectedDueAt);
+    });
+
+    it("closes drawer and shows success on successful save", async () => {
+      const dueAt = new Date(Date.now() + 60_000).toISOString();
+      const item = makeUnifiedItem({ source: "local-reminder", dueAt, label: "Buy milk" });
+      const onUpdateReminder = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+      const onClose = vi.fn();
+      
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateReminder={onUpdateReminder}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit");
+      fireEvent.click(editButton);
+      
+      const dueDateInput = screen.getByLabelText("Due Date");
+      const newDue = new Date(Date.now() + 120_000);
+      const isoString = newDue.toISOString().slice(0, 16);
+      fireEvent.change(dueDateInput, { target: { value: isoString } });
+      
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await vi.waitFor(() => expect(onUpdateReminder).toHaveBeenCalled());
+      expect(onClose).toHaveBeenCalled();
+      expect(onShowSuccess).toHaveBeenCalledWith("Reminder updated.");
+    });
+
+    it("reports error and keeps drawer open on failed save", async () => {
+      const dueAt = new Date(Date.now() + 60_000).toISOString();
+      const item = makeUnifiedItem({ source: "local-reminder", dueAt, label: "Buy milk" });
+      const onUpdateReminder = vi.fn().mockRejectedValue(new Error("Update failed"));
+      const onError = vi.fn();
+      const onClose = vi.fn();
+      
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateReminder={onUpdateReminder}
+          onError={onError}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit");
+      fireEvent.click(editButton);
+      
+      const dueDateInput = screen.getByLabelText("Due Date");
+      const newDue = new Date(Date.now() + 120_000);
+      const isoString = newDue.toISOString().slice(0, 16);
+      fireEvent.change(dueDateInput, { target: { value: isoString } });
+      
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await vi.waitFor(() => expect(onUpdateReminder).toHaveBeenCalled());
+      expect(onError).toHaveBeenCalledWith("Failed to update item.");
+      expect(onClose).not.toHaveBeenCalled();
+    });
+  });
 });

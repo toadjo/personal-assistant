@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld("assistantApi", {
   listReminders: () => ipcRenderer.invoke(invoke.remindersList),
   createReminder: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) =>
     ipcRenderer.invoke(invoke.remindersCreate, payload),
+  updateReminder: (payload: { id: string; text?: string; dueAt?: string }) =>
+    ipcRenderer.invoke(invoke.remindersUpdate, payload),
   completeReminder: (id: string) => ipcRenderer.invoke(invoke.remindersComplete, id),
   deleteReminder: (id: string) => ipcRenderer.invoke(invoke.remindersDelete, id),
   snoozeReminder: (id: string, minutes: number) => ipcRenderer.invoke(invoke.remindersSnooze, id, minutes),

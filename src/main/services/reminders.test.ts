@@ -23,7 +23,7 @@ vi.mock("../log", () => ({
 }));
 
 import { decodeAssistantInvokeFailure } from "../../shared/invokeErrors";
-import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, runReminderSchedulerTick } from "./reminders";
+import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, runReminderSchedulerTick, updateReminder } from "./reminders";
 import type { NotificationResult } from "../notification";
 
 describe("reminders service", () => {
@@ -94,6 +94,100 @@ describe("reminders service", () => {
         retryable: false
       });
     }
+  });
+
+  describe("updateReminder", () => {
+    it("updates reminder text successfully", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Buy milk", dueAt: due, recurrence: "none" });
+      updateReminder(r.id, { text: "Buy bread" });
+      const updated = listReminders().find((x) => x.id === r.id);
+      expect(updated?.text).toBe("Buy bread");
+      expect(updated?.dueAt).toBe(due);
+    });
+
+    it("updates reminder due date successfully", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Buy milk", dueAt: due, recurrence: "none" });
+      const newDue = new Date(Date.now() + 120_000).toISOString();
+      updateReminder(r.id, { dueAt: newDue });
+      const updated = listReminders().find((x) => x.id === r.id);
+      expect(updated?.text).toBe("Buy milk");
+      expect(updated?.dueAt).toBe(newDue);
+    });
+
+    it("updates both text and due date successfully", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Buy milk", dueAt: due, recurrence: "none" });
+      const newDue = new Date(Date.now() + 120_000).toISOString();
+      updateReminder(r.id, { text: "Buy bread", dueAt: newDue });
+      const updated = listReminders().find((x) => x.id === r.id);
+      expect(updated?.text).toBe("Buy bread");
+      expect(updated?.dueAt).toBe(newDue);
+    });
+
+    it("rejects empty text", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Buy milk", dueAt: due, recurrence: "none" });
+      try {
+        updateReminder(r.id, { text: "" });
+        expect.fail("expected throw");
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toContain("required");
+      }
+    });
+
+    it("rejects invalid due date", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Buy milk", dueAt: due, recurrence: "none" });
+      try {
+        updateReminder(r.id, { dueAt: "invalid-date" });
+        expect.fail("expected throw");
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toContain("valid ISO date");
+      }
+    });
+
+    it("rejects updates with no fields", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Buy milk", dueAt: due, recurrence: "none" });
+      try {
+        updateReminder(r.id, {});
+        expect.fail("expected throw");
+      } catch (e) {
+        expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+          domain: "reminders",
+          code: "INVALID_REMINDER_OPERATION",
+          retryable: false
+        });
+      }
+    });
+
+    it("surfaces REMINDER_NOT_FOUND for unknown ids", () => {
+      try {
+        updateReminder("00000000-0000-4000-8000-000000000099", { text: "Test" });
+        expect.fail("expected throw");
+      } catch (e) {
+        expect(decodeAssistantInvokeFailure(e)).toMatchObject({
+          domain: "reminders",
+          code: "REMINDER_NOT_FOUND",
+          retryable: false
+        });
+      }
+    });
+
+    it("preserves recurrence, status, and notifyChannel", () => {
+      const due = new Date(Date.now() + 60_000).toISOString();
+      const r = createReminder({ text: "Daily pill", dueAt: due, recurrence: "daily" });
+      updateReminder(r.id, { text: "Daily vitamin" });
+      const updated = listReminders().find((x) => x.id === r.id);
+      expect(updated?.text).toBe("Daily vitamin");
+      expect(updated?.recurrence).toBe("daily");
+      expect(updated?.status).toBe("pending");
+      expect(updated?.notifyChannel).toBe("desktop");
+    });
   });
 
   describe("scheduler notification reliability", () => {

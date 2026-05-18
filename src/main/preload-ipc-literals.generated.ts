@@ -9,6 +9,7 @@ export const invokeChannelMap = {
   notesDelete: "notes:delete",
   remindersList: "reminders:list",
   remindersCreate: "reminders:create",
+  remindersUpdate: "reminders:update",
   remindersComplete: "reminders:complete",
   remindersDelete: "reminders:delete",
   remindersSnooze: "reminders:snooze",

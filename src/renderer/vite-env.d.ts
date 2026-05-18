@@ -27,6 +27,7 @@ declare global {
       deleteNote: (id: string) => Promise<void>;
       listReminders: () => Promise<Reminder[]>;
       createReminder: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) => Promise<Reminder>;
+      updateReminder: (payload: { id: string; text?: string; dueAt?: string }) => Promise<void>;
       completeReminder: (id: string) => Promise<void>;
       deleteReminder: (id: string) => Promise<void>;
       snoozeReminder: (id: string, minutes: number) => Promise<void>;

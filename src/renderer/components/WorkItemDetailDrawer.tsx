@@ -15,7 +15,7 @@ type Props = {
   onDeleteNote?: (id: string) => Promise<void>;
   onUpdateNote?: (id: string, title: string, content: string) => Promise<void>;
   onUpdateTask?: (id: string, title: string, notes: string) => Promise<void>;
-  onUpdateReminder?: (id: string, text: string, dueAt: string) => Promise<void>;
+  onUpdateReminder?: (id: string, text?: string, dueAt?: string) => Promise<void>;
   onConvertNoteToTask?: (noteId: string) => Promise<void>;
   onConvertNoteToReminder?: (noteId: string) => Promise<void>;
   onShowSuccess?: (message: string) => void;
@@ -288,8 +288,6 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                 type="button"
                 className="primaryButton"
                 onClick={handleEdit}
-                disabled={item.source === "local-reminder"}
-                title={item.source === "local-reminder" ? "Reminder editing not yet supported" : undefined}
               >
                 Edit
               </button>

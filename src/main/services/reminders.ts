@@ -103,6 +103,44 @@ export function snoozeReminder(id: string, minutes: number): void {
   getDb().prepare("UPDATE reminders SET dueAt=@dueAt WHERE id=@id").run({ id, dueAt: nextDueAt });
 }
 
+export function updateReminder(id: string, updates: { text?: string; dueAt?: string }): void {
+  validateId(id, "Reminder");
+  const reminder = getDb().prepare("SELECT * FROM reminders WHERE id=@id").get({ id }) as Reminder | undefined;
+  if (!reminder) {
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "REMINDER_NOT_FOUND",
+      message: "That reminder was not found.",
+      retryable: false
+    });
+  }
+
+  const setClauses: string[] = [];
+  const params: Record<string, unknown> = { id };
+
+  if (updates.text !== undefined) {
+    setClauses.push("text=@text");
+    params.text = normalizeReminderText(updates.text);
+  }
+
+  if (updates.dueAt !== undefined) {
+    setClauses.push("dueAt=@dueAt");
+    params.dueAt = normalizeIsoDate(updates.dueAt, "Reminder dueAt");
+  }
+
+  if (setClauses.length === 0) {
+    throwAssistantInvoke({
+      domain: "reminders",
+      code: "INVALID_REMINDER_OPERATION",
+      message: "At least one of text or dueAt must be provided.",
+      retryable: false
+    });
+  }
+
+  const sql = `UPDATE reminders SET ${setClauses.join(", ")} WHERE id=@id`;
+  getDb().prepare(sql).run(params);
+}
+
 function computeMsUntilNextReminderWake(): number {
   const row = getDb().prepare("SELECT dueAt FROM reminders WHERE status='pending' ORDER BY dueAt ASC LIMIT 1").get() as
     | { dueAt?: string }

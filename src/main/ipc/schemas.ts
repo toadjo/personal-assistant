@@ -38,6 +38,16 @@ export const reminderCreateSchema = z.object({
   recurrence: z.enum(["none", "daily"])
 });
 
+export const reminderUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    text: z.string().trim().min(1).max(500).optional(),
+    dueAt: z.string().datetime({ offset: true }).optional()
+  })
+  .refine((v) => v.text !== undefined || v.dueAt !== undefined, {
+    message: "At least one of text or dueAt must be provided."
+  });
+
 export const taskCreateSchema = z
   .object({
     title: z.string().trim().min(1).max(200),
