@@ -3,6 +3,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarPanel } from "./CalendarPanel";
 import type { CalendarCell } from "../../lib/calendar";
@@ -53,5 +54,182 @@ describe("CalendarPanel", () => {
 
     expect(screen.getByText("Add reminder")).toBeInTheDocument();
     expect(screen.getByText("Add task")).toBeInTheDocument();
+  });
+
+  it("reminder form opens from Add reminder", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const addButton = screen.getByText("Add reminder");
+    await user.click(addButton);
+
+    expect(screen.getByText(/Add reminder for/i)).toBeInTheDocument();
+  });
+
+  it("reminder save sends trimmed text, ISO due date, and recurrence: none", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const addButton = screen.getByText("Add reminder");
+    await user.click(addButton);
+
+    const textInput = screen.getByPlaceholderText("Reminder text...");
+    await user.type(textInput, "Test reminder");
+
+    const saveButton = screen.getByText("Save");
+    await user.click(saveButton);
+
+    expect(onCreateReminder).toHaveBeenCalledWith({
+      text: "Test reminder",
+      dueAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+      recurrence: "none"
+    });
+  });
+
+  it("empty reminder text keeps Save disabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const addButton = screen.getByText("Add reminder");
+    await user.click(addButton);
+
+    const saveButton = screen.getByText("Save");
+    expect(saveButton).toBeDisabled();
+  });
+
+  it("task form opens from Add task", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const addButton = screen.getByText("Add task");
+    await user.click(addButton);
+
+    expect(screen.getByText(/Add task for/i)).toBeInTheDocument();
+  });
+
+  it("task save sends trimmed title, notes, ISO due date, selected priority, and selected recurrence", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const addButton = screen.getByText("Add task");
+    await user.click(addButton);
+
+    const titleInput = screen.getByPlaceholderText("Task title...");
+    await user.type(titleInput, "Test task");
+
+    const notesInput = screen.getByPlaceholderText("Notes (optional)...");
+    await user.type(notesInput, "Test notes");
+
+    const prioritySelect = screen.getByDisplayValue("Normal priority");
+    await user.selectOptions(prioritySelect, "high");
+
+    const recurrenceSelect = screen.getByDisplayValue("No repeat");
+    await user.selectOptions(recurrenceSelect, "daily");
+
+    const saveButton = screen.getByText("Save");
+    await user.click(saveButton);
+
+    expect(onCreateTask).toHaveBeenCalledWith({
+      title: "Test task",
+      notes: "Test notes",
+      dueAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+      priority: "high",
+      recurrence: "daily"
+    });
+  });
+
+  it("empty task title keeps Save disabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const addButton = screen.getByText("Add task");
+    await user.click(addButton);
+
+    const saveButton = screen.getByText("Save");
+    expect(saveButton).toBeDisabled();
   });
 });

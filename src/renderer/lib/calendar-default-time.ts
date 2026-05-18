@@ -4,17 +4,17 @@
  * - Today defaults to the next hour, at least one minute in the future
  */
 
-export function getDefaultTimeForDate(date: Date): string {
-  const now = new Date();
+export function getDefaultTimeForDate(date: Date, now?: Date): string {
+  const effectiveNow = now ?? new Date();
   const isToday = 
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
+    date.getFullYear() === effectiveNow.getFullYear() &&
+    date.getMonth() === effectiveNow.getMonth() &&
+    date.getDate() === effectiveNow.getDate();
 
   if (isToday) {
     // Next hour, at least one minute in the future
-    const nextHour = new Date(now);
-    nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+    const nextHour = new Date(effectiveNow);
+    nextHour.setHours(effectiveNow.getHours() + 1, 0, 0, 0);
     return nextHour.toTimeString().slice(0, 5); // HH:MM
   } else {
     // Future dates default to 09:00

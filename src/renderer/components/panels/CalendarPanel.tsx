@@ -3,6 +3,7 @@ import type { CalendarCell } from "../../lib/calendar";
 import { Calendar, ChevronLeft, ChevronRight, ListTodo, Bell, X } from "lucide-react";
 import { parseLocalDateKey, toLocalDateKey } from "../../lib/calendar";
 import { getDefaultTimeForDate } from "../../lib/calendar-default-time";
+import { parseLocalDateTimeInput } from "../../lib/dateTime";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import type { AgendaItem, AgendaFilter } from "../../hooks/workspace/useCalendarState";
@@ -80,14 +81,15 @@ export const CalendarPanel = memo(function CalendarPanel({
 
   function handleSaveReminder(): void {
     if (!reminderText.trim() || !reminderTime) return;
-    const dueAt = `${selectedDateKey}T${reminderTime}:00`;
+    const localDateTime = `${selectedDateKey}T${reminderTime}`;
+    const dueAt = parseLocalDateTimeInput(localDateTime);
     onCreateReminder?.({ text: reminderText, dueAt, recurrence: "none" });
     handleCloseForm();
   }
 
   function handleSaveTask(): void {
     if (!taskTitle.trim()) return;
-    const dueAt = taskTime ? `${selectedDateKey}T${taskTime}:00` : undefined;
+    const dueAt = taskTime ? parseLocalDateTimeInput(`${selectedDateKey}T${taskTime}`) : undefined;
     onCreateTask?.({ title: taskTitle, notes: taskNotes || undefined, dueAt, priority: taskPriority, recurrence: taskRecurrence });
     handleCloseForm();
   }
