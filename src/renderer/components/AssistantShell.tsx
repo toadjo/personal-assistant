@@ -30,6 +30,7 @@ import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
+import { findUnifiedWorkItem } from "../lib/unified-work-item-lookup";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
@@ -54,6 +55,16 @@ export function AssistantShell(): JSX.Element {
   const setDailyCommandCenterFilter = (filter: DailyCommandCenterFilter) => {
     setDailyCommandCenter((prev) => ({ ...prev, filter }));
   };
+
+  function openUnifiedWorkItem(source: "local-note" | "local-task" | "local-reminder" | "team-task", id: string): void {
+    const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, id);
+    if (unifiedItem) {
+      setSelectedWorkItem(unifiedItem);
+      ui.setStatus(`${source === "local-note" ? "Note" : source === "local-task" ? "Task" : source === "local-reminder" ? "Reminder" : "Team task"} opened.`);
+    } else {
+      ui.reportError(`${source === "local-note" ? "Note" : source === "local-task" ? "Task" : source === "local-reminder" ? "Reminder" : "Team task"} not found in unified items.`);
+    }
+  }
 
   const team = useTeamState();
 
@@ -316,15 +327,15 @@ export function AssistantShell(): JSX.Element {
               teamProjects={team.projects}
               onOpenNote={(id) => {
                 data.setQuery("");
-                ui.setStatus(`Note opened: ${id}`);
+                openUnifiedWorkItem("local-note", id);
               }}
               onOpenTask={(id) => {
                 tasks.setFilter("all");
-                ui.setStatus(`Task opened: ${id}`);
+                openUnifiedWorkItem("local-task", id);
               }}
               onOpenReminder={(id) => {
                 reminders.setFilter("all");
-                ui.setStatus(`Reminder opened: ${id}`);
+                openUnifiedWorkItem("local-reminder", id);
               }}
               onOpenAutomation={(id) => {
                 ui.setStatus(`Automation opened: ${id}`);
@@ -333,13 +344,7 @@ export function AssistantShell(): JSX.Element {
                 void ha.runDeviceToggle(entityId, entityId);
               }}
               onOpenTeamTask={(id) => {
-                const unifiedItem = inbox.unifiedItems.find(item => item.source === "team-task" && item.sourceId === id);
-                if (unifiedItem) {
-                  setSelectedWorkItem(unifiedItem);
-                  ui.setStatus("Team task opened.");
-                } else {
-                  ui.reportError("Team task not found in unified items.");
-                }
+                openUnifiedWorkItem("team-task", id);
               }}
               onOpenAppearance={() => setShowAppearance(true)}
               onClose={() => setShowPalette(false)}
