@@ -16,10 +16,21 @@ type Props = {
   onUpdateNote?: (id: string, title: string, content: string) => Promise<void>;
   onUpdateTask?: (id: string, title: string, notes: string) => Promise<void>;
   onUpdateReminder?: (id: string, text?: string, dueAt?: string) => Promise<void>;
+  onUpdateTeamTask?: (id: string, patch: Partial<TeamProjectTaskFields>) => Promise<void>;
   onConvertNoteToTask?: (noteId: string) => Promise<void>;
   onConvertNoteToReminder?: (noteId: string) => Promise<void>;
   onShowSuccess?: (message: string) => void;
   onError?: (message: string) => void;
+};
+
+type TeamProjectTaskFields = {
+  title: string;
+  notes: string;
+  dueAt: string | null;
+  priority: "low" | "normal" | "high";
+  recurrence: "none" | "daily" | "weekly" | "monthly";
+  assigneeDisplayName: string | null;
+  status: "open" | "done";
 };
 
 export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
@@ -34,6 +45,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
   onUpdateNote,
   onUpdateTask,
   onUpdateReminder,
+  onUpdateTeamTask,
   onConvertNoteToTask,
   onConvertNoteToReminder,
   onShowSuccess,
@@ -43,6 +55,10 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editDueAt, setEditDueAt] = useState("");
+  const [editPriority, setEditPriority] = useState<"low" | "normal" | "high">("normal");
+  const [editRecurrence, setEditRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
+  const [editAssignee, setEditAssignee] = useState("");
+  const [editStatus, setEditStatus] = useState<"open" | "done">("open");
 
   if (!item) return null;
 
@@ -55,6 +71,11 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
     } else {
       setEditDueAt("");
     }
+    // Reset team task fields to defaults for non-team items
+    setEditPriority("normal");
+    setEditRecurrence("none");
+    setEditAssignee("");
+    setEditStatus("open");
   };
 
   const handleSave = async () => {
@@ -76,6 +97,20 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
           onShowSuccess?.("Reminder updated.");
           onClose();
         }
+      } else if (item.source === "team-task" && onUpdateTeamTask) {
+        const dueAt = editDueAt ? new Date(editDueAt).toISOString() : null;
+        const patch: Partial<TeamProjectTaskFields> = {
+          title: editTitle,
+          notes: editContent,
+          dueAt,
+          priority: editPriority,
+          recurrence: editRecurrence,
+          assigneeDisplayName: editAssignee || null,
+          status: editStatus
+        };
+        await onUpdateTeamTask(item.sourceId, patch);
+        onShowSuccess?.("Team task updated.");
+        onClose();
       }
     } catch {
       onError?.("Failed to update item.");
@@ -87,6 +122,10 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
     setEditTitle("");
     setEditContent("");
     setEditDueAt("");
+    setEditPriority("normal");
+    setEditRecurrence("none");
+    setEditAssignee("");
+    setEditStatus("open");
   };
 
   const getIcon = () => {
@@ -97,6 +136,8 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
         return ListTodo;
       case "local-reminder":
         return Bell;
+      case "team-task":
+        return ListTodo;
       default:
         return FileText;
     }
@@ -153,6 +194,70 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                   />
                 </div>
               )}
+              {item.source === "team-task" && (
+                <>
+                  <div className="formGroup">
+                    <label htmlFor="edit-dueAt">Due Date</label>
+                    <input
+                      id="edit-dueAt"
+                      type="datetime-local"
+                      value={editDueAt}
+                      onChange={(e) => setEditDueAt(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div className="formGroup">
+                    <label htmlFor="edit-priority">Priority</label>
+                    <select
+                      id="edit-priority"
+                      value={editPriority}
+                      onChange={(e) => setEditPriority(e.target.value as "low" | "normal" | "high")}
+                      className="input"
+                    >
+                      <option value="low">Low</option>
+                      <option value="normal">Normal</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                  <div className="formGroup">
+                    <label htmlFor="edit-recurrence">Recurrence</label>
+                    <select
+                      id="edit-recurrence"
+                      value={editRecurrence}
+                      onChange={(e) => setEditRecurrence(e.target.value as "none" | "daily" | "weekly" | "monthly")}
+                      className="input"
+                    >
+                      <option value="none">None</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div className="formGroup">
+                    <label htmlFor="edit-assignee">Assignee</label>
+                    <input
+                      id="edit-assignee"
+                      type="text"
+                      value={editAssignee}
+                      onChange={(e) => setEditAssignee(e.target.value)}
+                      className="input"
+                      placeholder="Optional assignee name"
+                    />
+                  </div>
+                  <div className="formGroup">
+                    <label htmlFor="edit-status">Status</label>
+                    <select
+                      id="edit-status"
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value as "open" | "done")}
+                      className="input"
+                    >
+                      <option value="open">Open</option>
+                      <option value="done">Done</option>
+                    </select>
+                  </div>
+                </>
+              )}
               <div className="formActions">
                 <button type="button" className="textButton" onClick={handleCancel}>
                   Cancel
@@ -170,6 +275,18 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                 <span className="metaLabel">Source:</span>
                 <span className="metaValue">{item.source}</span>
               </div>
+              {item.projectName && (
+                <div className="itemMeta">
+                  <span className="metaLabel">Project:</span>
+                  <span className="metaValue">{item.projectName}</span>
+                </div>
+              )}
+              {item.assigneeDisplayName && (
+                <div className="itemMeta">
+                  <span className="metaLabel">Assignee:</span>
+                  <span className="metaValue">{item.assigneeDisplayName}</span>
+                </div>
+              )}
               <div className="itemMeta">
                 <span className="metaLabel">Priority:</span>
                 <span className="metaValue">{item.priority}</span>
@@ -247,6 +364,34 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                       }}
                       variant="ghost"
                     />
+                  </>
+                )}
+                {item.source === "team-task" && (
+                  <>
+                    {!item.isCompleted && (
+                      <IconButton
+                        icon={Check}
+                        label="Complete team task"
+                        onClick={async () => {
+                          await onUpdateTeamTask?.(item.sourceId, { status: "done" });
+                          onShowSuccess?.("Team task completed.");
+                          onClose();
+                        }}
+                        variant="ghost"
+                      />
+                    )}
+                    {item.isCompleted && (
+                      <IconButton
+                        icon={Clock}
+                        label="Reopen team task"
+                        onClick={async () => {
+                          await onUpdateTeamTask?.(item.sourceId, { status: "open" });
+                          onShowSuccess?.("Team task reopened.");
+                          onClose();
+                        }}
+                        variant="ghost"
+                      />
+                    )}
                   </>
                 )}
                 {item.source === "local-note" && (

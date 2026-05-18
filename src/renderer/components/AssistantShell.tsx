@@ -522,6 +522,21 @@ export function AssistantShell(): JSX.Element {
           onUpdateNote={(id, title, content) => memos.updateNote({ id, title, content })}
           onUpdateTask={(id, title, notes) => tasks.updateDetailsById(id, title, notes)}
           onUpdateReminder={(id, text, dueAt) => reminders.updateById(id, text, dueAt)}
+          onUpdateTeamTask={async (id, patch) => {
+            const existingTask = team.tasks.find(t => t.id === id);
+            if (!existingTask) {
+              ui.reportError("Team task not found.");
+              return;
+            }
+            const updatedTask = {
+              ...existingTask,
+              ...patch,
+              updatedAt: new Date().toISOString(),
+              updatedBy: "user"
+            };
+            await team.updateTask(updatedTask);
+            ui.showSuccess("Team task updated.");
+          }}
           onConvertNoteToTask={inbox.convertNoteToTask}
           onConvertNoteToReminder={inbox.convertNoteToReminder}
           onShowSuccess={ui.showSuccess}

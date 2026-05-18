@@ -325,4 +325,157 @@ describe("WorkItemDetailDrawer", () => {
       expect(onClose).not.toHaveBeenCalled();
     });
   });
+
+  describe("team task editing", () => {
+    it("shows project name and assignee in metadata for team tasks", () => {
+      const item = makeUnifiedItem({ 
+        source: "team-task",
+        projectName: "Frontend",
+        assigneeDisplayName: "Alice"
+      });
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={vi.fn()}
+        />
+      );
+      
+      expect(screen.getByText("Project:")).toBeDefined();
+      expect(screen.getByText("Frontend")).toBeDefined();
+      expect(screen.getByText("Assignee:")).toBeDefined();
+      expect(screen.getByText("Alice")).toBeDefined();
+    });
+
+    it("shows team task edit form with all required fields", () => {
+      const item = makeUnifiedItem({ source: "team-task" });
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={vi.fn()}
+          onUpdateTeamTask={vi.fn()}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit");
+      fireEvent.click(editButton);
+      
+      expect(screen.getByLabelText("Title")).toBeDefined();
+      expect(screen.getByLabelText("Content")).toBeDefined();
+      expect(screen.getByLabelText("Due Date")).toBeDefined();
+      expect(screen.getByLabelText("Priority")).toBeDefined();
+      expect(screen.getByLabelText("Recurrence")).toBeDefined();
+      expect(screen.getByLabelText("Assignee")).toBeDefined();
+      expect(screen.getByLabelText("Status")).toBeDefined();
+    });
+
+    it("calls onUpdateTeamTask with expected patch on save", async () => {
+      const item = makeUnifiedItem({ source: "team-task", label: "Review PR" });
+      const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+      const onClose = vi.fn();
+      
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateTeamTask={onUpdateTeamTask}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+      
+      const editButton = screen.getByText("Edit");
+      fireEvent.click(editButton);
+      
+      const titleInput = screen.getByLabelText("Title");
+      fireEvent.change(titleInput, { target: { value: "Update PR" } });
+      
+      const contentInput = screen.getByLabelText("Content");
+      fireEvent.change(contentInput, { target: { value: "Updated notes" } });
+      
+      const priorityInput = screen.getByLabelText("Priority");
+      fireEvent.change(priorityInput, { target: { value: "high" } });
+      
+      const assigneeInput = screen.getByLabelText("Assignee");
+      fireEvent.change(assigneeInput, { target: { value: "Bob" } });
+      
+      const statusInput = screen.getByLabelText("Status");
+      fireEvent.change(statusInput, { target: { value: "done" } });
+      
+      const saveButton = screen.getByText("Save");
+      fireEvent.click(saveButton);
+      
+      await vi.waitFor(() => expect(onUpdateTeamTask).toHaveBeenCalled());
+      
+      expect(onUpdateTeamTask).toHaveBeenCalledWith("task-1", {
+        title: "Update PR",
+        notes: "Updated notes",
+        dueAt: null,
+        priority: "high",
+        recurrence: "none",
+        assigneeDisplayName: "Bob",
+        status: "done"
+      });
+    });
+
+    it("shows complete action for open team tasks", async () => {
+      const item = makeUnifiedItem({ source: "team-task", isCompleted: false });
+      const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+      const onClose = vi.fn();
+      
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateTeamTask={onUpdateTeamTask}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+      
+      const completeButton = screen.getByLabelText("Complete team task");
+      fireEvent.click(completeButton);
+      
+      await vi.waitFor(() => expect(onUpdateTeamTask).toHaveBeenCalled());
+      expect(onUpdateTeamTask).toHaveBeenCalledWith("task-1", { status: "done" });
+      expect(onShowSuccess).toHaveBeenCalledWith("Team task completed.");
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("shows reopen action for done team tasks", async () => {
+      const item = makeUnifiedItem({ source: "team-task", isCompleted: true });
+      const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+      const onClose = vi.fn();
+      
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateTeamTask={onUpdateTeamTask}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+      
+      const reopenButton = screen.getByLabelText("Reopen team task");
+      fireEvent.click(reopenButton);
+      
+      await vi.waitFor(() => expect(onUpdateTeamTask).toHaveBeenCalled());
+      expect(onUpdateTeamTask).toHaveBeenCalledWith("task-1", { status: "open" });
+      expect(onShowSuccess).toHaveBeenCalledWith("Team task reopened.");
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("does not show delete action for team tasks", () => {
+      const item = makeUnifiedItem({ source: "team-task" });
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={vi.fn()}
+        />
+      );
+      
+      expect(screen.queryByLabelText("Delete task")).toBeNull();
+      expect(screen.queryByLabelText("Delete team task")).toBeNull();
+    });
+  });
 });
