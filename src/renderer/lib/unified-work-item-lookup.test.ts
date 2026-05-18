@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { findUnifiedWorkItem } from "./unified-work-item-lookup";
+import { findUnifiedWorkItem, getUnifiedWorkItemSourceLabel, getUnifiedWorkItemSourceForBriefKind } from "./unified-work-item-lookup";
 import type { UnifiedWorkItem } from "./derived/unified-work";
 
 function makeUnifiedItem(overrides: Partial<UnifiedWorkItem> = {}): UnifiedWorkItem {
@@ -95,5 +95,49 @@ describe("findUnifiedWorkItem", () => {
     const result = findUnifiedWorkItem(unifiedItems, "local-task", "task-456");
 
     expect(result).toBe(task);
+  });
+});
+
+describe("getUnifiedWorkItemSourceLabel", () => {
+  it("returns 'Note' for local-note source", () => {
+    expect(getUnifiedWorkItemSourceLabel("local-note")).toBe("Note");
+  });
+
+  it("returns 'Task' for local-task source", () => {
+    expect(getUnifiedWorkItemSourceLabel("local-task")).toBe("Task");
+  });
+
+  it("returns 'Reminder' for local-reminder source", () => {
+    expect(getUnifiedWorkItemSourceLabel("local-reminder")).toBe("Reminder");
+  });
+
+  it("returns 'Team task' for team-task source", () => {
+    expect(getUnifiedWorkItemSourceLabel("team-task")).toBe("Team task");
+  });
+});
+
+describe("getUnifiedWorkItemSourceForBriefKind", () => {
+  it("returns 'local-note' for note kind", () => {
+    expect(getUnifiedWorkItemSourceForBriefKind("note")).toBe("local-note");
+  });
+
+  it("returns 'local-task' for task kind", () => {
+    expect(getUnifiedWorkItemSourceForBriefKind("task")).toBe("local-task");
+  });
+
+  it("returns 'local-reminder' for reminder kind", () => {
+    expect(getUnifiedWorkItemSourceForBriefKind("reminder")).toBe("local-reminder");
+  });
+
+  it("returns 'team-task' for team-task kind", () => {
+    expect(getUnifiedWorkItemSourceForBriefKind("team-task")).toBe("team-task");
+  });
+
+  it("returns null for automation kind", () => {
+    expect(getUnifiedWorkItemSourceForBriefKind("automation")).toBeNull();
+  });
+
+  it("returns null for agenda kind", () => {
+    expect(getUnifiedWorkItemSourceForBriefKind("agenda")).toBeNull();
   });
 });

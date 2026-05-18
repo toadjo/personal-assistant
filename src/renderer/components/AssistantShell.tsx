@@ -30,7 +30,7 @@ import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
-import { findUnifiedWorkItem } from "../lib/unified-work-item-lookup";
+import { findUnifiedWorkItem, getUnifiedWorkItemSourceLabel, getUnifiedWorkItemSourceForBriefKind } from "../lib/unified-work-item-lookup";
 import { setAutomationFocusIntent } from "../lib/automation-focus-intent";
 import { getAssistantInvokeErrorMessage } from "../lib/errors";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
@@ -62,9 +62,9 @@ export function AssistantShell(): JSX.Element {
     const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, id);
     if (unifiedItem) {
       setSelectedWorkItem(unifiedItem);
-      ui.setStatus(`${source === "local-note" ? "Note" : source === "local-task" ? "Task" : source === "local-reminder" ? "Reminder" : "Team task"} opened.`);
+      ui.setStatus(`${getUnifiedWorkItemSourceLabel(source)} opened.`);
     } else {
-      ui.reportError(`${source === "local-note" ? "Note" : source === "local-task" ? "Task" : source === "local-reminder" ? "Reminder" : "Team task"} not found in unified items.`);
+      ui.reportError(`${getUnifiedWorkItemSourceLabel(source)} not found in unified items.`);
     }
   }
 
@@ -76,14 +76,6 @@ export function AssistantShell(): JSX.Element {
   // Compute team task status counts
   const teamOpenTasks = team.tasks.filter(t => t.status === "open");
   const teamOverdueTasks = teamOpenTasks.filter(t => t.dueAt && new Date(t.dueAt) < new Date(new Date().setHours(0, 0, 0, 0)));
-  const _teamDueTodayTasks = teamOpenTasks.filter(t => {
-    if (!t.dueAt) return false;
-    const dueDate = new Date(t.dueAt);
-    const today = new Date();
-    const todayStart = new Date(today.setHours(0, 0, 0, 0));
-    const todayEnd = new Date(today.setHours(23, 59, 59, 999));
-    return dueDate >= todayStart && dueDate <= todayEnd;
-  });
 
   // Load team config on mount
   useEffect(() => {
@@ -476,19 +468,10 @@ export function AssistantShell(): JSX.Element {
               window.assistantApi.openHouseholdWindow();
             }}
             onOpenWorkItem={(briefItem) => {
-              // Map BriefItem to UnifiedWorkItem using sourceId and kind
-              const kindToSource: Record<string, string> = {
-                task: "local-task",
-                reminder: "local-reminder",
-                note: "local-note",
-                "team-task": "team-task"
-              };
-              const source = kindToSource[briefItem.kind];
+              const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
               if (!source) return; // Don't map automation or agenda items
 
-              const unifiedItem = inbox.unifiedItems.find(
-                (item) => item.sourceId === briefItem.sourceId && item.source === source
-              );
+              const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
               if (unifiedItem) {
                 setSelectedWorkItem(unifiedItem);
               }
