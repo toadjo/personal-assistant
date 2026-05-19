@@ -28,6 +28,7 @@ type Props = {
   aiReply: string | null;
   onConfirmAiDraft: () => Promise<void>;
   onCancelAiDraft: () => void;
+  aiConfigured: boolean;
 };
 
 export function CommandPanel({
@@ -50,7 +51,8 @@ export function CommandPanel({
   aiDraft,
   aiReply,
   onConfirmAiDraft,
-  onCancelAiDraft
+  onCancelAiDraft,
+  aiConfigured
 }: Props): JSX.Element {
   return (
     <section className={`panel commandPanel secretaryAsk${isRunningCommand ? " commandPanelThinking" : ""}`}>
@@ -59,6 +61,11 @@ export function CommandPanel({
           Working on that...
         </p>
       ) : null}
+      {aiConfigured && (
+        <p className="muted" style={{ fontSize: "0.8rem", marginBottom: "var(--space-1)" }}>
+          Natural-language AI fallback is on.
+        </p>
+      )}
       <div className="row commandRow">
         <input
           ref={commandInputRef as Ref<HTMLInputElement>}

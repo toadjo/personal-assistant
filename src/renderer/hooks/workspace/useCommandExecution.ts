@@ -29,6 +29,7 @@ export function useCommandExecution(args: {
   notesCount: number;
   tasksCount: number;
   remindersCount: number;
+  aiConfigured: boolean;
 }) {
   const {
     devices,
@@ -43,7 +44,8 @@ export function useCommandExecution(args: {
     runDeviceToggle,
     notesCount,
     tasksCount,
-    remindersCount
+    remindersCount,
+    aiConfigured
   } = args;
 
   const [commandInput, setCommandInput] = useState("");
@@ -174,8 +176,12 @@ export function useCommandExecution(args: {
       } else {
         setStatus(response.reply);
       }
-    } catch {
-      setError("I do not recognize that yet. Type help for ideas, or rephrase.");
+    } catch (err) {
+      if (aiConfigured) {
+        setError(getAssistantInvokeErrorMessage(err));
+      } else {
+        setError("I do not recognize that yet. Type help for ideas, or rephrase.");
+      }
     }
   }
 

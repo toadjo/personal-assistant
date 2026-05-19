@@ -29,6 +29,7 @@ type TeamDataParams = {
   teamProjects?: TeamProject[];
   mergeTeamTask?: (task: TeamProjectTask) => void;
   refreshTeamTasks?: () => Promise<void>;
+  aiConfigured?: boolean;
 };
 
 export function useAssistantWorkspace(
@@ -83,7 +84,8 @@ export function useAssistantWorkspace(
     runDeviceToggle: ha.runDeviceToggle,
     notesCount: data.notes.length,
     tasksCount: data.tasks.length,
-    remindersCount: data.reminders.length
+    remindersCount: data.reminders.length,
+    aiConfigured: teamDataParams?.aiConfigured ?? false
   });
 
   // Effect to dismiss onboarding after first command

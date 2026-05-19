@@ -33,6 +33,7 @@ describe("AiSettingsPanel", () => {
     expect(screen.getByText("OpenAI")).toBeInTheDocument();
     expect(screen.getByText("Test connection")).toBeInTheDocument();
     expect(screen.getByText("Disconnect")).toBeInTheDocument();
+    expect(screen.getByText("AI is connected. Type natural-language requests in the command box above.")).toBeInTheDocument();
   });
 
   it("renders unconfigured state when provider is not set", () => {

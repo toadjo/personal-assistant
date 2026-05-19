@@ -101,6 +101,9 @@ export function AiSettingsPanel({
               <span>{new Date(config.lastTestedAt).toLocaleString()}</span>
             </div>
           )}
+          <p className="muted" style={{ marginBottom: "var(--space-2)" }}>
+            AI is connected. Type natural-language requests in the command box above.
+          </p>
           <div className="row" style={{ gap: "0.5rem", marginTop: "var(--space-2)" }}>
             <button
               type="button"

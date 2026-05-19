@@ -109,7 +109,8 @@ export function AssistantShell(): JSX.Element {
       teamTasks: team.tasks,
       teamProjects: team.projects,
       mergeTeamTask: () => {},
-      refreshTeamTasks: team.loadTasks
+      refreshTeamTasks: team.loadTasks,
+      aiConfigured: aiConfig?.configured ?? false
     });
 
   const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
@@ -360,6 +361,7 @@ export function AssistantShell(): JSX.Element {
               aiReply={command.aiReply}
               onConfirmAiDraft={command.confirmAiDraft}
               onCancelAiDraft={command.cancelAiDraft}
+              aiConfigured={aiConfig?.configured ?? false}
             />
           </div>
 

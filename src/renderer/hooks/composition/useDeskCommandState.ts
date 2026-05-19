@@ -60,6 +60,7 @@ export function useDeskCommandState(args: {
   notesCount: number;
   tasksCount: number;
   remindersCount: number;
+  aiConfigured: boolean;
 }): DeskCommandState {
   const {
     devices,
@@ -74,7 +75,8 @@ export function useDeskCommandState(args: {
     runDeviceToggle,
     notesCount,
     tasksCount,
-    remindersCount
+    remindersCount,
+    aiConfigured
   } = args;
 
   const command = useCommandExecution({
@@ -90,7 +92,8 @@ export function useDeskCommandState(args: {
     runDeviceToggle,
     notesCount,
     tasksCount,
-    remindersCount
+    remindersCount,
+    aiConfigured
   });
 
   return {
