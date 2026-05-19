@@ -250,6 +250,46 @@ npm run dist
 
 ## Release Notes
 
+### v2.1.4
+
+**Security Hardening and Electron Upgrade**
+
+This release focuses on security hardening and closing the npm audit risk for high/critical vulnerabilities.
+
+**Security Improvements:**
+
+- Fail-closed secret storage: AI API keys, Home Assistant tokens, and Supabase session tokens now require OS encryption. If encryption is unavailable, the app refuses to store secrets and prompts the user to ensure their system supports secure storage.
+- Backup safety: Secret settings are now excluded from backup export. Backup import rejects any secret settings present in the backup file.
+- Log redaction: Renderer error logs now redact secrets before persistence to prevent secret leakage in error reports.
+- Runtime hardening: Electron sandbox enabled with hardened Content Security Policy in packaged builds.
+
+**Dependency Upgrades:**
+
+- Electron: 35.0.0 to 41.0.0
+- electron-builder: 25.1.8 to 26.8.1
+- better-sqlite3: 11.8.1 to 12.10.0
+- Dependency overrides removed (no longer needed after upgrades)
+
+**CI Improvements:**
+
+- `npm audit --audit-level=high` is now a hard gate in CI. Releases cannot proceed if high/critical vulnerabilities are present.
+
+**Bug Fix:**
+
+- Fixed AI error visibility: AI provider errors now display correctly instead of generic command errors.
+
+**Platform Notes:**
+
+- This is a Windows-only release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+- Users on systems without OS encryption support (Windows without DPAPI, macOS without Keychain, Linux without libsecret) cannot use AI, Home Assistant, or team features.
+
+**Verification:**
+
+- npm audit --audit-level=high: 0 vulnerabilities
+- All tests passing (832 passed, 2 skipped)
+- Windows installer built and tested
+- Windows installer SHA256: `A98E693708F10677BCE1CEFD2B6E8A875B37F1BACDCA43877BC9A0BBEED740EC`
+
 ### v1.5.0
 
 **Local-first operating layer** - The desk now centers on Daily Command Center instead of a Home Assistant-led workflow:

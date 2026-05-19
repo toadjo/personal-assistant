@@ -6,18 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [2.1.4] - 2026-05-19
 
-AI chat feature for unknown commands and action suggestions. This is a Windows-only local test release; no GitHub release or tag.
+Security hardening and Electron upgrade. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
 
 ### Added
 
-- OpenAI and Anthropic API-key setup with secure storage and connection testing.
-- AI settings panel accessible from the toolbar for provider selection and key management.
-- AI chat fallback for unknown commands: deterministic commands run first, unrecognized commands route to AI when configured.
-- AI action draft preview and confirmation: AI can suggest structured actions (create_note, create_task, create_reminder, toggle_device) with user confirmation UI.
-- Local tool registry foundation for future AI tool integration.
-- Real workspace context (notesCount, tasksCount, remindersCount, devicesCount) passed to AI for better suggestions.
-- Discriminated union types for AI action drafts with schema validation.
-- Response parser handling JSON, plain text, and fenced JSON blocks with safe actionDraft extraction.
+- ISO 27001 readiness documentation pack under `docs/security/`, including control mapping, risk register, asset inventory, operational controls, and Greek management summary.
+- v2.1.4 release evidence checklist with verification results and installer checksum.
+
+### Changed
+
+- Upgraded Electron from 35.0.0 to 41.0.0, electron-builder from 25.1.8 to 26.8.1, and better-sqlite3 from 11.8.1 to 12.10.0.
+- Added `npm audit --audit-level=high` as a documented release security gate.
+- Removed dependency overrides that are no longer needed after the Electron upgrade.
+
+### Security
+
+- Fail-closed secret storage now refuses to store AI API keys, Home Assistant tokens, and Supabase session tokens when OS encryption is unavailable.
+- Backup export excludes secret settings, and backup import rejects backups containing secret fields.
+- Renderer error persistence redacts secrets before logs are stored.
+- Packaged Electron runtime uses sandboxing and a hardened Content Security Policy.
+
+### Fixed
+
+- AI provider errors now surface as real provider errors instead of generic command failures.
 
 ## [2.1.3] - 2026-05-18
 

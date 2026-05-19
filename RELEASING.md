@@ -21,14 +21,18 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 
 When GitHub Actions budget is unavailable, releases ship Windows-only via local build and manual upload. macOS/Linux assets are omitted until budget is restored.
 
+**Security Gate:** `npm audit --audit-level=high` must pass with zero high/critical vulnerabilities before any release. This is a hard gate enforced in CI and must be verified locally.
+
 1. Run local verification:
-   - `npm run check:preload-ipc`
-   - `npm run typecheck`
+   - `npm install`
+   - `npm run rebuild:electron`
    - `npm run lint`
+   - `npm run typecheck`
+   - `npm run check:preload-ipc`
    - `npm test`
-   - `npm run build`
-   - `npm run test:smoke`
    - `npm run test:preload-electron`
+   - `npm audit --audit-level=high` (must pass with zero high/critical findings)
+   - `npm run build`
 
 2. Build Windows release assets:
    - `npm run release:build -- -Version X.Y.Z -SkipVersionBump -ReplaceExisting`
@@ -38,14 +42,16 @@ When GitHub Actions budget is unavailable, releases ship Windows-only via local 
    - Confirm `installer-history/vX.Y.Z` exists.
    - Confirm the Windows `.exe`, `.blockmap`, and `yml` files exist.
    - Confirm generated release artifacts are not committed.
+   - Compute SHA256 checksum of the installer.
 
 4. GitHub manual upload:
    - Commit as `release: prepare vX.Y.Z`.
    - Tag `vX.Y.Z`.
    - Push `main` and the tag.
    - Create or edit the GitHub Release manually.
-   - Upload only the Windows installer/update assets.
+   - Upload only the Windows installer/update assets (`.exe`, `.blockmap`, `latest.yml`).
    - Release notes must state this is a Windows-only release and that macOS/Linux assets are omitted due to Actions budget constraints.
+   - Include SHA256 checksum and verification commands in release notes.
 
 ## GitHub Actions release flow (future, when budget restored)
 
