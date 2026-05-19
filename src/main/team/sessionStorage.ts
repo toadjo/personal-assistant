@@ -1,29 +1,29 @@
 /**
  * Supabase auth session storage adapter for Electron main process.
  *
- * Persists the anonymous session JSON to disk using Electron's safeStorage
- * when available, falling back to plaintext with a single startup warning.
+ * Persists the anonymous session JSON to disk using Electron's safeStorage.
+ * Fails closed if encryption is unavailable.
  * Uses synchronous `fs` calls to avoid race conditions during rapid token refreshes.
  */
 
-import { app, safeStorage } from "electron";
+import { app } from "electron";
 import { mainLog } from "../log";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { decryptSecret, encryptSecret, SecureStorageUnavailableError } from "../services/secureSecrets";
 
 const SESSION_FILE_NAME = "team-session.enc";
 const PLAINTEXT_FALLBACK_NAME = "team-session.json";
-let encryptionWarningLogged = false;
 
 /**
- * Returns the path to the session file (encrypted or plaintext fallback).
+ * Returns the path to the session file.
  */
 function getSessionPath(): string {
   return path.join(app.getPath("userData"), SESSION_FILE_NAME);
 }
 
 /**
- * Returns the path to the plaintext fallback file.
+ * Returns the path to the legacy plaintext fallback file.
  */
 function getPlaintextPath(): string {
   const userDataPath = app.getPath("userData");
@@ -36,65 +36,52 @@ function getPlaintextPath(): string {
 function readSessionFile(): string | null {
   const encryptedPath = getSessionPath();
   const plaintextPath = getPlaintextPath();
-  const encryptionAvailable = safeStorage.isEncryptionAvailable();
 
   // Try encrypted first
   if (fs.existsSync(encryptedPath)) {
     try {
       const encrypted = fs.readFileSync(encryptedPath);
-      if (encryptionAvailable) {
-        const decrypted = safeStorage.decryptString(encrypted);
+      const encryptedString = encrypted.toString("base64");
+      // The file stores the raw encrypted buffer as base64, not with the prefix
+      // We need to add the prefix for decryptSecret to recognize it
+      const prefixed = `sse1:${encryptedString}`;
+      const decrypted = decryptSecret(prefixed);
+      if (decrypted) {
         return decrypted;
       }
-      // If encryption is not available but file exists, it's plaintext
-      return encrypted.toString("utf-8");
-    } catch {
-      return null;
+    } catch (error) {
+      mainLog.error("Failed to decrypt team session.", error);
     }
   }
 
-  // Fall back to plaintext
+  // Check for legacy plaintext and warn
   if (fs.existsSync(plaintextPath)) {
-    try {
-      const plaintext = fs.readFileSync(plaintextPath, "utf-8");
-      return plaintext;
-    } catch {
-      return null;
-    }
+    mainLog.warn("Legacy plaintext team session detected. For security, please reconnect Team integration.");
+    // Don't use the plaintext session - require reconnection
   }
 
   return null;
 }
 
 /**
- * Writes the session JSON string to disk (encrypted or plaintext fallback).
+ * Writes the session JSON string to disk (encrypted only).
+ * Throws SecureStorageUnavailableError if encryption is unavailable.
  */
 function writeSessionFile(value: string): void {
   const encryptedPath = getSessionPath();
-  const plaintextPath = getPlaintextPath();
-  const encryptionAvailable = safeStorage.isEncryptionAvailable();
 
-  // Log warning once if encryption is not available
-  if (!encryptionAvailable && !encryptionWarningLogged) {
-    mainLog.warn("[team:session] System does not support safeStorage encryption. Team session will be stored in plaintext.");
-    encryptionWarningLogged = true;
-  }
-
-  if (encryptionAvailable) {
-    try {
-      const encrypted = safeStorage.encryptString(value);
-      fs.writeFileSync(encryptedPath, encrypted);
-      return;
-    } catch {
-      // Fall through to plaintext on encryption failure
-    }
-  }
-
-  // Fallback to plaintext
   try {
-    fs.writeFileSync(plaintextPath, value, "utf-8");
-  } catch {
-    // If both fail, silently swallow — session loss is recoverable via re-sign-in
+    // encryptSecret returns a string with the prefix, but we need to strip it
+    // and store the raw encrypted buffer as base64 for file storage
+    const encryptedWithPrefix = encryptSecret(value);
+    const encryptedBuffer = Buffer.from(encryptedWithPrefix.slice(5), "base64"); // Remove "sse1:" prefix
+    fs.writeFileSync(encryptedPath, encryptedBuffer);
+  } catch (error) {
+    if (error instanceof SecureStorageUnavailableError) {
+      throw error;
+    }
+    mainLog.error("Failed to encrypt team session.", error);
+    throw new Error("Failed to save team session.");
   }
 }
 

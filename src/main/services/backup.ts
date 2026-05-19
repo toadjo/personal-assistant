@@ -1,6 +1,17 @@
 import { app } from "electron";
 import { getDb } from "../db";
 
+/**
+ * Secret setting keys that should never be included in backups.
+ */
+const SECRET_SETTING_KEYS = [
+  "ha.token",
+  "ai.apiKey",
+  "ai.provider",
+  "ai.configured",
+  "ai.lastTestedAt"
+] as const;
+
 export type BackupPayload = {
   version: string;
   exportedAt: string;
@@ -57,7 +68,13 @@ export function exportBackup(): BackupPayload {
   const reminders = db.prepare("SELECT * FROM reminders").all() as BackupPayload["reminders"];
   const tasks = db.prepare("SELECT * FROM tasks").all() as BackupPayload["tasks"];
   const automation_rules = db.prepare("SELECT * FROM automation_rules").all() as BackupPayload["automation_rules"];
-  const app_settings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
+  
+  // Filter out secret settings from backup
+  const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
+  const app_settings = allSettings.filter(
+    (setting) => !SECRET_SETTING_KEYS.includes(setting.key as typeof SECRET_SETTING_KEYS[number])
+  );
+  
   return {
     version: app.getVersion(),
     exportedAt: new Date().toISOString(),
@@ -75,8 +92,11 @@ export function importBackup(payload: BackupPayload): {
   tasks: number;
   automation_rules: number;
   app_settings: number;
+  rejected_secret_settings: number;
 } {
   const db = getDb();
+  let rejectedSecretSettings = 0;
+  
   db.transaction(() => {
     db.prepare("DELETE FROM notes").run();
     db.prepare("DELETE FROM reminders").run();
@@ -116,6 +136,11 @@ export function importBackup(payload: BackupPayload): {
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
     for (const row of payload.app_settings) {
+      // Reject secret settings from import
+      if (SECRET_SETTING_KEYS.includes(row.key as typeof SECRET_SETTING_KEYS[number])) {
+        rejectedSecretSettings++;
+        continue;
+      }
       settingStmt.run(row);
     }
   })();
@@ -125,7 +150,8 @@ export function importBackup(payload: BackupPayload): {
     reminders: payload.reminders.length,
     tasks: payload.tasks.length,
     automation_rules: payload.automation_rules.length,
-    app_settings: payload.app_settings.length
+    app_settings: payload.app_settings.length - rejectedSecretSettings,
+    rejected_secret_settings: rejectedSecretSettings
   };
 }
 

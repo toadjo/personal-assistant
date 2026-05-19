@@ -23,7 +23,6 @@ vi.mock("../log", () => ({
 }));
 
 import { clearAiApiKey, getAiApiKey, hasStoredAiApiKey, saveAiApiKey } from "./aiSecrets";
-import { mainLog } from "../log";
 
 describe("aiSecrets", () => {
   beforeEach(() => {
@@ -41,11 +40,11 @@ describe("aiSecrets", () => {
     expect(hasStoredAiApiKey()).toBe(true);
   });
 
-  it("falls back to plaintext and warns when encryption is unavailable", async () => {
+  it("throws when encryption is unavailable", async () => {
     isEncryptionAvailable.mockReturnValue(false);
-    await saveAiApiKey("plain-key");
-    expect(await getAiApiKey()).toBe("plain-key");
-    expect(mainLog.warn).toHaveBeenCalled();
+    await expect(saveAiApiKey("plain-key")).rejects.toThrow(
+      "Secure storage (OS encryption) is required to save API keys and tokens. Please ensure your system supports secure storage."
+    );
   });
 
   it("rejects empty keys", async () => {

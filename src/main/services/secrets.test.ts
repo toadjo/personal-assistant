@@ -23,7 +23,6 @@ vi.mock("../log", () => ({
 }));
 
 import { getHaToken, saveHaToken } from "./secrets";
-import { mainLog } from "../log";
 
 describe("secrets service", () => {
   beforeEach(() => {
@@ -40,10 +39,10 @@ describe("secrets service", () => {
     expect(await getHaToken()).toBe("secret");
   });
 
-  it("falls back to plaintext and warns when encryption is unavailable", async () => {
+  it("throws when encryption is unavailable", async () => {
     isEncryptionAvailable.mockReturnValue(false);
-    await saveHaToken("plain");
-    expect(await getHaToken()).toBe("plain");
-    expect(mainLog.warn).toHaveBeenCalled();
+    await expect(saveHaToken("plain")).rejects.toThrow(
+      "Secure storage (OS encryption) is required to save API keys and tokens. Please ensure your system supports secure storage."
+    );
   });
 });

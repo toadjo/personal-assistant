@@ -19,7 +19,14 @@ export function installDefaultContentSecurityPolicy(): void {
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       const responseHeaders = { ...(details.responseHeaders ?? {}) };
       const csp = app.isPackaged
-        ? "default-src 'self'; script-src 'self'"
+        ? [
+            "default-src 'self'",
+            "script-src 'self'",
+            "style-src 'self'",
+            "img-src 'self' data: blob:",
+            "font-src 'self' data:",
+            "connect-src 'self' https://api.openai.com https://api.anthropic.com https://*.supabase.co"
+          ].join("; ")
         : [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -63,7 +70,7 @@ export function createWindow(role: AppWindowRole): BrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      sandbox: false,
+      sandbox: true,
       nodeIntegration: false,
       webviewTag: false
     }
