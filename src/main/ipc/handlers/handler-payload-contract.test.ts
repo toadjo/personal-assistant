@@ -54,7 +54,8 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.teamRealtimeStop,
   // AI configuration zero-arg channels
   IpcInvoke.aiGetConfig,
-  IpcInvoke.aiClearKey
+  IpcInvoke.aiClearKey,
+  IpcInvoke.aiTestKey
 ];
 
 describe("IPC handler payload contracts", () => {

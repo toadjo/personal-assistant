@@ -20,8 +20,8 @@ vi.mock("../log", () => ({
   mainLog: { warn: vi.fn(), error: vi.fn(), info: vi.fn() }
 }));
 
-import { clearAiKey, getAiConfig, setAiKey } from "./aiConfig";
-import { setSetting } from "./settingsRepository";
+import { clearAiKey, getAiConfig, setAiKey, updateLastTestedAt } from "./aiConfig";
+import { getSetting, setSetting } from "./settingsRepository";
 
 describe("aiConfig", () => {
   beforeEach(() => {
@@ -72,5 +72,14 @@ describe("aiConfig", () => {
     const status = await getAiConfig();
     expect(status.provider).toBeNull();
     expect(status.configured).toBe(false);
+  });
+
+  it("updateLastTestedAt sets the timestamp and returns it in getAiConfig", async () => {
+    await updateLastTestedAt("gpt-4o-mini");
+    const raw = getSetting("ai.lastTestedAt");
+    expect(typeof raw).toBe("string");
+    expect(raw).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    const status = await getAiConfig();
+    expect(status.lastTestedAt).toBe(raw);
   });
 });

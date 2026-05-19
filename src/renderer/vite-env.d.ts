@@ -165,6 +165,7 @@ declare global {
       getAiConfig: () => Promise<AiConfigStatus>;
       setAiKey: (payload: { provider: AiProvider; apiKey: string }) => Promise<AiConfigStatus>;
       clearAiKey: () => Promise<AiConfigStatus>;
+      testAiKey: () => Promise<{ success: true; model: string }>;
     };
   }
 }

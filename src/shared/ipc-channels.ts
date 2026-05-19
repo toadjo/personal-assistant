@@ -65,7 +65,8 @@ export const IpcInvoke = {
   teamRealtimeStop: "team:realtime:stop",
   aiGetConfig: "ai:getConfig",
   aiSetKey: "ai:setKey",
-  aiClearKey: "ai:clearKey"
+  aiClearKey: "ai:clearKey",
+  aiTestKey: "ai:testKey"
 } as const;
 
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */

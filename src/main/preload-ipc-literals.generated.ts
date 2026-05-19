@@ -61,7 +61,8 @@ export const invokeChannelMap = {
   teamRealtimeStop: "team:realtime:stop",
   aiGetConfig: "ai:getConfig",
   aiSetKey: "ai:setKey",
-  aiClearKey: "ai:clearKey"
+  aiClearKey: "ai:clearKey",
+  aiTestKey: "ai:testKey"
 } as const;
 
 export const pushChannelMap = {

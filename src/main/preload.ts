@@ -168,5 +168,6 @@ contextBridge.exposeInMainWorld("assistantApi", {
   getAiConfig: () => ipcRenderer.invoke(invoke.aiGetConfig),
   setAiKey: (payload: { provider: "openai" | "anthropic"; apiKey: string }) =>
     ipcRenderer.invoke(invoke.aiSetKey, payload),
-  clearAiKey: () => ipcRenderer.invoke(invoke.aiClearKey)
+  clearAiKey: () => ipcRenderer.invoke(invoke.aiClearKey),
+  testAiKey: () => ipcRenderer.invoke(invoke.aiTestKey)
 });

@@ -51,6 +51,27 @@ export const teamFailureCodes = [
   "NETWORK_FAILURE"
 ] as const;
 
+/**
+ * AI provider failure codes and their retryability semantics.
+ *
+ * NOT_CONFIGURED: AI provider is not configured (missing key). Not retryable.
+ * INVALID_KEY: API key is invalid or expired. Not retryable.
+ * RATE_LIMITED: Provider rate limit exceeded. Retryable.
+ * NETWORK_FAILURE: Network error connecting to provider. Retryable.
+ * PROVIDER_UNAVAILABLE: Provider service is down or returning unexpected errors. Retryable.
+ * MALFORMED_RESPONSE: Provider returned JSON that could not be parsed. Not retryable.
+ * INVALID_MODEL: Configured model ID is not available. Not retryable.
+ */
+export const aiFailureCodes = [
+  "NOT_CONFIGURED",
+  "INVALID_KEY",
+  "RATE_LIMITED",
+  "NETWORK_FAILURE",
+  "PROVIDER_UNAVAILABLE",
+  "MALFORMED_RESPONSE",
+  "INVALID_MODEL"
+] as const;
+
 export type AssistantInvokeDomain = (typeof assistantInvokeDomains)[number];
 
 const assistantInvokeFailureSchema = z.object({

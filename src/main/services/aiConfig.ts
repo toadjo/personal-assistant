@@ -39,3 +39,7 @@ export async function clearAiKey(): Promise<AiConfigStatus> {
   deleteSetting(LAST_TESTED_SETTING);
   return getAiConfig();
 }
+
+export async function updateLastTestedAt(_model: string): Promise<void> {
+  setSetting(LAST_TESTED_SETTING, new Date().toISOString());
+}

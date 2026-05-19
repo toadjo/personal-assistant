@@ -1,12 +1,14 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import { clearAiKey, getAiConfig, setAiKey } from "../../services/aiConfig";
+import { createAdapter } from "../../services/aiProvider";
+import { getAiApiKey } from "../../services/aiSecrets";
 import { registerInvoke } from "../invoke-handle";
 import { aiSetKeySchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
-/** Registers IPC handlers for AI provider configuration (key storage only; no provider calls in slice 1). */
+/** Registers IPC handlers for AI provider configuration and connection testing. */
 export function registerAiHandlers(assertSender: AssertSender): void {
   registerInvoke(IpcInvoke.aiGetConfig, assertSender, () => getAiConfig());
   registerInvoke(IpcInvoke.aiSetKey, assertSender, (_event, payload) => {
@@ -14,4 +16,20 @@ export function registerAiHandlers(assertSender: AssertSender): void {
     return setAiKey(parsed.provider, parsed.apiKey);
   });
   registerInvoke(IpcInvoke.aiClearKey, assertSender, () => clearAiKey());
+  registerInvoke(IpcInvoke.aiTestKey, assertSender, async () => {
+    const config = await getAiConfig();
+    if (!config.provider || !config.configured) {
+      throw new Error("AI provider is not configured.");
+    }
+    const apiKey = await getAiApiKey();
+    if (!apiKey) {
+      throw new Error("AI API key is missing.");
+    }
+    const adapter = createAdapter(config.provider);
+    const result = await adapter.testConnection(apiKey);
+    // Update lastTestedAt on successful test
+    const { updateLastTestedAt } = await import("../../services/aiConfig");
+    await updateLastTestedAt(result.model);
+    return result;
+  });
 }
