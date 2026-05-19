@@ -4,6 +4,21 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.4] - 2026-05-19
+
+AI chat feature for unknown commands and action suggestions. This is a Windows-only local test release; no GitHub release or tag.
+
+### Added
+
+- OpenAI and Anthropic API-key setup with secure storage and connection testing.
+- AI settings panel accessible from the toolbar for provider selection and key management.
+- AI chat fallback for unknown commands: deterministic commands run first, unrecognized commands route to AI when configured.
+- AI action draft preview and confirmation: AI can suggest structured actions (create_note, create_task, create_reminder, toggle_device) with user confirmation UI.
+- Local tool registry foundation for future AI tool integration.
+- Real workspace context (notesCount, tasksCount, remindersCount, devicesCount) passed to AI for better suggestions.
+- Discriminated union types for AI action drafts with schema validation.
+- Response parser handling JSON, plain text, and fenced JSON blocks with safe actionDraft extraction.
+
 ## [2.1.3] - 2026-05-18
 
 Team Projects setup hotfix. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
@@ -272,6 +287,7 @@ Final minimal corporate pass. Version bump rolling up 1.5.2 – 1.5.4.
 
 History prior to 1.4.3 is in git log; no curated changelog exists for those versions. See `git log v1.4.2 --no-merges` for details.
 
+[2.1.4]: https://github.com/toadjo/personal-assistant/compare/v2.1.3...v2.1.4
 [2.1.3]: https://github.com/toadjo/personal-assistant/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/toadjo/personal-assistant/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/toadjo/personal-assistant/compare/v2.1.0...v2.1.1
