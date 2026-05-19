@@ -14,6 +14,7 @@ type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
 
 type RunDeviceToggle = (entityId: string, friendlyName: string) => Promise<void>;
+const UNKNOWN_COMMAND_MESSAGE = "I do not recognize that yet. Type help for ideas, or rephrase.";
 
 export function useCommandExecution(args: {
   devices: HaDeviceRow[];
@@ -142,9 +143,7 @@ export function useCommandExecution(args: {
       }
     } catch (err) {
       const errorMessage = getAssistantInvokeErrorMessage(err);
-      // Check if this is the unrecognized command error
-      if (errorMessage.includes("I do not recognize that yet")) {
-        // Try AI fallback
+      if (errorMessage === UNKNOWN_COMMAND_MESSAGE) {
         await tryAiFallback(trimmed);
       } else {
         setError(errorMessage);
@@ -155,10 +154,15 @@ export function useCommandExecution(args: {
   }
 
   async function tryAiFallback(command: string): Promise<void> {
+    if (!aiConfigured) {
+      setError(UNKNOWN_COMMAND_MESSAGE);
+      return;
+    }
+
     try {
       const api = window.assistantApi;
       if (!api?.aiChat) {
-        setError("I do not recognize that yet. Type help for ideas, or rephrase.");
+        setError("AI chat is unavailable. Restart the app and try again.");
         return;
       }
       const response = await api.aiChat({
@@ -177,11 +181,7 @@ export function useCommandExecution(args: {
         setStatus(response.reply);
       }
     } catch (err) {
-      if (aiConfigured) {
-        setError(getAssistantInvokeErrorMessage(err));
-      } else {
-        setError("I do not recognize that yet. Type help for ideas, or rephrase.");
-      }
+      setError(getAssistantInvokeErrorMessage(err));
     }
   }
 

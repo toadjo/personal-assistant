@@ -1,7 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AiSettingsPanel } from "./AiSettingsPanel";
 import type { AiConfigStatus } from "../../../shared/ai/types";
+import { encodeAssistantInvokeFailure } from "../../../shared/invokeErrors";
 
 describe("AiSettingsPanel", () => {
   const mockConfig: AiConfigStatus = {
@@ -84,5 +86,35 @@ describe("AiSettingsPanel", () => {
     const closeButton = screen.getByText("Close");
     closeButton.click();
     expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it("shows decoded provider errors from connection test", async () => {
+    const failingTestKey = vi.fn().mockRejectedValue(
+      encodeAssistantInvokeFailure({
+        domain: "ai",
+        code: "RATE_LIMITED",
+        message: "OpenAI rate limit exceeded.",
+        retryable: true
+      })
+    );
+
+    render(
+      <AiSettingsPanel
+        config={mockConfig}
+        onSetKey={mockSetKey}
+        onClearKey={mockClearKey}
+        onTestKey={failingTestKey}
+        onRefresh={mockRefresh}
+        onClose={mockOnClose}
+      />
+    );
+
+    await act(async () => {
+      screen.getByText("Test connection").click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("OpenAI rate limit exceeded. You can try again in a moment.")).toBeInTheDocument();
+    });
   });
 });

@@ -98,8 +98,9 @@ export function encodeHomeAssistantInvokeFailure(failure: HomeAssistantInvokeFai
 export function decodeAssistantInvokeFailure(err: unknown): AssistantInvokeFailure | null {
   if (!(err instanceof Error)) return null;
   const { message } = err;
-  if (!message.startsWith(ASSISTANT_INVOKE_ERROR_PREFIX)) return null;
-  const raw = message.slice(ASSISTANT_INVOKE_ERROR_PREFIX.length);
+  const prefixIndex = message.indexOf(ASSISTANT_INVOKE_ERROR_PREFIX);
+  if (prefixIndex === -1) return null;
+  const raw = message.slice(prefixIndex + ASSISTANT_INVOKE_ERROR_PREFIX.length);
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);

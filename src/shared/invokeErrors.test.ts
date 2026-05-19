@@ -35,6 +35,19 @@ describe("invokeErrors", () => {
     expect(decodeHomeAssistantInvokeFailure(err)?.code).toBe("HTTP_401");
   });
 
+  it("decodes structured failures wrapped by Electron invoke errors", () => {
+    const original: AssistantInvokeFailure = {
+      domain: "ai",
+      code: "RATE_LIMITED",
+      message: "OpenAI rate limit exceeded.",
+      retryable: true
+    };
+    const encoded = encodeAssistantInvokeFailure(original);
+    const wrapped = new Error(`Error invoking remote method 'ai:chat': Error: ${encoded.message}`);
+
+    expect(decodeAssistantInvokeFailure(wrapped)).toEqual(original);
+  });
+
   it("returns null for plain errors and malformed payloads", () => {
     expect(decodeAssistantInvokeFailure(new Error("plain"))).toBeNull();
     expect(decodeAssistantInvokeFailure("x")).toBeNull();

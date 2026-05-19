@@ -29,6 +29,20 @@ describe("getAssistantInvokeErrorMessage", () => {
     expect(getAssistantInvokeErrorMessage(err)).toBe(IPC_VALIDATION_DEFAULT_MESSAGE);
   });
 
+  it("formats structured failures wrapped by Electron invoke errors", () => {
+    const encoded = encodeAssistantInvokeFailure({
+      domain: "ai",
+      code: "RATE_LIMITED",
+      message: "OpenAI rate limit exceeded.",
+      retryable: true
+    });
+    const wrapped = new Error(`Error invoking remote method 'ai:chat': Error: ${encoded.message}`);
+
+    expect(getAssistantInvokeErrorMessage(wrapped)).toBe(
+      "OpenAI rate limit exceeded. You can try again in a moment."
+    );
+  });
+
   it("formats legacy Home Assistant payloads", () => {
     const err = encodeHomeAssistantInvokeFailure({
       domain: "home_assistant",

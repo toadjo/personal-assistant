@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, Sparkles, Trash2, X } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import type { AiConfigStatus, AiProvider } from "../../../shared/ai/types";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 
 type Props = {
   config: AiConfigStatus | null;
@@ -48,7 +49,7 @@ export function AiSettingsPanel({
       setApiKey("");
       setSelectedProvider(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save API key.");
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsSaving(false);
     }
@@ -64,7 +65,7 @@ export function AiSettingsPanel({
       setTestResult(result);
       await onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection test failed.");
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsTesting(false);
     }
@@ -78,7 +79,7 @@ export function AiSettingsPanel({
       await onClearKey();
       await onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear API key.");
+      setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsClearing(false);
     }
