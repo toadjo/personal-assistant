@@ -1,8 +1,10 @@
 import type { Ref, RefObject } from "react";
 import type { ReminderFilter } from "../../types";
+import type { AiActionDraft } from "../../../shared/ai/types";
 import { Send, Loader2, Trash2, X } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CommandExamples } from "../layout/CommandExamples";
+import { AiActionPreview } from "../AiActionPreview";
 
 type Props = {
   commandInputRef: RefObject<HTMLInputElement | null>;
@@ -22,6 +24,10 @@ type Props = {
   onPreset: (command: string) => void;
   /** When the command field is empty, Escape hides the desk window (background behavior). */
   onHideDeskIfInputEmpty?: () => void;
+  aiDraft: AiActionDraft | null;
+  aiReply: string | null;
+  onConfirmAiDraft: () => Promise<void>;
+  onCancelAiDraft: () => void;
 };
 
 export function CommandPanel({
@@ -40,7 +46,11 @@ export function CommandPanel({
   onClearHistory,
   onClearNoteSearch,
   onPreset,
-  onHideDeskIfInputEmpty
+  onHideDeskIfInputEmpty,
+  aiDraft,
+  aiReply,
+  onConfirmAiDraft,
+  onCancelAiDraft
 }: Props): JSX.Element {
   return (
     <section className={`panel commandPanel secretaryAsk${isRunningCommand ? " commandPanelThinking" : ""}`}>
@@ -128,6 +138,19 @@ export function CommandPanel({
           <IconButton icon={X} label="Clear memo search" onClick={onClearNoteSearch} variant="ghost" size={13} />
         ) : null}
       </div>
+      {aiDraft && (
+        <AiActionPreview
+          draft={aiDraft}
+          onConfirm={onConfirmAiDraft}
+          onCancel={onCancelAiDraft}
+          isConfirming={isRunningCommand}
+        />
+      )}
+      {aiReply && !aiDraft && (
+        <div style={{ marginTop: "var(--space-2)", fontSize: "0.85em", color: "var(--muted)" }}>
+          AI: {aiReply}
+        </div>
+      )}
       <CommandExamples haReady={haReady} onRunPreset={onPreset} />
     </section>
   );

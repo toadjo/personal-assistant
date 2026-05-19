@@ -9,6 +9,7 @@ import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
 import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
+import type { AiActionDraft } from "../../../shared/ai/types";
 
 export type DeskMode = "personal" | "projects";
 
@@ -83,6 +84,10 @@ export type AssistantWorkspace = {
     runPresetCommand: (command: string) => void;
     runCommandInternal: (rawInput: string) => Promise<void>;
     clearCommandHistory: () => void;
+    aiDraft: AiActionDraft | null;
+    aiReply: string | null;
+    confirmAiDraft: () => Promise<void>;
+    cancelAiDraft: () => void;
   };
   calendar: {
     calendarCursor: Date;

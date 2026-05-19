@@ -115,14 +115,30 @@ export const aiSetKeySchema = z.object({
     .refine((val) => val.length > 0, { message: "API key cannot be empty" })
 });
 
-export const aiActionDraftSchema = z.object({
-  type: z.enum(["note", "reminder", "task", "device", "unknown"]),
-  title: z.string().optional(),
-  content: z.string().optional(),
-  entityId: z.string().optional(),
-  action: z.enum(["create", "update", "delete", "toggle", "unknown"]),
-  reason: z.string().min(1).max(1000)
-});
+export const aiActionDraftSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("create_note"),
+    title: z.string().min(1).max(500),
+    content: z.string().max(5000).optional()
+  }),
+  z.object({
+    type: z.literal("create_task"),
+    title: z.string().min(1).max(500),
+    notes: z.string().max(5000).optional(),
+    dueAt: z.string().optional(),
+    priority: z.enum(["low", "medium", "high"]).optional()
+  }),
+  z.object({
+    type: z.literal("create_reminder"),
+    text: z.string().min(1).max(500),
+    dueAt: z.string().min(1)
+  }),
+  z.object({
+    type: z.literal("toggle_device"),
+    entityId: z.string().min(1),
+    friendlyName: z.string().max(200).optional()
+  })
+]);
 
 export const aiChatRequestSchema = z.object({
   message: z.string().min(1).max(8000),

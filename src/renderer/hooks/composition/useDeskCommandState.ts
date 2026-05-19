@@ -24,6 +24,7 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { ReminderFilter, TaskFilter, HaDeviceRow } from "../../types";
 import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
+import type { AiActionDraft } from "../../../shared/ai/types";
 import { useCommandExecution } from "../workspace/useCommandExecution";
 
 export type DeskCommandState = {
@@ -39,6 +40,10 @@ export type DeskCommandState = {
   runPresetCommand: (command: string) => void;
   runCommandInternal: (rawInput: string) => Promise<void>;
   clearCommandHistory: () => void;
+  aiDraft: AiActionDraft | null;
+  aiReply: string | null;
+  confirmAiDraft: () => Promise<void>;
+  cancelAiDraft: () => void;
 };
 
 export function useDeskCommandState(args: {
@@ -52,6 +57,9 @@ export function useDeskCommandState(args: {
   setError: (value: string) => void;
   refreshAll: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
+  notesCount: number;
+  tasksCount: number;
+  remindersCount: number;
 }): DeskCommandState {
   const {
     devices,
@@ -63,7 +71,10 @@ export function useDeskCommandState(args: {
     setStatus,
     setError,
     refreshAll,
-    runDeviceToggle
+    runDeviceToggle,
+    notesCount,
+    tasksCount,
+    remindersCount
   } = args;
 
   const command = useCommandExecution({
@@ -76,7 +87,10 @@ export function useDeskCommandState(args: {
     setStatus,
     setError,
     refreshAll,
-    runDeviceToggle
+    runDeviceToggle,
+    notesCount,
+    tasksCount,
+    remindersCount
   });
 
   return {
@@ -91,6 +105,10 @@ export function useDeskCommandState(args: {
     commandInputRef: command.commandInputRef,
     runPresetCommand: command.runPresetCommand,
     runCommandInternal: command.runCommandInternal,
-    clearCommandHistory: command.clearCommandHistory
+    clearCommandHistory: command.clearCommandHistory,
+    aiDraft: command.aiDraft,
+    aiReply: command.aiReply,
+    confirmAiDraft: command.confirmAiDraft,
+    cancelAiDraft: command.cancelAiDraft
   };
 }

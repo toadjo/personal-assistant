@@ -9,7 +9,7 @@ interface ImportMetaEnv {
 
 import type { AssistantSettings, AutomationRule, Note, Reminder, Task } from "../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../shared/team/types";
-import type { AiConfigStatus, AiProvider } from "../shared/ai/types";
+import type { AiConfigStatus, AiProvider, AiActionDraft } from "../shared/ai/types";
 
 declare global {
   const __APP_VERSION__: string;
@@ -166,7 +166,7 @@ declare global {
       setAiKey: (payload: { provider: AiProvider; apiKey: string }) => Promise<AiConfigStatus>;
       clearAiKey: () => Promise<AiConfigStatus>;
       testAiKey: () => Promise<{ success: true; model: string }>;
-      aiChat: (payload: { message: string; context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number } }) => Promise<{ reply: string; actionDraft?: unknown }>;
+      aiChat: (payload: { message: string; context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number } }) => Promise<{ reply: string; actionDraft?: AiActionDraft }>;
     };
   }
 }

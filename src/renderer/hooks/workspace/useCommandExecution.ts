@@ -7,6 +7,7 @@ import { COMMAND_HISTORY_PERSIST_DEBOUNCE_MS } from "../../constants/timing";
 import { normalizeCommandAlias } from "../../lib/commands";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { persistCommandHistory, loadCommandHistory } from "../../lib/storage/commandHistory";
+import type { AiActionDraft } from "../../../shared/ai/types";
 import type { HaDeviceRow } from "../../types";
 
 type SetStatus = (value: string) => void;
@@ -25,6 +26,9 @@ export function useCommandExecution(args: {
   setError: SetError;
   refreshAll: () => Promise<void>;
   runDeviceToggle: RunDeviceToggle;
+  notesCount: number;
+  tasksCount: number;
+  remindersCount: number;
 }) {
   const {
     devices,
@@ -36,7 +40,10 @@ export function useCommandExecution(args: {
     setStatus,
     setError,
     refreshAll,
-    runDeviceToggle
+    runDeviceToggle,
+    notesCount,
+    tasksCount,
+    remindersCount
   } = args;
 
   const [commandInput, setCommandInput] = useState("");
@@ -44,6 +51,8 @@ export function useCommandExecution(args: {
   const [historyCursor, setHistoryCursor] = useState(-1);
   const commandInputRef = useRef<HTMLInputElement | null>(null);
   const [isRunningCommand, setIsRunningCommand] = useState(false);
+  const [aiDraft, setAiDraft] = useState<AiActionDraft | null>(null);
+  const [aiReply, setAiReply] = useState<string | null>(null);
 
   const commandHints = useMemo(
     () => COMMAND_HINT_SAMPLES.filter((c) => c.includes(commandInput.toLowerCase())),
@@ -130,10 +139,102 @@ export function useCommandExecution(args: {
         });
       }
     } catch (err) {
+      const errorMessage = getAssistantInvokeErrorMessage(err);
+      // Check if this is the unrecognized command error
+      if (errorMessage.includes("I do not recognize that yet")) {
+        // Try AI fallback
+        await tryAiFallback(trimmed);
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsRunningCommand(false);
+    }
+  }
+
+  async function tryAiFallback(command: string): Promise<void> {
+    try {
+      const api = window.assistantApi;
+      if (!api?.aiChat) {
+        setError("I do not recognize that yet. Type help for ideas, or rephrase.");
+        return;
+      }
+      const response = await api.aiChat({
+        message: command,
+        context: {
+          notesCount,
+          tasksCount,
+          remindersCount,
+          devicesCount: devices.length
+        }
+      });
+      setAiReply(response.reply);
+      if (response.actionDraft) {
+        setAiDraft(response.actionDraft);
+      } else {
+        setStatus(response.reply);
+      }
+    } catch {
+      setError("I do not recognize that yet. Type help for ideas, or rephrase.");
+    }
+  }
+
+  async function confirmAiDraft(): Promise<void> {
+    if (!aiDraft) return;
+    try {
+      setIsRunningCommand(true);
+      const api = window.assistantApi;
+      switch (aiDraft.type) {
+        case "create_note": {
+          await api?.createNote({
+            title: aiDraft.title,
+            content: aiDraft.content || "",
+            tags: [],
+            pinned: false
+          });
+          setStatus("Created note.");
+          break;
+        }
+        case "create_task": {
+          await api?.createTask({
+            title: aiDraft.title,
+            notes: aiDraft.notes || "",
+            dueAt: aiDraft.dueAt || null,
+            priority: aiDraft.priority === "low" ? "low" : aiDraft.priority === "high" ? "high" : "normal",
+            recurrence: "none"
+          });
+          setStatus("Created task.");
+          break;
+        }
+        case "create_reminder": {
+          await api?.createReminder({
+            text: aiDraft.text,
+            dueAt: aiDraft.dueAt,
+            recurrence: "none"
+          });
+          setStatus("Created reminder.");
+          break;
+        }
+        case "toggle_device": {
+          await runDeviceToggle(aiDraft.entityId, aiDraft.friendlyName || aiDraft.entityId);
+          setStatus("Toggled device.");
+          break;
+        }
+      }
+      setAiDraft(null);
+      setAiReply(null);
+      setCommandInput("");
+      await refreshAll();
+    } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
     } finally {
       setIsRunningCommand(false);
     }
+  }
+
+  function cancelAiDraft(): void {
+    setAiDraft(null);
+    setAiReply(null);
   }
 
   function runPresetCommand(command: string): void {
@@ -159,6 +260,10 @@ export function useCommandExecution(args: {
     commandHints,
     runCommandInternal,
     runPresetCommand,
-    clearCommandHistory
+    clearCommandHistory,
+    aiDraft,
+    aiReply,
+    confirmAiDraft,
+    cancelAiDraft
   };
 }

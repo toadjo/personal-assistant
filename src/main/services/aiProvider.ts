@@ -164,10 +164,24 @@ export class OpenAiAdapter implements AiProviderAdapter {
         throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response is not an object.", retryable: false });
       }
 
-      const reply = "AI response received.";
+      const choices = (data as { choices?: unknown }).choices;
+      if (!choices || !Array.isArray(choices) || choices.length === 0) {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response has no choices.", retryable: false });
+      }
+      const firstChoice = choices[0];
+      if (!firstChoice || typeof firstChoice !== "object") {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response choice is not an object.", retryable: false });
+      }
+      const message = (firstChoice as { message?: unknown }).message;
+      if (!message || typeof message !== "object") {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response has no message.", retryable: false });
+      }
+      const content = (message as { content?: unknown }).content;
+      if (!content || typeof content !== "string") {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response has no message content.", retryable: false });
+      }
+      const reply = content;
 
-      // For now, return simple reply without action draft parsing
-      // Action draft parsing can be added in a future iteration
       return { reply };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -301,10 +315,10 @@ export class AnthropicAdapter implements AiProviderAdapter {
         });
       }
 
-      const text = await res.text();
+      const responseText = await res.text();
       let data: unknown;
       try {
-        data = JSON.parse(text);
+        data = JSON.parse(responseText);
       } catch {
         throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic returned invalid JSON.", retryable: false });
       }
@@ -313,10 +327,22 @@ export class AnthropicAdapter implements AiProviderAdapter {
         throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic response is not an object.", retryable: false });
       }
 
-      const reply = "AI response received.";
+      const content = (data as { content?: unknown }).content;
+      if (!content || !Array.isArray(content) || content.length === 0) {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic response has no content.", retryable: false });
+      }
+      const textBlock = content.find((block) => {
+        return block && typeof block === "object" && (block as { type?: string }).type === "text";
+      });
+      if (!textBlock || typeof textBlock !== "object") {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic response has no text block.", retryable: false });
+      }
+      const text = (textBlock as { text?: unknown }).text;
+      if (!text || typeof text !== "string") {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic text block has no text.", retryable: false });
+      }
+      const reply = text;
 
-      // For now, return simple reply without action draft parsing
-      // Action draft parsing can be added in a future iteration
       return { reply };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {

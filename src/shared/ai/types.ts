@@ -15,16 +15,31 @@ export type AiConfigStatus = {
 
 /**
  * Structured action draft returned by AI. The AI should respond with JSON matching this schema
- * when asked to perform an action. This is a minimal foundation that can be expanded later.
+ * when asked to perform an action. This is a discriminated union for type safety.
  */
-export type AiActionDraft = {
-  type: "note" | "reminder" | "task" | "device" | "unknown";
-  title?: string;
-  content?: string;
-  entityId?: string; // For device toggles
-  action: "create" | "update" | "delete" | "toggle" | "unknown";
-  reason: string; // Human-readable explanation of what the AI intends to do
-};
+export type AiActionDraft =
+  | {
+      type: "create_note";
+      title: string;
+      content?: string;
+    }
+  | {
+      type: "create_task";
+      title: string;
+      notes?: string;
+      dueAt?: string; // ISO datetime
+      priority?: "low" | "medium" | "high";
+    }
+  | {
+      type: "create_reminder";
+      text: string;
+      dueAt: string; // ISO datetime
+    }
+  | {
+      type: "toggle_device";
+      entityId: string;
+      friendlyName?: string;
+    };
 
 /**
  * Chat request payload for AI conversation.

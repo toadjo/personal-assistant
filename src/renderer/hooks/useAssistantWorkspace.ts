@@ -80,7 +80,10 @@ export function useAssistantWorkspace(
     setStatus: ui.setStatus,
     setError: ui.setError,
     refreshAll: data.refreshAll,
-    runDeviceToggle: ha.runDeviceToggle
+    runDeviceToggle: ha.runDeviceToggle,
+    notesCount: data.notes.length,
+    tasksCount: data.tasks.length,
+    remindersCount: data.reminders.length
   });
 
   // Effect to dismiss onboarding after first command
@@ -166,7 +169,11 @@ export function useAssistantWorkspace(
       commandInputRef: command.commandInputRef,
       runPresetCommand: command.runPresetCommand,
       runCommandInternal: command.runCommandInternal,
-      clearCommandHistory: command.clearCommandHistory
+      clearCommandHistory: command.clearCommandHistory,
+      aiDraft: command.aiDraft,
+      aiReply: command.aiReply,
+      confirmAiDraft: command.confirmAiDraft,
+      cancelAiDraft: command.cancelAiDraft
     },
     calendar: productivity.calendar,
     reminders: productivity.reminders,

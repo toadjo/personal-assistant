@@ -87,6 +87,39 @@ describe("aiProvider", () => {
       expect(result.success).toBe(true);
       expect(result.model).toBe("gpt-4o-mini");
     });
+
+    describe("chat method", () => {
+      it("extracts real text from OpenAI chat response", async () => {
+        const adapter = new OpenAiAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () =>
+            JSON.stringify({
+              choices: [{ message: { content: "Hello, how can I help you?" } }]
+            })
+        } as Response);
+        const result = await adapter.chat("sk-test", { message: "test" });
+        expect(result.reply).toBe("Hello, how can I help you?");
+      });
+
+      it("throws MALFORMED_RESPONSE when choices array is empty", async () => {
+        const adapter = new OpenAiAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () => JSON.stringify({ choices: [] })
+        } as Response);
+        await expect(adapter.chat("sk-test", { message: "test" })).rejects.toThrow("no choices");
+      });
+
+      it("throws MALFORMED_RESPONSE when message content is missing", async () => {
+        const adapter = new OpenAiAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () => JSON.stringify({ choices: [{ message: {} }] })
+        } as Response);
+        await expect(adapter.chat("sk-test", { message: "test" })).rejects.toThrow("no message content");
+      });
+    });
   });
 
   describe("AnthropicAdapter", () => {
@@ -174,6 +207,48 @@ describe("aiProvider", () => {
       const result = await adapter.testConnection("sk-ant-valid");
       expect(result.success).toBe(true);
       expect(result.model).toBe("claude-3-5-sonnet-20241022");
+    });
+
+    describe("chat method", () => {
+      it("extracts real text from Anthropic chat response", async () => {
+        const adapter = new AnthropicAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () =>
+            JSON.stringify({
+              content: [{ type: "text", text: "Hello, how can I help you?" }]
+            })
+        } as Response);
+        const result = await adapter.chat("sk-test", { message: "test" });
+        expect(result.reply).toBe("Hello, how can I help you?");
+      });
+
+      it("throws MALFORMED_RESPONSE when content array is empty", async () => {
+        const adapter = new AnthropicAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () => JSON.stringify({ content: [] })
+        } as Response);
+        await expect(adapter.chat("sk-test", { message: "test" })).rejects.toThrow("no content");
+      });
+
+      it("throws MALFORMED_RESPONSE when text block is missing", async () => {
+        const adapter = new AnthropicAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () => JSON.stringify({ content: [{ type: "image" }] })
+        } as Response);
+        await expect(adapter.chat("sk-test", { message: "test" })).rejects.toThrow("no text block");
+      });
+
+      it("throws MALFORMED_RESPONSE when text block has no text field", async () => {
+        const adapter = new AnthropicAdapter();
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          text: async () => JSON.stringify({ content: [{ type: "text" }] })
+        } as Response);
+        await expect(adapter.chat("sk-test", { message: "test" })).rejects.toThrow("no text");
+      });
     });
   });
 

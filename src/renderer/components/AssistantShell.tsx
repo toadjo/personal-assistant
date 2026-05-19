@@ -356,6 +356,10 @@ export function AssistantShell(): JSX.Element {
               onClearNoteSearch={() => data.setQuery("")}
               onPreset={command.runPresetCommand}
               onHideDeskIfInputEmpty={desk.hideWindow}
+              aiDraft={command.aiDraft}
+              aiReply={command.aiReply}
+              onConfirmAiDraft={command.confirmAiDraft}
+              onCancelAiDraft={command.cancelAiDraft}
             />
           </div>
 

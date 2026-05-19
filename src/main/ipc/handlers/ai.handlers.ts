@@ -3,6 +3,7 @@ import { IpcInvoke } from "../../../shared/ipc-channels";
 import { clearAiKey, getAiConfig, setAiKey } from "../../services/aiConfig";
 import { createAdapter } from "../../services/aiProvider";
 import { getAiApiKey } from "../../services/aiSecrets";
+import { parseAiResponse } from "../../services/aiResponseParser";
 import { registerInvoke } from "../invoke-handle";
 import { aiChatRequestSchema, aiSetKeySchema } from "../schemas";
 
@@ -43,6 +44,8 @@ export function registerAiHandlers(assertSender: AssertSender): void {
       throw new Error("AI API key is missing.");
     }
     const adapter = createAdapter(config.provider);
-    return adapter.chat(apiKey, parsed);
+    const rawResponse = await adapter.chat(apiKey, parsed);
+    // Parse the response to extract JSON and actionDraft if present
+    return parseAiResponse(rawResponse.reply);
   });
 }
