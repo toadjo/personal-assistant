@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import {
+  aiChatRequestSchema,
   aiSetKeySchema,
   assistantNameSchema,
   backupPayloadSchema,
@@ -12,11 +13,11 @@ import {
   positiveIntegerSchema,
   reminderCreateSchema,
   reminderUpdateSchema,
-  taskCreateSchema,
-  taskUpdateSchema,
   rendererLogPayloadSchema,
   ruleCreateSchema,
   ruleEnabledPayloadSchema,
+  taskCreateSchema,
+  taskUpdateSchema,
   userPreferredNameSchema,
   uuidSchema
 } from "../schemas";
@@ -99,7 +100,8 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.teamProjectsCreate ||
         ch === IpcInvoke.teamTasksCreate ||
         ch === IpcInvoke.teamTasksUpdate ||
-        ch === IpcInvoke.aiSetKey;
+        ch === IpcInvoke.aiSetKey ||
+        ch === IpcInvoke.aiChat;
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }
   });
@@ -320,6 +322,20 @@ describe("IPC handler payload contracts", () => {
     const parsed = aiSetKeySchema.parse({ provider: "anthropic", apiKey: "  sk-ant-123  " });
     expect(parsed.provider).toBe("anthropic");
     expect(parsed.apiKey).toBe("sk-ant-123");
+  });
+
+  it("aiChatRequestSchema rejects empty message", () => {
+    expect(() => aiChatRequestSchema.parse({ message: "" })).toThrow();
+  });
+
+  it("aiChatRequestSchema rejects overlong message", () => {
+    expect(() => aiChatRequestSchema.parse({ message: "x".repeat(8001) })).toThrow();
+  });
+
+  it("aiChatRequestSchema accepts valid message with context", () => {
+    const parsed = aiChatRequestSchema.parse({ message: "hello", context: { notesCount: 5, tasksCount: 3 } });
+    expect(parsed.message).toBe("hello");
+    expect(parsed.context?.notesCount).toBe(5);
   });
 
   it("backupPayloadSchema rejects missing top-level key", () => {

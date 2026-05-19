@@ -166,6 +166,7 @@ declare global {
       setAiKey: (payload: { provider: AiProvider; apiKey: string }) => Promise<AiConfigStatus>;
       clearAiKey: () => Promise<AiConfigStatus>;
       testAiKey: () => Promise<{ success: true; model: string }>;
+      aiChat: (payload: { message: string; context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number } }) => Promise<{ reply: string; actionDraft?: unknown }>;
     };
   }
 }

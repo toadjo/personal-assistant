@@ -4,11 +4,11 @@ import { clearAiKey, getAiConfig, setAiKey } from "../../services/aiConfig";
 import { createAdapter } from "../../services/aiProvider";
 import { getAiApiKey } from "../../services/aiSecrets";
 import { registerInvoke } from "../invoke-handle";
-import { aiSetKeySchema } from "../schemas";
+import { aiChatRequestSchema, aiSetKeySchema } from "../schemas";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
-/** Registers IPC handlers for AI provider configuration and connection testing. */
+/** Registers IPC handlers for AI provider configuration, connection testing, and chat. */
 export function registerAiHandlers(assertSender: AssertSender): void {
   registerInvoke(IpcInvoke.aiGetConfig, assertSender, () => getAiConfig());
   registerInvoke(IpcInvoke.aiSetKey, assertSender, (_event, payload) => {
@@ -31,5 +31,18 @@ export function registerAiHandlers(assertSender: AssertSender): void {
     const { updateLastTestedAt } = await import("../../services/aiConfig");
     await updateLastTestedAt(result.model);
     return result;
+  });
+  registerInvoke(IpcInvoke.aiChat, assertSender, async (_event, payload) => {
+    const parsed = aiChatRequestSchema.parse(payload);
+    const config = await getAiConfig();
+    if (!config.provider || !config.configured) {
+      throw new Error("AI provider is not configured.");
+    }
+    const apiKey = await getAiApiKey();
+    if (!apiKey) {
+      throw new Error("AI API key is missing.");
+    }
+    const adapter = createAdapter(config.provider);
+    return adapter.chat(apiKey, parsed);
   });
 }

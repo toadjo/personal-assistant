@@ -62,7 +62,8 @@ export const invokeChannelMap = {
   aiGetConfig: "ai:getConfig",
   aiSetKey: "ai:setKey",
   aiClearKey: "ai:clearKey",
-  aiTestKey: "ai:testKey"
+  aiTestKey: "ai:testKey",
+  aiChat: "ai:chat"
 } as const;
 
 export const pushChannelMap = {

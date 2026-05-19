@@ -66,7 +66,8 @@ export const IpcInvoke = {
   aiGetConfig: "ai:getConfig",
   aiSetKey: "ai:setKey",
   aiClearKey: "ai:clearKey",
-  aiTestKey: "ai:testKey"
+  aiTestKey: "ai:testKey",
+  aiChat: "ai:chat"
 } as const;
 
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */

@@ -107,7 +107,33 @@ export const aiProviderSchema = z.enum(["openai", "anthropic"]);
 
 export const aiSetKeySchema = z.object({
   provider: aiProviderSchema,
-  apiKey: z.string().trim().min(1).max(4_096)
+  apiKey: z
+    .string()
+    .min(1)
+    .max(4096)
+    .transform((val) => val.trim())
+    .refine((val) => val.length > 0, { message: "API key cannot be empty" })
+});
+
+export const aiActionDraftSchema = z.object({
+  type: z.enum(["note", "reminder", "task", "device", "unknown"]),
+  title: z.string().optional(),
+  content: z.string().optional(),
+  entityId: z.string().optional(),
+  action: z.enum(["create", "update", "delete", "toggle", "unknown"]),
+  reason: z.string().min(1).max(1000)
+});
+
+export const aiChatRequestSchema = z.object({
+  message: z.string().min(1).max(8000),
+  context: z
+    .object({
+      notesCount: z.number().int().nonnegative().optional(),
+      tasksCount: z.number().int().nonnegative().optional(),
+      remindersCount: z.number().int().nonnegative().optional(),
+      devicesCount: z.number().int().nonnegative().optional()
+    })
+    .optional()
 });
 
 export const optionalQuerySchema = z.string().optional();

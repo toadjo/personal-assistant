@@ -1,4 +1,4 @@
-import type { AiProvider } from "../../shared/ai/types";
+import type { AiProvider, AiChatRequest, AiChatResponse } from "../../shared/ai/types";
 import { throwAssistantInvoke } from "./structuredInvokeError";
 
 /**
@@ -32,6 +32,12 @@ export interface AiProviderAdapter {
    * Throws structured errors on failure; returns success result on 2xx.
    */
   testConnection(apiKey: string): Promise<AiTestResult>;
+
+  /**
+   * Send a chat request to the provider and return the response.
+   * Throws structured errors on failure; returns chat response on 2xx.
+   */
+  chat(apiKey: string, request: AiChatRequest): Promise<AiChatResponse>;
 }
 
 function throwAi(partial: Omit<Parameters<typeof throwAssistantInvoke>[0], "domain">): never {
@@ -94,6 +100,75 @@ export class OpenAiAdapter implements AiProviderAdapter {
       }
 
       return { success: true, model: this.modelId };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throwAi({ code: "NETWORK_FAILURE", message: "OpenAI API request timed out.", retryable: true });
+      }
+      if (error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "ECONNREFUSED") {
+        throwAi({ code: "NETWORK_FAILURE", message: "Network error connecting to OpenAI.", retryable: true });
+      }
+      // Re-throw structured errors from above
+      throw error;
+    }
+  }
+
+  async chat(apiKey: string, request: AiChatRequest): Promise<AiChatResponse> {
+    if (!apiKey) {
+      throwAi({ code: "NOT_CONFIGURED", message: "OpenAI API key is not configured.", retryable: false });
+    }
+
+    try {
+      const res = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: this.modelId,
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields."
+            },
+            { role: "user", content: request.message }
+          ],
+          max_tokens: 500
+        }),
+        signal: AbortSignal.timeout(30_000)
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          throwAi({ code: "INVALID_KEY", message: "OpenAI API key is invalid or expired.", retryable: false });
+        }
+        if (res.status === 429) {
+          throwAi({ code: "RATE_LIMITED", message: "OpenAI rate limit exceeded.", retryable: true });
+        }
+        throwAi({
+          code: "PROVIDER_UNAVAILABLE",
+          message: `OpenAI API returned ${res.status}: ${res.statusText}`,
+          retryable: true
+        });
+      }
+
+      const text = await res.text();
+      let data: unknown;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI returned invalid JSON.", retryable: false });
+      }
+
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response is not an object.", retryable: false });
+      }
+
+      const reply = "AI response received.";
+
+      // For now, return simple reply without action draft parsing
+      // Action draft parsing can be added in a future iteration
+      return { reply };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "OpenAI API request timed out.", retryable: true });
@@ -178,6 +253,71 @@ export class AnthropicAdapter implements AiProviderAdapter {
       }
 
       return { success: true, model: this.modelId };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throwAi({ code: "NETWORK_FAILURE", message: "Anthropic API request timed out.", retryable: true });
+      }
+      if (error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "ECONNREFUSED") {
+        throwAi({ code: "NETWORK_FAILURE", message: "Network error connecting to Anthropic.", retryable: true });
+      }
+      // Re-throw structured errors from above
+      throw error;
+    }
+  }
+
+  async chat(apiKey: string, request: AiChatRequest): Promise<AiChatResponse> {
+    if (!apiKey) {
+      throwAi({ code: "NOT_CONFIGURED", message: "Anthropic API key is not configured.", retryable: false });
+    }
+
+    try {
+      const res = await fetch(`${this.baseUrl}/messages`, {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: this.modelId,
+          max_tokens: 500,
+          system: "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields.",
+          messages: [{ role: "user", content: request.message }]
+        }),
+        signal: AbortSignal.timeout(30_000)
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          throwAi({ code: "INVALID_KEY", message: "Anthropic API key is invalid or expired.", retryable: false });
+        }
+        if (res.status === 429) {
+          throwAi({ code: "RATE_LIMITED", message: "Anthropic rate limit exceeded.", retryable: true });
+        }
+        throwAi({
+          code: "PROVIDER_UNAVAILABLE",
+          message: `Anthropic API returned ${res.status}: ${res.statusText}`,
+          retryable: true
+        });
+      }
+
+      const text = await res.text();
+      let data: unknown;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic returned invalid JSON.", retryable: false });
+      }
+
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic response is not an object.", retryable: false });
+      }
+
+      const reply = "AI response received.";
+
+      // For now, return simple reply without action draft parsing
+      // Action draft parsing can be added in a future iteration
+      return { reply };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "Anthropic API request timed out.", retryable: true });

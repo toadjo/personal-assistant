@@ -12,3 +12,37 @@ export type AiConfigStatus = {
   configured: boolean;
   lastTestedAt: string | null;
 };
+
+/**
+ * Structured action draft returned by AI. The AI should respond with JSON matching this schema
+ * when asked to perform an action. This is a minimal foundation that can be expanded later.
+ */
+export type AiActionDraft = {
+  type: "note" | "reminder" | "task" | "device" | "unknown";
+  title?: string;
+  content?: string;
+  entityId?: string; // For device toggles
+  action: "create" | "update" | "delete" | "toggle" | "unknown";
+  reason: string; // Human-readable explanation of what the AI intends to do
+};
+
+/**
+ * Chat request payload for AI conversation.
+ */
+export type AiChatRequest = {
+  message: string;
+  context?: {
+    notesCount?: number;
+    tasksCount?: number;
+    remindersCount?: number;
+    devicesCount?: number;
+  };
+};
+
+/**
+ * Chat response payload from AI.
+ */
+export type AiChatResponse = {
+  reply: string; // Natural language response
+  actionDraft?: AiActionDraft; // Optional structured action suggestion
+};
