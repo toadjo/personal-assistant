@@ -1,4 +1,4 @@
-import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database, Users } from "lucide-react";
+import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database, Users, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { useBackupActions } from "../hooks/workspace/useBackupActions";
@@ -18,6 +18,7 @@ import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
 import { ProjectsPanel } from "./panels/ProjectsPanel";
+import { AiSettingsPanel } from "./panels/AiSettingsPanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
@@ -36,13 +37,16 @@ import { getAssistantInvokeErrorMessage } from "../lib/errors";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
+import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
 export function AssistantShell(): JSX.Element {
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);
+  const [showAi, setShowAi] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState<UnifiedWorkItem | null>(null);
+  const [aiConfig, setAiConfig] = useState<AiConfigStatus | null>(null);
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -187,6 +191,41 @@ export function AssistantShell(): JSX.Element {
     }
   }, [data.isRefreshing]);
 
+  // Load AI config on mount
+  useEffect(() => {
+    void (async () => {
+      try {
+        const config = await window.assistantApi.getAiConfig();
+        setAiConfig(config);
+      } catch {
+        // Ignore errors if AI is not configured
+      }
+    })();
+  }, []);
+
+  const handleAiSetKey = async (provider: AiProvider, apiKey: string): Promise<AiConfigStatus> => {
+    const config = await window.assistantApi.setAiKey({ provider, apiKey });
+    setAiConfig(config);
+    return config;
+  };
+
+  const handleAiClearKey = async (): Promise<AiConfigStatus> => {
+    const config = await window.assistantApi.clearAiKey();
+    setAiConfig(config);
+    return config;
+  };
+
+  const handleAiTestKey = async (): Promise<{ success: true; model: string }> => {
+    const result = await window.assistantApi.testAiKey();
+    return result;
+  };
+
+  const handleAiRefresh = async (): Promise<AiConfigStatus> => {
+    const config = await window.assistantApi.getAiConfig();
+    setAiConfig(config);
+    return config;
+  };
+
   // Close drawer if selected item is no longer in inbox after data refresh
   useEffect(() => {
     if (selectedWorkItem) {
@@ -279,6 +318,14 @@ export function AssistantShell(): JSX.Element {
           >
             <Database size={14} />
           </button>
+          <button
+            type="button"
+            className="ghostButton ghostButtonCompact"
+            title="AI configuration"
+            onClick={() => setShowAi((s) => !s)}
+          >
+            <Sparkles size={14} />
+          </button>
           <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-desk" />
         </div>
       </header>
@@ -367,6 +414,16 @@ export function AssistantShell(): JSX.Element {
               isExporting={backupActions.isExporting}
               isImporting={backupActions.isImporting}
               isResetting={backupActions.isResetting}
+            />
+          )}
+          {showAi && (
+            <AiSettingsPanel
+              config={aiConfig}
+              onSetKey={handleAiSetKey}
+              onClearKey={handleAiClearKey}
+              onTestKey={handleAiTestKey}
+              onRefresh={handleAiRefresh}
+              onClose={() => setShowAi(false)}
             />
           )}
 
