@@ -9,6 +9,7 @@ interface ImportMetaEnv {
 
 import type { AssistantSettings, AutomationRule, Note, Reminder, Task } from "../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../shared/team/types";
+import type { AiConfigStatus, AiProvider } from "../shared/ai/types";
 
 declare global {
   const __APP_VERSION__: string;
@@ -160,6 +161,10 @@ declare global {
       teamRealtimeStart: () => Promise<void>;
       teamRealtimeStop: () => Promise<void>;
       onTeamDataUpdated: (callback: (event: Electron.IpcRendererEvent, payload: { workspaceId: string; tables: Array<"projects" | "tasks"> }) => void) => () => void;
+      // AI configuration (slice 1: storage + status only).
+      getAiConfig: () => Promise<AiConfigStatus>;
+      setAiKey: (payload: { provider: AiProvider; apiKey: string }) => Promise<AiConfigStatus>;
+      clearAiKey: () => Promise<AiConfigStatus>;
     };
   }
 }

@@ -1,6 +1,7 @@
 import type { BrowserWindow } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import { assertTrustedIpcSender } from "../security";
+import { registerAiHandlers } from "./handlers/ai.handlers";
 import { registerAutomationHandlers } from "./handlers/automation.handlers";
 import { registerBackupHandlers } from "./handlers/backup.handlers";
 import { registerHomeAssistantHandlers } from "./handlers/homeAssistant.handlers";
@@ -31,4 +32,5 @@ export function registerIpcHandlers(getTrustedWindows: () => readonly (BrowserWi
   registerBackupHandlers(assertSender);
   registerRendererHandlers(assertSender);
   registerTeamHandlers(assertSender);
+  registerAiHandlers(assertSender);
 }

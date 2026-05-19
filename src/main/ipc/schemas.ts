@@ -103,6 +103,13 @@ export const haConfigSchema = z.object({
   token: z.string().trim().max(4_096)
 });
 
+export const aiProviderSchema = z.enum(["openai", "anthropic"]);
+
+export const aiSetKeySchema = z.object({
+  provider: aiProviderSchema,
+  apiKey: z.string().trim().min(1).max(4_096)
+});
+
 export const optionalQuerySchema = z.string().optional();
 export const positiveIntegerSchema = z.number().int().positive();
 export const haEntityIdSchema = z

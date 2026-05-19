@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import {
+  aiSetKeySchema,
   assistantNameSchema,
   backupPayloadSchema,
   haConfigSchema,
@@ -50,7 +51,10 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.testSetHaFetchOverride,
   IpcInvoke.testSetAutomationActionOverride,
   IpcInvoke.teamRealtimeStart,
-  IpcInvoke.teamRealtimeStop
+  IpcInvoke.teamRealtimeStop,
+  // AI configuration zero-arg channels
+  IpcInvoke.aiGetConfig,
+  IpcInvoke.aiClearKey
 ];
 
 describe("IPC handler payload contracts", () => {
@@ -93,7 +97,8 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.teamWorkspacesSetActive ||
         ch === IpcInvoke.teamProjectsCreate ||
         ch === IpcInvoke.teamTasksCreate ||
-        ch === IpcInvoke.teamTasksUpdate;
+        ch === IpcInvoke.teamTasksUpdate ||
+        ch === IpcInvoke.aiSetKey;
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }
   });
@@ -296,6 +301,24 @@ describe("IPC handler payload contracts", () => {
         app_settings: []
       })
     ).toThrow();
+  });
+
+  it("aiSetKeySchema rejects unsupported provider", () => {
+    expect(() => aiSetKeySchema.parse({ provider: "gemini", apiKey: "sk-abc" })).toThrow();
+  });
+
+  it("aiSetKeySchema rejects empty key after trim", () => {
+    expect(() => aiSetKeySchema.parse({ provider: "openai", apiKey: "   " })).toThrow();
+  });
+
+  it("aiSetKeySchema rejects overlong key", () => {
+    expect(() => aiSetKeySchema.parse({ provider: "openai", apiKey: "x".repeat(4_097) })).toThrow();
+  });
+
+  it("aiSetKeySchema accepts a valid payload and trims the key", () => {
+    const parsed = aiSetKeySchema.parse({ provider: "anthropic", apiKey: "  sk-ant-123  " });
+    expect(parsed.provider).toBe("anthropic");
+    expect(parsed.apiKey).toBe("sk-ant-123");
   });
 
   it("backupPayloadSchema rejects missing top-level key", () => {

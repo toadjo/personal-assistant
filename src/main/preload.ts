@@ -162,5 +162,11 @@ contextBridge.exposeInMainWorld("assistantApi", {
   onTeamDataUpdated: (cb: (...args: unknown[]) => void) => {
     ipcRenderer.on(push.teamDataUpdated, cb);
     return () => ipcRenderer.removeListener(push.teamDataUpdated, cb);
-  }
+  },
+  // AI configuration (slice 1: storage + status only, no provider calls).
+  // Raw API keys never cross the bridge: setAiKey takes the key in, no getter ever returns it.
+  getAiConfig: () => ipcRenderer.invoke(invoke.aiGetConfig),
+  setAiKey: (payload: { provider: "openai" | "anthropic"; apiKey: string }) =>
+    ipcRenderer.invoke(invoke.aiSetKey, payload),
+  clearAiKey: () => ipcRenderer.invoke(invoke.aiClearKey)
 });

@@ -9,7 +9,15 @@ export const ASSISTANT_INVOKE_ERROR_PREFIX = "assistant:invoke:v1:";
 /** Default copy when invoke payload validation fails (never expose raw Zod issues to the UI). */
 export const IPC_VALIDATION_DEFAULT_MESSAGE = "That request had invalid data. Please try again.";
 
-export const assistantInvokeDomains = ["home_assistant", "ipc_validation", "automation", "notes", "reminders", "team"] as const;
+export const assistantInvokeDomains = [
+  "home_assistant",
+  "ipc_validation",
+  "automation",
+  "notes",
+  "reminders",
+  "team",
+  "ai"
+] as const;
 
 /**
  * Automation failure codes and their retryability semantics.

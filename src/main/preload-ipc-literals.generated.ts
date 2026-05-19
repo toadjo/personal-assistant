@@ -58,7 +58,10 @@ export const invokeChannelMap = {
   teamTasksList: "team:tasks:list",
   teamTasksUpdate: "team:tasks:update",
   teamRealtimeStart: "team:realtime:start",
-  teamRealtimeStop: "team:realtime:stop"
+  teamRealtimeStop: "team:realtime:stop",
+  aiGetConfig: "ai:getConfig",
+  aiSetKey: "ai:setKey",
+  aiClearKey: "ai:clearKey"
 } as const;
 
 export const pushChannelMap = {
