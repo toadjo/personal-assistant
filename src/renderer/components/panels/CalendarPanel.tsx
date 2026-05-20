@@ -222,13 +222,6 @@ export const CalendarPanel = memo(function CalendarPanel({
         <div className="calendarDayView" aria-label="Day view">
           <div className="calendarDayHeader">
             <h3>{selectedDayHeading(selectedDateKey, todayKey)}</h3>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => setCalendarView("month")}
-            >
-              Back to month
-            </button>
           </div>
           <div className="calendarAllDayStrip">
             {getAllDayEventsForDate(selectedDateKey, monthCells.find(c => c.dateKey === selectedDateKey)?.events || []).map((event) => (
@@ -242,7 +235,23 @@ export const CalendarPanel = memo(function CalendarPanel({
               const selectedDate = monthCells.find(c => c.dateKey === selectedDateKey);
               const hourlyEvents = selectedDate ? getHourlyEventsForDate(selectedDateKey, selectedDate.events, START_HOUR, END_HOUR) : [];
               if (hourlyEvents.length === 0) {
-                return <div className="muted">No events scheduled for this day.</div>;
+                return (
+                  <>
+                    <div className="muted">No events scheduled for this day.</div>
+                    <div className="row" style={{ gap: "0.5rem", marginTop: "var(--space-2)" }}>
+                      {onCreateReminder && (
+                        <button type="button" className="ghostButton" onClick={handleOpenReminder}>
+                          <Bell size={14} /> Add reminder
+                        </button>
+                      )}
+                      {onCreateTask && (
+                        <button type="button" className="ghostButton" onClick={handleOpenTask}>
+                          <ListTodo size={14} /> Add task
+                        </button>
+                      )}
+                    </div>
+                  </>
+                );
               }
               return hourlyEvents.map(({ hour, event }) => (
                 <div key={`${hour}-${event.id}`} className="calendarHourRow">
@@ -262,24 +271,8 @@ export const CalendarPanel = memo(function CalendarPanel({
         <div className="calendarWeekView" aria-label={`${calendarView} view`}>
           <div className="calendarWeekHeader">
             <h3>{calendarView === "workWeek" ? "Work Week" : "Week"}</h3>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => setCalendarView("month")}
-            >
-              Back to month
-            </button>
           </div>
           <div className="calendarWeekGrid">
-            {(() => {
-              const days = calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey);
-              const dayKeys = ["Time", ...days];
-              return dayKeys.map((header, idx) => (
-                <div key={header} className={`calendarWeekHeaderCell ${idx === 0 ? "calendarWeekTimeHeader" : ""}`}>
-                  {idx === 0 ? header : parseLocalDateKey(header).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-                </div>
-              ));
-            })()}
             {(() => {
               const days = calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey);
               const allHourlyEvents = days.flatMap(dayKey => {
@@ -287,27 +280,60 @@ export const CalendarPanel = memo(function CalendarPanel({
                 return dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR) : [];
               });
               if (allHourlyEvents.length === 0) {
-                return <div className="muted" style={{ gridColumn: "1 / -1" }}>No events scheduled for this week.</div>;
+                const startDate = days[0] ? parseLocalDateKey(days[0]) : selectedDate;
+                const lastDayKey = days[days.length - 1];
+                const endDate = lastDayKey ? parseLocalDateKey(lastDayKey) : selectedDate;
+                const dateRange = `${startDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+                return (
+                  <>
+                    <p className="muted" style={{ gridColumn: "1 / -1", marginBottom: "var(--space-1)" }}>{dateRange}</p>
+                    <div className="muted" style={{ gridColumn: "1 / -1" }}>No events scheduled for this {calendarView === "workWeek" ? "work week" : "week"}.</div>
+                    <div className="row" style={{ gap: "0.5rem", marginTop: "var(--space-2)", gridColumn: "1 / -1" }}>
+                      {onCreateReminder && (
+                        <button type="button" className="ghostButton" onClick={handleOpenReminder}>
+                          <Bell size={14} /> Add reminder
+                        </button>
+                      )}
+                      {onCreateTask && (
+                        <button type="button" className="ghostButton" onClick={handleOpenTask}>
+                          <ListTodo size={14} /> Add task
+                        </button>
+                      )}
+                    </div>
+                  </>
+                );
               }
               const hoursWithEvents = [...new Set(allHourlyEvents.map(he => he.hour))];
-              return hoursWithEvents.sort((a, b) => a - b).map((hour) => (
-                <div key={hour} className="calendarWeekRow">
-                  <div className="calendarWeekTimeCell">{hour}:00</div>
-                  {days.map((dayKey) => {
-                    const dayCell = monthCells.find(c => c.dateKey === dayKey);
-                    const eventsForHour = dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
-                    return (
-                      <div key={dayKey} className="calendarWeekDayCell">
-                        {eventsForHour.map(({ event }) => (
-                          <div key={event.id} className="calendarWeekEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
-                            {event.title}
-                          </div>
-                        ))}
+              return (
+                <>
+                  <div className="calendarWeekHeaderRow">
+                    <div className="calendarWeekHeaderCell calendarWeekTimeHeader">Time</div>
+                    {days.map((dayKey) => (
+                      <div key={dayKey} className="calendarWeekHeaderCell">
+                        {parseLocalDateKey(dayKey).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
                       </div>
-                    );
-                  })}
-                </div>
-              ));
+                    ))}
+                  </div>
+                  {hoursWithEvents.sort((a, b) => a - b).map((hour) => (
+                    <div key={hour} className="calendarWeekRow">
+                      <div className="calendarWeekTimeCell">{hour}:00</div>
+                      {days.map((dayKey) => {
+                        const dayCell = monthCells.find(c => c.dateKey === dayKey);
+                        const eventsForHour = dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
+                        return (
+                          <div key={dayKey} className="calendarWeekDayCell">
+                            {eventsForHour.map(({ event }) => (
+                              <div key={event.id} className="calendarWeekEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                                {event.title}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </>
+              );
             })()}
           </div>
         </div>
@@ -316,13 +342,6 @@ export const CalendarPanel = memo(function CalendarPanel({
         <div className="calendarAgendaView" aria-label="Agenda view">
           <div className="calendarAgendaHeader">
             <h3>{selectedDayHeading(selectedDateKey, todayKey)}</h3>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => setCalendarView("month")}
-            >
-              Back to month
-            </button>
           </div>
           <ul className="agendaList">
             {dayAgenda.length > 0 ? (
@@ -365,13 +384,6 @@ export const CalendarPanel = memo(function CalendarPanel({
         <div className="calendarUpcomingView" aria-label="Upcoming view">
           <div className="calendarUpcomingHeader">
             <h3>Upcoming (Next 14 Days)</h3>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => setCalendarView("month")}
-            >
-              Back to month
-            </button>
           </div>
           {(() => {
             const allEvents = monthCells.flatMap(c => c.events);
@@ -424,56 +436,60 @@ export const CalendarPanel = memo(function CalendarPanel({
           })()}
         </div>
       )}
-      <div className="dayFocusTitle">
-        <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
-      </div>
-      <ul className="list" aria-label="Agenda for selected day">
-        {dayAgenda.length ? (
-          dayAgenda.map((item) => (
-            <li key={`${item.type}-${item.id}`} className="agendaListItem">
-              {item.type === "reminder" ? (
-                <>
-                  <Bell size={14} className="agendaListItemIcon" />
-                  <span className="agendaListItemTime">
-                    {new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  <span className="agendaListItemText">{item.text}</span>
-                </>
-              ) : item.type === "task" ? (
-                <>
-                  <ListTodo size={14} className="agendaListItemIcon" />
-                  <span className="agendaListItemTime">
-                    {item.dueAt
-                      ? new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                      : "-"}
-                  </span>
-                  <span className="agendaListItemText">{item.title}</span>
-                  <span className={`pill ${item.priority === "high" ? "pillAttention" : ""}`}>{item.priority}</span>
-                </>
-              ) : (
-                <>
-                  <span className="agendaListItemIcon">📝</span>
-                  <span className="agendaListItemText">{item.title}</span>
-                </>
-              )}
-            </li>
-          ))
-        ) : (
-          <li className="muted">Nothing scheduled.</li>
-        )}
-      </ul>
-      <div className="row" style={{ gap: "0.5rem", padding: "var(--space-2) 0" }}>
-        {onCreateReminder && createMode === "none" && (
-          <button type="button" className="ghostButton" onClick={handleOpenReminder}>
-            <Bell size={14} /> Add reminder
-          </button>
-        )}
-        {onCreateTask && createMode === "none" && (
-          <button type="button" className="ghostButton" onClick={handleOpenTask}>
-            <ListTodo size={14} /> Add task
-          </button>
-        )}
-      </div>
+      {calendarView === "month" && (
+        <>
+          <div className="dayFocusTitle">
+            <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
+          </div>
+          <ul className="list" aria-label="Agenda for selected day">
+            {dayAgenda.length ? (
+              dayAgenda.map((item) => (
+                <li key={`${item.type}-${item.id}`} className="agendaListItem">
+                  {item.type === "reminder" ? (
+                    <>
+                      <Bell size={14} className="agendaListItemIcon" />
+                      <span className="agendaListItemTime">
+                        {new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className="agendaListItemText">{item.text}</span>
+                    </>
+                  ) : item.type === "task" ? (
+                    <>
+                      <ListTodo size={14} className="agendaListItemIcon" />
+                      <span className="agendaListItemTime">
+                        {item.dueAt
+                          ? new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : "-"}
+                      </span>
+                      <span className="agendaListItemText">{item.title}</span>
+                      <span className={`pill ${item.priority === "high" ? "pillAttention" : ""}`}>{item.priority}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="agendaListItemIcon">📝</span>
+                      <span className="agendaListItemText">{item.title}</span>
+                    </>
+                  )}
+                </li>
+              ))
+            ) : (
+              <li className="muted">Nothing scheduled.</li>
+            )}
+          </ul>
+          <div className="row" style={{ gap: "0.5rem", padding: "var(--space-2) 0" }}>
+            {onCreateReminder && createMode === "none" && (
+              <button type="button" className="ghostButton" onClick={handleOpenReminder}>
+                <Bell size={14} /> Add reminder
+              </button>
+            )}
+            {onCreateTask && createMode === "none" && (
+              <button type="button" className="ghostButton" onClick={handleOpenTask}>
+                <ListTodo size={14} /> Add task
+              </button>
+            )}
+          </div>
+        </>
+      )}
       {createMode === "reminder" && (
         <div className="calendarCreateForm">
           <div className="calendarCreateFormHeader">

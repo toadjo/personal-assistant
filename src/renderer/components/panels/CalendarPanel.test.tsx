@@ -331,7 +331,7 @@ describe("CalendarPanel", () => {
     expect(headers[6]?.textContent).toBe("Sun");
   });
 
-  it("Day view with no events shows empty state", async () => {
+  it("Day view with no events shows empty state with Add buttons", async () => {
     const user = userEvent.setup();
     render(
       <CalendarPanel
@@ -353,7 +353,11 @@ describe("CalendarPanel", () => {
 
     // Should show empty state instead of hourly grid
     expect(screen.getByText("No events scheduled for this day.")).toBeInTheDocument();
-    expect(screen.getByText("Back to month")).toBeInTheDocument();
+    // Should show Add reminder and Add task buttons
+    expect(screen.getByText("Add reminder")).toBeInTheDocument();
+    expect(screen.getByText("Add task")).toBeInTheDocument();
+    // Should NOT show Back to month button
+    expect(screen.queryByText("Back to month")).not.toBeInTheDocument();
   });
 
   it("Day view with events shows only occupied hours", async () => {
@@ -393,13 +397,14 @@ describe("CalendarPanel", () => {
     expect(screen.getByText("14:00")).toBeInTheDocument();
     expect(screen.getByText("Reminder 1")).toBeInTheDocument();
     expect(screen.getByText("Task 1")).toBeInTheDocument();
-    expect(screen.getByText("Back to month")).toBeInTheDocument();
     // Should NOT show empty hours like 6:00 or 22:00
     expect(screen.queryByText("6:00")).not.toBeInTheDocument();
     expect(screen.queryByText("22:00")).not.toBeInTheDocument();
+    // Should NOT show Back to month button
+    expect(screen.queryByText("Back to month")).not.toBeInTheDocument();
   });
 
-  it("Work Week view with no events shows empty state", async () => {
+  it("Work Week view with no events shows empty state with date range", async () => {
     const user = userEvent.setup();
     render(
       <CalendarPanel
@@ -421,11 +426,17 @@ describe("CalendarPanel", () => {
 
     const weekView = document.querySelector(".calendarWeekView");
     expect(weekView?.textContent).toContain("Work Week");
-    expect(weekView?.textContent).toContain("No events scheduled for this week.");
-    expect(screen.getByText("Back to month")).toBeInTheDocument();
+    expect(weekView?.textContent).toContain("No events scheduled for this work week.");
+    // Should show date range
+    expect(weekView?.textContent).toMatch(/\w+ \d+ - \w+ \d+/);
+    // Should show Add reminder and Add task buttons
+    expect(screen.getByText("Add reminder")).toBeInTheDocument();
+    expect(screen.getByText("Add task")).toBeInTheDocument();
+    // Should NOT show Back to month button
+    expect(screen.queryByText("Back to month")).not.toBeInTheDocument();
   });
 
-  it("Week view with no events shows empty state", async () => {
+  it("Week view with no events shows empty state with date range", async () => {
     const user = userEvent.setup();
     render(
       <CalendarPanel
@@ -448,7 +459,13 @@ describe("CalendarPanel", () => {
     const weekView = document.querySelector(".calendarWeekView");
     expect(weekView?.textContent).toContain("Week");
     expect(weekView?.textContent).toContain("No events scheduled for this week.");
-    expect(screen.getByText("Back to month")).toBeInTheDocument();
+    // Should show date range
+    expect(weekView?.textContent).toMatch(/\w+ \d+ - \w+ \d+/);
+    // Should show Add reminder and Add task buttons
+    expect(screen.getByText("Add reminder")).toBeInTheDocument();
+    expect(screen.getByText("Add task")).toBeInTheDocument();
+    // Should NOT show Back to month button
+    expect(screen.queryByText("Back to month")).not.toBeInTheDocument();
   });
 
   it("Upcoming view groups overdue items and next 14 days", async () => {
@@ -492,7 +509,10 @@ describe("CalendarPanel", () => {
     await user.click(buttons[3]!);
 
     expect(screen.getByText("Upcoming (Next 14 Days)")).toBeInTheDocument();
-    expect(screen.getByText("Back to month")).toBeInTheDocument();
+    expect(screen.getByText("Overdue")).toBeInTheDocument();
+    expect(screen.getByText("Overdue reminder")).toBeInTheDocument();
+    // Should NOT show Back to month button
+    expect(screen.queryByText("Back to month")).not.toBeInTheDocument();
   });
 
   it("Agenda view renders reminders, tasks, and memo activity", async () => {
@@ -521,7 +541,8 @@ describe("CalendarPanel", () => {
     const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
     await user.click(buttons[5]!);
 
-    expect(screen.getByText("Back to month")).toBeInTheDocument();
+    // Should NOT show Back to month button
+    expect(screen.queryByText("Back to month")).not.toBeInTheDocument();
     // Check within the calendarAgendaView specifically
     const agendaView = document.querySelector(".calendarAgendaView");
     expect(agendaView?.textContent).toContain("Test reminder");

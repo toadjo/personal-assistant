@@ -57,15 +57,16 @@ test("projects mode renders team task surface and matches snapshot", async ({ pa
 
 test("calendar shows toolbar with view options and Monday as first day", async ({ page }) => {
   await page.goto("/");
-  
+
   // Verify calendar toolbar is visible
-  await expect(page.getByRole("button", { name: "Day" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Work Week" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Week" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Upcoming" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Month" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Agenda" })).toBeVisible();
-  
+  const calendarToolbar = page.locator(".calendarToolbar");
+  await expect(calendarToolbar.getByRole("button", { name: "Day", exact: true })).toBeVisible();
+  await expect(calendarToolbar.getByRole("button", { name: "Work Week" })).toBeVisible();
+  await expect(calendarToolbar.getByRole("button", { name: "Week", exact: true })).toBeVisible();
+  await expect(calendarToolbar.getByRole("button", { name: "Upcoming" })).toBeVisible();
+  await expect(calendarToolbar.getByRole("button", { name: "Month", exact: true })).toBeVisible();
+  await expect(calendarToolbar.getByRole("button", { name: "Agenda" })).toBeVisible();
+
   // Verify week starts with Monday
   const calendarHeaders = page.locator(".calendarHeader");
   await expect(calendarHeaders.first()).toHaveText("Mon");
@@ -75,40 +76,49 @@ test("calendar shows toolbar with view options and Monday as first day", async (
 test("calendar view buttons switch content", async ({ page }) => {
   await page.goto("/");
 
+  const calendarToolbar = page.locator(".calendarToolbar");
+  const dayView = page.locator(".calendarDayView");
+  const weekView = page.locator(".calendarWeekView");
+
   // Click Day view
-  await page.getByRole("button", { name: "Day" }).click();
-  await expect(page.getByText("Back to month")).toBeVisible();
+  await calendarToolbar.getByRole("button", { name: "Day", exact: true }).click();
   // Day view with no events should show empty state
   await expect(page.getByText("No events scheduled for this day.")).toBeVisible();
+  await expect(dayView.getByText("Add reminder")).toBeVisible();
+  await expect(dayView.getByText("Add task")).toBeVisible();
+  // Should NOT show Back to month button
+  await expect(page.getByText("Back to month")).not.toBeVisible();
 
   // Click Work Week view
-  await page.getByRole("button", { name: "Work Week" }).click();
-  await expect(page.getByText("Work Week")).toBeVisible();
-  await expect(page.getByText("Back to month")).toBeVisible();
-  // Work Week with no events should show empty state
-  await expect(page.getByText("No events scheduled for this week.")).toBeVisible();
+  await calendarToolbar.getByRole("button", { name: "Work Week" }).click();
+  await expect(weekView.getByRole("heading", { name: "Work Week" })).toBeVisible();
+  await expect(page.getByText("No events scheduled for this work week.")).toBeVisible();
+  // Should NOT show Back to month button
+  await expect(page.getByText("Back to month")).not.toBeVisible();
 
   // Click Week view
-  await page.getByRole("button", { name: "Week" }).click();
-  await expect(page.getByText("Week")).toBeVisible();
-  await expect(page.getByText("Back to month")).toBeVisible();
-  // Week with no events should show empty state
+  await calendarToolbar.getByRole("button", { name: "Week", exact: true }).click();
+  await expect(weekView.getByRole("heading", { name: "Week" })).toBeVisible();
   await expect(page.getByText("No events scheduled for this week.")).toBeVisible();
+  // Should NOT show Back to month button
+  await expect(page.getByText("Back to month")).not.toBeVisible();
 
   // Click Upcoming view
-  await page.getByRole("button", { name: "Upcoming" }).click();
+  await calendarToolbar.getByRole("button", { name: "Upcoming" }).click();
   await expect(page.getByText("Upcoming (Next 14 Days)")).toBeVisible();
-  await expect(page.getByText("Back to month")).toBeVisible();
+  // Should NOT show Back to month button
+  await expect(page.getByText("Back to month")).not.toBeVisible();
 
   // Click Agenda view
-  await page.getByRole("button", { name: "Agenda" }).click();
-  await expect(page.getByText("Back to month")).toBeVisible();
+  await calendarToolbar.getByRole("button", { name: "Agenda" }).click();
+  // Should NOT show Back to month button
+  await expect(page.getByText("Back to month")).not.toBeVisible();
 
   // Click Month view to return
-  await page.getByRole("button", { name: "Month" }).click();
+  await calendarToolbar.getByRole("button", { name: "Month", exact: true }).click();
   await expect(page.locator(".calendarHeader").first()).toHaveText("Mon");
-  // Month view should not show lower pill row
-  await expect(page.locator(".pillButton")).not.toBeVisible();
+  // Month view should be active (lower pill row was removed)
+  await expect(calendarToolbar.getByRole("button", { name: "Month", exact: true })).toHaveClass(/calendarToolbarButtonActive/);
 });
 
 test("top module buttons switch between Today, Inbox, Memos, Reminders, and Tasks", async ({ page }) => {
