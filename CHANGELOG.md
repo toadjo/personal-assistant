@@ -10,10 +10,11 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ### Changed
 
-- Desk UI now uses compact top module tabs (Today, Inbox, Calendar, Memos, Reminders, Tasks, Automations) for Personal mode, showing one selected module at a time instead of a long scrolling stack.
+- Desk UI now opens to a focused two-column Home dashboard: Calendar on the left, Command input on the right.
+- Top module buttons (Home, Today, Inbox, Memos, Reminders, Tasks, Automations) replace the previous tab strip.
+- Home dashboard is the default view; clicking a module button shows that focused module view.
+- Calendar is always visible in the Home dashboard; separate Calendar tab removed.
 - Top count chips are now clickable and navigate to their corresponding modules.
-- Today module shows Daily Command Center plus the compact count strip as the default view.
-- Automations tab opens the Household automation path.
 
 ### Fixed
 
@@ -22,7 +23,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ### Tests
 
-- Preload smoke test, E2E module tab navigation test, unit suite, typecheck, lint, and production builds all passing.
+- Preload smoke test, E2E Home layout navigation test, unit suite, typecheck, lint, and production builds all passing.
 
 ## [2.1.4] - 2026-05-19
 

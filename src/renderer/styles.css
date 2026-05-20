@@ -1331,6 +1331,29 @@ button:disabled {
     0 0 0 4px var(--focus-ring);
 }
 
+/* Home layout - two-column dashboard */
+.homeLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.homeLeft {
+  min-width: 0;
+}
+
+.homeRight {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .homeLayout {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
 /* Content grid - two-column desktop layout */
 .contentGrid {
   display: grid;

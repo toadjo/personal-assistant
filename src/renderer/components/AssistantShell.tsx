@@ -40,7 +40,7 @@ import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
-type PersonalModule = "today" | "inbox" | "calendar" | "memos" | "reminders" | "tasks" | "automations";
+type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations";
 
 
 export function AssistantShell(): JSX.Element {
@@ -51,7 +51,7 @@ export function AssistantShell(): JSX.Element {
   const [showPalette, setShowPalette] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState<UnifiedWorkItem | null>(null);
   const [aiConfig, setAiConfig] = useState<AiConfigStatus | null>(null);
-  const [activePersonalModule, setActivePersonalModule] = useState<PersonalModule>("today");
+  const [activePersonalModule, setActivePersonalModule] = useState<PersonalModule>("home");
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -394,33 +394,14 @@ export function AssistantShell(): JSX.Element {
         <ProjectsPanel team={team} />
       ) : (
         <>
-          <div className="commandHero">
-            <CommandPanel
-              commandInputRef={command.commandInputRef}
-              query={data.query}
-              reminderFilter={reminders.filter}
-              haReady={ha.haReady}
-              commandInput={command.commandInput}
-              setCommandInput={command.setCommandInput}
-              commandHints={command.commandHints}
-              commandHistory={command.commandHistory}
-              historyCursor={command.historyCursor}
-              setHistoryCursor={command.setHistoryCursor}
-              isRunningCommand={command.isRunningCommand}
-              onRunCommand={command.runCommandInternal}
-              onClearHistory={command.clearCommandHistory}
-              onClearNoteSearch={() => data.setQuery("")}
-              onPreset={command.runPresetCommand}
-              onHideDeskIfInputEmpty={desk.hideWindow}
-              aiDraft={command.aiDraft}
-              aiReply={command.aiReply}
-              onConfirmAiDraft={command.confirmAiDraft}
-              onCancelAiDraft={command.cancelAiDraft}
-              aiConfigured={aiConfig?.configured ?? false}
-            />
-          </div>
-
           <div className="moduleTabs">
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "home" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("home")}
+            >
+              Home
+            </button>
             <button
               type="button"
               className={`moduleTab ${activePersonalModule === "today" ? "moduleTabActive" : ""}`}
@@ -434,13 +415,6 @@ export function AssistantShell(): JSX.Element {
               onClick={() => setActivePersonalModule("inbox")}
             >
               Inbox
-            </button>
-            <button
-              type="button"
-              className={`moduleTab ${activePersonalModule === "calendar" ? "moduleTabActive" : ""}`}
-              onClick={() => setActivePersonalModule("calendar")}
-            >
-              Calendar
             </button>
             <button
               type="button"
@@ -600,6 +574,77 @@ export function AssistantShell(): JSX.Element {
             </div>
           ) : null}
 
+          {activePersonalModule === "home" ? (
+            <div className="homeLayout">
+              <div className="homeLeft">
+                <div className="todayStrip">
+                  <CalendarPanel
+                    calendarCursor={calendar.calendarCursor}
+                    setCalendarCursor={calendar.setCalendarCursor}
+                    monthCells={calendar.monthCells}
+                    todayKey={calendar.todayKey}
+                    selectedDateKey={calendar.calendarSelectedKey}
+                    onSelectDateKey={calendar.setCalendarSelectedKey}
+                    dayAgenda={calendar.selectedDayAgenda}
+                    agendaFilter={calendar.agendaFilter}
+                    setAgendaFilter={calendar.setAgendaFilter}
+                    onCreateReminder={async (payload) => {
+                      try {
+                        const api = requireAssistantApi();
+                        await api.createReminder(payload);
+                        await data.refreshReminders();
+                        ui.showSuccess("Reminder created.");
+                      } catch (err) {
+                        ui.reportError(getAssistantInvokeErrorMessage(err));
+                      }
+                    }}
+                    onCreateTask={async (payload) => {
+                      try {
+                        await tasks.saveTask({
+                          title: payload.title,
+                          notes: payload.notes ?? "",
+                          dueAt: payload.dueAt ?? null,
+                          priority: payload.priority,
+                          recurrence: payload.recurrence
+                        });
+                        ui.showSuccess("Task created.");
+                      } catch (err) {
+                        ui.reportError(getAssistantInvokeErrorMessage(err));
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="homeRight">
+                <div className="commandHero">
+                  <CommandPanel
+                    commandInputRef={command.commandInputRef}
+                    query={data.query}
+                    reminderFilter={reminders.filter}
+                    haReady={ha.haReady}
+                    commandInput={command.commandInput}
+                    setCommandInput={command.setCommandInput}
+                    commandHints={command.commandHints}
+                    commandHistory={command.commandHistory}
+                    historyCursor={command.historyCursor}
+                    setHistoryCursor={command.setHistoryCursor}
+                    isRunningCommand={command.isRunningCommand}
+                    onRunCommand={command.runCommandInternal}
+                    onClearHistory={command.clearCommandHistory}
+                    onClearNoteSearch={() => data.setQuery("")}
+                    onPreset={command.runPresetCommand}
+                    onHideDeskIfInputEmpty={desk.hideWindow}
+                    aiDraft={command.aiDraft}
+                    aiReply={command.aiReply}
+                    onConfirmAiDraft={command.confirmAiDraft}
+                    onCancelAiDraft={command.cancelAiDraft}
+                    aiConfigured={aiConfig?.configured ?? false}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {activePersonalModule === "today" && (
             <>
               <TodayStrip
@@ -680,50 +725,6 @@ export function AssistantShell(): JSX.Element {
               onShowSuccess={ui.showSuccess}
               onError={ui.reportError}
             />
-          )}
-
-          {activePersonalModule === "calendar" && (
-            <div className="contentGrid">
-              <div className="contentMain">
-                <div className="todayStrip">
-                  <CalendarPanel
-                    calendarCursor={calendar.calendarCursor}
-                    setCalendarCursor={calendar.setCalendarCursor}
-                    monthCells={calendar.monthCells}
-                    todayKey={calendar.todayKey}
-                    selectedDateKey={calendar.calendarSelectedKey}
-                    onSelectDateKey={calendar.setCalendarSelectedKey}
-                    dayAgenda={calendar.selectedDayAgenda}
-                    agendaFilter={calendar.agendaFilter}
-                    setAgendaFilter={calendar.setAgendaFilter}
-                    onCreateReminder={async (payload) => {
-                      try {
-                        const api = requireAssistantApi();
-                        await api.createReminder(payload);
-                        await data.refreshReminders();
-                        ui.showSuccess("Reminder created.");
-                      } catch (err) {
-                        ui.reportError(getAssistantInvokeErrorMessage(err));
-                      }
-                    }}
-                    onCreateTask={async (payload) => {
-                      try {
-                        await tasks.saveTask({
-                          title: payload.title,
-                          notes: payload.notes ?? "",
-                          dueAt: payload.dueAt ?? null,
-                          priority: payload.priority,
-                          recurrence: payload.recurrence
-                        });
-                        ui.showSuccess("Task created.");
-                      } catch (err) {
-                        ui.reportError(getAssistantInvokeErrorMessage(err));
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
           )}
 
           {activePersonalModule === "memos" && (

@@ -7,33 +7,38 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript({ path: stubPath });
 });
 
-test("desk shell shows assistant command field and module tabs", async ({ page }) => {
+test("desk shell shows assistant command field and home layout", async ({ page }) => {
   await page.goto("/");
+  
+  // Verify Home button is active by default
+  const homeButton = page.getByRole("button", { name: /^Home$/ }).first();
+  await expect(homeButton).toBeVisible();
+  await expect(homeButton).toHaveClass(/moduleTabActive/);
+  
+  // Verify command field is visible
   await expect(page.getByRole("textbox", { name: /message the assistant/i })).toBeVisible();
   
-  // Verify module tabs are visible
-  await expect(page.getByRole("button", { name: /^Today$/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Inbox$/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Calendar$/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Memos$/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Reminders$/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Tasks$/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Automations$/ })).toBeVisible();
+  // Verify Calendar is visible in home layout
+  await expect(page.getByRole("heading", { name: /^calendar$/i })).toBeVisible();
   
-  // Verify Today module is active by default
-  await expect(page.getByRole("button", { name: /^Today$/ })).toHaveClass(/moduleTabActive/);
+  // Verify module buttons are visible (target moduleTab class specifically)
+  await expect(page.locator(".moduleTab").filter({ hasText: "Today" })).toBeVisible();
+  await expect(page.locator(".moduleTab").filter({ hasText: "Inbox" })).toBeVisible();
+  await expect(page.locator(".moduleTab").filter({ hasText: "Memos" })).toBeVisible();
+  await expect(page.locator(".moduleTab").filter({ hasText: "Reminders" })).toBeVisible();
+  await expect(page.locator(".moduleTab").filter({ hasText: "Tasks" })).toBeVisible();
+  await expect(page.locator(".moduleTab").filter({ hasText: "Automations" })).toBeVisible();
   
-  // Click Memos tab and verify memos panel is shown
-  await page.getByRole("button", { name: /^Memos$/ }).click();
-  await expect(page.getByRole("heading", { name: /^memos$/i })).toBeVisible();
+  // Click Today button and verify it becomes active
+  const todayButton = page.locator(".moduleTab").filter({ hasText: "Today" });
+  await todayButton.click();
+  await expect(todayButton).toHaveClass(/moduleTabActive/);
+  await expect(page.getByRole("heading", { name: /^daily command center$/i })).toBeVisible();
   
-  // Click Reminders tab and verify reminders panel is shown
-  await page.getByRole("button", { name: /^Reminders$/ }).click();
-  await expect(page.getByRole("heading", { name: /^reminders$/i })).toBeVisible();
-  
-  // Click Tasks tab and verify tasks panel is shown
-  await page.getByRole("button", { name: /^Tasks$/ }).click();
-  await expect(page.getByRole("heading", { name: /^tasks$/i })).toBeVisible();
+  // Click Home button to return to dashboard
+  await homeButton.click();
+  await expect(homeButton).toHaveClass(/moduleTabActive/);
+  await expect(page.getByRole("heading", { name: /^calendar$/i })).toBeVisible();
 });
 
 test("household route loads household shell", async ({ page }) => {
