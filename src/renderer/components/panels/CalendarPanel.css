@@ -69,3 +69,53 @@
   gap: var(--space-2);
   margin-top: var(--space-2);
 }
+
+/* Calendar toolbar */
+.calendarToolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.calendarToolbarButton {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calendarToolbarButton:hover {
+  background: var(--ghost-bg);
+  color: var(--text);
+}
+
+.calendarToolbarButtonActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* Calendar event bars */
+.calendarCellEvents {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.calendarEventBar {
+  height: 4px;
+  border-radius: 2px;
+  width: 100%;
+}
+
+.calendarOverflow {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}

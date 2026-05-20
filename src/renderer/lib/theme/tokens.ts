@@ -36,7 +36,14 @@ export type ThemeTokenKey =
   | "successText"
   | "errorBg"
   | "errorBorder"
-  | "errorText";
+  | "errorText"
+  | "calReminderBg"
+  | "calTaskBg"
+  | "calTaskHighBg"
+  | "calCompletedBg"
+  | "calEventText"
+  | "calGridBg"
+  | "calGridBorder";
 
 /** Map each typed token to its CSS custom property name. */
 export const TOKEN_CSS_VAR: Record<ThemeTokenKey, string> = {
@@ -67,7 +74,14 @@ export const TOKEN_CSS_VAR: Record<ThemeTokenKey, string> = {
   successText: "--success-text",
   errorBg: "--error-bg",
   errorBorder: "--error-border",
-  errorText: "--error-text"
+  errorText: "--error-text",
+  calReminderBg: "--cal-reminder-bg",
+  calTaskBg: "--cal-task-bg",
+  calTaskHighBg: "--cal-task-high-bg",
+  calCompletedBg: "--cal-completed-bg",
+  calEventText: "--cal-event-text",
+  calGridBg: "--cal-grid-bg",
+  calGridBorder: "--cal-grid-border"
 };
 
 /** A full preset with a label and its complete token map. */
@@ -117,7 +131,14 @@ const GLASS_TOKENS: Record<ThemeTokenKey, string> = {
   successText: "#1a7f37",
   errorBg: "rgba(255, 59, 48, 0.06)",
   errorBorder: "rgba(255, 59, 48, 0.22)",
-  errorText: "#c42b1f"
+  errorText: "#c42b1f",
+  calReminderBg: "rgba(0, 113, 227, 0.15)",
+  calTaskBg: "rgba(100, 116, 139, 0.15)",
+  calTaskHighBg: "rgba(255, 59, 48, 0.15)",
+  calCompletedBg: "rgba(52, 199, 89, 0.12)",
+  calEventText: "#1d1d21",
+  calGridBg: "rgba(0, 0, 0, 0.02)",
+  calGridBorder: "rgba(0, 0, 0, 0.08)"
 };
 
 const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
@@ -148,7 +169,14 @@ const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
   successText: "#1b6b2f",
   errorBg: "rgba(181, 34, 48, 0.08)",
   errorBorder: "rgba(181, 34, 48, 0.26)",
-  errorText: "#8f1f2b"
+  errorText: "#8f1f2b",
+  calReminderBg: "rgba(0, 102, 212, 0.12)",
+  calTaskBg: "rgba(100, 116, 139, 0.12)",
+  calTaskHighBg: "rgba(181, 34, 48, 0.12)",
+  calCompletedBg: "rgba(46, 125, 50, 0.1)",
+  calEventText: "#141418",
+  calGridBg: "rgba(20, 20, 28, 0.03)",
+  calGridBorder: "rgba(20, 20, 28, 0.1)"
 };
 
 const OBSIDIAN_TOKENS: Record<ThemeTokenKey, string> = {
@@ -179,7 +207,14 @@ const OBSIDIAN_TOKENS: Record<ThemeTokenKey, string> = {
   successText: "#b8ffd0",
   errorBg: "rgba(220, 80, 100, 0.14)",
   errorBorder: "rgba(255, 140, 155, 0.35)",
-  errorText: "#ffd6dc"
+  errorText: "#ffd6dc",
+  calReminderBg: "rgba(126, 200, 255, 0.18)",
+  calTaskBg: "rgba(138, 138, 138, 0.18)",
+  calTaskHighBg: "rgba(255, 140, 155, 0.18)",
+  calCompletedBg: "rgba(100, 220, 150, 0.15)",
+  calEventText: "#ebebeb",
+  calGridBg: "rgba(255, 255, 255, 0.04)",
+  calGridBorder: "rgba(255, 255, 255, 0.1)"
 };
 
 const FOG_TOKENS: Record<ThemeTokenKey, string> = {
@@ -210,7 +245,14 @@ const FOG_TOKENS: Record<ThemeTokenKey, string> = {
   successText: "#1d5c2e",
   errorBg: "rgba(171, 49, 64, 0.1)",
   errorBorder: "rgba(171, 49, 64, 0.28)",
-  errorText: "#7a1f2a"
+  errorText: "#7a1f2a",
+  calReminderBg: "rgba(42, 95, 189, 0.14)",
+  calTaskBg: "rgba(74, 83, 100, 0.14)",
+  calTaskHighBg: "rgba(171, 49, 64, 0.14)",
+  calCompletedBg: "rgba(46, 125, 50, 0.12)",
+  calEventText: "#151820",
+  calGridBg: "rgba(32, 40, 56, 0.04)",
+  calGridBorder: "rgba(32, 40, 56, 0.14)"
 };
 
 const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
@@ -241,7 +283,14 @@ const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
   successText: "#c6ffea",
   errorBg: "rgba(230, 90, 110, 0.16)",
   errorBorder: "rgba(255, 150, 170, 0.38)",
-  errorText: "#ffd8e0"
+  errorText: "#ffd8e0",
+  calReminderBg: "rgba(94, 212, 255, 0.2)",
+  calTaskBg: "rgba(138, 163, 189, 0.2)",
+  calTaskHighBg: "rgba(255, 150, 170, 0.2)",
+  calCompletedBg: "rgba(110, 230, 180, 0.18)",
+  calEventText: "#dce8f4",
+  calGridBg: "rgba(100, 160, 220, 0.06)",
+  calGridBorder: "rgba(100, 160, 220, 0.22)"
 };
 
 const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
@@ -272,7 +321,14 @@ const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
   successText: "#1b6b2f",
   errorBg: "rgba(181, 34, 48, 0.06)",
   errorBorder: "rgba(181, 34, 48, 0.22)",
-  errorText: "#8f1f2b"
+  errorText: "#8f1f2b",
+  calReminderBg: "rgba(26, 95, 180, 0.1)",
+  calTaskBg: "rgba(92, 92, 102, 0.1)",
+  calTaskHighBg: "rgba(181, 34, 48, 0.1)",
+  calCompletedBg: "rgba(46, 125, 50, 0.08)",
+  calEventText: "#1a1a1f",
+  calGridBg: "rgba(20, 20, 28, 0.02)",
+  calGridBorder: "rgba(20, 20, 28, 0.08)"
 };
 
 /** Ordered list of all built-in presets. */

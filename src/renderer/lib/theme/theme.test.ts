@@ -53,6 +53,25 @@ describe("Theme token system (v1.5.6)", () => {
         }
       }
     });
+
+    it("each preset includes calendar event color tokens", () => {
+      const calendarTokens: ThemeTokenKey[] = [
+        "calReminderBg",
+        "calTaskBg",
+        "calTaskHighBg",
+        "calCompletedBg",
+        "calEventText",
+        "calGridBg",
+        "calGridBorder"
+      ];
+      for (const preset of THEME_PRESETS) {
+        for (const token of calendarTokens) {
+          expect(preset.tokens[token]).toBeDefined();
+          expect(typeof preset.tokens[token]).toBe("string");
+          expect(preset.tokens[token].length).toBeGreaterThan(0);
+        }
+      }
+    });
   });
 
   describe("THEME_IDS", () => {

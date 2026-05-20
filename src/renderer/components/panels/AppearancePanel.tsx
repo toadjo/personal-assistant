@@ -42,7 +42,14 @@ const TOKEN_LABELS: Record<ThemeTokenKey, string> = {
   successText: "Success text",
   errorBg: "Error background",
   errorBorder: "Error border",
-  errorText: "Error text"
+  errorText: "Error text",
+  calReminderBg: "Calendar reminder background",
+  calTaskBg: "Calendar task background",
+  calTaskHighBg: "Calendar high-priority task background",
+  calCompletedBg: "Calendar completed event background",
+  calEventText: "Calendar event text",
+  calGridBg: "Calendar grid background",
+  calGridBorder: "Calendar grid border"
 };
 
 const TOKEN_GROUPS: { label: string; keys: ThemeTokenKey[] }[] = [
@@ -54,7 +61,8 @@ const TOKEN_GROUPS: { label: string; keys: ThemeTokenKey[] }[] = [
   },
   { label: "Accent", keys: ["primary", "primaryHover", "primarySoft"] },
   { label: "Status", keys: ["successBg", "successBorder", "successText", "errorBg", "errorBorder", "errorText"] },
-  { label: "Stats", keys: ["statBg", "statBorder", "statText"] }
+  { label: "Stats", keys: ["statBg", "statBorder", "statText"] },
+  { label: "Calendar", keys: ["calReminderBg", "calTaskBg", "calTaskHighBg", "calCompletedBg", "calEventText", "calGridBg", "calGridBorder"] }
 ];
 
 type Props = {

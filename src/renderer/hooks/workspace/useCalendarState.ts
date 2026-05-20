@@ -50,6 +50,18 @@ function filterAgenda(items: AgendaItem[], filter: AgendaFilter): AgendaItem[] {
   return items;
 }
 
+function tasksGroupedByLocalDate(tasks: Task[]): Map<string, Task[]> {
+  const map = new Map<string, Task[]>();
+  for (const task of tasks) {
+    if (!task.dueAt) continue;
+    const dateKey = toLocalDateKey(new Date(task.dueAt));
+    const existing = map.get(dateKey) || [];
+    existing.push(task);
+    map.set(dateKey, existing);
+  }
+  return map;
+}
+
 export function useCalendarState(reminders: Reminder[], tasks: Task[]) {
   const [calendarCursor, setCalendarCursor] = useState(() => {
     const now = new Date();
@@ -59,9 +71,10 @@ export function useCalendarState(reminders: Reminder[], tasks: Task[]) {
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("day");
 
   const remindersByDate = useMemo(() => remindersGroupedByLocalDate(reminders), [reminders]);
+  const tasksByDate = useMemo(() => tasksGroupedByLocalDate(tasks), [tasks]);
   const monthCells = useMemo(
-    () => buildCalendarCells(calendarCursor, remindersByDate),
-    [calendarCursor, remindersByDate]
+    () => buildCalendarCells(calendarCursor, remindersByDate, tasksByDate),
+    [calendarCursor, remindersByDate, tasksByDate]
   );
   const todayKey = toLocalDateKey(new Date());
   const selectedDayAgenda = useMemo(

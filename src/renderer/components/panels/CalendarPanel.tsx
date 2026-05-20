@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import type { CalendarCell } from "../../lib/calendar";
+import type { CalendarCell, CalendarEventItem } from "../../lib/calendar";
 import { Calendar, ChevronLeft, ChevronRight, ListTodo, Bell, X } from "lucide-react";
 import { parseLocalDateKey, toLocalDateKey } from "../../lib/calendar";
 import { getDefaultTimeForDate } from "../../lib/calendar-default-time";
@@ -8,6 +8,17 @@ import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import type { AgendaItem, AgendaFilter } from "../../hooks/workspace/useCalendarState";
 import "./CalendarPanel.css";
+
+const MAX_EVENTS_PER_CELL = 3;
+
+function getEventBackgroundColor(event: CalendarEventItem): string {
+  if (event.completed) return "var(--cal-completed-bg)";
+  if (event.type === "task" && event.priority === "high") return "var(--cal-task-high-bg)";
+  if (event.type === "task") return "var(--cal-task-bg)";
+  return "var(--cal-reminder-bg)";
+}
+
+type CalendarView = "day" | "workWeek" | "week" | "upcoming" | "month" | "agenda";
 
 type Props = {
   calendarCursor: Date;
@@ -50,6 +61,7 @@ export const CalendarPanel = memo(function CalendarPanel({
   const [taskTime, setTaskTime] = useState("");
   const [taskPriority, setTaskPriority] = useState<"low" | "normal" | "high">("normal");
   const [taskRecurrence, setTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
+  const [calendarView, setCalendarView] = useState<CalendarView>("month");
 
   const selectedDate = parseLocalDateKey(selectedDateKey);
 
@@ -134,39 +146,76 @@ export const CalendarPanel = memo(function CalendarPanel({
         }
       />
       <p className="muted">{calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</p>
-      <div className="calendarGrid" aria-label="Month view">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} className="calendarHeader">
-            {d}
-          </div>
+      <div className="calendarToolbar" role="toolbar" aria-label="Calendar view">
+        {(["day", "workWeek", "week", "upcoming", "month", "agenda"] as CalendarView[]).map((view) => (
+          <button
+            key={view}
+            type="button"
+            className={`calendarToolbarButton ${calendarView === view ? "calendarToolbarButtonActive" : ""}`}
+            onClick={() => setCalendarView(view)}
+          >
+            {view === "day" && "Day"}
+            {view === "workWeek" && "Work Week"}
+            {view === "week" && "Week"}
+            {view === "upcoming" && "Upcoming"}
+            {view === "month" && "Month"}
+            {view === "agenda" && "Agenda"}
+          </button>
         ))}
-        {monthCells.map((cell, idx) => {
-          const selected = cell.dateKey === selectedDateKey;
-          const labelDate = parseLocalDateKey(cell.dateKey).toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric"
-          });
-          const countLabel = cell.count === 1 ? "1 reminder" : `${cell.count} reminders`;
-          const aria = cell.count ? `${labelDate}, ${countLabel}` : `${labelDate}, no reminders`;
-          return (
-            <button
-              key={`${cell.dateKey}-${idx}`}
-              type="button"
-              aria-label={aria}
-              aria-pressed={selected}
-              className={`calendarCell calendarCellButton ${cell.isCurrentMonth ? "" : "calendarCellMuted"} ${cell.dateKey === todayKey ? "calendarCellToday" : ""} ${selected ? "calendarCellSelected" : ""}`}
-              onClick={() => onSelectDateKey(cell.dateKey)}
-            >
-              <div className="calendarCellTop">
-                <span>{cell.dayNumber}</span>
-                {cell.count ? <span className="calendarBadge">{cell.count}</span> : null}
-              </div>
-            </button>
-          );
-        })}
       </div>
+      {calendarView === "month" && (
+        <div className="calendarGrid" aria-label="Month view">
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            <div key={d} className="calendarHeader">
+              {d}
+            </div>
+          ))}
+          {monthCells.map((cell, idx) => {
+            const selected = cell.dateKey === selectedDateKey;
+            const labelDate = parseLocalDateKey(cell.dateKey).toLocaleDateString(undefined, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric"
+            });
+            const visibleEvents = cell.events.slice(0, MAX_EVENTS_PER_CELL);
+            const overflowCount = cell.events.length - MAX_EVENTS_PER_CELL;
+            const aria = cell.count ? `${labelDate}, ${cell.count} events` : `${labelDate}, no events`;
+            return (
+              <button
+                key={`${cell.dateKey}-${idx}`}
+                type="button"
+                aria-label={aria}
+                aria-pressed={selected}
+                className={`calendarCell calendarCellButton ${cell.isCurrentMonth ? "" : "calendarCellMuted"} ${cell.dateKey === todayKey ? "calendarCellToday" : ""} ${selected ? "calendarCellSelected" : ""}`}
+                onClick={() => onSelectDateKey(cell.dateKey)}
+              >
+                <div className="calendarCellTop">
+                  <span>{cell.dayNumber}</span>
+                </div>
+                <div className="calendarCellEvents">
+                  {visibleEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="calendarEventBar"
+                      style={{ backgroundColor: getEventBackgroundColor(event) }}
+                      title={event.text}
+                    />
+                  ))}
+                  {overflowCount > 0 && (
+                    <span className="calendarOverflow">+{overflowCount}</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {calendarView === "agenda" && (
+        <div className="calendarAgendaView" aria-label="Agenda view">
+          {/* Agenda view reuses the current agenda list */}
+        </div>
+      )}
       <div className="dayFocusTitle">
         <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
         <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>

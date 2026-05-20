@@ -54,3 +54,20 @@ test("projects mode renders team task surface and matches snapshot", async ({ pa
   const projectsPanel = page.locator(".panel").filter({ hasText: "Shared Tasks" });
   await expect(projectsPanel).toHaveScreenshot("projects-panel.png");
 });
+
+test("calendar shows toolbar with view options and Monday as first day", async ({ page }) => {
+  await page.goto("/");
+  
+  // Verify calendar toolbar is visible
+  await expect(page.getByRole("button", { name: "Day" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Work Week" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Week" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Upcoming" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Month" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Agenda" })).toBeVisible();
+  
+  // Verify week starts with Monday
+  const calendarHeaders = page.locator(".calendarHeader");
+  await expect(calendarHeaders.first()).toHaveText("Mon");
+  await expect(calendarHeaders.nth(6)).toHaveText("Sun");
+});

@@ -4,6 +4,7 @@
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarPanel } from "./CalendarPanel";
 import type { CalendarCell } from "../../lib/calendar";
@@ -15,6 +16,7 @@ function makeCalendarCell(overrides: Partial<CalendarCell> = {}): CalendarCell {
     dayNumber: 1,
     isCurrentMonth: true,
     count: 0,
+    events: [],
     ...overrides
   };
 }
@@ -231,5 +233,125 @@ describe("CalendarPanel", () => {
 
     const saveButton = screen.getByText("Save");
     expect(saveButton).toBeDisabled();
+  });
+
+  it("renders calendar toolbar with Month view active by default", () => {
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const toolbarButtons = document.querySelectorAll(".calendarToolbarButton");
+    expect(toolbarButtons).toHaveLength(6);
+    expect(toolbarButtons[0].textContent).toBe("Day");
+    expect(toolbarButtons[1].textContent).toBe("Work Week");
+    expect(toolbarButtons[2].textContent).toBe("Week");
+    expect(toolbarButtons[3].textContent).toBe("Upcoming");
+    expect(toolbarButtons[4].textContent).toBe("Month");
+    expect(toolbarButtons[5].textContent).toBe("Agenda");
+  });
+
+  it("renders event bars for calendar cells with events", () => {
+    const cellsWithEvents = [
+      makeCalendarCell({
+        dateKey: "2024-01-01",
+        dayNumber: 1,
+        count: 2,
+        events: [
+          { id: "r1", type: "reminder", text: "Reminder 1", dueAt: "2024-01-01T10:00:00" },
+          { id: "t1", type: "task", text: "Task 1", dueAt: "2024-01-01T11:00:00", priority: "normal", completed: false }
+        ]
+      })
+    ];
+
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={cellsWithEvents}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    // Event bars should be rendered
+    const eventBars = screen.getAllByTitle(/Reminder 1|Task 1/);
+    expect(eventBars.length).toBeGreaterThan(0);
+  });
+
+  it("shows overflow indicator when events exceed max per cell", () => {
+    const cellsWithOverflow = [
+      makeCalendarCell({
+        dateKey: "2024-01-01",
+        dayNumber: 1,
+        count: 5,
+        events: [
+          { id: "r1", type: "reminder", text: "Reminder 1", dueAt: "2024-01-01T10:00:00" },
+          { id: "r2", type: "reminder", text: "Reminder 2", dueAt: "2024-01-01T11:00:00" },
+          { id: "r3", type: "reminder", text: "Reminder 3", dueAt: "2024-01-01T12:00:00" },
+          { id: "t1", type: "task", text: "Task 1", dueAt: "2024-01-01T13:00:00", priority: "normal", completed: false },
+          { id: "t2", type: "task", text: "Task 2", dueAt: "2024-01-01T14:00:00", priority: "normal", completed: false }
+        ]
+      })
+    ];
+
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={cellsWithOverflow}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    // Should show overflow indicator (+2 for 5 events with max 3)
+    expect(screen.getByText("+2")).toBeInTheDocument();
+  });
+
+  it("renders calendar grid with Monday as first day of week", () => {
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    // Week should start with Monday
+    const headers = document.querySelectorAll(".calendarHeader");
+    expect(headers[0].textContent).toBe("Mon");
+    expect(headers[6].textContent).toBe("Sun");
   });
 });
