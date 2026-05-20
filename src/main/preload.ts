@@ -1,12 +1,84 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { invokeChannelMap as invoke, pushChannelMap as push } from "./preload-ipc-literals.generated";
 
 /**
- * Preload must only import `electron` plus this generated literal map (no `src/shared` import).
- * Channel strings are produced at build time from `src/shared/ipc-channels.ts` by
- * `scripts/generate-preload-ipc.mjs` (`npm run build:main` / `npm test`). Drift is also
- * asserted in `src/main/preload-channels.test.ts`.
+ * Preload must be self-contained at runtime (no imports from local modules).
+ * Channel strings are inlined below; they are also generated from
+ * `src/shared/ipc-channels.ts` by `scripts/generate-preload-ipc.mjs`
+ * for drift protection in `src/main/preload-channels.test.ts`.
  */
+const invokeChannelMap = {
+  notesList: "notes:list",
+  notesCreate: "notes:create",
+  notesUpdate: "notes:update",
+  notesDelete: "notes:delete",
+  remindersList: "reminders:list",
+  remindersCreate: "reminders:create",
+  remindersUpdate: "reminders:update",
+  remindersComplete: "reminders:complete",
+  remindersDelete: "reminders:delete",
+  remindersSnooze: "reminders:snooze",
+  tasksList: "tasks:list",
+  tasksCreate: "tasks:create",
+  tasksUpdate: "tasks:update",
+  tasksComplete: "tasks:complete",
+  tasksDelete: "tasks:delete",
+  haConfigure: "ha:configure",
+  haGetConfig: "ha:getConfig",
+  haTest: "ha:test",
+  haRefresh: "ha:refresh",
+  haListDevices: "ha:listDevices",
+  haToggle: "ha:toggle",
+  settingsGetAssistant: "settings:getAssistant",
+  settingsSetAssistantName: "settings:setAssistantName",
+  settingsSetUserPreferredName: "settings:setUserPreferredName",
+  automationLogs: "automation:logs",
+  automationRulesList: "automation:rules:list",
+  automationRulesCreate: "automation:rules:create",
+  automationRulesDelete: "automation:rules:delete",
+  automationRulesSetEnabled: "automation:rules:setEnabled",
+  automationRulesDuplicate: "automation:rules:duplicate",
+  automationRulesTestRun: "automation:rules:testRun",
+  dataExport: "data:export",
+  dataImport: "data:import",
+  dataReset: "data:reset",
+  rendererLogError: "renderer:logError",
+  appOpenHouseholdWindow: "app:openHouseholdWindow",
+  appFocusDeskWindow: "app:focusDeskWindow",
+  appHideDeskWindow: "app:hideDeskWindow",
+  appOpenBugReport: "app:openBugReport",
+  testSetHaFetchOverride: "test:setHaFetchOverride",
+  testSetAutomationActionOverride: "test:setAutomationActionOverride",
+  teamGetConfig: "team:getConfig",
+  teamSetConfig: "team:setConfig",
+  teamSetDisplayName: "team:setDisplayName",
+  teamClearConfig: "team:clearConfig",
+  teamWorkspacesCreate: "team:workspaces:create",
+  teamWorkspacesJoin: "team:workspaces:join",
+  teamWorkspacesList: "team:workspaces:list",
+  teamWorkspacesSetActive: "team:workspaces:setActive",
+  teamProjectsCreate: "team:projects:create",
+  teamProjectsList: "team:projects:list",
+  teamTasksCreate: "team:tasks:create",
+  teamTasksList: "team:tasks:list",
+  teamTasksUpdate: "team:tasks:update",
+  teamRealtimeStart: "team:realtime:start",
+  teamRealtimeStop: "team:realtime:stop",
+  aiGetConfig: "ai:getConfig",
+  aiSetKey: "ai:setKey",
+  aiClearKey: "ai:clearKey",
+  aiTestKey: "ai:testKey",
+  aiChat: "ai:chat"
+} as const;
+
+const pushChannelMap = {
+  remindersUpdated: "reminders:updated",
+  command: "command",
+  showAbout: "showAbout",
+  teamDataUpdated: "team:dataUpdated"
+} as const;
+
+const invoke = invokeChannelMap;
+const push = pushChannelMap;
 contextBridge.exposeInMainWorld("assistantApi", {
   listNotes: (query?: string) => ipcRenderer.invoke(invoke.notesList, query),
   createNote: (payload: { title: string; content: string; tags: string[]; pinned: boolean }) =>

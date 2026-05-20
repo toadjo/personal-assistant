@@ -57,7 +57,7 @@ app.whenReady().then(() => {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
       preload: preloadPath
     }
   });

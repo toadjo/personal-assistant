@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Note, ExecutionLog } from "../../../shared/types";
-import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../../constants/assistant";
 import { QUERY_REFRESH_DEBOUNCE_MS } from "../../constants/timing";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
@@ -197,7 +196,8 @@ export function useAssistantData(setError: SetError) {
   useEffect(() => {
     const api = getAssistantApi();
     if (!api?.onRemindersUpdated) {
-      setError(PRELOAD_BRIDGE_MISSING_MESSAGE);
+      // Don't show scary warning on initial passive load
+      // Only user-triggered actions should fail with the bridge missing message
       return;
     }
     void refreshRef.current();
