@@ -23,6 +23,9 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
   test("creating a note advances onboarding progress", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
+    // Click the Memos module to show the notes panel
+    await window.locator(".moduleTab").filter({ hasText: "Memos" }).click();
+
     // Create a note using the quick note form (scoped to avoid Add button ambiguity)
     const noteForm = window.locator("form").filter({
       has: window.getByLabel("Quick note title")
@@ -67,6 +70,9 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
 
     // Wait for the reminder step UI to appear
     await window.getByRole("button", { name: "I've created a reminder" }).waitFor();
+
+    // Click the Reminders module to show the reminders panel
+    await window.locator(".moduleTab").filter({ hasText: "Reminders" }).click();
 
     // Create a reminder using the UI form
     // Use a local datetime helper to avoid UTC formatting issues
@@ -156,9 +162,14 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
     const heading = await window.getByRole("heading", { name: "Get started" }).isVisible();
     expect(heading).toBe(false);
 
-    // Check that normal panels are visible using accessible locators
-    const notesPanel = await window.getByRole("heading", { name: "Memos" }).isVisible();
-    expect(notesPanel).toBe(true);
+    // Check that the new home layout is visible: Calendar left, Command right
+    // Calendar panel should be visible
+    const calendarHeader = await window.locator(".calendarHeader").first().isVisible();
+    expect(calendarHeader).toBe(true);
+
+    // Command panel should be visible (check for the command input field)
+    const commandPanel = await window.locator(".commandPanel").isVisible();
+    expect(commandPanel).toBe(true);
   });
 
   test("command examples are shown in desk UI", async ({ window }) => {

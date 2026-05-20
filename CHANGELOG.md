@@ -4,6 +4,23 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.6] - 2026-05-20
+
+Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Fixed
+
+- First-run onboarding now works with the new module-tab layout.
+- Note creation step switches to Memos module before showing the note form.
+- Reminder creation step switches to Reminders module before showing the reminder form.
+- Completed onboarding lands on the default Home layout (Calendar left, Command right).
+- Electron E2E tests for first-run onboarding now pass with the updated layout.
+
+### Tests
+
+- All 24 Electron E2E tests passing.
+- Browser E2E, unit suite, typecheck, lint, and production builds all passing.
+
 ## [2.1.5] - 2026-05-20
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.

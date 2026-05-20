@@ -522,22 +522,26 @@ export function AssistantShell(): JSX.Element {
               <GuidedOnboardingPanel
                 currentStep={onboarding.currentStep}
                 onComplete={() => {
+                  setActivePersonalModule("home");
                   window.localStorage.setItem(STORAGE_ONBOARDED, "1");
                   window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
                   onboarding.setShow(false);
                   ui.setStatus("Welcome aboard - onboarding complete!");
                 }}
                 onCreateNote={() => {
+                  setActivePersonalModule("memos");
                   data.setQuery("");
                   onboarding.markNoteCreated();
                   ui.setStatus("Great! Note created. Next: add a reminder.");
                 }}
                 onCreateReminder={() => {
+                  setActivePersonalModule("reminders");
                   onboarding.markReminderCreated();
                   ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
                 }}
                 onOpenHousehold={handleOpenHouseholdWindow}
                 onSkipHomeAssistant={() => {
+                  setActivePersonalModule("home");
                   onboarding.skipHomeAssistant();
                   window.localStorage.setItem(STORAGE_ONBOARDED, "1");
                   window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
