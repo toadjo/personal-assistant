@@ -22,7 +22,6 @@ import { AiSettingsPanel } from "./panels/AiSettingsPanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
-import { StatusChip } from "./ui/StatusChip";
 import { IconButton } from "./ui/IconButton";
 import { InboxPanel } from "./panels/InboxPanel";
 import { WorkItemDetailDrawer } from "./WorkItemDetailDrawer";
@@ -41,6 +40,8 @@ import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
+type PersonalModule = "today" | "inbox" | "calendar" | "memos" | "reminders" | "tasks" | "automations";
+
 
 export function AssistantShell(): JSX.Element {
   const [showAbout, setShowAbout] = useState(false);
@@ -50,6 +51,7 @@ export function AssistantShell(): JSX.Element {
   const [showPalette, setShowPalette] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState<UnifiedWorkItem | null>(null);
   const [aiConfig, setAiConfig] = useState<AiConfigStatus | null>(null);
+  const [activePersonalModule, setActivePersonalModule] = useState<PersonalModule>("today");
   const focusBriefRef = useRef<BriefItem[]>([]);
   const [dailyCommandCenter, setDailyCommandCenter] = useState<DailyCommandCenter>({
     nowItems: [],
@@ -290,31 +292,65 @@ export function AssistantShell(): JSX.Element {
           </div>
         </div>
         <div className="utilityToolbarRight">
-          <StatusChip icon={StickyNote} label="Memos" count={data.notes.length} />
-          <StatusChip icon={Bell} label="Open" count={reminders.pending.length} />
-          <StatusChip
-            icon={ListTodo}
-            label="Tasks"
-            count={data.tasks.filter((task) => task.status === "open").length}
-          />
+          <button
+            type="button"
+            className="statusChip"
+            onClick={() => setActivePersonalModule("memos")}
+          >
+            <StickyNote size={14} />
+            <span>Memos</span>
+            <span className="statusChipCount">{data.notes.length}</span>
+          </button>
+          <button
+            type="button"
+            className="statusChip"
+            onClick={() => setActivePersonalModule("reminders")}
+          >
+            <Bell size={14} />
+            <span>Open</span>
+            <span className="statusChipCount">{reminders.pending.length}</span>
+          </button>
+          <button
+            type="button"
+            className="statusChip"
+            onClick={() => setActivePersonalModule("tasks")}
+          >
+            <ListTodo size={14} />
+            <span>Tasks</span>
+            <span className="statusChipCount">{data.tasks.filter((task) => task.status === "open").length}</span>
+          </button>
           {reminders.overdue.length > 0 ? (
-            <StatusChip icon={AlertTriangle} label="Overdue" count={reminders.overdue.length} variant="attention" />
+            <button
+              type="button"
+              className="statusChip statusChipAttention"
+              onClick={() => setActivePersonalModule("reminders")}
+            >
+              <AlertTriangle size={14} />
+              <span>Overdue</span>
+              <span className="statusChipCount">{reminders.overdue.length}</span>
+            </button>
           ) : null}
           {tasks.overdueOpen.length > 0 ? (
-            <StatusChip
-              icon={AlertTriangle}
-              label="Task overdue"
-              count={tasks.overdueOpen.length}
-              variant="attention"
-            />
+            <button
+              type="button"
+              className="statusChip statusChipAttention"
+              onClick={() => setActivePersonalModule("tasks")}
+            >
+              <AlertTriangle size={14} />
+              <span>Task overdue</span>
+              <span className="statusChipCount">{tasks.overdueOpen.length}</span>
+            </button>
           ) : null}
           {team.config?.configured && teamOpenTasks.length > 0 ? (
-            <StatusChip
-              icon={Users}
-              label="Team"
-              count={teamOpenTasks.length}
-              variant={teamOverdueTasks.length > 0 ? "attention" : undefined}
-            />
+            <button
+              type="button"
+              className={`statusChip ${teamOverdueTasks.length > 0 ? "statusChipAttention" : ""}`}
+              onClick={() => setDailyCommandCenterFilter("team")}
+            >
+              <Users size={14} />
+              <span>Team</span>
+              <span className="statusChipCount">{teamOpenTasks.length}</span>
+            </button>
           ) : null}
           <IconButton
             icon={Home}
@@ -382,6 +418,61 @@ export function AssistantShell(): JSX.Element {
               onCancelAiDraft={command.cancelAiDraft}
               aiConfigured={aiConfig?.configured ?? false}
             />
+          </div>
+
+          <div className="moduleTabs">
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "today" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("today")}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "inbox" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("inbox")}
+            >
+              Inbox
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "calendar" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("calendar")}
+            >
+              Calendar
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "memos" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("memos")}
+            >
+              Memos
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "reminders" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("reminders")}
+            >
+              Reminders
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "tasks" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("tasks")}
+            >
+              Tasks
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "automations" ? "moduleTabActive" : ""}`}
+              onClick={() => {
+                setAutomationFocusIntent("");
+                handleOpenHouseholdWindow();
+              }}
+            >
+              Automations
+            </button>
           </div>
 
           {showPalette && (
@@ -509,147 +600,186 @@ export function AssistantShell(): JSX.Element {
             </div>
           ) : null}
 
-          <TodayStrip
-            overdueCount={tasks.overdueOpen.length}
-            dueTodayCount={tasks.dueTodayOpen.length}
-            remindersCount={reminders.pending.length}
-            notesCount={data.notes.length}
-            automationsCount={data.rules.length}
-            teamOpenCount={team.config?.configured ? teamOpenTasks.length : undefined}
-            teamAttentionCount={team.config?.configured ? teamOverdueTasks.length : undefined}
-            onFilterOverdue={() => tasks.setFilter("overdue")}
-            onFilterDueToday={() => tasks.setFilter("open")}
-            onFilterReminders={() => reminders.setFilter("pending")}
-            onFilterNotes={() => data.setQuery("")}
-            onFilterAutomations={() => {
-              setDailyCommandCenterFilter("household");
-              ui.setStatus("Showing household automations.");
-            }}
-            onFilterTeam={() => {
-              setDailyCommandCenterFilter("team");
-              ui.setStatus("Showing team tasks.");
-            }}
-          />
+          {activePersonalModule === "today" && (
+            <>
+              <TodayStrip
+                overdueCount={tasks.overdueOpen.length}
+                dueTodayCount={tasks.dueTodayOpen.length}
+                remindersCount={reminders.pending.length}
+                notesCount={data.notes.length}
+                automationsCount={data.rules.length}
+                teamOpenCount={team.config?.configured ? teamOpenTasks.length : undefined}
+                teamAttentionCount={team.config?.configured ? teamOverdueTasks.length : undefined}
+                onFilterOverdue={() => {
+                  setActivePersonalModule("tasks");
+                  tasks.setFilter("overdue");
+                }}
+                onFilterDueToday={() => {
+                  setActivePersonalModule("tasks");
+                  tasks.setFilter("open");
+                }}
+                onFilterReminders={() => {
+                  setActivePersonalModule("reminders");
+                  reminders.setFilter("pending");
+                }}
+                onFilterNotes={() => {
+                  setActivePersonalModule("memos");
+                  data.setQuery("");
+                }}
+                onFilterAutomations={() => {
+                  setDailyCommandCenterFilter("household");
+                  ui.setStatus("Showing household automations.");
+                }}
+                onFilterTeam={() => {
+                  setDailyCommandCenterFilter("team");
+                  ui.setStatus("Showing team tasks.");
+                }}
+              />
 
-          <DailyCommandCenterPanel
-            data={dailyCommandCenter}
-            showAllSecondary={display.dccShowAllSecondary}
-            onCompleteTask={tasks.completeById}
-            onCompleteReminder={reminders.completeById}
-            onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
-            onMarkSeen={handleMarkSeen}
-            onOpenTasks={tasks.setFilter}
-            onOpenReminders={reminders.setFilter}
-            onOpenNotes={() => data.setQuery("")}
-            onOpenAutomations={(briefItem) => {
-              if (briefItem.kind === "automation") {
-                setAutomationFocusIntent(briefItem.sourceId);
-              }
-              handleOpenHouseholdWindow();
-            }}
-            onOpenWorkItem={(briefItem) => {
-              const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
-              if (!source) return; // Don't map automation or agenda items
+              <DailyCommandCenterPanel
+                data={dailyCommandCenter}
+                showAllSecondary={display.dccShowAllSecondary}
+                onCompleteTask={tasks.completeById}
+                onCompleteReminder={reminders.completeById}
+                onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+                onMarkSeen={handleMarkSeen}
+                onOpenTasks={() => setActivePersonalModule("tasks")}
+                onOpenReminders={() => setActivePersonalModule("reminders")}
+                onOpenNotes={() => setActivePersonalModule("memos")}
+                onOpenAutomations={(briefItem) => {
+                  if (briefItem.kind === "automation") {
+                    setAutomationFocusIntent(briefItem.sourceId);
+                  }
+                  handleOpenHouseholdWindow();
+                }}
+                onOpenWorkItem={(briefItem) => {
+                  const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
+                  if (!source) return;
 
-              const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
-              if (unifiedItem) {
-                setSelectedWorkItem(unifiedItem);
-              }
-            }}
-          />
+                  const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
+                  if (unifiedItem) {
+                    setSelectedWorkItem(unifiedItem);
+                  }
+                }}
+              />
+            </>
+          )}
 
-          <InboxPanel
-            unifiedItems={inbox.unifiedItems}
-            needsSorting={inbox.needsSorting}
-            teamProjects={team.projects}
-            createQuickNote={inbox.createQuickNote}
-            createQuickTask={inbox.createQuickTask}
-            createQuickReminder={inbox.createQuickReminder}
-            convertNoteToTask={inbox.convertNoteToTask}
-            convertNoteToReminder={inbox.convertNoteToReminder}
-            sendTaskToTeam={inbox.sendTaskToTeam}
-            onOpenItem={setSelectedWorkItem}
-            onShowSuccess={ui.showSuccess}
-            onError={ui.reportError}
-          />
+          {activePersonalModule === "inbox" && (
+            <InboxPanel
+              unifiedItems={inbox.unifiedItems}
+              needsSorting={inbox.needsSorting}
+              teamProjects={team.projects}
+              createQuickNote={inbox.createQuickNote}
+              createQuickTask={inbox.createQuickTask}
+              createQuickReminder={inbox.createQuickReminder}
+              convertNoteToTask={inbox.convertNoteToTask}
+              convertNoteToReminder={inbox.convertNoteToReminder}
+              sendTaskToTeam={inbox.sendTaskToTeam}
+              onOpenItem={setSelectedWorkItem}
+              onShowSuccess={ui.showSuccess}
+              onError={ui.reportError}
+            />
+          )}
 
-          <div className="contentGrid">
-            <div className="contentMain">
-              <div className="todayStrip">
-                <CalendarPanel
-                  calendarCursor={calendar.calendarCursor}
-                  setCalendarCursor={calendar.setCalendarCursor}
-                  monthCells={calendar.monthCells}
-                  todayKey={calendar.todayKey}
-                  selectedDateKey={calendar.calendarSelectedKey}
-                  onSelectDateKey={calendar.setCalendarSelectedKey}
-                  dayAgenda={calendar.selectedDayAgenda}
-                  agendaFilter={calendar.agendaFilter}
-                  setAgendaFilter={calendar.setAgendaFilter}
-                  onCreateReminder={async (payload) => {
-                    try {
-                      const api = requireAssistantApi();
-                      await api.createReminder(payload);
-                      await data.refreshReminders();
-                      ui.showSuccess("Reminder created.");
-                    } catch (err) {
-                      ui.reportError(getAssistantInvokeErrorMessage(err));
-                    }
-                  }}
-                  onCreateTask={async (payload) => {
-                    try {
-                      await tasks.saveTask({
-                        title: payload.title,
-                        notes: payload.notes ?? "",
-                        dueAt: payload.dueAt ?? null,
-                        priority: payload.priority,
-                        recurrence: payload.recurrence
-                      });
-                      ui.showSuccess("Task created.");
-                    } catch (err) {
-                      ui.reportError(getAssistantInvokeErrorMessage(err));
-                    }
-                  }}
+          {activePersonalModule === "calendar" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <div className="todayStrip">
+                  <CalendarPanel
+                    calendarCursor={calendar.calendarCursor}
+                    setCalendarCursor={calendar.setCalendarCursor}
+                    monthCells={calendar.monthCells}
+                    todayKey={calendar.todayKey}
+                    selectedDateKey={calendar.calendarSelectedKey}
+                    onSelectDateKey={calendar.setCalendarSelectedKey}
+                    dayAgenda={calendar.selectedDayAgenda}
+                    agendaFilter={calendar.agendaFilter}
+                    setAgendaFilter={calendar.setAgendaFilter}
+                    onCreateReminder={async (payload) => {
+                      try {
+                        const api = requireAssistantApi();
+                        await api.createReminder(payload);
+                        await data.refreshReminders();
+                        ui.showSuccess("Reminder created.");
+                      } catch (err) {
+                        ui.reportError(getAssistantInvokeErrorMessage(err));
+                      }
+                    }}
+                    onCreateTask={async (payload) => {
+                      try {
+                        await tasks.saveTask({
+                          title: payload.title,
+                          notes: payload.notes ?? "",
+                          dueAt: payload.dueAt ?? null,
+                          priority: payload.priority,
+                          recurrence: payload.recurrence
+                        });
+                        ui.showSuccess("Task created.");
+                      } catch (err) {
+                        ui.reportError(getAssistantInvokeErrorMessage(err));
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activePersonalModule === "memos" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <NotesPanel
+                  onFetchNotes={data.refreshNotes}
+                  onError={ui.reportError}
+                  onShowSuccess={ui.showSuccess}
+                  onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
+                  onUpdateNote={(payload) => void memos.updateNote(payload)}
+                  onNoteCreated={() => onboarding.markNoteCreated()}
                 />
               </div>
             </div>
-            <div>
-              <NotesPanel
-                onFetchNotes={data.refreshNotes}
-                onError={ui.reportError}
-                onShowSuccess={ui.showSuccess}
-                onDeleteNote={(id, title) => void memos.deleteNote(id, title)}
-                onUpdateNote={(payload) => void memos.updateNote(payload)}
-                onNoteCreated={() => onboarding.markNoteCreated()}
-              />
-              <RemindersPanel
-                isRefreshing={data.isRefreshing}
-                reminderFilter={reminders.filter}
-                setReminderFilter={reminders.setFilter}
-                visibleReminders={reminders.visible}
-                onRefresh={data.refreshReminders}
-                onError={ui.reportError}
-                onShowSuccess={ui.showSuccess}
-                onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
-                onSnooze60={(id) => void reminders.snoozeMinutes(id, 60, "Snoozed 1h.")}
-                onComplete={(id) => void reminders.completeById(id)}
-                onDelete={(id) => reminders.deleteById(id)}
-                onReminderCreated={() => onboarding.markReminderCreated()}
-              />
-              <TasksPanel
-                filter={tasks.filter}
-                setFilter={tasks.setFilter}
-                tasks={tasks.visible}
-                onSaveTask={tasks.saveTask}
-                onComplete={tasks.completeById}
-                onDelete={tasks.deleteById}
-                onBulkComplete={tasks.bulkComplete}
-                onUpdatePriority={tasks.updatePriority}
-                onUndo={tasks.undo}
-                canUndo={tasks.canUndo}
-              />
+          )}
+
+          {activePersonalModule === "reminders" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <RemindersPanel
+                  isRefreshing={data.isRefreshing}
+                  reminderFilter={reminders.filter}
+                  setReminderFilter={reminders.setFilter}
+                  visibleReminders={reminders.visible}
+                  onRefresh={data.refreshReminders}
+                  onError={ui.reportError}
+                  onShowSuccess={ui.showSuccess}
+                  onSnooze10={(id) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+                  onSnooze60={(id) => void reminders.snoozeMinutes(id, 60, "Snoozed 1h.")}
+                  onComplete={(id) => void reminders.completeById(id)}
+                  onDelete={(id) => reminders.deleteById(id)}
+                  onReminderCreated={() => onboarding.markReminderCreated()}
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {activePersonalModule === "tasks" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <TasksPanel
+                  filter={tasks.filter}
+                  setFilter={tasks.setFilter}
+                  tasks={tasks.visible}
+                  onSaveTask={tasks.saveTask}
+                  onComplete={tasks.completeById}
+                  onDelete={tasks.deleteById}
+                  onBulkComplete={tasks.bulkComplete}
+                  onUpdatePriority={tasks.updatePriority}
+                  onUndo={tasks.undo}
+                  canUndo={tasks.canUndo}
+                />
+              </div>
+            </div>
+          )}
         </>
       )}
 

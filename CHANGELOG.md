@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
 
+### Changed
+
+- Desk UI now uses compact top module tabs (Today, Inbox, Calendar, Memos, Reminders, Tasks, Automations) for Personal mode, showing one selected module at a time instead of a long scrolling stack.
+- Top count chips are now clickable and navigate to their corresponding modules.
+- Today module shows Daily Command Center plus the compact count strip as the default view.
+- Automations tab opens the Household automation path.
+
 ### Fixed
 
 - Renderer load stability when Electron preload bridge is unavailable or partial.
@@ -15,7 +22,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ### Tests
 
-- Preload smoke test, E2E route load test, unit suite, typecheck, lint, and production builds all passing.
+- Preload smoke test, E2E module tab navigation test, unit suite, typecheck, lint, and production builds all passing.
 
 ## [2.1.4] - 2026-05-19
 
