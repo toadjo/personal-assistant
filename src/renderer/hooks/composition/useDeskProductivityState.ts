@@ -143,6 +143,7 @@ export function useDeskProductivityState(args: {
   const {
     reminders,
     tasks,
+    notes,
     setStatus,
     setError,
     refreshAll: _refreshAll,
@@ -164,7 +165,7 @@ export function useDeskProductivityState(args: {
 
   const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
 
-  const calendar = useCalendarState(reminders, tasks);
+  const calendar = useCalendarState(reminders, tasks, notes);
   const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
     mergeNote,
     removeNoteById,

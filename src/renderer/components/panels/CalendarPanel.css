@@ -100,6 +100,191 @@
   color: white;
 }
 
+/* Day view */
+.calendarDayView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarDayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  --cal-reminder-bg: var(--cal-reminder-bg);
+  --cal-task-bg: var(--cal-task-bg);
+  --cal-task-high-bg: var(--cal-task-high-bg);
+  --cal-completed-bg: var(--cal-completed-bg);
+  --cal-memo-bg: var(--cal-memo-bg);
+  --cal-event-text: var(--cal-event-text);
+  --cal-grid-bg: var(--cal-grid-bg);
+  --cal-grid-border: var(--cal-grid-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) 0;
+}
+
+.calendarAllDayStrip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--cal-grid-bg);
+  border: 1px solid var(--cal-grid-border);
+  border-radius: var(--radius-sm);
+}
+
+.calendarAllDayEvent {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.calendarHourlyGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarHourRow {
+  display: flex;
+  min-height: 3rem;
+  border-bottom: 1px solid var(--cal-grid-border);
+}
+
+.calendarHourLabel {
+  width: 3rem;
+  padding: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+  border-right: 1px solid var(--cal-grid-border);
+}
+
+.calendarHourContent {
+  flex: 1;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarHourEvent {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+/* Agenda view */
+.calendarAgendaView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarAgendaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+/* Upcoming view */
+.calendarUpcomingView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarUpcomingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.calendarUpcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.calendarUpcomingSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarUpcomingSectionTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Week view */
+.calendarWeekView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarWeekHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.calendarWeekGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarWeekHeaderCell {
+  padding: var(--space-1);
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekTimeHeader {
+  text-align: left;
+}
+
+.calendarWeekRow {
+  display: flex;
+  min-height: 3rem;
+  border-bottom: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekTimeCell {
+  width: 3rem;
+  padding: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+  border-right: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekDayCell {
+  flex: 1;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border-right: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekDayCell:last-child {
+  border-right: none;
+}
+
+.calendarWeekEvent {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+}
+
 /* Calendar event bars */
 .calendarCellEvents {
   display: flex;

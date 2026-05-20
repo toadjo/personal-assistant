@@ -71,3 +71,67 @@ test("calendar shows toolbar with view options and Monday as first day", async (
   await expect(calendarHeaders.first()).toHaveText("Mon");
   await expect(calendarHeaders.nth(6)).toHaveText("Sun");
 });
+
+test("calendar view buttons switch content", async ({ page }) => {
+  await page.goto("/");
+  
+  // Click Day view
+  await page.getByRole("button", { name: "Day" }).click();
+  await expect(page.getByText("Back to month")).toBeVisible();
+  await expect(page.getByText("6:00")).toBeVisible();
+  await expect(page.getByText("10:00")).toBeVisible();
+  
+  // Click Work Week view
+  await page.getByRole("button", { name: "Work Week" }).click();
+  await expect(page.getByText("Work Week")).toBeVisible();
+  await expect(page.getByText("Back to month")).toBeVisible();
+  
+  // Click Week view
+  await page.getByRole("button", { name: "Week" }).click();
+  await expect(page.getByText("Week")).toBeVisible();
+  await expect(page.getByText("Back to month")).toBeVisible();
+  
+  // Click Upcoming view
+  await page.getByRole("button", { name: "Upcoming" }).click();
+  await expect(page.getByText("Upcoming (Next 14 Days)")).toBeVisible();
+  await expect(page.getByText("Back to month")).toBeVisible();
+  
+  // Click Agenda view
+  await page.getByRole("button", { name: "Agenda" }).click();
+  await expect(page.getByText("Back to month")).toBeVisible();
+  
+  // Click Month view to return
+  await page.getByRole("button", { name: "Month" }).click();
+  await expect(page.locator(".calendarHeader").first()).toHaveText("Mon");
+});
+
+test("top module buttons switch between Today, Inbox, Memos, Reminders, and Tasks", async ({ page }) => {
+  await page.goto("/");
+  
+  // Click Today
+  const todayButton = page.locator(".moduleTab").filter({ hasText: "Today" });
+  await todayButton.click();
+  await expect(todayButton).toHaveClass(/moduleTabActive/);
+  await expect(page.getByRole("heading", { name: /^daily command center$/i })).toBeVisible();
+  
+  // Click Inbox
+  const inboxButton = page.locator(".moduleTab").filter({ hasText: "Inbox" });
+  await inboxButton.click();
+  await expect(inboxButton).toHaveClass(/moduleTabActive/);
+  
+  // Click Memos
+  const memosButton = page.locator(".moduleTab").filter({ hasText: "Memos" });
+  await memosButton.click();
+  await expect(memosButton).toHaveClass(/moduleTabActive/);
+  
+  // Click Reminders
+  const remindersButton = page.locator(".moduleTab").filter({ hasText: "Reminders" });
+  await remindersButton.click();
+  await expect(remindersButton).toHaveClass(/moduleTabActive/);
+  
+  // Click Tasks
+  const tasksButton = page.locator(".moduleTab").filter({ hasText: "Tasks" });
+  await tasksButton.click();
+  await expect(tasksButton).toHaveClass(/moduleTabActive/);
+});
+

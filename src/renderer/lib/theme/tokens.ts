@@ -41,6 +41,7 @@ export type ThemeTokenKey =
   | "calTaskBg"
   | "calTaskHighBg"
   | "calCompletedBg"
+  | "calMemoBg"
   | "calEventText"
   | "calGridBg"
   | "calGridBorder";
@@ -79,6 +80,7 @@ export const TOKEN_CSS_VAR: Record<ThemeTokenKey, string> = {
   calTaskBg: "--cal-task-bg",
   calTaskHighBg: "--cal-task-high-bg",
   calCompletedBg: "--cal-completed-bg",
+  calMemoBg: "--cal-memo-bg",
   calEventText: "--cal-event-text",
   calGridBg: "--cal-grid-bg",
   calGridBorder: "--cal-grid-border"
@@ -136,6 +138,7 @@ const GLASS_TOKENS: Record<ThemeTokenKey, string> = {
   calTaskBg: "rgba(100, 116, 139, 0.15)",
   calTaskHighBg: "rgba(255, 59, 48, 0.15)",
   calCompletedBg: "rgba(52, 199, 89, 0.12)",
+  calMemoBg: "rgba(147, 51, 234, 0.12)",
   calEventText: "#1d1d21",
   calGridBg: "rgba(0, 0, 0, 0.02)",
   calGridBorder: "rgba(0, 0, 0, 0.08)"
@@ -174,6 +177,7 @@ const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
   calTaskBg: "rgba(100, 116, 139, 0.12)",
   calTaskHighBg: "rgba(181, 34, 48, 0.12)",
   calCompletedBg: "rgba(46, 125, 50, 0.1)",
+  calMemoBg: "rgba(147, 51, 234, 0.1)",
   calEventText: "#141418",
   calGridBg: "rgba(20, 20, 28, 0.03)",
   calGridBorder: "rgba(20, 20, 28, 0.1)"
@@ -208,12 +212,13 @@ const OBSIDIAN_TOKENS: Record<ThemeTokenKey, string> = {
   errorBg: "rgba(220, 80, 100, 0.14)",
   errorBorder: "rgba(255, 140, 155, 0.35)",
   errorText: "#ffd6dc",
-  calReminderBg: "rgba(126, 200, 255, 0.18)",
-  calTaskBg: "rgba(138, 138, 138, 0.18)",
-  calTaskHighBg: "rgba(255, 140, 155, 0.18)",
-  calCompletedBg: "rgba(100, 220, 150, 0.15)",
-  calEventText: "#ebebeb",
-  calGridBg: "rgba(255, 255, 255, 0.04)",
+  calReminderBg: "rgba(59, 130, 246, 0.18)",
+  calTaskBg: "rgba(148, 163, 184, 0.18)",
+  calTaskHighBg: "rgba(239, 68, 68, 0.18)",
+  calCompletedBg: "rgba(34, 197, 94, 0.15)",
+  calMemoBg: "rgba(168, 85, 247, 0.15)",
+  calEventText: "#e2e8f0",
+  calGridBg: "rgba(255, 255, 255, 0.03)",
   calGridBorder: "rgba(255, 255, 255, 0.1)"
 };
 
@@ -241,18 +246,19 @@ const FOG_TOKENS: Record<ThemeTokenKey, string> = {
   ghostText: "#2a3140",
   ghostBorder: "rgba(32, 40, 56, 0.14)",
   successBg: "rgba(46, 125, 50, 0.1)",
-  successBorder: "rgba(46, 125, 50, 0.28)",
-  successText: "#1d5c2e",
-  errorBg: "rgba(171, 49, 64, 0.1)",
-  errorBorder: "rgba(171, 49, 64, 0.28)",
-  errorText: "#7a1f2a",
-  calReminderBg: "rgba(42, 95, 189, 0.14)",
-  calTaskBg: "rgba(74, 83, 100, 0.14)",
-  calTaskHighBg: "rgba(171, 49, 64, 0.14)",
-  calCompletedBg: "rgba(46, 125, 50, 0.12)",
-  calEventText: "#151820",
-  calGridBg: "rgba(32, 40, 56, 0.04)",
-  calGridBorder: "rgba(32, 40, 56, 0.14)"
+  successBorder: "rgba(46, 125, 50, 0.22)",
+  successText: "#1b6b2f",
+  errorBg: "rgba(181, 34, 48, 0.06)",
+  errorBorder: "rgba(181, 34, 48, 0.22)",
+  errorText: "#8f1f2b",
+  calReminderBg: "rgba(37, 99, 235, 0.18)",
+  calTaskBg: "rgba(71, 85, 105, 0.18)",
+  calTaskHighBg: "rgba(220, 38, 38, 0.18)",
+  calCompletedBg: "rgba(22, 163, 74, 0.15)",
+  calMemoBg: "rgba(139, 92, 246, 0.15)",
+  calEventText: "#f1f5f9",
+  calGridBg: "rgba(0, 0, 0, 0.04)",
+  calGridBorder: "rgba(255, 255, 255, 0.08)"
 };
 
 const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
@@ -288,6 +294,7 @@ const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
   calTaskBg: "rgba(138, 163, 189, 0.2)",
   calTaskHighBg: "rgba(255, 150, 170, 0.2)",
   calCompletedBg: "rgba(110, 230, 180, 0.18)",
+  calMemoBg: "rgba(192, 132, 252, 0.18)",
   calEventText: "#dce8f4",
   calGridBg: "rgba(100, 160, 220, 0.06)",
   calGridBorder: "rgba(100, 160, 220, 0.22)"
@@ -317,15 +324,16 @@ const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
   ghostText: "#2a2a32",
   ghostBorder: "rgba(20, 20, 28, 0.08)",
   successBg: "rgba(46, 125, 50, 0.08)",
-  successBorder: "rgba(46, 125, 50, 0.22)",
+  successBorder: "rgba(46, 125, 50, 0.26)",
   successText: "#1b6b2f",
   errorBg: "rgba(181, 34, 48, 0.06)",
-  errorBorder: "rgba(181, 34, 48, 0.22)",
+  errorBorder: "rgba(181, 34, 48, 0.26)",
   errorText: "#8f1f2b",
   calReminderBg: "rgba(26, 95, 180, 0.1)",
   calTaskBg: "rgba(92, 92, 102, 0.1)",
   calTaskHighBg: "rgba(181, 34, 48, 0.1)",
   calCompletedBg: "rgba(46, 125, 50, 0.08)",
+  calMemoBg: "rgba(139, 92, 246, 0.08)",
   calEventText: "#1a1a1f",
   calGridBg: "rgba(20, 20, 28, 0.02)",
   calGridBorder: "rgba(20, 20, 28, 0.08)"

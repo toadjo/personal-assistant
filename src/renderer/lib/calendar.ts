@@ -1,13 +1,18 @@
 import type { Reminder } from "../../shared/types";
 import type { Task } from "../../shared/types";
+import type { Note } from "../../shared/types";
+
+export type CalendarEventSource = "reminder" | "task" | "note";
 
 export type CalendarEventItem = {
+  source: CalendarEventSource;
   id: string;
-  type: "reminder" | "task";
-  text: string;
-  dueAt: string | null;
+  title: string;
+  startsAt: string;
+  endsAt?: string;
+  allDay: boolean;
+  status?: "pending" | "completed" | "open" | "done";
   priority?: "low" | "normal" | "high";
-  completed?: boolean;
 };
 
 export type CalendarCell = {
@@ -17,6 +22,85 @@ export type CalendarCell = {
   count: number;
   events: CalendarEventItem[];
 };
+
+export type HourlyEvent = {
+  event: CalendarEventItem;
+  hour: number;
+};
+
+export function getHourlyEventsForDate(
+  dateKey: string,
+  events: CalendarEventItem[],
+  startHour: number = 6,
+  endHour: number = 22
+): HourlyEvent[] {
+  const hourlyEvents: HourlyEvent[] = [];
+  for (const event of events) {
+    if (event.allDay) continue;
+    const eventDate = new Date(event.startsAt);
+    const eventDateKey = toLocalDateKey(eventDate);
+    if (eventDateKey !== dateKey) continue;
+    const hour = eventDate.getHours();
+    if (hour >= startHour && hour < endHour) {
+      hourlyEvents.push({ event, hour });
+    }
+  }
+  return hourlyEvents.sort((a, b) => {
+    // Sort by hour first
+    if (a.hour !== b.hour) return a.hour - b.hour;
+    // Then by source: reminder, task, note
+    const sourceOrder = { reminder: 0, task: 1, note: 2 };
+    return sourceOrder[a.event.source] - sourceOrder[b.event.source];
+  });
+}
+
+export function getAllDayEventsForDate(dateKey: string, events: CalendarEventItem[]): CalendarEventItem[] {
+  return events.filter((e) => {
+    if (!e.allDay) return false;
+    const eventDate = new Date(e.startsAt);
+    return toLocalDateKey(eventDate) === dateKey;
+  });
+}
+
+export function getWeekDaysForDate(dateKey: string): string[] {
+  const date = parseLocalDateKey(dateKey);
+  const dayOfWeek = date.getDay();
+  // Adjust to Monday as first day (0 = Sunday, 1 = Monday, so Sunday becomes 7)
+  const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - mondayOffset);
+  
+  const days: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + i);
+    days.push(toLocalDateKey(day));
+  }
+  return days;
+}
+
+export function getWorkWeekDaysForDate(dateKey: string): string[] {
+  const weekDays = getWeekDaysForDate(dateKey);
+  return weekDays.slice(0, 5); // Monday to Friday
+}
+
+export function getUpcomingDays(dateKey: string, days: number = 14): string[] {
+  const date = parseLocalDateKey(dateKey);
+  const upcomingDays: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const day = new Date(date);
+    day.setDate(date.getDate() + i);
+    upcomingDays.push(toLocalDateKey(day));
+  }
+  return upcomingDays;
+}
+
+export function getOverdueEvents(events: CalendarEventItem[], todayKey: string): CalendarEventItem[] {
+  return events.filter((e) => {
+    const eventDateKey = toLocalDateKey(new Date(e.startsAt));
+    return eventDateKey < todayKey && (e.status !== "completed" && e.status !== "done");
+  });
+}
 
 export function toLocalDateKey(date: Date): string {
   const year = date.getFullYear();
@@ -43,7 +127,8 @@ export function parseLocalDateKey(dateKey: string): Date {
 export function buildCalendarCells(
   monthDate: Date,
   remindersByDate: Map<string, Reminder[]>,
-  tasksByDate: Map<string, Task[]>
+  tasksByDate: Map<string, Task[]>,
+  notesByDate?: Map<string, Note[]>
 ): CalendarCell[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -58,20 +143,37 @@ export function buildCalendarCells(
     const key = toLocalDateKey(date);
     const reminders = remindersByDate.get(key) || [];
     const tasks = tasksByDate.get(key) || [];
+    const notes = notesByDate?.get(key) || [];
     const events: CalendarEventItem[] = [
       ...reminders.map((r) => ({
+        source: "reminder" as const,
         id: r.id,
-        type: "reminder" as const,
-        text: r.text,
-        dueAt: r.dueAt
+        title: r.text,
+        startsAt: r.dueAt,
+        endsAt: undefined,
+        allDay: false,
+        status: r.status,
+        priority: undefined
       })),
       ...tasks.map((t) => ({
+        source: "task" as const,
         id: t.id,
-        type: "task" as const,
-        text: t.title,
-        dueAt: t.dueAt,
-        priority: t.priority,
-        completed: t.status === "done"
+        title: t.title,
+        startsAt: t.dueAt || "",
+        endsAt: undefined,
+        allDay: !t.dueAt,
+        status: t.status,
+        priority: t.priority
+      })),
+      ...notes.map((n) => ({
+        source: "note" as const,
+        id: n.id,
+        title: n.title,
+        startsAt: n.createdAt,
+        endsAt: n.updatedAt,
+        allDay: true,
+        status: undefined,
+        priority: undefined
       }))
     ];
     cells.push({
@@ -88,20 +190,37 @@ export function buildCalendarCells(
     const key = toLocalDateKey(date);
     const reminders = remindersByDate.get(key) || [];
     const tasks = tasksByDate.get(key) || [];
+    const notes = notesByDate?.get(key) || [];
     const events: CalendarEventItem[] = [
       ...reminders.map((r) => ({
+        source: "reminder" as const,
         id: r.id,
-        type: "reminder" as const,
-        text: r.text,
-        dueAt: r.dueAt
+        title: r.text,
+        startsAt: r.dueAt,
+        endsAt: undefined,
+        allDay: false,
+        status: r.status,
+        priority: undefined
       })),
       ...tasks.map((t) => ({
+        source: "task" as const,
         id: t.id,
-        type: "task" as const,
-        text: t.title,
-        dueAt: t.dueAt,
-        priority: t.priority,
-        completed: t.status === "done"
+        title: t.title,
+        startsAt: t.dueAt || "",
+        endsAt: undefined,
+        allDay: !t.dueAt,
+        status: t.status,
+        priority: t.priority
+      })),
+      ...notes.map((n) => ({
+        source: "note" as const,
+        id: n.id,
+        title: n.title,
+        startsAt: n.createdAt,
+        endsAt: n.updatedAt,
+        allDay: true,
+        status: undefined,
+        priority: undefined
       }))
     ];
     cells.push({
@@ -119,20 +238,37 @@ export function buildCalendarCells(
     const key = toLocalDateKey(nextDate);
     const reminders = remindersByDate.get(key) || [];
     const tasks = tasksByDate.get(key) || [];
+    const notes = notesByDate?.get(key) || [];
     const events: CalendarEventItem[] = [
       ...reminders.map((r) => ({
+        source: "reminder" as const,
         id: r.id,
-        type: "reminder" as const,
-        text: r.text,
-        dueAt: r.dueAt
+        title: r.text,
+        startsAt: r.dueAt,
+        endsAt: undefined,
+        allDay: false,
+        status: r.status,
+        priority: undefined
       })),
       ...tasks.map((t) => ({
+        source: "task" as const,
         id: t.id,
-        type: "task" as const,
-        text: t.title,
-        dueAt: t.dueAt,
-        priority: t.priority,
-        completed: t.status === "done"
+        title: t.title,
+        startsAt: t.dueAt || "",
+        endsAt: undefined,
+        allDay: !t.dueAt,
+        status: t.status,
+        priority: t.priority
+      })),
+      ...notes.map((n) => ({
+        source: "note" as const,
+        id: n.id,
+        title: n.title,
+        startsAt: n.createdAt,
+        endsAt: n.updatedAt,
+        allDay: true,
+        status: undefined,
+        priority: undefined
       }))
     ];
     cells.push({

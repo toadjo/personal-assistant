@@ -24,23 +24,23 @@ describe("calendar", () => {
     const reminderCell = cells.find(c => c.dateKey === reminderDateKey);
     expect(reminderCell).toBeDefined();
     expect(reminderCell?.events).toHaveLength(1);
-    expect(reminderCell?.events[0].type).toBe("reminder");
-    expect(reminderCell?.events[0].text).toBe("Test reminder");
+    expect(reminderCell?.events[0]?.source).toBe("reminder");
+    expect(reminderCell?.events[0]?.title).toBe("Test reminder");
     
     const taskCell = cells.find(c => c.dateKey === taskDateKey);
     expect(taskCell).toBeDefined();
     expect(taskCell?.events).toHaveLength(1);
-    expect(taskCell?.events[0].type).toBe("task");
-    expect(taskCell?.events[0].text).toBe("Test task");
+    expect(taskCell?.events[0]?.source).toBe("task");
+    expect(taskCell?.events[0]?.title).toBe("Test task");
   });
 
   it("buildCalendarCells starts week on Monday", () => {
     const monthDate = new Date(2026, 0, 1); // January 1, 2026 is Thursday
-    const cells = buildCalendarCells(monthDate, new Map(), new Map());
+    const cells = buildCalendarCells(monthDate, new Map(), new Map(), new Map());
     
     // First cell should be Monday (Dec 29, 2025)
-    expect(cells[0].dayNumber).toBe(29);
-    expect(cells[0].isCurrentMonth).toBe(false);
+    expect(cells[0]?.dayNumber).toBe(29);
+    expect(cells[0]?.isCurrentMonth).toBe(false);
     
     // Thursday (Jan 1) should be at index 3
     const jan1 = cells.find(c => c.dateKey === "2026-01-01");
@@ -85,7 +85,7 @@ describe("calendar", () => {
     const cell = cells.find(c => c.dateKey === dateKey);
     
     expect(cell).toBeDefined();
-    expect(cell?.events[0].completed).toBe(true);
+    expect(cell?.events[0]?.status).toBe("done");
   });
 
   it("buildCalendarCells handles high priority tasks", () => {
@@ -102,7 +102,7 @@ describe("calendar", () => {
     const cell = cells.find(c => c.dateKey === dateKey);
     
     expect(cell).toBeDefined();
-    expect(cell?.events[0].priority).toBe("high");
+    expect(cell?.events[0]?.priority).toBe("high");
   });
 });
 

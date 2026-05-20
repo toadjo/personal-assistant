@@ -254,12 +254,12 @@ describe("CalendarPanel", () => {
 
     const toolbarButtons = document.querySelectorAll(".calendarToolbarButton");
     expect(toolbarButtons).toHaveLength(6);
-    expect(toolbarButtons[0].textContent).toBe("Day");
-    expect(toolbarButtons[1].textContent).toBe("Work Week");
-    expect(toolbarButtons[2].textContent).toBe("Week");
-    expect(toolbarButtons[3].textContent).toBe("Upcoming");
-    expect(toolbarButtons[4].textContent).toBe("Month");
-    expect(toolbarButtons[5].textContent).toBe("Agenda");
+    expect(toolbarButtons[0]?.textContent).toBe("Day");
+    expect(toolbarButtons[1]?.textContent).toBe("Work Week");
+    expect(toolbarButtons[2]?.textContent).toBe("Week");
+    expect(toolbarButtons[3]?.textContent).toBe("Upcoming");
+    expect(toolbarButtons[4]?.textContent).toBe("Month");
+    expect(toolbarButtons[5]?.textContent).toBe("Agenda");
   });
 
   it("renders event bars for calendar cells with events", () => {
@@ -269,8 +269,8 @@ describe("CalendarPanel", () => {
         dayNumber: 1,
         count: 2,
         events: [
-          { id: "r1", type: "reminder", text: "Reminder 1", dueAt: "2024-01-01T10:00:00" },
-          { id: "t1", type: "task", text: "Task 1", dueAt: "2024-01-01T11:00:00", priority: "normal", completed: false }
+          { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
+          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T11:00:00", allDay: false, priority: "normal", status: "open" }
         ]
       })
     ];
@@ -303,11 +303,11 @@ describe("CalendarPanel", () => {
         dayNumber: 1,
         count: 5,
         events: [
-          { id: "r1", type: "reminder", text: "Reminder 1", dueAt: "2024-01-01T10:00:00" },
-          { id: "r2", type: "reminder", text: "Reminder 2", dueAt: "2024-01-01T11:00:00" },
-          { id: "r3", type: "reminder", text: "Reminder 3", dueAt: "2024-01-01T12:00:00" },
-          { id: "t1", type: "task", text: "Task 1", dueAt: "2024-01-01T13:00:00", priority: "normal", completed: false },
-          { id: "t2", type: "task", text: "Task 2", dueAt: "2024-01-01T14:00:00", priority: "normal", completed: false }
+          { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
+          { id: "r2", source: "reminder", title: "Reminder 2", startsAt: "2024-01-01T11:00:00", allDay: false },
+          { id: "r3", source: "reminder", title: "Reminder 3", startsAt: "2024-01-01T12:00:00", allDay: false },
+          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T13:00:00", allDay: false, priority: "normal", status: "open" },
+          { id: "t2", source: "task", title: "Task 2", startsAt: "2024-01-01T14:00:00", allDay: false, priority: "normal", status: "open" }
         ]
       })
     ];
@@ -351,7 +351,219 @@ describe("CalendarPanel", () => {
 
     // Week should start with Monday
     const headers = document.querySelectorAll(".calendarHeader");
-    expect(headers[0].textContent).toBe("Mon");
-    expect(headers[6].textContent).toBe("Sun");
+    expect(headers[0]?.textContent).toBe("Mon");
+    expect(headers[6]?.textContent).toBe("Sun");
+  });
+
+  it("Day view renders hourly rows from 6 AM to 10 PM", async () => {
+    const user = userEvent.setup();
+    const cellsWithEvents = [
+      makeCalendarCell({
+        dateKey: "2024-01-01",
+        dayNumber: 1,
+        count: 2,
+        events: [
+          { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
+          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T14:00:00", allDay: false, priority: "normal", status: "open" }
+        ]
+      })
+    ];
+
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={cellsWithEvents}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const calendarToolbar = document.querySelector(".calendarToolbar");
+    const dayButton = calendarToolbar?.querySelector('button') as HTMLElement;
+    await user.click(dayButton!);
+
+    // Should show hourly grid with time labels
+    expect(screen.getByText("6:00")).toBeInTheDocument();
+    expect(screen.getByText("10:00")).toBeInTheDocument();
+    expect(screen.getByText("Back to month")).toBeInTheDocument();
+  });
+
+  it("Work Week view shows Monday to Friday grid", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const calendarToolbar = document.querySelector(".calendarToolbar");
+    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    await user.click(buttons[1]!);
+
+    const weekView = document.querySelector(".calendarWeekView");
+    expect(weekView?.textContent).toContain("Work Week");
+    expect(screen.getByText("Back to month")).toBeInTheDocument();
+  });
+
+  it("Week view shows Monday to Sunday grid", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const calendarToolbar = document.querySelector(".calendarToolbar");
+    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    await user.click(buttons[2]!);
+
+    const weekView = document.querySelector(".calendarWeekView");
+    expect(weekView?.textContent).toContain("Week");
+    expect(screen.getByText("Back to month")).toBeInTheDocument();
+  });
+
+  it("Upcoming view groups overdue items and next 14 days", async () => {
+    const user = userEvent.setup();
+    const yesterday = "2023-12-31";
+    const cellsWithOverdue = [
+      makeCalendarCell({
+        dateKey: yesterday,
+        dayNumber: 31,
+        count: 1,
+        events: [
+          { id: "r1", source: "reminder", title: "Overdue reminder", startsAt: "2023-12-31T10:00:00", allDay: false, status: "pending" }
+        ]
+      }),
+      makeCalendarCell({
+        dateKey: "2024-01-02",
+        dayNumber: 2,
+        count: 1,
+        events: [
+          { id: "t1", source: "task", title: "Future task", startsAt: "2024-01-02T10:00:00", allDay: false, priority: "normal", status: "open" }
+        ]
+      })
+    ];
+
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={cellsWithOverdue}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const calendarToolbar = document.querySelector(".calendarToolbar");
+    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    await user.click(buttons[3]!);
+
+    expect(screen.getByText("Upcoming (Next 14 Days)")).toBeInTheDocument();
+    expect(screen.getByText("Back to month")).toBeInTheDocument();
+  });
+
+  it("Agenda view renders reminders, tasks, and memo activity", async () => {
+    const user = userEvent.setup();
+    const agendaWithItems: AgendaItem[] = [
+      { type: "reminder", id: "r1", text: "Test reminder", dueAt: "2024-01-01T10:00:00" },
+      { type: "task", id: "t1", title: "Test task", dueAt: "2024-01-01T11:00:00", priority: "normal" },
+      { type: "note", id: "n1", title: "Test note", createdAt: "2024-01-01T09:00:00" }
+    ];
+
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={agendaWithItems}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const calendarToolbar = document.querySelector(".calendarToolbar");
+    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    await user.click(buttons[5]!);
+
+    expect(screen.getByText("Back to month")).toBeInTheDocument();
+    // Check within the calendarAgendaView specifically
+    const agendaView = document.querySelector(".calendarAgendaView");
+    expect(agendaView?.textContent).toContain("Test reminder");
+    expect(agendaView?.textContent).toContain("Test task");
+    expect(agendaView?.textContent).toContain("Test note");
+  });
+
+  it("Month view still renders event bars and overflow", async () => {
+    const cellsWithEvents = [
+      makeCalendarCell({
+        dateKey: "2024-01-01",
+        dayNumber: 1,
+        count: 5,
+        events: [
+          { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
+          { id: "r2", source: "reminder", title: "Reminder 2", startsAt: "2024-01-01T11:00:00", allDay: false },
+          { id: "r3", source: "reminder", title: "Reminder 3", startsAt: "2024-01-01T12:00:00", allDay: false },
+          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T13:00:00", allDay: false, priority: "normal", status: "open" },
+          { id: "t2", source: "task", title: "Task 2", startsAt: "2024-01-01T14:00:00", allDay: false, priority: "normal", status: "open" }
+        ]
+      })
+    ];
+
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={cellsWithEvents}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        agendaFilter={agendaFilter}
+        setAgendaFilter={setAgendaFilter}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    // Month view should be active by default
+    expect(screen.getByText("+2")).toBeInTheDocument();
   });
 });

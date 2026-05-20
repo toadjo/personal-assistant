@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import type { CalendarCell, CalendarEventItem } from "../../lib/calendar";
 import { Calendar, ChevronLeft, ChevronRight, ListTodo, Bell, X } from "lucide-react";
-import { parseLocalDateKey, toLocalDateKey } from "../../lib/calendar";
+import { parseLocalDateKey, toLocalDateKey, getHourlyEventsForDate, getAllDayEventsForDate, getWeekDaysForDate, getWorkWeekDaysForDate, getUpcomingDays, getOverdueEvents } from "../../lib/calendar";
 import { getDefaultTimeForDate } from "../../lib/calendar-default-time";
 import { parseLocalDateTimeInput } from "../../lib/dateTime";
 import { PanelHeader } from "../ui/PanelHeader";
@@ -12,9 +12,11 @@ import "./CalendarPanel.css";
 const MAX_EVENTS_PER_CELL = 3;
 
 function getEventBackgroundColor(event: CalendarEventItem): string {
-  if (event.completed) return "var(--cal-completed-bg)";
-  if (event.type === "task" && event.priority === "high") return "var(--cal-task-high-bg)";
-  if (event.type === "task") return "var(--cal-task-bg)";
+  const isCompleted = event.status === "completed" || event.status === "done";
+  if (isCompleted) return "var(--cal-completed-bg)";
+  if (event.source === "task" && event.priority === "high") return "var(--cal-task-high-bg)";
+  if (event.source === "task") return "var(--cal-task-bg)";
+  if (event.source === "note") return "var(--cal-memo-bg)";
   return "var(--cal-reminder-bg)";
 }
 
@@ -29,10 +31,20 @@ type Props = {
   onSelectDateKey: (dateKey: string) => void;
   dayAgenda: AgendaItem[];
   agendaFilter: AgendaFilter;
-  setAgendaFilter: (f: AgendaFilter) => void;
-  onCreateReminder?: (payload: { text: string; dueAt: string; recurrence: "none" }) => void;
-  onCreateTask?: (payload: { title: string; notes?: string; dueAt?: string; priority: "low" | "normal" | "high"; recurrence: "none" | "daily" | "weekly" | "monthly" }) => void;
+  setAgendaFilter: (filter: AgendaFilter) => void;
+  onCreateReminder?: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) => void;
+  onCreateTask?: (payload: {
+    title: string;
+    notes: string;
+    dueAt: string | null;
+    priority: "low" | "normal" | "high";
+    recurrence: "none" | "daily" | "weekly" | "monthly";
+  }) => void;
 };
+
+const START_HOUR = 6;
+const END_HOUR = 22;
+const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
 function selectedDayHeading(selectedKey: string, todayKey: string): string {
   if (selectedKey === todayKey) return "Today";
@@ -101,8 +113,8 @@ export const CalendarPanel = memo(function CalendarPanel({
 
   function handleSaveTask(): void {
     if (!taskTitle.trim()) return;
-    const dueAt = taskTime ? parseLocalDateTimeInput(`${selectedDateKey}T${taskTime}`) : undefined;
-    onCreateTask?.({ title: taskTitle, notes: taskNotes || undefined, dueAt, priority: taskPriority, recurrence: taskRecurrence });
+    const dueAt = taskTime ? parseLocalDateTimeInput(`${selectedDateKey}T${taskTime}`) : null;
+    onCreateTask?.({ title: taskTitle, notes: taskNotes, dueAt, priority: taskPriority, recurrence: taskRecurrence });
     handleCloseForm();
   }
   return (
@@ -199,7 +211,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                       key={event.id}
                       className="calendarEventBar"
                       style={{ backgroundColor: getEventBackgroundColor(event) }}
-                      title={event.text}
+                      title={event.title}
                     />
                   ))}
                   {overflowCount > 0 && (
@@ -211,9 +223,194 @@ export const CalendarPanel = memo(function CalendarPanel({
           })}
         </div>
       )}
+      {calendarView === "day" && (
+        <div className="calendarDayView" aria-label="Day view">
+          <div className="calendarDayHeader">
+            <h3>{selectedDayHeading(selectedDateKey, todayKey)}</h3>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => setCalendarView("month")}
+            >
+              Back to month
+            </button>
+          </div>
+          <div className="calendarAllDayStrip">
+            {getAllDayEventsForDate(selectedDateKey, monthCells.find(c => c.dateKey === selectedDateKey)?.events || []).map((event) => (
+              <div key={event.id} className="calendarAllDayEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                {event.title}
+              </div>
+            ))}
+          </div>
+          <div className="calendarHourlyGrid">
+            {HOURS.map((hour) => {
+              const selectedDate = monthCells.find(c => c.dateKey === selectedDateKey);
+              const eventsForHour = selectedDate ? getHourlyEventsForDate(selectedDateKey, selectedDate.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
+              return (
+                <div key={hour} className="calendarHourRow">
+                  <div className="calendarHourLabel">{hour}:00</div>
+                  <div className="calendarHourContent">
+                    {eventsForHour.map(({ event }) => (
+                      <div key={event.id} className="calendarHourEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                        {event.title}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {(calendarView === "workWeek" || calendarView === "week") && (
+        <div className="calendarWeekView" aria-label={`${calendarView} view`}>
+          <div className="calendarWeekHeader">
+            <h3>{calendarView === "workWeek" ? "Work Week" : "Week"}</h3>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => setCalendarView("month")}
+            >
+              Back to month
+            </button>
+          </div>
+          <div className="calendarWeekGrid">
+            {["Time", ...(calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey))].map((header, idx) => (
+              <div key={header} className={`calendarWeekHeaderCell ${idx === 0 ? "calendarWeekTimeHeader" : ""}`}>
+                {idx === 0 ? header : parseLocalDateKey(header).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+              </div>
+            ))}
+            {HOURS.map((hour) => (
+              <div key={hour} className="calendarWeekRow">
+                <div className="calendarWeekTimeCell">{hour}:00</div>
+                {(calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey)).map((dayKey) => {
+                  const dayCell = monthCells.find(c => c.dateKey === dayKey);
+                  const eventsForHour = dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
+                  return (
+                    <div key={dayKey} className="calendarWeekDayCell">
+                      {eventsForHour.map(({ event }) => (
+                        <div key={event.id} className="calendarWeekEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                          {event.title}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {calendarView === "agenda" && (
         <div className="calendarAgendaView" aria-label="Agenda view">
-          {/* Agenda view reuses the current agenda list */}
+          <div className="calendarAgendaHeader">
+            <h3>{selectedDayHeading(selectedDateKey, todayKey)}</h3>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => setCalendarView("month")}
+            >
+              Back to month
+            </button>
+          </div>
+          <ul className="agendaList">
+            {dayAgenda.length > 0 ? (
+              dayAgenda.map((item) => (
+                <li key={`${item.type}-${item.id}`} className="agendaListItem">
+                  {item.type === "reminder" ? (
+                    <>
+                      <Bell size={14} className="agendaListItemIcon" />
+                      <span className="agendaListItemTime">
+                        {new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className="agendaListItemText">{item.text}</span>
+                    </>
+                  ) : item.type === "task" ? (
+                    <>
+                      <ListTodo size={14} className="agendaListItemIcon" />
+                      <span className="agendaListItemTime">
+                        {item.dueAt
+                          ? new Date(item.dueAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : "-"}
+                      </span>
+                      <span className="agendaListItemText">{item.title}</span>
+                      <span className={`pill ${item.priority === "high" ? "pillAttention" : ""}`}>{item.priority}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="agendaListItemIcon">📝</span>
+                      <span className="agendaListItemText">{item.title}</span>
+                    </>
+                  )}
+                </li>
+              ))
+            ) : (
+              <li className="muted">Nothing scheduled.</li>
+            )}
+          </ul>
+        </div>
+      )}
+      {calendarView === "upcoming" && (
+        <div className="calendarUpcomingView" aria-label="Upcoming view">
+          <div className="calendarUpcomingHeader">
+            <h3>Upcoming (Next 14 Days)</h3>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => setCalendarView("month")}
+            >
+              Back to month
+            </button>
+          </div>
+          {(() => {
+            const allEvents = monthCells.flatMap(c => c.events);
+            const overdue = getOverdueEvents(allEvents, todayKey);
+            const upcomingDays = getUpcomingDays(todayKey, 14);
+            return (
+              <div className="calendarUpcomingList">
+                {overdue.length > 0 && (
+                  <div className="calendarUpcomingSection">
+                    <h4 className="calendarUpcomingSectionTitle">Overdue</h4>
+                    <ul className="agendaList">
+                      {overdue.map((event) => (
+                        <li key={event.id} className="agendaListItem">
+                          <span className={`agendaListItemIcon ${event.source === "reminder" ? "" : event.source === "task" ? "" : ""}`}>
+                            {event.source === "reminder" && <Bell size={14} />}
+                            {event.source === "task" && <ListTodo size={14} />}
+                            {event.source === "note" && <span>📝</span>}
+                          </span>
+                          <span className="agendaListItemText">{event.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {upcomingDays.map((dayKey) => {
+                  const dayCell = monthCells.find(c => c.dateKey === dayKey);
+                  if (!dayCell || dayCell.events.length === 0) return null;
+                  return (
+                    <div key={dayKey} className="calendarUpcomingSection">
+                      <h4 className="calendarUpcomingSectionTitle">
+                        {dayKey === todayKey ? "Today" : parseLocalDateKey(dayKey).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                      </h4>
+                      <ul className="agendaList">
+                        {dayCell.events.map((event) => (
+                          <li key={event.id} className="agendaListItem">
+                            <span className={`agendaListItemIcon ${event.source === "reminder" ? "" : event.source === "task" ? "" : ""}`}>
+                              {event.source === "reminder" && <Bell size={14} />}
+                              {event.source === "task" && <ListTodo size={14} />}
+                              {event.source === "note" && <span>📝</span>}
+                            </span>
+                            <span className="agendaListItemText">{event.title}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
       <div className="dayFocusTitle">
@@ -243,7 +440,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                   </span>
                   <span className="agendaListItemText">{item.text}</span>
                 </>
-              ) : (
+              ) : item.type === "task" ? (
                 <>
                   <ListTodo size={14} className="agendaListItemIcon" />
                   <span className="agendaListItemTime">
@@ -253,6 +450,11 @@ export const CalendarPanel = memo(function CalendarPanel({
                   </span>
                   <span className="agendaListItemText">{item.title}</span>
                   <span className={`pill ${item.priority === "high" ? "pillAttention" : ""}`}>{item.priority}</span>
+                </>
+              ) : (
+                <>
+                  <span className="agendaListItemIcon">📝</span>
+                  <span className="agendaListItemText">{item.title}</span>
                 </>
               )}
             </li>
