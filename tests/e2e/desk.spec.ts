@@ -74,35 +74,41 @@ test("calendar shows toolbar with view options and Monday as first day", async (
 
 test("calendar view buttons switch content", async ({ page }) => {
   await page.goto("/");
-  
+
   // Click Day view
   await page.getByRole("button", { name: "Day" }).click();
   await expect(page.getByText("Back to month")).toBeVisible();
-  await expect(page.getByText("6:00")).toBeVisible();
-  await expect(page.getByText("10:00")).toBeVisible();
-  
+  // Day view with no events should show empty state
+  await expect(page.getByText("No events scheduled for this day.")).toBeVisible();
+
   // Click Work Week view
   await page.getByRole("button", { name: "Work Week" }).click();
   await expect(page.getByText("Work Week")).toBeVisible();
   await expect(page.getByText("Back to month")).toBeVisible();
-  
+  // Work Week with no events should show empty state
+  await expect(page.getByText("No events scheduled for this week.")).toBeVisible();
+
   // Click Week view
   await page.getByRole("button", { name: "Week" }).click();
   await expect(page.getByText("Week")).toBeVisible();
   await expect(page.getByText("Back to month")).toBeVisible();
-  
+  // Week with no events should show empty state
+  await expect(page.getByText("No events scheduled for this week.")).toBeVisible();
+
   // Click Upcoming view
   await page.getByRole("button", { name: "Upcoming" }).click();
   await expect(page.getByText("Upcoming (Next 14 Days)")).toBeVisible();
   await expect(page.getByText("Back to month")).toBeVisible();
-  
+
   // Click Agenda view
   await page.getByRole("button", { name: "Agenda" }).click();
   await expect(page.getByText("Back to month")).toBeVisible();
-  
+
   // Click Month view to return
   await page.getByRole("button", { name: "Month" }).click();
   await expect(page.locator(".calendarHeader").first()).toHaveText("Mon");
+  // Month view should not show lower pill row
+  await expect(page.locator(".pillButton")).not.toBeVisible();
 });
 
 test("top module buttons switch between Today, Inbox, Memos, Reminders, and Tasks", async ({ page }) => {

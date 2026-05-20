@@ -586,8 +586,6 @@ export function AssistantShell(): JSX.Element {
                     selectedDateKey={calendar.calendarSelectedKey}
                     onSelectDateKey={calendar.setCalendarSelectedKey}
                     dayAgenda={calendar.selectedDayAgenda}
-                    agendaFilter={calendar.agendaFilter}
-                    setAgendaFilter={calendar.setAgendaFilter}
                     onCreateReminder={async (payload) => {
                       try {
                         const api = requireAssistantApi();

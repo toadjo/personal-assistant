@@ -8,7 +8,7 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarPanel } from "./CalendarPanel";
 import type { CalendarCell } from "../../lib/calendar";
-import type { AgendaItem, AgendaFilter } from "../../hooks/workspace/useCalendarState";
+import type { AgendaItem } from "../../hooks/workspace/useCalendarState";
 
 function makeCalendarCell(overrides: Partial<CalendarCell> = {}): CalendarCell {
   return {
@@ -32,8 +32,6 @@ describe("CalendarPanel", () => {
   const selectedDateKey = "2024-01-01";
   const onSelectDateKey = vi.fn();
   const dayAgenda: AgendaItem[] = [];
-  const agendaFilter: AgendaFilter = "day";
-  const setAgendaFilter = vi.fn();
   const onCreateReminder = vi.fn();
   const onCreateTask = vi.fn();
 
@@ -47,8 +45,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -69,8 +65,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -93,8 +87,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -127,8 +119,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -152,8 +142,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -176,8 +164,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -221,8 +207,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -245,8 +229,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -284,8 +266,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -321,8 +301,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -342,8 +320,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -355,7 +331,32 @@ describe("CalendarPanel", () => {
     expect(headers[6]?.textContent).toBe("Sun");
   });
 
-  it("Day view renders hourly rows from 6 AM to 10 PM", async () => {
+  it("Day view with no events shows empty state", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    const calendarToolbar = document.querySelector(".calendarToolbar");
+    const dayButton = calendarToolbar?.querySelector('button') as HTMLElement;
+    await user.click(dayButton!);
+
+    // Should show empty state instead of hourly grid
+    expect(screen.getByText("No events scheduled for this day.")).toBeInTheDocument();
+    expect(screen.getByText("Back to month")).toBeInTheDocument();
+  });
+
+  it("Day view with events shows only occupied hours", async () => {
     const user = userEvent.setup();
     const cellsWithEvents = [
       makeCalendarCell({
@@ -378,8 +379,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -389,13 +388,18 @@ describe("CalendarPanel", () => {
     const dayButton = calendarToolbar?.querySelector('button') as HTMLElement;
     await user.click(dayButton!);
 
-    // Should show hourly grid with time labels
-    expect(screen.getByText("6:00")).toBeInTheDocument();
+    // Should show only hours with events (10:00 and 14:00), not all hours
     expect(screen.getByText("10:00")).toBeInTheDocument();
+    expect(screen.getByText("14:00")).toBeInTheDocument();
+    expect(screen.getByText("Reminder 1")).toBeInTheDocument();
+    expect(screen.getByText("Task 1")).toBeInTheDocument();
     expect(screen.getByText("Back to month")).toBeInTheDocument();
+    // Should NOT show empty hours like 6:00 or 22:00
+    expect(screen.queryByText("6:00")).not.toBeInTheDocument();
+    expect(screen.queryByText("22:00")).not.toBeInTheDocument();
   });
 
-  it("Work Week view shows Monday to Friday grid", async () => {
+  it("Work Week view with no events shows empty state", async () => {
     const user = userEvent.setup();
     render(
       <CalendarPanel
@@ -406,8 +410,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -419,10 +421,11 @@ describe("CalendarPanel", () => {
 
     const weekView = document.querySelector(".calendarWeekView");
     expect(weekView?.textContent).toContain("Work Week");
+    expect(weekView?.textContent).toContain("No events scheduled for this week.");
     expect(screen.getByText("Back to month")).toBeInTheDocument();
   });
 
-  it("Week view shows Monday to Sunday grid", async () => {
+  it("Week view with no events shows empty state", async () => {
     const user = userEvent.setup();
     render(
       <CalendarPanel
@@ -433,8 +436,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -446,6 +447,7 @@ describe("CalendarPanel", () => {
 
     const weekView = document.querySelector(".calendarWeekView");
     expect(weekView?.textContent).toContain("Week");
+    expect(weekView?.textContent).toContain("No events scheduled for this week.");
     expect(screen.getByText("Back to month")).toBeInTheDocument();
   });
 
@@ -480,8 +482,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -512,8 +512,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={agendaWithItems}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />
@@ -529,6 +527,27 @@ describe("CalendarPanel", () => {
     expect(agendaView?.textContent).toContain("Test reminder");
     expect(agendaView?.textContent).toContain("Test task");
     expect(agendaView?.textContent).toContain("Test note");
+  });
+
+  it("Month view renders without lower pill row", () => {
+    render(
+      <CalendarPanel
+        calendarCursor={calendarCursor}
+        setCalendarCursor={setCalendarCursor}
+        monthCells={monthCells}
+        todayKey={todayKey}
+        selectedDateKey={selectedDateKey}
+        onSelectDateKey={onSelectDateKey}
+        dayAgenda={dayAgenda}
+        onCreateReminder={onCreateReminder}
+        onCreateTask={onCreateTask}
+      />
+    );
+
+    // Month view should be active by default
+    expect(screen.getByText("Mon")).toBeInTheDocument();
+    // Should NOT show the lower pill row buttons (they had specific styling)
+    expect(document.querySelector(".pillButton")).not.toBeInTheDocument();
   });
 
   it("Month view still renders event bars and overflow", async () => {
@@ -556,8 +575,6 @@ describe("CalendarPanel", () => {
         selectedDateKey={selectedDateKey}
         onSelectDateKey={onSelectDateKey}
         dayAgenda={dayAgenda}
-        agendaFilter={agendaFilter}
-        setAgendaFilter={setAgendaFilter}
         onCreateReminder={onCreateReminder}
         onCreateTask={onCreateTask}
       />

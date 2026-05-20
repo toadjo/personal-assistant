@@ -6,7 +6,7 @@ import { getDefaultTimeForDate } from "../../lib/calendar-default-time";
 import { parseLocalDateTimeInput } from "../../lib/dateTime";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
-import type { AgendaItem, AgendaFilter } from "../../hooks/workspace/useCalendarState";
+import type { AgendaItem } from "../../hooks/workspace/useCalendarState";
 import "./CalendarPanel.css";
 
 const MAX_EVENTS_PER_CELL = 3;
@@ -30,8 +30,6 @@ type Props = {
   selectedDateKey: string;
   onSelectDateKey: (dateKey: string) => void;
   dayAgenda: AgendaItem[];
-  agendaFilter: AgendaFilter;
-  setAgendaFilter: (filter: AgendaFilter) => void;
   onCreateReminder?: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) => void;
   onCreateTask?: (payload: {
     title: string;
@@ -44,7 +42,6 @@ type Props = {
 
 const START_HOUR = 6;
 const END_HOUR = 22;
-const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
 function selectedDayHeading(selectedKey: string, todayKey: string): string {
   if (selectedKey === todayKey) return "Today";
@@ -60,8 +57,6 @@ export const CalendarPanel = memo(function CalendarPanel({
   selectedDateKey,
   onSelectDateKey,
   dayAgenda,
-  agendaFilter,
-  setAgendaFilter,
   onCreateReminder,
   onCreateTask
 }: Props): JSX.Element {
@@ -243,22 +238,23 @@ export const CalendarPanel = memo(function CalendarPanel({
             ))}
           </div>
           <div className="calendarHourlyGrid">
-            {HOURS.map((hour) => {
+            {(() => {
               const selectedDate = monthCells.find(c => c.dateKey === selectedDateKey);
-              const eventsForHour = selectedDate ? getHourlyEventsForDate(selectedDateKey, selectedDate.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
-              return (
-                <div key={hour} className="calendarHourRow">
+              const hourlyEvents = selectedDate ? getHourlyEventsForDate(selectedDateKey, selectedDate.events, START_HOUR, END_HOUR) : [];
+              if (hourlyEvents.length === 0) {
+                return <div className="muted">No events scheduled for this day.</div>;
+              }
+              return hourlyEvents.map(({ hour, event }) => (
+                <div key={`${hour}-${event.id}`} className="calendarHourRow">
                   <div className="calendarHourLabel">{hour}:00</div>
                   <div className="calendarHourContent">
-                    {eventsForHour.map(({ event }) => (
-                      <div key={event.id} className="calendarHourEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
-                        {event.title}
-                      </div>
-                    ))}
+                    <div key={event.id} className="calendarHourEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                      {event.title}
+                    </div>
                   </div>
                 </div>
-              );
-            })}
+              ));
+            })()}
           </div>
         </div>
       )}
@@ -275,29 +271,44 @@ export const CalendarPanel = memo(function CalendarPanel({
             </button>
           </div>
           <div className="calendarWeekGrid">
-            {["Time", ...(calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey))].map((header, idx) => (
-              <div key={header} className={`calendarWeekHeaderCell ${idx === 0 ? "calendarWeekTimeHeader" : ""}`}>
-                {idx === 0 ? header : parseLocalDateKey(header).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-              </div>
-            ))}
-            {HOURS.map((hour) => (
-              <div key={hour} className="calendarWeekRow">
-                <div className="calendarWeekTimeCell">{hour}:00</div>
-                {(calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey)).map((dayKey) => {
-                  const dayCell = monthCells.find(c => c.dateKey === dayKey);
-                  const eventsForHour = dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
-                  return (
-                    <div key={dayKey} className="calendarWeekDayCell">
-                      {eventsForHour.map(({ event }) => (
-                        <div key={event.id} className="calendarWeekEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
-                          {event.title}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+            {(() => {
+              const days = calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey);
+              const dayKeys = ["Time", ...days];
+              return dayKeys.map((header, idx) => (
+                <div key={header} className={`calendarWeekHeaderCell ${idx === 0 ? "calendarWeekTimeHeader" : ""}`}>
+                  {idx === 0 ? header : parseLocalDateKey(header).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                </div>
+              ));
+            })()}
+            {(() => {
+              const days = calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey);
+              const allHourlyEvents = days.flatMap(dayKey => {
+                const dayCell = monthCells.find(c => c.dateKey === dayKey);
+                return dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR) : [];
+              });
+              if (allHourlyEvents.length === 0) {
+                return <div className="muted" style={{ gridColumn: "1 / -1" }}>No events scheduled for this week.</div>;
+              }
+              const hoursWithEvents = [...new Set(allHourlyEvents.map(he => he.hour))];
+              return hoursWithEvents.sort((a, b) => a - b).map((hour) => (
+                <div key={hour} className="calendarWeekRow">
+                  <div className="calendarWeekTimeCell">{hour}:00</div>
+                  {days.map((dayKey) => {
+                    const dayCell = monthCells.find(c => c.dateKey === dayKey);
+                    const eventsForHour = dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
+                    return (
+                      <div key={dayKey} className="calendarWeekDayCell">
+                        {eventsForHour.map(({ event }) => (
+                          <div key={event.id} className="calendarWeekEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                            {event.title}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              ));
+            })()}
           </div>
         </div>
       )}
@@ -415,18 +426,6 @@ export const CalendarPanel = memo(function CalendarPanel({
       )}
       <div className="dayFocusTitle">
         <h3 className="subheading">{selectedDayHeading(selectedDateKey, todayKey)}</h3>
-        <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
-          {(["day", "today", "tomorrow", "week"] as AgendaFilter[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={`pillButton ${agendaFilter === f ? "pillButtonActive" : ""}`}
-              onClick={() => setAgendaFilter(f)}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
-        </div>
       </div>
       <ul className="list" aria-label="Agenda for selected day">
         {dayAgenda.length ? (
