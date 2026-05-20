@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Task } from "../../../shared/types";
 import type { TaskFilter } from "../../types";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 export type UndoableTaskAction = {
   type: "priority";
@@ -45,7 +46,8 @@ export function useTaskActions(
 
   async function completeById(id: string): Promise<void> {
     try {
-      await window.assistantApi.completeTask(id);
+      const api = requireAssistantApi();
+      await api.completeTask(id);
       await refreshTasks();
       setStatus("Task updated.");
     } catch (err) {
@@ -55,7 +57,8 @@ export function useTaskActions(
 
   async function deleteById(id: string): Promise<void> {
     try {
-      await window.assistantApi.deleteTask(id);
+      const api = requireAssistantApi();
+      await api.deleteTask(id);
       await refreshTasks();
       setStatus("Task deleted.");
     } catch (err) {
@@ -72,8 +75,9 @@ export function useTaskActions(
     recurrence: "none" | "daily" | "weekly" | "monthly";
   }): Promise<void> {
     try {
+      const api = requireAssistantApi();
       if (payload.id) {
-        await window.assistantApi.updateTask({
+        await api.updateTask({
           id: payload.id,
           title: payload.title,
           notes: payload.notes,
@@ -83,7 +87,7 @@ export function useTaskActions(
         });
         setStatus("Task updated.");
       } else {
-        await window.assistantApi.createTask(payload);
+        await api.createTask(payload);
         setStatus("Task created.");
       }
       await refreshTasks();
@@ -94,7 +98,8 @@ export function useTaskActions(
 
   async function updateDetailsById(id: string, title: string, notes: string): Promise<void> {
     try {
-      await window.assistantApi.updateTask({ id, title, notes });
+      const api = requireAssistantApi();
+      await api.updateTask({ id, title, notes });
       await refreshTasks();
       setStatus("Task updated.");
     } catch (err) {
@@ -104,7 +109,8 @@ export function useTaskActions(
 
   async function bulkComplete(ids: string[]): Promise<void> {
     try {
-      await Promise.all(ids.map((id) => window.assistantApi.completeTask(id)));
+      const api = requireAssistantApi();
+      await Promise.all(ids.map((id) => api.completeTask(id)));
       await refreshTasks();
       setStatus(`${ids.length} task${ids.length > 1 ? "s" : ""} completed.`);
     } catch (err) {
@@ -118,7 +124,8 @@ export function useTaskActions(
     const previousPriority = task.priority;
     try {
       setUndoStack((prev) => [...prev, { type: "priority" as const, taskId: id, previousValue: previousPriority }]);
-      await window.assistantApi.updateTask({
+      const api = requireAssistantApi();
+      await api.updateTask({
         id,
         title: task.title,
         notes: task.notes,
@@ -140,7 +147,8 @@ export function useTaskActions(
     try {
       const task = tasks.find((t) => t.id === action.taskId);
       if (task) {
-        await window.assistantApi.updateTask({
+        const api = requireAssistantApi();
+        await api.updateTask({
           id: action.taskId,
           title: task.title,
           notes: task.notes,

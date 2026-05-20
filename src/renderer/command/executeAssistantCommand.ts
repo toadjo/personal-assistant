@@ -1,6 +1,7 @@
 import { normalizeCommandAlias, parseReminderCommand, parseReminderMeCommand, parseNoteAlias } from "../lib/commands";
 import type { HaDeviceRow, ReminderFilter, TaskFilter } from "../types";
 import type { DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
+import { requireAssistantApi } from "../lib/assistantApi";
 
 export type AssistantCommandDeps = {
   rawInput: string;
@@ -23,7 +24,8 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   const lower = normalized.toLowerCase();
 
   if (lower === "open household" || lower === "household" || lower === "open home") {
-    await window.assistantApi.openHouseholdWindow();
+    const api = requireAssistantApi();
+    await api.openHouseholdWindow();
     deps.setStatus("Opened the Household window for you.");
     return { mutated: false };
   }
@@ -109,14 +111,16 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   ) {
     const text = parseNoteAlias(raw);
     if (!text) throw new Error("Tell me what to save. Example: make a note buy coffee.");
-    await window.assistantApi.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
+    const api = requireAssistantApi();
+    await api.createNote({ title: text.slice(0, 40), content: text, tags: [], pinned: false });
     deps.setStatus("Got it - memo saved.");
     return { mutated: true };
   }
   if (lower.startsWith("add task ") || lower.startsWith("todo ") || lower.startsWith("task ")) {
     const text = raw.replace(/^(add task|todo|task)\s+/i, "").trim();
     if (!text) throw new Error("Tell me the task title. Example: add task pay rent.");
-    await window.assistantApi.createTask({
+    const api = requireAssistantApi();
+    await api.createTask({
       title: text,
       notes: "",
       dueAt: null,
@@ -140,13 +144,15 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower.startsWith("remind me to ")) {
     const parsed = parseReminderMeCommand(normalized);
-    await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
+    const api = requireAssistantApi();
+    await api.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
     deps.setStatus(`All set - reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
     return { mutated: true };
   }
   if (lower.startsWith("remind ")) {
     const parsed = parseReminderCommand(normalized);
-    await window.assistantApi.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
+    const api = requireAssistantApi();
+    await api.createReminder({ text: parsed.text, dueAt: parsed.dueAt, recurrence: "none" });
     deps.setStatus(`All set - reminder for ${new Date(parsed.dueAt).toLocaleString()}.`);
     return { mutated: true };
   }

@@ -1,5 +1,6 @@
 import type { Note } from "../../../shared/types";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 type SetStatus = (value: string) => void;
 type SetError = (message: string) => void;
@@ -16,7 +17,8 @@ export function useNoteActions(setStatus: SetStatus, setError: SetError, helpers
   async function deleteNote(id: string, title: string): Promise<void> {
     if (!window.confirm(`Delete note "${title}"?`)) return;
     try {
-      await window.assistantApi.deleteNote(id);
+      const api = requireAssistantApi();
+      await api.deleteNote(id);
       removeNoteById(id);
       setStatus("Memo removed.");
       await refreshNotes();
@@ -34,7 +36,8 @@ export function useNoteActions(setStatus: SetStatus, setError: SetError, helpers
     pinned?: boolean;
   }): Promise<void> {
     try {
-      const updated = await window.assistantApi.updateNote(payload);
+      const api = requireAssistantApi();
+      const updated = await api.updateNote(payload);
       mergeNote(updated);
       setStatus("Memo updated.");
       await refreshNotes();

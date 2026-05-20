@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { logRendererWarning } from "../../lib/log";
+import { getAssistantApi, requireAssistantApi } from "../../lib/assistantApi";
 
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
@@ -12,7 +13,9 @@ export function useUserProfileSettings(setError: SetError, setStatus: SetStatus)
   useEffect(() => {
     void (async () => {
       try {
-        const s = await window.assistantApi.getAssistantSettings();
+        const api = getAssistantApi();
+        if (!api) return;
+        const s = await api.getAssistantSettings();
         setUserPreferredName(s.userPreferredName);
         setUserPreferredNameIsSet(s.userPreferredNameIsSet);
       } catch (err) {
@@ -24,7 +27,8 @@ export function useUserProfileSettings(setError: SetError, setStatus: SetStatus)
   async function persistUserPreferredName(raw: string): Promise<void> {
     try {
       setError("");
-      const s = await window.assistantApi.setUserPreferredName(raw);
+      const api = requireAssistantApi();
+      const s = await api.setUserPreferredName(raw);
       setUserPreferredName(s.userPreferredName);
       setUserPreferredNameIsSet(s.userPreferredNameIsSet);
       setStatus(

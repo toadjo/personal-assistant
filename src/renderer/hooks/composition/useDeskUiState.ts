@@ -23,6 +23,7 @@ import { useThemePreference } from "../ui/useThemePreference";
 import { useDisplayPreferences } from "../ui/useDisplayPreferences";
 import { useOnboardingProgress } from "../useOnboardingProgress";
 import type { DisplayPreferences, Density, PanelRadius } from "../../lib/display/types";
+import { getAssistantApi } from "../../lib/assistantApi";
 
 export type DeskMode = "personal" | "projects";
 
@@ -121,8 +122,10 @@ export function useDeskUiState(): DeskUiState {
     },
     desk: {
       hideWindow: () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).assistantApi.hideDeskWindow();
+        const api = getAssistantApi();
+        if (api?.hideDeskWindow) {
+          api.hideDeskWindow();
+        }
       },
       mode: deskMode,
       setMode: setDeskMode

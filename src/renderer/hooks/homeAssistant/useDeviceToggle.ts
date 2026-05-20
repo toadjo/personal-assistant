@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 export function useDeviceToggle(
   refreshDevices: () => Promise<void>,
@@ -19,7 +20,8 @@ export function useDeviceToggle(
       setError("");
       setStatus(`Switching ${friendlyName}...`);
       setTogglingEntityIds((prev) => new Set(prev).add(entityId));
-      await window.assistantApi.toggleDevice(entityId);
+      const api = requireAssistantApi();
+      await api.toggleDevice(entityId);
       setStatus(`${friendlyName} updated - refreshing devices...`);
       await refreshDevices();
       setStatus(`${friendlyName} is in sync now.`);

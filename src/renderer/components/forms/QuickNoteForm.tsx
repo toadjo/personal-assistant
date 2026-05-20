@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 type Props = {
   onDone: () => Promise<void>;
@@ -16,7 +17,8 @@ export function QuickNoteForm({ onDone, onError, onShowSuccess, onCreated }: Pro
     event.preventDefault();
     try {
       if (!title.trim() && !content.trim()) throw new Error("Write a title or content before adding a note.");
-      await window.assistantApi.createNote({
+      const api = requireAssistantApi();
+      await api.createNote({
         title: title.trim() || "Untitled",
         content: content.trim(),
         tags: [],

@@ -1,4 +1,5 @@
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
@@ -12,7 +13,8 @@ export function useAutomationRuleActions(
   async function deleteRuleById(id: string, name: string): Promise<void> {
     if (!window.confirm(`Delete rule "${name}"?`)) return;
     try {
-      await window.assistantApi.deleteRule(id);
+      const api = requireAssistantApi();
+      await api.deleteRule(id);
       setStatus("Rule removed.");
       await refreshRules();
     } catch (err) {
@@ -22,7 +24,8 @@ export function useAutomationRuleActions(
 
   async function setRuleEnabledById(id: string, enabled: boolean): Promise<void> {
     try {
-      await window.assistantApi.setRuleEnabled(id, enabled);
+      const api = requireAssistantApi();
+      await api.setRuleEnabled(id, enabled);
       setStatus(enabled ? "Rule enabled." : "Rule paused.");
       await refreshRules();
     } catch (err) {
@@ -32,7 +35,8 @@ export function useAutomationRuleActions(
 
   async function duplicateRuleById(id: string): Promise<void> {
     try {
-      await window.assistantApi.duplicateRule(id);
+      const api = requireAssistantApi();
+      await api.duplicateRule(id);
       setStatus("Rule duplicated.");
       await refreshRules();
     } catch (err) {
@@ -42,7 +46,8 @@ export function useAutomationRuleActions(
 
   async function testRunRuleById(id: string): Promise<void> {
     try {
-      await window.assistantApi.testRunRule(id);
+      const api = requireAssistantApi();
+      await api.testRunRule(id);
       setStatus("Test run completed.");
       await Promise.all([refreshRules(), refreshLogs()]);
     } catch (err) {

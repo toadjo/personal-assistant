@@ -8,6 +8,7 @@ import { HomeAssistantPanel } from "./panels/HomeAssistantPanel";
 import { AutomationLogsPanel } from "./panels/AutomationLogsPanel";
 import { AutomationRulesPanel } from "./panels/AutomationRulesPanel";
 import { getAutomationFocusIntent, clearAutomationFocusIntent } from "../lib/automation-focus-intent";
+import { getAssistantApi } from "../lib/assistantApi";
 
 export function HouseholdShell(): JSX.Element {
   const { ui, data, ha, automation } = useAssistantWorkspace();
@@ -53,7 +54,10 @@ export function HouseholdShell(): JSX.Element {
           <IconButton
             icon={Monitor}
             label="Open Desk window"
-            onClick={() => void window.assistantApi.focusDeskWindow()}
+            onClick={() => {
+              const api = getAssistantApi();
+              if (api) void api.focusDeskWindow();
+            }}
             variant="ghost"
           />
           <ThemeSelect theme={ui.theme} onChange={ui.setTheme} selectId="theme-select-household" />

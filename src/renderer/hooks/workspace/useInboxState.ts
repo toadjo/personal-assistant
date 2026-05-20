@@ -9,6 +9,7 @@ import { useMemo } from "react";
 import { deriveUnifiedWorkItems } from "../../lib/derived/unified-work";
 import type { Note, Reminder, Task } from "../../../shared/types";
 import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 type SetStatus = (value: string) => void;
 type SetError = (message: string) => void;
@@ -65,7 +66,8 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
   // Quick capture actions
   async function createQuickNote(title: string, content: string): Promise<void> {
     try {
-      const note = await window.assistantApi.createNote({
+      const api = requireAssistantApi();
+      const note = await api.createNote({
         title: title.trim(),
         content: content.trim(),
         tags: [],
@@ -82,7 +84,8 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
 
   async function createQuickTask(title: string, notes: string): Promise<void> {
     try {
-      const task = await window.assistantApi.createTask({
+      const api = requireAssistantApi();
+      const task = await api.createTask({
         title: title.trim(),
         notes: notes.trim(),
         dueAt: null,
@@ -100,7 +103,8 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
 
   async function createQuickReminder(text: string): Promise<void> {
     try {
-      const reminder = await window.assistantApi.createReminder({
+      const api = requireAssistantApi();
+      const reminder = await api.createReminder({
         text: text.trim(),
         dueAt: new Date(Date.now() + 60_000).toISOString(),
         recurrence: "none"
@@ -120,7 +124,8 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
     if (!note) return;
 
     try {
-      const task = await window.assistantApi.createTask({
+      const api = requireAssistantApi();
+      const task = await api.createTask({
         title: note.title,
         notes: note.content,
         dueAt: null,
@@ -128,7 +133,7 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
         recurrence: "none"
       });
       mergeTask(task);
-      await window.assistantApi.deleteNote(noteId);
+      await api.deleteNote(noteId);
       setStatus("Note converted to task.");
       await Promise.all([refreshNotes(), refreshTasks()]);
     } catch {
@@ -142,13 +147,14 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
     if (!note) return;
 
     try {
-      const reminder = await window.assistantApi.createReminder({
+      const api = requireAssistantApi();
+      const reminder = await api.createReminder({
         text: note.title,
         dueAt: new Date(Date.now() + 60_000).toISOString(),
         recurrence: "none"
       });
       mergeReminder(reminder);
-      await window.assistantApi.deleteNote(noteId);
+      await api.deleteNote(noteId);
       setStatus("Note converted to reminder.");
       await Promise.all([refreshNotes(), refreshReminders()]);
     } catch {
@@ -162,7 +168,8 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
     if (!task) return;
 
     try {
-      const teamTask = await window.assistantApi.teamTasksCreate({
+      const api = requireAssistantApi();
+      const teamTask = await api.teamTasksCreate({
         projectId,
         title: task.title,
         notes: task.notes,
@@ -172,7 +179,7 @@ export function useInboxState(setStatus: SetStatus, setError: SetError, helpers:
         assigneeDisplayName: null
       });
       mergeTeamTask(teamTask);
-      await window.assistantApi.deleteTask(taskId);
+      await api.deleteTask(taskId);
       setStatus("Task sent to team.");
       await Promise.all([refreshTasks(), refreshTeamTasks()]);
     } catch {

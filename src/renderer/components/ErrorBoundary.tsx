@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { devConsoleError } from "../lib/devConsole";
+import { getAssistantApi } from "../lib/assistantApi";
 
 type Props = { children: ReactNode };
 
@@ -14,7 +15,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     devConsoleError("[assistant:ErrorBoundary]", error, info.componentStack);
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (api?.logRendererError) {
       void api
         .logRendererError({

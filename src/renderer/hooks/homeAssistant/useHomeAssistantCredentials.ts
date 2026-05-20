@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { getAssistantApi, requireAssistantApi } from "../../lib/assistantApi";
 
 type Messages = { setStatus: (value: string) => void; setError: (value: string) => void };
 
@@ -11,7 +12,7 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
   const [isRefreshingHa, setIsRefreshingHa] = useState(false);
 
   useEffect(() => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.getHomeAssistantConfig) return;
     void (async () => {
       try {
@@ -30,8 +31,9 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
       setError("");
       setIsSavingHa(true);
       setStatus("Saving your Home Assistant settings...");
-      await window.assistantApi.configureHomeAssistant({ url: haUrl, token: haToken });
-      const config = await window.assistantApi.getHomeAssistantConfig();
+      const api = requireAssistantApi();
+      await api.configureHomeAssistant({ url: haUrl, token: haToken });
+      const config = await api.getHomeAssistantConfig();
       setHasHaToken(config.hasToken);
       setHaToken("");
       setStatus("Saved. Next step: Test connection, then Refresh devices so I see your entities.");
@@ -46,8 +48,9 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
     try {
       setError("");
       setStatus("Pinging Home Assistant...");
+      const api = requireAssistantApi();
       setStatus(
-        (await window.assistantApi.testHomeAssistant())
+        (await api.testHomeAssistant())
           ? "Connection looks good - we can talk to Home Assistant."
           : "That test did not succeed. Double-check the URL, token, and that HA allows this machine."
       );
@@ -62,7 +65,8 @@ export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
         setError("");
         setIsRefreshingHa(true);
         setStatus("Pulling the latest device list from Home Assistant...");
-        await window.assistantApi.refreshHomeAssistantEntities();
+        const api = requireAssistantApi();
+        await api.refreshHomeAssistantEntities();
         setStatus("Entities updated - syncing this app...");
         await refreshAll();
         setStatus("All synced. You should see fresh states below.");

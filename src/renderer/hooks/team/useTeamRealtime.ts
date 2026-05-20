@@ -8,6 +8,7 @@
 import { useEffect } from "react";
 import type { TeamState } from "./useTeamState";
 import { startTeamRealtimeSubscription } from "./teamRealtimeSubscription";
+import { getAssistantApi } from "../../lib/assistantApi";
 
 type RefreshOptions = {
   projects?: boolean;
@@ -25,14 +26,16 @@ export function useTeamRealtime(
     if (!enabled) return;
 
     const activeId = team.activeWorkspace?.id ?? null;
+    const api = getAssistantApi();
+    if (!api) return;
 
     const cleanup = startTeamRealtimeSubscription({
       activeWorkspaceId: activeId,
       refreshProjects: () => team.loadProjects(),
       refreshTasks: () => team.loadTasks(),
-      startRealtime: () => window.assistantApi.teamRealtimeStart(),
-      stopRealtime: () => window.assistantApi.teamRealtimeStop(),
-      onTeamDataUpdated: (callback) => window.assistantApi.onTeamDataUpdated(callback),
+      startRealtime: () => api.teamRealtimeStart(),
+      stopRealtime: () => api.teamRealtimeStop(),
+      onTeamDataUpdated: (callback) => api.onTeamDataUpdated(callback),
       refreshProjectsEnabled: !!projects,
       refreshTasksEnabled: !!tasks,
       debounceMs: 200

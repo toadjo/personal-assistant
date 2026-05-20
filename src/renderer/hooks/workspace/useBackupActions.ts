@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 export type BackupResult = {
   notes: number;
@@ -20,7 +21,8 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   async function exportData(): Promise<void> {
     setIsExporting(true);
     try {
-      const payload = await window.assistantApi.exportData();
+      const api = requireAssistantApi();
+      const payload = await api.exportData();
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -46,7 +48,8 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     try {
       const text = await file.text();
       const payload = JSON.parse(text);
-      const result = await window.assistantApi.importData(payload);
+      const api = requireAssistantApi();
+      const result = await api.importData(payload);
       setStatus(
         `Import complete: ${result.notes} notes, ${result.reminders} reminders, ${result.tasks} tasks, ${result.automation_rules} rules, ${result.app_settings} settings.`
       );
@@ -70,7 +73,8 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     }
     setIsResetting(true);
     try {
-      await window.assistantApi.resetData();
+      const api = requireAssistantApi();
+      await api.resetData();
       setStatus("All data has been reset.");
       await refreshAll();
     } catch (err) {

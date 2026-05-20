@@ -5,6 +5,7 @@ import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../../constants/assistant";
 import { QUERY_REFRESH_DEBOUNCE_MS } from "../../constants/timing";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { getAssistantApi } from "../../lib/assistantApi";
 type SetError = (message: string) => void;
 
 export function useAssistantData(setError: SetError) {
@@ -50,7 +51,7 @@ export function useAssistantData(setError: SetError) {
   queryRef.current = query;
 
   const refreshNotes = useCallback(async (): Promise<void> => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listNotes) return;
     try {
       setNotes(await api.listNotes(queryRef.current));
@@ -60,7 +61,7 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setNotes]);
 
   const refreshReminders = useCallback(async (): Promise<void> => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listReminders) return;
     try {
       setReminders(await api.listReminders());
@@ -70,7 +71,7 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setReminders]);
 
   const refreshTasks = useCallback(async (): Promise<void> => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listTasks) return;
     try {
       setTasks(await api.listTasks());
@@ -80,7 +81,7 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setTasks]);
 
   const refreshDevices = useCallback(async (): Promise<void> => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listDevices) return;
     try {
       setDevices(await api.listDevices());
@@ -90,7 +91,7 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setDevices]);
 
   const refreshLogs = useCallback(async (): Promise<void> => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listExecutionLogs) return;
     try {
       const rows = await api.listExecutionLogs();
@@ -126,7 +127,7 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setLogs]);
 
   const refreshRules = useCallback(async (): Promise<void> => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listRules) return;
     try {
       setRules(await api.listRules());
@@ -136,7 +137,7 @@ export function useAssistantData(setError: SetError) {
   }, [setError, setRules]);
 
   const refreshAll = useCallback(async () => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.listNotes) return;
     try {
       setError("");
@@ -194,7 +195,7 @@ export function useAssistantData(setError: SetError) {
   refreshRef.current = refreshAll;
 
   useEffect(() => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.onRemindersUpdated) {
       setError(PRELOAD_BRIDGE_MISSING_MESSAGE);
       return;

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Info, HardDrive, MessageSquare } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
+import { getAssistantApi } from "../../lib/assistantApi";
 
 type Props = {
   version: string;
@@ -12,7 +13,7 @@ export function AboutPanel({ version, onClose }: Props): JSX.Element {
 
   const handleBugReport = useCallback(() => {
     setBugError(null);
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.openBugReport) {
       setBugError("Bug reporting is not available in this build.");
       return;

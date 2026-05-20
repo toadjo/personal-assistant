@@ -9,6 +9,7 @@ import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { persistCommandHistory, loadCommandHistory } from "../../lib/storage/commandHistory";
 import type { AiActionDraft } from "../../../shared/ai/types";
 import type { HaDeviceRow } from "../../types";
+import { getAssistantApi, requireAssistantApi } from "../../lib/assistantApi";
 
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
@@ -70,7 +71,7 @@ export function useCommandExecution(args: {
   }, [commandHistory]);
 
   useEffect(() => {
-    const api = window.assistantApi;
+    const api = getAssistantApi();
     if (!api?.onCommand) {
       return;
     }
@@ -123,7 +124,8 @@ export function useCommandExecution(args: {
         setDailyCommandCenterFilter,
         setStatus,
         refreshHomeAssistantEntities: async () => {
-          await window.assistantApi?.refreshHomeAssistantEntities?.();
+          const api = getAssistantApi();
+          await api?.refreshHomeAssistantEntities?.();
         },
         runDeviceToggle
       });
@@ -160,7 +162,7 @@ export function useCommandExecution(args: {
     }
 
     try {
-      const api = window.assistantApi;
+      const api = requireAssistantApi();
       if (!api?.aiChat) {
         setError("AI chat is unavailable. Restart the app and try again.");
         return;
@@ -189,7 +191,7 @@ export function useCommandExecution(args: {
     if (!aiDraft) return;
     try {
       setIsRunningCommand(true);
-      const api = window.assistantApi;
+      const api = requireAssistantApi();
       switch (aiDraft.type) {
         case "create_note": {
           await api?.createNote({

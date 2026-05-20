@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { HaDeviceRow } from "../../types";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 type Props = {
   devices: HaDeviceRow[];
@@ -148,13 +149,14 @@ export function RuleForm({ devices, onDone, onError, onShowSuccess }: Props): JS
             setIsSubmitting(true);
             const error = validate();
             if (error) throw new Error(error);
-            await window.assistantApi.createRule({
+            const api = requireAssistantApi();
+            await api.createRule({
               name: name.trim(),
               triggerConfig: { at },
               actionType,
               actionConfig: getActionConfig(),
               enabled: true
-            } as Parameters<typeof window.assistantApi.createRule>[0]);
+            } as Parameters<typeof api.createRule>[0]);
             resetForm();
             await onDone();
             // persistent success feedback

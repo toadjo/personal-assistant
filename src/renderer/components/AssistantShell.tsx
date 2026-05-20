@@ -34,10 +34,13 @@ import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
 import { findUnifiedWorkItem, getUnifiedWorkItemSourceLabel, getUnifiedWorkItemSourceForBriefKind } from "../lib/unified-work-item-lookup";
 import { setAutomationFocusIntent } from "../lib/automation-focus-intent";
 import { getAssistantInvokeErrorMessage } from "../lib/errors";
+import { getAssistantApi, requireAssistantApi } from "../lib/assistantApi";
+import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
+
 
 export function AssistantShell(): JSX.Element {
   const [showAbout, setShowAbout] = useState(false);
@@ -118,7 +121,8 @@ export function AssistantShell(): JSX.Element {
 
   useEffect(() => {
     const handleShowAbout = () => setShowAbout(true);
-    const unsubscribe = window.assistantApi.onShowAbout(handleShowAbout);
+    const api = getAssistantApi();
+    const unsubscribe = api?.onShowAbout?.(handleShowAbout) ?? (() => {});
     return () => {
       unsubscribe();
     };
@@ -196,7 +200,9 @@ export function AssistantShell(): JSX.Element {
   useEffect(() => {
     void (async () => {
       try {
-        const config = await window.assistantApi.getAiConfig();
+        const api = getAssistantApi();
+        if (!api) return;
+        const config = await api.getAiConfig();
         setAiConfig(config);
       } catch {
         // Ignore errors if AI is not configured
@@ -205,24 +211,28 @@ export function AssistantShell(): JSX.Element {
   }, []);
 
   const handleAiSetKey = async (provider: AiProvider, apiKey: string): Promise<AiConfigStatus> => {
-    const config = await window.assistantApi.setAiKey({ provider, apiKey });
+    const api = requireAssistantApi();
+    const config = await api.setAiKey({ provider, apiKey });
     setAiConfig(config);
     return config;
   };
 
   const handleAiClearKey = async (): Promise<AiConfigStatus> => {
-    const config = await window.assistantApi.clearAiKey();
+    const api = requireAssistantApi();
+    const config = await api.clearAiKey();
     setAiConfig(config);
     return config;
   };
 
   const handleAiTestKey = async (): Promise<{ success: true; model: string }> => {
-    const result = await window.assistantApi.testAiKey();
+    const api = requireAssistantApi();
+    const result = await api.testAiKey();
     return result;
   };
 
   const handleAiRefresh = async (): Promise<AiConfigStatus> => {
-    const config = await window.assistantApi.getAiConfig();
+    const api = requireAssistantApi();
+    const config = await api.getAiConfig();
     setAiConfig(config);
     return config;
   };
@@ -246,6 +256,15 @@ export function AssistantShell(): JSX.Element {
         filter: dailyCommandCenter.filter
       })
     );
+  };
+
+  const handleOpenHouseholdWindow = () => {
+    const api = getAssistantApi();
+    if (!api?.openHouseholdWindow) {
+      ui.reportError(PRELOAD_BRIDGE_MISSING_MESSAGE);
+      return;
+    }
+    void api.openHouseholdWindow();
   };
 
   return (
@@ -300,7 +319,7 @@ export function AssistantShell(): JSX.Element {
           <IconButton
             icon={Home}
             label={ha.haReady ? "Home Assistant - linked (optional)" : "Home Assistant - optional"}
-            onClick={() => void window.assistantApi.openHouseholdWindow()}
+            onClick={handleOpenHouseholdWindow}
             variant={ha.haReady ? "default" : "ghost"}
           />
           <button
@@ -388,7 +407,7 @@ export function AssistantShell(): JSX.Element {
               }}
               onOpenAutomation={(id) => {
                 setAutomationFocusIntent(id);
-                window.assistantApi.openHouseholdWindow();
+                handleOpenHouseholdWindow();
               }}
               onToggleDevice={(entityId) => {
                 void ha.runDeviceToggle(entityId, entityId);
@@ -452,9 +471,7 @@ export function AssistantShell(): JSX.Element {
                   onboarding.markReminderCreated();
                   ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
                 }}
-                onOpenHousehold={() => {
-                  void window.assistantApi.openHouseholdWindow();
-                }}
+                onOpenHousehold={handleOpenHouseholdWindow}
                 onSkipHomeAssistant={() => {
                   onboarding.skipHomeAssistant();
                   window.localStorage.setItem(STORAGE_ONBOARDED, "1");
@@ -528,7 +545,7 @@ export function AssistantShell(): JSX.Element {
               if (briefItem.kind === "automation") {
                 setAutomationFocusIntent(briefItem.sourceId);
               }
-              window.assistantApi.openHouseholdWindow();
+              handleOpenHouseholdWindow();
             }}
             onOpenWorkItem={(briefItem) => {
               const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
@@ -571,7 +588,8 @@ export function AssistantShell(): JSX.Element {
                   setAgendaFilter={calendar.setAgendaFilter}
                   onCreateReminder={async (payload) => {
                     try {
-                      await window.assistantApi.createReminder(payload);
+                      const api = requireAssistantApi();
+                      await api.createReminder(payload);
                       await data.refreshReminders();
                       ui.showSuccess("Reminder created.");
                     } catch (err) {

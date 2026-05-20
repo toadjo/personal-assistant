@@ -15,6 +15,7 @@ import { useTeamRealtime } from "../../hooks/team/useTeamRealtime";
 import type { TeamProjectTask } from "../../../shared/team/types";
 import type { TeamState } from "../../hooks/team/useTeamState";
 import { validateWorkspaceKey } from "../../../shared/team/keyValidation";
+import { requireAssistantApi } from "../../lib/assistantApi";
 import "./ProjectsPanel.css";
 
 type Props = {
@@ -127,7 +128,8 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
       return;
     }
     try {
-      await window.assistantApi.teamSetDisplayName({ displayName });
+      const api = requireAssistantApi();
+      await api.teamSetDisplayName({ displayName });
       await team.loadConfig();
       setShowSetupForm(false);
     } catch (error) {

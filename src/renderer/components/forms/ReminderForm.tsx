@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { parseLocalDateTimeInput, toLocalDateTimeInputValue } from "../../lib/dateTime";
+import { requireAssistantApi } from "../../lib/assistantApi";
 
 type Props = {
   onDone: () => Promise<void>;
@@ -23,7 +24,8 @@ export function ReminderForm({ onDone, onError, onShowSuccess, onCreated }: Prop
       if (new Date(parsedDueAt).getTime() < Date.now() + 30_000) {
         throw new Error("Reminder time must be at least 30 seconds in the future.");
       }
-      await window.assistantApi.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
+      const api = requireAssistantApi();
+      await api.createReminder({ text: text.trim(), dueAt: parsedDueAt, recurrence: "none" });
       setText("");
       setDueAt(toLocalDateTimeInputValue(new Date(Date.now() + 60_000)));
       await onDone();

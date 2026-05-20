@@ -7,6 +7,7 @@
 
 import { useState, useCallback } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { requireAssistantApi } from "../../lib/assistantApi";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../../../shared/team/types";
 
 export type TeamState = {
@@ -60,7 +61,8 @@ export function useTeamState(): TeamState {
     setIsLoadingConfig(true);
     setConfigError(null);
     try {
-      const result = await window.assistantApi.teamGetConfig();
+      const api = requireAssistantApi();
+      const result = await api.teamGetConfig();
       setConfig(result);
     } catch (err) {
       setConfigError(getAssistantInvokeErrorMessage(err));
@@ -73,7 +75,8 @@ export function useTeamState(): TeamState {
     setIsLoadingConfig(true);
     setConfigError(null);
     try {
-      await window.assistantApi.teamSetConfig(configToSave);
+      const api = requireAssistantApi();
+      await api.teamSetConfig(configToSave);
       await loadConfig();
     } catch (err) {
       setConfigError(getAssistantInvokeErrorMessage(err));
@@ -87,7 +90,8 @@ export function useTeamState(): TeamState {
     setIsLoadingConfig(true);
     setConfigError(null);
     try {
-      await window.assistantApi.teamClearConfig();
+      const api = requireAssistantApi();
+      await api.teamClearConfig();
       setConfig(null);
     } catch (err) {
       setConfigError(getAssistantInvokeErrorMessage(err));
@@ -101,7 +105,8 @@ export function useTeamState(): TeamState {
     setIsLoadingWorkspaces(true);
     setError(null);
     try {
-      const result = await window.assistantApi.teamWorkspacesList();
+      const api = requireAssistantApi();
+      const result = await api.teamWorkspacesList();
       setWorkspaces(result);
       const activeId = activeWorkspaceId ?? config?.activeWorkspaceId;
       setActiveWorkspaceState(result.find((w) => w.id === activeId) || null);
@@ -115,10 +120,11 @@ export function useTeamState(): TeamState {
   const createWorkspace = useCallback(async (name: string) => {
     setError(null);
     try {
-      const result = await window.assistantApi.teamWorkspacesCreate({ name });
+      const api = requireAssistantApi();
+      const result = await api.teamWorkspacesCreate({ name });
       // Auto-set the new workspace as active if no workspace is currently active
       if (!activeWorkspace) {
-        await window.assistantApi.teamWorkspacesSetActive({ workspaceId: result.id });
+        await api.teamWorkspacesSetActive({ workspaceId: result.id });
         await loadConfig();
         await loadWorkspaces(result.id);
       } else {
@@ -134,10 +140,11 @@ export function useTeamState(): TeamState {
   const joinWorkspace = useCallback(async (workspaceKey: string) => {
     setError(null);
     try {
-      const result = await window.assistantApi.teamWorkspacesJoin({ workspaceKey });
+      const api = requireAssistantApi();
+      const result = await api.teamWorkspacesJoin({ workspaceKey });
       // Auto-set the joined workspace as active if no workspace is currently active
       if (!activeWorkspace) {
-        await window.assistantApi.teamWorkspacesSetActive({ workspaceId: result.id });
+        await api.teamWorkspacesSetActive({ workspaceId: result.id });
         await loadConfig();
         await loadWorkspaces(result.id);
       } else {
@@ -153,7 +160,8 @@ export function useTeamState(): TeamState {
   const setWorkspaceActive = useCallback(async (workspaceId: string) => {
     setError(null);
     try {
-      await window.assistantApi.teamWorkspacesSetActive({ workspaceId });
+      const api = requireAssistantApi();
+      await api.teamWorkspacesSetActive({ workspaceId });
       await loadConfig();
       await loadWorkspaces(workspaceId);
     } catch (err) {
@@ -165,7 +173,8 @@ export function useTeamState(): TeamState {
     setIsLoadingProjects(true);
     setError(null);
     try {
-      const result = await window.assistantApi.teamProjectsList();
+      const api = requireAssistantApi();
+      const result = await api.teamProjectsList();
       setProjects(result);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -181,7 +190,8 @@ export function useTeamState(): TeamState {
       return null;
     }
     try {
-      const result = await window.assistantApi.teamProjectsCreate({ name });
+      const api = requireAssistantApi();
+      const result = await api.teamProjectsCreate({ name });
       await loadProjects();
       return result;
     } catch (err) {
@@ -194,7 +204,8 @@ export function useTeamState(): TeamState {
     setIsLoadingTasks(true);
     setError(null);
     try {
-      const result = await window.assistantApi.teamTasksList();
+      const api = requireAssistantApi();
+      const result = await api.teamTasksList();
       setTasks(result);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -214,7 +225,8 @@ export function useTeamState(): TeamState {
   }) => {
     setError(null);
     try {
-      const result = await window.assistantApi.teamTasksCreate(taskToCreate);
+      const api = requireAssistantApi();
+      const result = await api.teamTasksCreate(taskToCreate);
       await loadTasks();
       return result;
     } catch (err) {
@@ -226,7 +238,8 @@ export function useTeamState(): TeamState {
   const updateTask = useCallback(async (taskToUpdate: TeamProjectTask) => {
     setError(null);
     try {
-      await window.assistantApi.teamTasksUpdate({
+      const api = requireAssistantApi();
+      await api.teamTasksUpdate({
         id: taskToUpdate.id,
         title: taskToUpdate.title,
         notes: taskToUpdate.notes,
