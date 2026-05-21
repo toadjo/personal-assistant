@@ -405,11 +405,13 @@ describe("DailyCommandCenterPanel", () => {
     expect(labelButton).toBeDefined();
     labelButton?.click();
 
-    expect(onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({
-      kind: "task",
-      label: "Task to open",
-      sourceId: "t1"
-    }));
+    expect(onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "task",
+        label: "Task to open",
+        sourceId: "t1"
+      })
+    );
   });
 
   it("calls onOpenWorkItem when reminder label is clicked", () => {
@@ -445,11 +447,13 @@ describe("DailyCommandCenterPanel", () => {
     expect(labelButton).toBeDefined();
     labelButton?.click();
 
-    expect(onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({
-      kind: "reminder",
-      label: "Reminder to open",
-      sourceId: "r1"
-    }));
+    expect(onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "reminder",
+        label: "Reminder to open",
+        sourceId: "r1"
+      })
+    );
   });
 
   it("existing complete button still works when onOpenWorkItem is provided", () => {
@@ -516,9 +520,7 @@ describe("DailyCommandCenterPanel", () => {
     onCompleteTask.mockClear();
     const onOpenWorkItem = vi.fn();
     const data = makeData({
-      attentionItems: [
-        { kind: "team-task", label: "Team task", urgency: "overdue", sourceId: "tt1" }
-      ],
+      attentionItems: [{ kind: "team-task", label: "Team task", urgency: "overdue", sourceId: "tt1" }],
       summary: "Now: 1 overdue."
     });
 
@@ -539,11 +541,13 @@ describe("DailyCommandCenterPanel", () => {
     expect(labelButton).toBeDefined();
     labelButton?.click();
 
-    expect(onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({
-      kind: "team-task",
-      label: "Team task",
-      sourceId: "tt1"
-    }));
+    expect(onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "team-task",
+        label: "Team task",
+        sourceId: "tt1"
+      })
+    );
     expect(onCompleteTask).not.toHaveBeenCalled();
   });
 
@@ -607,10 +611,12 @@ describe("DailyCommandCenterPanel", () => {
     expect(automationOpenButton).toBeDefined();
     automationOpenButton?.click();
 
-    expect(onOpenAutomations).toHaveBeenCalledWith(expect.objectContaining({
-      kind: "automation",
-      label: "Morning reminder",
-      sourceId: "rule-1"
-    }));
+    expect(onOpenAutomations).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "automation",
+        label: "Morning reminder",
+        sourceId: "rule-1"
+      })
+    );
   });
 });

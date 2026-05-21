@@ -46,7 +46,6 @@ vi.mock("node:fs", () => ({
 import { teamSessionStorage } from "./sessionStorage";
 
 describe("teamSessionStorage", () => {
-
   afterEach(() => {
     vi.clearAllMocks();
     // Reset mock implementations to default behavior

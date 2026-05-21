@@ -22,6 +22,14 @@ import { startAutomationScheduler } from "./automation-scheduler";
 import { mainLog } from "./log";
 import { IpcRendererEvent } from "../shared/ipc-channels";
 import { safeWebContentsSend } from "./ipc-safe-send";
+import { isCrashReportingAllowed } from "./security/policy";
+
+export const APP_USER_MODEL_ID = "com.toadjo.personalassistant";
+
+// Set Windows AppUserModelID before any window/tray creation or single-instance lock
+if (process.platform === "win32") {
+  app.setAppUserModelId(APP_USER_MODEL_ID);
+}
 
 let deskWin: BrowserWindow | null = null;
 let householdWin: BrowserWindow | null = null;
@@ -211,14 +219,14 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     installDefaultContentSecurityPolicy();
-    if (process.env.SENTRY_DSN) {
+    if (process.env.SENTRY_DSN && isCrashReportingAllowed()) {
       Sentry.init({
         dsn: process.env.SENTRY_DSN,
         environment: app.isPackaged ? "production" : "development"
       });
     }
     const crashSubmitUrl = process.env.ELECTRON_CRASH_REPORT_URL?.trim();
-    if (app.isPackaged && crashSubmitUrl) {
+    if (app.isPackaged && crashSubmitUrl && isCrashReportingAllowed()) {
       crashReporter.start({
         companyName: "Personal Assistant",
         submitURL: crashSubmitUrl,

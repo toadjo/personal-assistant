@@ -66,9 +66,9 @@ describe("useCommandExecution", () => {
     });
 
     (window.assistantApi as unknown) = {
-      aiChat: vi.fn().mockRejectedValue(
-        new Error(`Error invoking remote method 'ai:chat': Error: ${encodedError.message}`)
-      )
+      aiChat: vi
+        .fn()
+        .mockRejectedValue(new Error(`Error invoking remote method 'ai:chat': Error: ${encodedError.message}`))
     };
 
     const { result } = renderHook(() =>

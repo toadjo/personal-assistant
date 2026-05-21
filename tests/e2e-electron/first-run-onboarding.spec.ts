@@ -4,20 +4,11 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
   test("shows guided onboarding panel on first run", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Check that guided onboarding panel is visible with stable current UI copy
-    const heading = await window.getByRole("heading", { name: "Get started" }).isVisible();
-    expect(heading).toBe(true);
-
-    // Check for description text
-    const stepDescription = await window
-      .locator(".stepDescription")
-      .filter({ hasText: "Notes are for quick memos" })
-      .isVisible();
-    expect(stepDescription).toBe(true);
-
-    // Check for the action button
-    const actionButton = await window.getByRole("button", { name: "I've created a note" }).isVisible();
-    expect(actionButton).toBe(true);
+    await expect(window.locator(".homeDashboard")).toBeVisible();
+    await expect(window.locator(".onboardingCoach")).toBeVisible();
+    await expect(window.getByText("Start with one memo.")).toBeVisible();
+    await expect(window.getByRole("button", { name: "Open Memos" })).toBeVisible();
+    await expect(window.getByRole("button", { name: "Mark done" })).toBeVisible();
   });
 
   test("creating a note advances onboarding progress", async ({ window }) => {
@@ -68,8 +59,8 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
     await window.reload();
     await window.waitForLoadState("domcontentloaded");
 
-    // Wait for the reminder step UI to appear
-    await window.getByRole("button", { name: "I've created a reminder" }).waitFor();
+    await expect(window.locator(".onboardingCoach")).toBeVisible();
+    await expect(window.getByText("Add one reminder.")).toBeVisible();
 
     // Click the Reminders module to show the reminders panel
     await window.locator(".moduleTab").filter({ hasText: "Reminders" }).click();

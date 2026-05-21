@@ -34,5 +34,5 @@ export function findUnifiedWorkItem(
   source: "local-note" | "local-task" | "local-reminder" | "team-task",
   sourceId: string
 ): UnifiedWorkItem | null {
-  return unifiedItems.find(item => item.source === source && item.sourceId === sourceId) ?? null;
+  return unifiedItems.find((item) => item.source === source && item.sourceId === sourceId) ?? null;
 }

@@ -6,3 +6,5 @@ export const STORAGE_ONBOARDED = "assistant-onboarded";
 export const STORAGE_ONBOARDING_DEFERRED = "assistant-onboarding-deferred";
 /** Tracks progress through the guided first-run flow. JSON string with completed steps. */
 export const STORAGE_ONBOARDING_PROGRESS = "assistant-onboarding-progress";
+/** Tracks the last app version for which release notes were shown. */
+export const STORAGE_LAST_SEEN_RELEASE_VERSION = "assistant-last-seen-release-version";

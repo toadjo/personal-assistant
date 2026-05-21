@@ -281,7 +281,8 @@ export const backupPayloadSchema = z.object({
   reminders: z.array(backupReminderSchema),
   tasks: z.array(backupTaskSchema),
   automation_rules: z.array(backupAutomationRuleSchema),
-  app_settings: z.array(backupAppSettingSchema)
+  app_settings: z.array(backupAppSettingSchema),
+  _encrypted: z.string().optional()
 });
 
 // ---------------------------------------------------------------------------

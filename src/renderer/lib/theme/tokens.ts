@@ -106,18 +106,18 @@ export type ThemeState = {
 };
 
 const GLASS_TOKENS: Record<ThemeTokenKey, string> = {
-  bg: "#fafbfc",
+  bg: "#f8fafc",
   text: "#1d1d21",
   title: "#0a0a0d",
   subtitle: "#5a5a64",
-  panelBg: "rgba(255, 255, 255, 0.72)",
-  panelBorder: "rgba(0, 0, 0, 0.06)",
-  surfaceBorderStrong: "rgba(0, 0, 0, 0.1)",
-  statBg: "rgba(255, 255, 255, 0.8)",
-  statBorder: "rgba(0, 0, 0, 0.06)",
+  panelBg: "rgba(255, 255, 255, 0.65)",
+  panelBorder: "rgba(0, 0, 0, 0.05)",
+  surfaceBorderStrong: "rgba(0, 0, 0, 0.08)",
+  statBg: "rgba(255, 255, 255, 0.75)",
+  statBorder: "rgba(0, 0, 0, 0.05)",
   statText: "#2a2a32",
-  inputBg: "rgba(255, 255, 255, 0.9)",
-  inputBorder: "rgba(0, 0, 0, 0.08)",
+  inputBg: "rgba(255, 255, 255, 0.85)",
+  inputBorder: "rgba(0, 0, 0, 0.06)",
   inputText: "#111118",
   primary: "#0071e3",
   primaryHover: "#005bb5",
@@ -125,9 +125,9 @@ const GLASS_TOKENS: Record<ThemeTokenKey, string> = {
   focusRing: "rgba(0, 113, 227, 0.3)",
   muted: "#6b6b76",
   listText: "#232328",
-  ghostBg: "rgba(255, 255, 255, 0.65)",
+  ghostBg: "rgba(255, 255, 255, 0.55)",
   ghostText: "#35353d",
-  ghostBorder: "rgba(0, 0, 0, 0.06)",
+  ghostBorder: "rgba(0, 0, 0, 0.05)",
   successBg: "rgba(52, 199, 89, 0.08)",
   successBorder: "rgba(52, 199, 89, 0.22)",
   successText: "#1a7f37",
@@ -141,32 +141,32 @@ const GLASS_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(147, 51, 234, 0.12)",
   calEventText: "#1d1d21",
   calGridBg: "rgba(0, 0, 0, 0.02)",
-  calGridBorder: "rgba(0, 0, 0, 0.08)"
+  calGridBorder: "rgba(0, 0, 0, 0.06)"
 };
 
 const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
-  bg: "#f6f6f8",
+  bg: "#faf9f7",
   text: "#141418",
   title: "#0b0b0e",
   subtitle: "#5c5c66",
-  panelBg: "rgba(255, 255, 255, 0.94)",
-  panelBorder: "rgba(20, 20, 28, 0.1)",
-  surfaceBorderStrong: "rgba(20, 20, 28, 0.16)",
-  statBg: "rgba(255, 255, 255, 0.88)",
-  statBorder: "rgba(20, 20, 28, 0.1)",
+  panelBg: "rgba(255, 255, 255, 0.96)",
+  panelBorder: "rgba(20, 20, 28, 0.08)",
+  surfaceBorderStrong: "rgba(20, 20, 28, 0.12)",
+  statBg: "rgba(255, 255, 255, 0.90)",
+  statBorder: "rgba(20, 20, 28, 0.08)",
   statText: "#2a2a32",
   inputBg: "#ffffff",
-  inputBorder: "rgba(20, 20, 28, 0.14)",
+  inputBorder: "rgba(20, 20, 28, 0.12)",
   inputText: "#111118",
   primary: "#0066d4",
   primaryHover: "#0055b3",
   primarySoft: "rgba(0, 102, 212, 0.1)",
   focusRing: "rgba(0, 102, 212, 0.35)",
-  muted: "#6b6b76",
+  muted: "#70707a",
   listText: "#232328",
-  ghostBg: "rgba(255, 255, 255, 0.75)",
+  ghostBg: "rgba(255, 255, 255, 0.85)",
   ghostText: "#35353d",
-  ghostBorder: "rgba(20, 20, 28, 0.12)",
+  ghostBorder: "rgba(20, 20, 28, 0.08)",
   successBg: "rgba(46, 125, 50, 0.09)",
   successBorder: "rgba(46, 125, 50, 0.26)",
   successText: "#1b6b2f",
@@ -180,7 +180,7 @@ const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(147, 51, 234, 0.1)",
   calEventText: "#141418",
   calGridBg: "rgba(20, 20, 28, 0.03)",
-  calGridBorder: "rgba(20, 20, 28, 0.1)"
+  calGridBorder: "rgba(20, 20, 28, 0.08)"
 };
 
 const OBSIDIAN_TOKENS: Record<ThemeTokenKey, string> = {
@@ -301,18 +301,18 @@ const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
 };
 
 const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
-  bg: "#f5f6f8",
+  bg: "#f0f2f5",
   text: "#1a1a1f",
   title: "#0e0e12",
   subtitle: "#4a4a52",
-  panelBg: "rgba(255, 255, 255, 0.96)",
-  panelBorder: "rgba(20, 20, 28, 0.08)",
-  surfaceBorderStrong: "rgba(20, 20, 28, 0.14)",
-  statBg: "rgba(255, 255, 255, 0.9)",
-  statBorder: "rgba(20, 20, 28, 0.08)",
+  panelBg: "rgba(255, 255, 255, 0.98)",
+  panelBorder: "rgba(20, 20, 28, 0.12)",
+  surfaceBorderStrong: "rgba(20, 20, 28, 0.18)",
+  statBg: "rgba(255, 255, 255, 0.92)",
+  statBorder: "rgba(20, 20, 28, 0.12)",
   statText: "#2a2a32",
   inputBg: "#ffffff",
-  inputBorder: "rgba(20, 20, 28, 0.1)",
+  inputBorder: "rgba(20, 20, 28, 0.14)",
   inputText: "#111118",
   primary: "#1a5fb4",
   primaryHover: "#154a8c",
@@ -320,9 +320,9 @@ const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
   focusRing: "rgba(26, 95, 180, 0.3)",
   muted: "#5c5c66",
   listText: "#1f1f24",
-  ghostBg: "rgba(255, 255, 255, 0.8)",
+  ghostBg: "rgba(255, 255, 255, 0.9)",
   ghostText: "#2a2a32",
-  ghostBorder: "rgba(20, 20, 28, 0.08)",
+  ghostBorder: "rgba(20, 20, 28, 0.1)",
   successBg: "rgba(46, 125, 50, 0.08)",
   successBorder: "rgba(46, 125, 50, 0.26)",
   successText: "#1b6b2f",
@@ -336,7 +336,7 @@ const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(139, 92, 246, 0.08)",
   calEventText: "#1a1a1f",
   calGridBg: "rgba(20, 20, 28, 0.02)",
-  calGridBorder: "rgba(20, 20, 28, 0.08)"
+  calGridBorder: "rgba(20, 20, 28, 0.1)"
 };
 
 /** Ordered list of all built-in presets. */

@@ -103,7 +103,16 @@ export function CommandPalette({
       }
       onClose();
     },
-    [onOpenNote, onOpenTask, onOpenReminder, onOpenAutomation, onToggleDevice, onOpenTeamTask, onOpenAppearance, onClose]
+    [
+      onOpenNote,
+      onOpenTask,
+      onOpenReminder,
+      onOpenAutomation,
+      onToggleDevice,
+      onOpenTeamTask,
+      onOpenAppearance,
+      onClose
+    ]
   );
 
   const handleKeyDown = useCallback(

@@ -154,9 +154,7 @@ export function CommandPanel({
         />
       )}
       {aiReply && !aiDraft && (
-        <div style={{ marginTop: "var(--space-2)", fontSize: "0.85em", color: "var(--muted)" }}>
-          AI: {aiReply}
-        </div>
+        <div style={{ marginTop: "var(--space-2)", fontSize: "0.85em", color: "var(--muted)" }}>AI: {aiReply}</div>
       )}
       <CommandExamples haReady={haReady} onRunPreset={onPreset} />
     </section>

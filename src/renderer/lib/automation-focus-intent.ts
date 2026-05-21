@@ -22,15 +22,15 @@ export function getAutomationFocusIntent(): string | null {
   try {
     const value = localStorage.getItem(AUTOMATION_FOCUS_INTENT_KEY);
     if (!value) return null;
-    
+
     const intent: AutomationFocusIntent = JSON.parse(value);
-    
+
     // Ignore intents older than 30 seconds
     if (Date.now() - intent.createdAt > INTENT_EXPIRY_MS) {
       clearAutomationFocusIntent();
       return null;
     }
-    
+
     return intent.ruleId;
   } catch {
     return null;

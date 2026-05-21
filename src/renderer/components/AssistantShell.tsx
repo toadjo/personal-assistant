@@ -7,14 +7,16 @@ import { useTeamRealtime } from "../hooks/team/useTeamRealtime";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
 import { OnboardingPanel } from "./panels/OnboardingPanel";
-import { GuidedOnboardingPanel } from "./panels/GuidedOnboardingPanel";
+import { OnboardingCoach } from "./panels/OnboardingCoach";
 import { CommandPanel } from "./panels/CommandPanel";
 import { CalendarPanel } from "./panels/CalendarPanel";
 import { NotesPanel } from "./panels/NotesPanel";
 import { RemindersPanel } from "./panels/RemindersPanel";
 import { AboutPanel } from "./panels/AboutPanel";
+import { ReleaseNotesPanel } from "./panels/ReleaseNotesPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
+import { HomeDashboardPanel } from "./panels/HomeDashboardPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
 import { ProjectsPanel } from "./panels/ProjectsPanel";
@@ -25,15 +27,24 @@ import { ThemeSelect } from "./layout/ThemeSelect";
 import { IconButton } from "./ui/IconButton";
 import { InboxPanel } from "./panels/InboxPanel";
 import { WorkItemDetailDrawer } from "./WorkItemDetailDrawer";
-import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
+import {
+  STORAGE_ONBOARDED,
+  STORAGE_ONBOARDING_DEFERRED,
+  STORAGE_LAST_SEEN_RELEASE_VERSION
+} from "../constants/storageKeys";
 import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
-import { findUnifiedWorkItem, getUnifiedWorkItemSourceLabel, getUnifiedWorkItemSourceForBriefKind } from "../lib/unified-work-item-lookup";
+import {
+  findUnifiedWorkItem,
+  getUnifiedWorkItemSourceLabel,
+  getUnifiedWorkItemSourceForBriefKind
+} from "../lib/unified-work-item-lookup";
 import { setAutomationFocusIntent } from "../lib/automation-focus-intent";
 import { getAssistantInvokeErrorMessage } from "../lib/errors";
 import { getAssistantApi, requireAssistantApi } from "../lib/assistantApi";
+import { getReleaseNote } from "../lib/release-notes.generated";
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
@@ -42,13 +53,13 @@ import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
 type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations";
 
-
 export function AssistantShell(): JSX.Element {
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);
   const [showAi, setShowAi] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState<UnifiedWorkItem | null>(null);
   const [aiConfig, setAiConfig] = useState<AiConfigStatus | null>(null);
   const [activePersonalModule, setActivePersonalModule] = useState<PersonalModule>("home");
@@ -83,8 +94,10 @@ export function AssistantShell(): JSX.Element {
   useTeamRealtime(team, { projects: true, tasks: true });
 
   // Compute team task status counts
-  const teamOpenTasks = team.tasks.filter(t => t.status === "open");
-  const teamOverdueTasks = teamOpenTasks.filter(t => t.dueAt && new Date(t.dueAt) < new Date(new Date().setHours(0, 0, 0, 0)));
+  const teamOpenTasks = team.tasks.filter((t) => t.status === "open");
+  const teamOverdueTasks = teamOpenTasks.filter(
+    (t) => t.dueAt && new Date(t.dueAt) < new Date(new Date().setHours(0, 0, 0, 0))
+  );
 
   // Load team config on mount
   useEffect(() => {
@@ -163,7 +176,7 @@ export function AssistantShell(): JSX.Element {
           notifyChannel: "desktop" as const
         })),
       pinnedNotes: data.notes.filter((note) => note.pinned),
-      teamTasks: team.tasks.filter(t => t.status === "open"),
+      teamTasks: team.tasks.filter((t) => t.status === "open"),
       teamProjects: team.projects,
       automationRules: data.rules
     });
@@ -211,6 +224,17 @@ export function AssistantShell(): JSX.Element {
       }
     })();
   }, []);
+
+  // Show release notes if version changed
+  useEffect(() => {
+    const lastSeenVersion = window.localStorage.getItem(STORAGE_LAST_SEEN_RELEASE_VERSION);
+    if (lastSeenVersion !== appVersion) {
+      const releaseNote = getReleaseNote(appVersion);
+      if (releaseNote) {
+        setShowReleaseNotes(true);
+      }
+    }
+  }, [appVersion]);
 
   const handleAiSetKey = async (provider: AiProvider, apiKey: string): Promise<AiConfigStatus> => {
     const api = requireAssistantApi();
@@ -269,6 +293,11 @@ export function AssistantShell(): JSX.Element {
     void api.openHouseholdWindow();
   };
 
+  const handleCloseReleaseNotes = () => {
+    window.localStorage.setItem(STORAGE_LAST_SEEN_RELEASE_VERSION, appVersion);
+    setShowReleaseNotes(false);
+  };
+
   return (
     <main className="container desktopShell">
       <header className="utilityToolbar">
@@ -292,29 +321,17 @@ export function AssistantShell(): JSX.Element {
           </div>
         </div>
         <div className="utilityToolbarRight">
-          <button
-            type="button"
-            className="statusChip"
-            onClick={() => setActivePersonalModule("memos")}
-          >
+          <button type="button" className="statusChip" onClick={() => setActivePersonalModule("memos")}>
             <StickyNote size={14} />
             <span>Memos</span>
             <span className="statusChipCount">{data.notes.length}</span>
           </button>
-          <button
-            type="button"
-            className="statusChip"
-            onClick={() => setActivePersonalModule("reminders")}
-          >
+          <button type="button" className="statusChip" onClick={() => setActivePersonalModule("reminders")}>
             <Bell size={14} />
             <span>Open</span>
             <span className="statusChipCount">{reminders.pending.length}</span>
           </button>
-          <button
-            type="button"
-            className="statusChip"
-            onClick={() => setActivePersonalModule("tasks")}
-          >
+          <button type="button" className="statusChip" onClick={() => setActivePersonalModule("tasks")}>
             <ListTodo size={14} />
             <span>Tasks</span>
             <span className="statusChipCount">{data.tasks.filter((task) => task.status === "open").length}</span>
@@ -519,27 +536,24 @@ export function AssistantShell(): JSX.Element {
 
           {onboarding.show && !onboarding.isComplete ? (
             <div className="onboardingHero">
-              <GuidedOnboardingPanel
+              <OnboardingCoach
                 currentStep={onboarding.currentStep}
-                onComplete={() => {
-                  setActivePersonalModule("home");
-                  window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-                  window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-                  onboarding.setShow(false);
-                  ui.setStatus("Welcome aboard - onboarding complete!");
-                }}
-                onCreateNote={() => {
+                onOpenMemos={() => {
                   setActivePersonalModule("memos");
                   data.setQuery("");
+                }}
+                onOpenReminders={() => {
+                  setActivePersonalModule("reminders");
+                }}
+                onOpenHousehold={handleOpenHouseholdWindow}
+                onMarkNoteCreated={() => {
                   onboarding.markNoteCreated();
                   ui.setStatus("Great! Note created. Next: add a reminder.");
                 }}
-                onCreateReminder={() => {
-                  setActivePersonalModule("reminders");
+                onMarkReminderCreated={() => {
                   onboarding.markReminderCreated();
                   ui.setStatus("Reminder added. Next: connect Home Assistant (optional).");
                 }}
-                onOpenHousehold={handleOpenHouseholdWindow}
                 onSkipHomeAssistant={() => {
                   setActivePersonalModule("home");
                   onboarding.skipHomeAssistant();
@@ -547,6 +561,11 @@ export function AssistantShell(): JSX.Element {
                   window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
                   onboarding.setShow(false);
                   ui.setStatus("Onboarding complete - you can connect Home Assistant anytime from Household.");
+                }}
+                onDefer={() => {
+                  window.localStorage.setItem(STORAGE_ONBOARDING_DEFERRED, "1");
+                  onboarding.setShow(false);
+                  ui.setStatus("Onboarding deferred - you can continue anytime from settings.");
                 }}
               />
             </div>
@@ -578,10 +597,46 @@ export function AssistantShell(): JSX.Element {
             </div>
           ) : null}
 
+          {showReleaseNotes ? (
+            <div className="onboardingHero">
+              <ReleaseNotesPanel
+                version={appVersion}
+                onClose={handleCloseReleaseNotes}
+                onOpenAbout={() => {
+                  setShowReleaseNotes(false);
+                  setShowAbout(true);
+                }}
+              />
+            </div>
+          ) : null}
+
           {activePersonalModule === "home" ? (
-            <div className="homeLayout">
-              <div className="homeLeft">
-                <div className="todayStrip">
+            <>
+              <HomeDashboardPanel
+                data={dailyCommandCenter}
+                onOpenToday={() => setActivePersonalModule("today")}
+                onOpenInbox={() => setActivePersonalModule("inbox")}
+                onOpenWorkItem={(briefItem) => {
+                  const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
+                  if (!source) return;
+
+                  const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
+                  if (unifiedItem) {
+                    setSelectedWorkItem(unifiedItem);
+                  }
+                }}
+                onOpenAutomations={(briefItem) => {
+                  if (briefItem.kind === "automation") {
+                    setAutomationFocusIntent(briefItem.sourceId);
+                  }
+                  handleOpenHouseholdWindow();
+                }}
+                onCompleteTask={tasks.completeById}
+                onCompleteReminder={reminders.completeById}
+                onSnoozeReminder={(id: string) => void reminders.snoozeMinutes(id, 10, "Snoozed 10m.")}
+              />
+              <div className="homeLayout">
+                <div className="homeLeft">
                   <CalendarPanel
                     calendarCursor={calendar.calendarCursor}
                     setCalendarCursor={calendar.setCalendarCursor}
@@ -616,35 +671,35 @@ export function AssistantShell(): JSX.Element {
                     }}
                   />
                 </div>
-              </div>
-              <div className="homeRight">
-                <div className="commandHero">
-                  <CommandPanel
-                    commandInputRef={command.commandInputRef}
-                    query={data.query}
-                    reminderFilter={reminders.filter}
-                    haReady={ha.haReady}
-                    commandInput={command.commandInput}
-                    setCommandInput={command.setCommandInput}
-                    commandHints={command.commandHints}
-                    commandHistory={command.commandHistory}
-                    historyCursor={command.historyCursor}
-                    setHistoryCursor={command.setHistoryCursor}
-                    isRunningCommand={command.isRunningCommand}
-                    onRunCommand={command.runCommandInternal}
-                    onClearHistory={command.clearCommandHistory}
-                    onClearNoteSearch={() => data.setQuery("")}
-                    onPreset={command.runPresetCommand}
-                    onHideDeskIfInputEmpty={desk.hideWindow}
-                    aiDraft={command.aiDraft}
-                    aiReply={command.aiReply}
-                    onConfirmAiDraft={command.confirmAiDraft}
-                    onCancelAiDraft={command.cancelAiDraft}
-                    aiConfigured={aiConfig?.configured ?? false}
-                  />
+                <div className="homeRight">
+                  <div className="commandHero">
+                    <CommandPanel
+                      commandInputRef={command.commandInputRef}
+                      query={data.query}
+                      reminderFilter={reminders.filter}
+                      haReady={ha.haReady}
+                      commandInput={command.commandInput}
+                      setCommandInput={command.setCommandInput}
+                      commandHints={command.commandHints}
+                      commandHistory={command.commandHistory}
+                      historyCursor={command.historyCursor}
+                      setHistoryCursor={command.setHistoryCursor}
+                      isRunningCommand={command.isRunningCommand}
+                      onRunCommand={command.runCommandInternal}
+                      onClearHistory={command.clearCommandHistory}
+                      onClearNoteSearch={() => data.setQuery("")}
+                      onPreset={command.runPresetCommand}
+                      onHideDeskIfInputEmpty={desk.hideWindow}
+                      aiDraft={command.aiDraft}
+                      aiReply={command.aiReply}
+                      onConfirmAiDraft={command.confirmAiDraft}
+                      onCancelAiDraft={command.cancelAiDraft}
+                      aiConfigured={aiConfig?.configured ?? false}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           ) : null}
 
           {activePersonalModule === "today" && (
@@ -800,7 +855,7 @@ export function AssistantShell(): JSX.Element {
           onUpdateTask={(id, title, notes) => tasks.updateDetailsById(id, title, notes)}
           onUpdateReminder={(id, text, dueAt) => reminders.updateById(id, text, dueAt)}
           onUpdateTeamTask={async (id, patch) => {
-            const existingTask = team.tasks.find(t => t.id === id);
+            const existingTask = team.tasks.find((t) => t.id === id);
             if (!existingTask) {
               ui.reportError("Team task not found.");
               return;

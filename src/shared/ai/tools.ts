@@ -40,7 +40,8 @@ export function getLocalToolRegistry(): AiToolRegistry {
       {
         id: "create_note",
         name: "Create Note",
-        description: "Create a new note with a title and optional content. Returns { type: 'create_note', title, content? }",
+        description:
+          "Create a new note with a title and optional content. Returns { type: 'create_note', title, content? }",
         category: "notes",
         parameters: [
           { name: "title", type: "string", description: "Note title (required)", required: true },
@@ -50,7 +51,8 @@ export function getLocalToolRegistry(): AiToolRegistry {
       {
         id: "create_task",
         name: "Create Task",
-        description: "Create a new task with title, optional notes, due date, and priority. Returns { type: 'create_task', title, notes?, dueAt?, priority? }",
+        description:
+          "Create a new task with title, optional notes, due date, and priority. Returns { type: 'create_task', title, notes?, dueAt?, priority? }",
         category: "tasks",
         parameters: [
           { name: "title", type: "string", description: "Task title (required)", required: true },
@@ -72,7 +74,8 @@ export function getLocalToolRegistry(): AiToolRegistry {
       {
         id: "toggle_device",
         name: "Toggle Device",
-        description: "Turn a Home Assistant device on or off. Returns { type: 'toggle_device', entityId, friendlyName? }",
+        description:
+          "Turn a Home Assistant device on or off. Returns { type: 'toggle_device', entityId, friendlyName? }",
         category: "devices",
         parameters: [
           { name: "entityId", type: "string", description: "Home Assistant entity ID (required)", required: true },

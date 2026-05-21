@@ -31,6 +31,7 @@ export const IpcInvoke = {
   settingsGetAssistant: "settings:getAssistant",
   settingsSetAssistantName: "settings:setAssistantName",
   settingsSetUserPreferredName: "settings:setUserPreferredName",
+  settingsGetSecurityPolicy: "settings:getSecurityPolicy",
   automationLogs: "automation:logs",
   automationRulesList: "automation:rules:list",
   automationRulesCreate: "automation:rules:create",

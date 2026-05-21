@@ -247,17 +247,14 @@ export function runTaskSchedulerTick(getWindows: () => readonly (BrowserWindow |
       continue;
     }
 
-    const result = showNotificationSafe(
-      { title: "Task due", body: task.title },
-      () => {
-        for (const w of getWindows()) {
-          if (w && !w.isDestroyed()) {
-            showMainWindow(w);
-            break;
-          }
+    const result = showNotificationSafe({ title: "Task due", body: task.title }, () => {
+      for (const w of getWindows()) {
+        if (w && !w.isDestroyed()) {
+          showMainWindow(w);
+          break;
         }
       }
-    );
+    });
 
     if (result === "shown") {
       // Clear any previous failure cooldown on success

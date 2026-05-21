@@ -71,20 +71,23 @@ export function useTeamState(): TeamState {
     }
   }, []);
 
-  const saveConfig = useCallback(async (configToSave: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) => {
-    setIsLoadingConfig(true);
-    setConfigError(null);
-    try {
-      const api = requireAssistantApi();
-      await api.teamSetConfig(configToSave);
-      await loadConfig();
-    } catch (err) {
-      setConfigError(getAssistantInvokeErrorMessage(err));
-      throw err;
-    } finally {
-      setIsLoadingConfig(false);
-    }
-  }, [loadConfig]);
+  const saveConfig = useCallback(
+    async (configToSave: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) => {
+      setIsLoadingConfig(true);
+      setConfigError(null);
+      try {
+        const api = requireAssistantApi();
+        await api.teamSetConfig(configToSave);
+        await loadConfig();
+      } catch (err) {
+        setConfigError(getAssistantInvokeErrorMessage(err));
+        throw err;
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    },
+    [loadConfig]
+  );
 
   const clearConfig = useCallback(async () => {
     setIsLoadingConfig(true);
@@ -101,73 +104,85 @@ export function useTeamState(): TeamState {
     }
   }, []);
 
-  const loadWorkspaces = useCallback(async (activeWorkspaceId?: string) => {
-    setIsLoadingWorkspaces(true);
-    setError(null);
-    try {
-      const api = requireAssistantApi();
-      const result = await api.teamWorkspacesList();
-      setWorkspaces(result);
-      const activeId = activeWorkspaceId ?? config?.activeWorkspaceId;
-      setActiveWorkspaceState(result.find((w) => w.id === activeId) || null);
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    } finally {
-      setIsLoadingWorkspaces(false);
-    }
-  }, [config?.activeWorkspaceId]);
-
-  const createWorkspace = useCallback(async (name: string) => {
-    setError(null);
-    try {
-      const api = requireAssistantApi();
-      const result = await api.teamWorkspacesCreate({ name });
-      // Auto-set the new workspace as active if no workspace is currently active
-      if (!activeWorkspace) {
-        await api.teamWorkspacesSetActive({ workspaceId: result.id });
-        await loadConfig();
-        await loadWorkspaces(result.id);
-      } else {
-        await loadWorkspaces();
+  const loadWorkspaces = useCallback(
+    async (activeWorkspaceId?: string) => {
+      setIsLoadingWorkspaces(true);
+      setError(null);
+      try {
+        const api = requireAssistantApi();
+        const result = await api.teamWorkspacesList();
+        setWorkspaces(result);
+        const activeId = activeWorkspaceId ?? config?.activeWorkspaceId;
+        setActiveWorkspaceState(result.find((w) => w.id === activeId) || null);
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+      } finally {
+        setIsLoadingWorkspaces(false);
       }
-      return result;
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-      return null;
-    }
-  }, [activeWorkspace, loadConfig, loadWorkspaces]);
+    },
+    [config?.activeWorkspaceId]
+  );
 
-  const joinWorkspace = useCallback(async (workspaceKey: string) => {
-    setError(null);
-    try {
-      const api = requireAssistantApi();
-      const result = await api.teamWorkspacesJoin({ workspaceKey });
-      // Auto-set the joined workspace as active if no workspace is currently active
-      if (!activeWorkspace) {
-        await api.teamWorkspacesSetActive({ workspaceId: result.id });
-        await loadConfig();
-        await loadWorkspaces(result.id);
-      } else {
-        await loadWorkspaces();
+  const createWorkspace = useCallback(
+    async (name: string) => {
+      setError(null);
+      try {
+        const api = requireAssistantApi();
+        const result = await api.teamWorkspacesCreate({ name });
+        // Auto-set the new workspace as active if no workspace is currently active
+        if (!activeWorkspace) {
+          await api.teamWorkspacesSetActive({ workspaceId: result.id });
+          await loadConfig();
+          await loadWorkspaces(result.id);
+        } else {
+          await loadWorkspaces();
+        }
+        return result;
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+        return null;
       }
-      return result;
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-      return null;
-    }
-  }, [activeWorkspace, loadConfig, loadWorkspaces]);
+    },
+    [activeWorkspace, loadConfig, loadWorkspaces]
+  );
 
-  const setWorkspaceActive = useCallback(async (workspaceId: string) => {
-    setError(null);
-    try {
-      const api = requireAssistantApi();
-      await api.teamWorkspacesSetActive({ workspaceId });
-      await loadConfig();
-      await loadWorkspaces(workspaceId);
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [loadConfig, loadWorkspaces]);
+  const joinWorkspace = useCallback(
+    async (workspaceKey: string) => {
+      setError(null);
+      try {
+        const api = requireAssistantApi();
+        const result = await api.teamWorkspacesJoin({ workspaceKey });
+        // Auto-set the joined workspace as active if no workspace is currently active
+        if (!activeWorkspace) {
+          await api.teamWorkspacesSetActive({ workspaceId: result.id });
+          await loadConfig();
+          await loadWorkspaces(result.id);
+        } else {
+          await loadWorkspaces();
+        }
+        return result;
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+        return null;
+      }
+    },
+    [activeWorkspace, loadConfig, loadWorkspaces]
+  );
+
+  const setWorkspaceActive = useCallback(
+    async (workspaceId: string) => {
+      setError(null);
+      try {
+        const api = requireAssistantApi();
+        await api.teamWorkspacesSetActive({ workspaceId });
+        await loadConfig();
+        await loadWorkspaces(workspaceId);
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+      }
+    },
+    [loadConfig, loadWorkspaces]
+  );
 
   const loadProjects = useCallback(async () => {
     setIsLoadingProjects(true);
@@ -183,22 +198,25 @@ export function useTeamState(): TeamState {
     }
   }, []);
 
-  const createProject = useCallback(async (name: string) => {
-    setError(null);
-    if (!activeWorkspace) {
-      setError("No active workspace selected");
-      return null;
-    }
-    try {
-      const api = requireAssistantApi();
-      const result = await api.teamProjectsCreate({ name });
-      await loadProjects();
-      return result;
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-      return null;
-    }
-  }, [activeWorkspace, loadProjects]);
+  const createProject = useCallback(
+    async (name: string) => {
+      setError(null);
+      if (!activeWorkspace) {
+        setError("No active workspace selected");
+        return null;
+      }
+      try {
+        const api = requireAssistantApi();
+        const result = await api.teamProjectsCreate({ name });
+        await loadProjects();
+        return result;
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+        return null;
+      }
+    },
+    [activeWorkspace, loadProjects]
+  );
 
   const loadTasks = useCallback(async () => {
     setIsLoadingTasks(true);
@@ -214,46 +232,52 @@ export function useTeamState(): TeamState {
     }
   }, []);
 
-  const createTask = useCallback(async (taskToCreate: {
-    projectId: string;
-    title: string;
-    notes: string;
-    dueAt: string | null;
-    priority: "low" | "normal" | "high";
-    recurrence: "none" | "daily" | "weekly" | "monthly";
-    assigneeDisplayName: string | null;
-  }) => {
-    setError(null);
-    try {
-      const api = requireAssistantApi();
-      const result = await api.teamTasksCreate(taskToCreate);
-      await loadTasks();
-      return result;
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-      return null;
-    }
-  }, [loadTasks]);
+  const createTask = useCallback(
+    async (taskToCreate: {
+      projectId: string;
+      title: string;
+      notes: string;
+      dueAt: string | null;
+      priority: "low" | "normal" | "high";
+      recurrence: "none" | "daily" | "weekly" | "monthly";
+      assigneeDisplayName: string | null;
+    }) => {
+      setError(null);
+      try {
+        const api = requireAssistantApi();
+        const result = await api.teamTasksCreate(taskToCreate);
+        await loadTasks();
+        return result;
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+        return null;
+      }
+    },
+    [loadTasks]
+  );
 
-  const updateTask = useCallback(async (taskToUpdate: TeamProjectTask) => {
-    setError(null);
-    try {
-      const api = requireAssistantApi();
-      await api.teamTasksUpdate({
-        id: taskToUpdate.id,
-        title: taskToUpdate.title,
-        notes: taskToUpdate.notes,
-        dueAt: taskToUpdate.dueAt,
-        priority: taskToUpdate.priority,
-        status: taskToUpdate.status,
-        recurrence: taskToUpdate.recurrence,
-        assigneeDisplayName: taskToUpdate.assigneeDisplayName
-      });
-      await loadTasks();
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [loadTasks]);
+  const updateTask = useCallback(
+    async (taskToUpdate: TeamProjectTask) => {
+      setError(null);
+      try {
+        const api = requireAssistantApi();
+        await api.teamTasksUpdate({
+          id: taskToUpdate.id,
+          title: taskToUpdate.title,
+          notes: taskToUpdate.notes,
+          dueAt: taskToUpdate.dueAt,
+          priority: taskToUpdate.priority,
+          status: taskToUpdate.status,
+          recurrence: taskToUpdate.recurrence,
+          assigneeDisplayName: taskToUpdate.assigneeDisplayName
+        });
+        await loadTasks();
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+      }
+    },
+    [loadTasks]
+  );
 
   return {
     config,

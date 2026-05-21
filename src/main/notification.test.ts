@@ -37,9 +37,7 @@ describe("showNotificationSafe", () => {
     const result = showNotificationSafe({ title: "Test", body: "Test body" });
     expect(result).toBe("unsupported");
     expect(warnMock).toHaveBeenCalledTimes(1);
-    expect(warnMock).toHaveBeenCalledWith(
-      'Desktop notifications not supported. Notification suppressed: "Test"'
-    );
+    expect(warnMock).toHaveBeenCalledWith('Desktop notifications not supported. Notification suppressed: "Test"');
   });
 
   it("returns 'shown' when notification is created and shown successfully", () => {

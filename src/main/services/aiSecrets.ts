@@ -1,11 +1,6 @@
 import { mainLog } from "../log";
 import { deleteSetting, getSetting, setSetting } from "./settingsRepository";
-import {
-  decryptSecret,
-  encryptSecret,
-  isEncrypted,
-  SecureStorageUnavailableError
-} from "./secureSecrets";
+import { decryptSecret, encryptSecret, isEncrypted, SecureStorageUnavailableError } from "./secureSecrets";
 
 const API_KEY_SETTING = "ai.apiKey";
 
@@ -33,13 +28,13 @@ export async function saveAiApiKey(apiKey: string): Promise<void> {
 export async function getAiApiKey(): Promise<string | null> {
   const raw = getSetting(API_KEY_SETTING);
   if (typeof raw !== "string" || !raw) return null;
-  
+
   // If not encrypted, it's legacy plaintext - treat as insecure
   if (!isEncrypted(raw)) {
     mainLog.warn("Legacy plaintext AI API key detected. For security, please reconnect AI integration.");
     return null;
   }
-  
+
   const decrypted = decryptSecret(raw);
   if (decrypted === null) {
     mainLog.error("Failed to decrypt AI API key.");

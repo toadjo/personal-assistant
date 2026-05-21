@@ -129,9 +129,7 @@ describe("tasks", () => {
   describe("updateTask", () => {
     it("throws when no active workspace", async () => {
       mockGetTeamConfig.mockReturnValue({ configured: true, displayName: "Alice", activeWorkspaceId: null });
-      await expect(
-        updateTask({ taskId: "task-123", status: "done" })
-      ).rejects.toThrow("No active workspace selected");
+      await expect(updateTask({ taskId: "task-123", status: "done" })).rejects.toThrow("No active workspace selected");
     });
 
     it("updates task and returns it", async () => {

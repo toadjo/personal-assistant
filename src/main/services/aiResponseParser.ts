@@ -53,7 +53,17 @@ function validateActionDraft(value: unknown): AiActionDraft | undefined {
     return undefined;
   }
 
-  const draft = value as { type?: string; title?: string; content?: string; text?: string; entityId?: string; friendlyName?: string; notes?: string; dueAt?: string; priority?: string };
+  const draft = value as {
+    type?: string;
+    title?: string;
+    content?: string;
+    text?: string;
+    entityId?: string;
+    friendlyName?: string;
+    notes?: string;
+    dueAt?: string;
+    priority?: string;
+  };
 
   switch (draft.type) {
     case "create_note": {
@@ -73,13 +83,21 @@ function validateActionDraft(value: unknown): AiActionDraft | undefined {
           title: draft.title,
           notes: typeof draft.notes === "string" ? draft.notes : undefined,
           dueAt: typeof draft.dueAt === "string" ? draft.dueAt : undefined,
-          priority: draft.priority === "low" || draft.priority === "medium" || draft.priority === "high" ? draft.priority : undefined
+          priority:
+            draft.priority === "low" || draft.priority === "medium" || draft.priority === "high"
+              ? draft.priority
+              : undefined
         };
       }
       return undefined;
     }
     case "create_reminder": {
-      if (typeof draft.text === "string" && draft.text.length > 0 && typeof draft.dueAt === "string" && draft.dueAt.length > 0) {
+      if (
+        typeof draft.text === "string" &&
+        draft.text.length > 0 &&
+        typeof draft.dueAt === "string" &&
+        draft.dueAt.length > 0
+      ) {
         return {
           type: "create_reminder",
           text: draft.text,

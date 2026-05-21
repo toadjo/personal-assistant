@@ -3,6 +3,7 @@ import { IpcInvoke } from "../../../shared/ipc-channels";
 import { getAssistantSettings, saveAssistantName, saveUserPreferredName } from "../../services/settings";
 import { registerInvoke } from "../invoke-handle";
 import { assistantNameSchema, userPreferredNameSchema } from "../schemas";
+import { getSecurityPolicy } from "../../security/policy";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
@@ -16,5 +17,8 @@ export function registerSettingsHandlers(assertSender: AssertSender): void {
   });
   registerInvoke(IpcInvoke.settingsSetUserPreferredName, assertSender, (_event, name) => {
     return saveUserPreferredName(userPreferredNameSchema.parse(name));
+  });
+  registerInvoke(IpcInvoke.settingsGetSecurityPolicy, assertSender, () => {
+    return getSecurityPolicy();
   });
 }

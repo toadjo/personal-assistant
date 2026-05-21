@@ -372,11 +372,7 @@ export function DailyCommandCenterPanel({
                       <li key={item.sourceId} className="dccListItem">
                         <Icon size={16} className="dccListItemIcon" />
                         <div className="dccListItemContent">
-                          <button
-                            type="button"
-                            className="dccItemLabelButton"
-                            onClick={() => onOpenWorkItem?.(item)}
-                          >
+                          <button type="button" className="dccItemLabelButton" onClick={() => onOpenWorkItem?.(item)}>
                             {item.label}
                           </button>
                           {item.detail && <div className="dccItemDetail">{item.detail}</div>}

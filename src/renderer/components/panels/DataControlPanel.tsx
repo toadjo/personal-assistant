@@ -44,12 +44,7 @@ export function DataControlPanel({
           {isExporting ? "Exporting..." : "Export backup"}
         </button>
 
-        <button
-          type="button"
-          className="ghostButton"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isBusy}
-        >
+        <button type="button" className="ghostButton" onClick={() => fileInputRef.current?.click()} disabled={isBusy}>
           <Upload size={14} />
           {isImporting ? "Importing..." : "Import backup"}
         </button>

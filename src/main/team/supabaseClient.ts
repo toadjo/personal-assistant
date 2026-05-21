@@ -4,6 +4,9 @@
  * Lazy singleton that creates a Supabase client on first access, performs
  * anonymous sign-in, and persists the session via the storage adapter.
  * The client is invalidated when team config changes so a new session can be created.
+ *
+ * Fails closed if OS encryption (safeStorage) is unavailable, matching the
+ * fail-closed behavior of AI and Home Assistant secrets.
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -11,19 +14,31 @@ import { safeStorage } from "electron";
 import { mainLog } from "../log";
 import { getTeamCredentials } from "./config";
 import { teamSessionStorage } from "./sessionStorage";
+import { SecureStorageUnavailableError } from "../services/secureSecrets";
+import { checkTeamSyncAllowed, checkHostAllowed } from "../security/outboundGuard";
 
 let cachedClient: SupabaseClient | null = null;
-let encryptionWarningLogged = false;
 
 /**
  * Returns the Supabase client, creating it on first access.
  *
  * If team config is missing, returns null (caller should throw TEAM_NOT_CONFIGURED).
+ * If OS encryption is unavailable, throws SecureStorageUnavailableError.
  * Does NOT perform authentication - use getAuthenticatedSupabaseClient() for that.
  */
 export function getSupabaseClient(): SupabaseClient | null {
+  checkTeamSyncAllowed();
   const credentials = getTeamCredentials();
   if (!credentials) {
+    return null;
+  }
+
+  // Check if Supabase host is allowed
+  try {
+    const hostname = new URL(credentials.supabaseUrl).hostname;
+    checkHostAllowed(hostname);
+  } catch (error) {
+    mainLog.error("[team:session] Invalid Supabase URL format", error);
     return null;
   }
 
@@ -31,15 +46,13 @@ export function getSupabaseClient(): SupabaseClient | null {
     return cachedClient;
   }
 
-  const { supabaseUrl, supabaseAnonKey } = credentials;
-
-  // Log a single warning if safeStorage encryption is not available
-  if (!encryptionWarningLogged && !safeStorage.isEncryptionAvailable()) {
-    mainLog.warn(
-      "[team:session] System does not support safeStorage encryption. Team session will be stored in plaintext."
-    );
-    encryptionWarningLogged = true;
+  // Fail closed if safeStorage encryption is not available
+  if (!safeStorage.isEncryptionAvailable()) {
+    mainLog.error("[team:session] System does not support safeStorage encryption. Team mode requires secure storage.");
+    throw new SecureStorageUnavailableError();
   }
+
+  const { supabaseUrl, supabaseAnonKey } = credentials;
 
   const client = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -80,7 +93,10 @@ export async function getAuthenticatedSupabaseClient(): Promise<{
   }
 
   // First, check if there's an existing persisted session
-  const { data: { user: existingUser }, error: getUserError } = await client.auth.getUser();
+  const {
+    data: { user: existingUser },
+    error: getUserError
+  } = await client.auth.getUser();
   if (getUserError) {
     throw new Error(`Authentication failed: ${getUserError.message}`);
   }
@@ -94,7 +110,10 @@ export async function getAuthenticatedSupabaseClient(): Promise<{
   await signInAnonymously(client);
 
   // Get the newly signed-in user
-  const { data: { user: newUser }, error: postSignInError } = await client.auth.getUser();
+  const {
+    data: { user: newUser },
+    error: postSignInError
+  } = await client.auth.getUser();
   if (postSignInError) {
     throw new Error(`Authentication failed: ${postSignInError.message}`);
   }

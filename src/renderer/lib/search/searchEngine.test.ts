@@ -52,7 +52,14 @@ function makeDevice(entityId: string, friendlyName: string, state = "off"): HaDe
   return { entityId, friendlyName, state };
 }
 
-function makeTeamTask(id: string, projectId: string, title: string, notes = "", status: "open" | "done" = "open", assigneeDisplayName: string | null = null): TeamProjectTask {
+function makeTeamTask(
+  id: string,
+  projectId: string,
+  title: string,
+  notes = "",
+  status: "open" | "done" = "open",
+  assigneeDisplayName: string | null = null
+): TeamProjectTask {
   return {
     id,
     projectId,

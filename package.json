@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -14,7 +14,7 @@
     "dev": "npm run rebuild:electron && node scripts/generate-preload-ipc.mjs && concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 file:dist/main/main/main.js file:dist/main/main/preload.js && electron .\"",
     "build": "npm run build:renderer && npm run build:main",
     "build:report": "vite build --mode report",
-    "build:renderer": "vite build",
+    "build:renderer": "node scripts/generate-release-notes.mjs && vite build",
     "build:main": "node scripts/generate-team-hosted-backend.mjs && node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json",
     "check:preload-ipc": "node scripts/generate-preload-ipc.mjs --check",
     "icons:prepare": "node scripts/ensure-win-icon.mjs",
@@ -28,7 +28,7 @@
     "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
     "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
     "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
-    "typecheck": "node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "typecheck": "node scripts/generate-release-notes.mjs && node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
     "lint": "eslint . --no-warn-ignored",
     "lint:fix": "eslint . --fix --no-warn-ignored",
     "format": "prettier --write .",
@@ -42,7 +42,10 @@
     "test:e2e": "playwright test",
     "test:e2e:electron": "playwright test --config=playwright.electron.config.ts",
     "handoff": "node scripts/handoff.mjs",
-    "activity": "node scripts/activity.mjs"
+    "activity": "node scripts/activity.mjs",
+    "security:sbom": "npm run build && node scripts/generate-sbom.mjs",
+    "security:audit": "npm audit --audit-level=high",
+    "security:release-evidence": "node scripts/generate-release-evidence.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",
@@ -110,7 +113,8 @@
     },
     "nsis": {
       "installerIcon": "assets/app-icon.ico",
-      "uninstallerIcon": "assets/app-icon.ico"
+      "uninstallerIcon": "assets/app-icon.ico",
+      "deleteAppDataOnUninstall": false
     },
     "linux": {
       "target": [

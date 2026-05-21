@@ -22,7 +22,9 @@ const ENCRYPTED_PREFIX = "sse1:";
  */
 export class SecureStorageUnavailableError extends Error {
   constructor() {
-    super("Secure storage (OS encryption) is required to save API keys and tokens. Please ensure your system supports secure storage.");
+    super(
+      "Secure storage (OS encryption) is required to save API keys and tokens. Please ensure your system supports secure storage."
+    );
     this.name = "SecureStorageUnavailableError";
   }
 }
@@ -57,12 +59,12 @@ export function encryptSecret(value: string): string {
  */
 export function decryptSecret(value: string): string | null {
   if (typeof value !== "string" || !value) return null;
-  
+
   if (!value.startsWith(ENCRYPTED_PREFIX)) {
     // Not encrypted - this is legacy plaintext
     return null;
   }
-  
+
   try {
     const buf = Buffer.from(value.slice(ENCRYPTED_PREFIX.length), "base64");
     return safeStorage.decryptString(buf);
@@ -86,7 +88,8 @@ export function secureStorageUnavailableToInvokeError(): Error {
   const failure = encodeAssistantInvokeFailure({
     domain: "ipc_validation",
     code: "SECURE_STORAGE_UNAVAILABLE",
-    message: "Secure storage (OS encryption) is required to save API keys and tokens. Please ensure your system supports secure storage.",
+    message:
+      "Secure storage (OS encryption) is required to save API keys and tokens. Please ensure your system supports secure storage.",
     retryable: false
   });
   return new Error(`Error invoking remote method: ${failure.message}`);

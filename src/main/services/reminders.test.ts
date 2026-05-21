@@ -23,7 +23,15 @@ vi.mock("../log", () => ({
 }));
 
 import { decodeAssistantInvokeFailure } from "../../shared/invokeErrors";
-import { completeReminder, createReminder, deleteReminder, listReminders, snoozeReminder, runReminderSchedulerTick, updateReminder } from "./reminders";
+import {
+  completeReminder,
+  createReminder,
+  deleteReminder,
+  listReminders,
+  snoozeReminder,
+  runReminderSchedulerTick,
+  updateReminder
+} from "./reminders";
 import type { NotificationResult } from "../notification";
 
 describe("reminders service", () => {

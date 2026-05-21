@@ -26,9 +26,5 @@ if (!supabaseUrl.startsWith("https://") || supabaseUrl.endsWith("/")) {
 }
 
 mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(
-  outputPath,
-  JSON.stringify({ supabaseUrl, supabaseAnonKey }, null, 2) + "\n",
-  "utf8"
-);
+writeFileSync(outputPath, JSON.stringify({ supabaseUrl, supabaseAnonKey }, null, 2) + "\n", "utf8");
 console.log("Bundled hosted Team Projects backend config for this build.");

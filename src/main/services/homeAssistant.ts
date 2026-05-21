@@ -7,6 +7,7 @@ import { assertHomeAssistantBaseUrl } from "./haUrlPolicy";
 import { parseHaStatesResponse, type HaStateRow } from "./haStatesResponse";
 import { getSetting, setSetting } from "./settingsRepository";
 import { throwAssistantInvoke } from "./structuredInvokeError";
+import { checkHostAllowed } from "../security/outboundGuard";
 
 const HA_BASE_URL_KEY = "ha.baseUrl";
 const HA_REQUEST_TIMEOUT_MS = 10_000;
@@ -98,6 +99,26 @@ async function authedFetch(path: string, init?: RequestInit, options?: HaFetchOp
       retryable: false
     });
   }
+
+  // Check if Home Assistant host is allowed
+  try {
+    const hostname = new URL(url).hostname;
+    checkHostAllowed(hostname);
+  } catch (error) {
+    if (error instanceof Error && error.name === "HostNotAllowedError") {
+      throwHa({
+        code: "HOST_BLOCKED",
+        message: error.message,
+        retryable: false
+      });
+    }
+    throwHa({
+      code: "INVALID_URL",
+      message: "Invalid Home Assistant URL format.",
+      retryable: false
+    });
+  }
+
   if (!path.startsWith("/")) {
     throwHa({
       code: "INVALID_REQUEST",

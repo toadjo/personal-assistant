@@ -16,7 +16,8 @@ function extractInlineBlock(text: string, constName: string): string {
 }
 
 function parseObjectBody(body: string): Record<string, string> {
-  const entries = body.split("\n")
+  const entries = body
+    .split("\n")
     .map((l: string) => l.trim())
     .filter((l: string) => l.length > 0)
     .map((l: string) => {

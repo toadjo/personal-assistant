@@ -34,6 +34,7 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.haRefresh,
   IpcInvoke.haListDevices,
   IpcInvoke.settingsGetAssistant,
+  IpcInvoke.settingsGetSecurityPolicy,
   IpcInvoke.automationLogs,
   IpcInvoke.automationRulesList,
   IpcInvoke.dataExport,

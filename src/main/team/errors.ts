@@ -6,6 +6,8 @@
  */
 
 import { encodeAssistantInvokeFailure } from "../../shared/invokeErrors";
+import { SecureStorageUnavailableError } from "../services/secureSecrets";
+import { OutboundIntegrationBlockedError, HostNotAllowedError } from "../security/outboundGuard";
 
 /**
  * Maps team service errors to structured invoke errors.
@@ -18,6 +20,37 @@ import { encodeAssistantInvokeFailure } from "../../shared/invokeErrors";
 export function mapTeamError(error: unknown): never {
   if (!(error instanceof Error)) {
     throw error;
+  }
+
+  // Handle secure storage unavailability specifically
+  if (error instanceof SecureStorageUnavailableError) {
+    throw encodeAssistantInvokeFailure({
+      domain: "team",
+      code: "SECURE_STORAGE_UNAVAILABLE",
+      message:
+        "Secure storage (OS encryption) is required for team mode. Please ensure your system supports secure storage.",
+      retryable: false
+    });
+  }
+
+  // Handle outbound integration blocked by policy
+  if (error instanceof OutboundIntegrationBlockedError) {
+    throw encodeAssistantInvokeFailure({
+      domain: "team",
+      code: "INTEGRATION_BLOCKED",
+      message: error.message,
+      retryable: false
+    });
+  }
+
+  // Handle host not allowed by policy allowlist
+  if (error instanceof HostNotAllowedError) {
+    throw encodeAssistantInvokeFailure({
+      domain: "team",
+      code: "HOST_BLOCKED",
+      message: error.message,
+      retryable: false
+    });
   }
 
   const message = error.message.toLowerCase();

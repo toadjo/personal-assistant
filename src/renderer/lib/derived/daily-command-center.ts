@@ -30,7 +30,7 @@ function getActionForItem(item: BriefItem): DailyCommandCenterAction {
 
 function filterBySource(items: BriefItem[], filter: DailyCommandCenterFilter): BriefItem[] {
   if (filter === "all") return items;
-  
+
   return items.filter((item) => {
     if (filter === "personal") {
       return item.kind === "task" || item.kind === "reminder" || item.kind === "note";
@@ -96,7 +96,12 @@ export function deriveDailyCommandCenter(params: {
   };
 }
 
-function buildSummary(attentionItems: BriefItem[], contextItems: BriefItem[], awayItems: AwayBriefItem[], filter: DailyCommandCenterFilter): string {
+function buildSummary(
+  attentionItems: BriefItem[],
+  contextItems: BriefItem[],
+  awayItems: AwayBriefItem[],
+  filter: DailyCommandCenterFilter
+): string {
   const overdueCount = attentionItems.filter((item) => item.urgency === "overdue").length;
   const dueTodayCount = attentionItems.filter((item) => item.urgency === "today").length;
   const contextCount = contextItems.length;
@@ -116,7 +121,7 @@ function buildSummary(attentionItems: BriefItem[], contextItems: BriefItem[], aw
     if (filter === "household") return "Household: All clear.";
     return "All clear.";
   }
-  
+
   const prefix = filter === "all" ? "Now" : filter.charAt(0).toUpperCase() + filter.slice(1);
   return `${prefix}: ${parts.join(", ")}.`;
 }

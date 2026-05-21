@@ -104,11 +104,7 @@ export function isTeamConfigured(): boolean {
 /**
  * Persists team configuration. Validates URL shape before storing.
  */
-export function setTeamConfig(input: {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  displayName: string;
-}): void {
+export function setTeamConfig(input: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }): void {
   const { supabaseUrl, supabaseAnonKey, displayName } = input;
 
   if (!isValidSupabaseUrl(supabaseUrl)) {

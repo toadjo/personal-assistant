@@ -252,7 +252,15 @@ describe("CalendarPanel", () => {
         count: 2,
         events: [
           { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
-          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T11:00:00", allDay: false, priority: "normal", status: "open" }
+          {
+            id: "t1",
+            source: "task",
+            title: "Task 1",
+            startsAt: "2024-01-01T11:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          }
         ]
       })
     ];
@@ -286,8 +294,24 @@ describe("CalendarPanel", () => {
           { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
           { id: "r2", source: "reminder", title: "Reminder 2", startsAt: "2024-01-01T11:00:00", allDay: false },
           { id: "r3", source: "reminder", title: "Reminder 3", startsAt: "2024-01-01T12:00:00", allDay: false },
-          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T13:00:00", allDay: false, priority: "normal", status: "open" },
-          { id: "t2", source: "task", title: "Task 2", startsAt: "2024-01-01T14:00:00", allDay: false, priority: "normal", status: "open" }
+          {
+            id: "t1",
+            source: "task",
+            title: "Task 1",
+            startsAt: "2024-01-01T13:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          },
+          {
+            id: "t2",
+            source: "task",
+            title: "Task 2",
+            startsAt: "2024-01-01T14:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          }
         ]
       })
     ];
@@ -348,7 +372,7 @@ describe("CalendarPanel", () => {
     );
 
     const calendarToolbar = document.querySelector(".calendarToolbar");
-    const dayButton = calendarToolbar?.querySelector('button') as HTMLElement;
+    const dayButton = calendarToolbar?.querySelector("button") as HTMLElement;
     await user.click(dayButton!);
 
     // Should show empty state instead of hourly grid
@@ -369,7 +393,15 @@ describe("CalendarPanel", () => {
         count: 2,
         events: [
           { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
-          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T14:00:00", allDay: false, priority: "normal", status: "open" }
+          {
+            id: "t1",
+            source: "task",
+            title: "Task 1",
+            startsAt: "2024-01-01T14:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          }
         ]
       })
     ];
@@ -389,7 +421,7 @@ describe("CalendarPanel", () => {
     );
 
     const calendarToolbar = document.querySelector(".calendarToolbar");
-    const dayButton = calendarToolbar?.querySelector('button') as HTMLElement;
+    const dayButton = calendarToolbar?.querySelector("button") as HTMLElement;
     await user.click(dayButton!);
 
     // Should show only hours with events (10:00 and 14:00), not all hours
@@ -421,7 +453,7 @@ describe("CalendarPanel", () => {
     );
 
     const calendarToolbar = document.querySelector(".calendarToolbar");
-    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    const buttons = calendarToolbar?.querySelectorAll("button") as NodeListOf<HTMLElement>;
     await user.click(buttons[1]!);
 
     const weekView = document.querySelector(".calendarWeekView");
@@ -453,7 +485,7 @@ describe("CalendarPanel", () => {
     );
 
     const calendarToolbar = document.querySelector(".calendarToolbar");
-    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    const buttons = calendarToolbar?.querySelectorAll("button") as NodeListOf<HTMLElement>;
     await user.click(buttons[2]!);
 
     const weekView = document.querySelector(".calendarWeekView");
@@ -477,7 +509,14 @@ describe("CalendarPanel", () => {
         dayNumber: 31,
         count: 1,
         events: [
-          { id: "r1", source: "reminder", title: "Overdue reminder", startsAt: "2023-12-31T10:00:00", allDay: false, status: "pending" }
+          {
+            id: "r1",
+            source: "reminder",
+            title: "Overdue reminder",
+            startsAt: "2023-12-31T10:00:00",
+            allDay: false,
+            status: "pending"
+          }
         ]
       }),
       makeCalendarCell({
@@ -485,7 +524,15 @@ describe("CalendarPanel", () => {
         dayNumber: 2,
         count: 1,
         events: [
-          { id: "t1", source: "task", title: "Future task", startsAt: "2024-01-02T10:00:00", allDay: false, priority: "normal", status: "open" }
+          {
+            id: "t1",
+            source: "task",
+            title: "Future task",
+            startsAt: "2024-01-02T10:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          }
         ]
       })
     ];
@@ -505,7 +552,7 @@ describe("CalendarPanel", () => {
     );
 
     const calendarToolbar = document.querySelector(".calendarToolbar");
-    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    const buttons = calendarToolbar?.querySelectorAll("button") as NodeListOf<HTMLElement>;
     await user.click(buttons[3]!);
 
     expect(screen.getByText("Upcoming (Next 14 Days)")).toBeInTheDocument();
@@ -538,7 +585,7 @@ describe("CalendarPanel", () => {
     );
 
     const calendarToolbar = document.querySelector(".calendarToolbar");
-    const buttons = calendarToolbar?.querySelectorAll('button') as NodeListOf<HTMLElement>;
+    const buttons = calendarToolbar?.querySelectorAll("button") as NodeListOf<HTMLElement>;
     await user.click(buttons[5]!);
 
     // Should NOT show Back to month button
@@ -581,8 +628,24 @@ describe("CalendarPanel", () => {
           { id: "r1", source: "reminder", title: "Reminder 1", startsAt: "2024-01-01T10:00:00", allDay: false },
           { id: "r2", source: "reminder", title: "Reminder 2", startsAt: "2024-01-01T11:00:00", allDay: false },
           { id: "r3", source: "reminder", title: "Reminder 3", startsAt: "2024-01-01T12:00:00", allDay: false },
-          { id: "t1", source: "task", title: "Task 1", startsAt: "2024-01-01T13:00:00", allDay: false, priority: "normal", status: "open" },
-          { id: "t2", source: "task", title: "Task 2", startsAt: "2024-01-01T14:00:00", allDay: false, priority: "normal", status: "open" }
+          {
+            id: "t1",
+            source: "task",
+            title: "Task 1",
+            startsAt: "2024-01-01T13:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          },
+          {
+            id: "t2",
+            source: "task",
+            title: "Task 2",
+            startsAt: "2024-01-01T14:00:00",
+            allDay: false,
+            priority: "normal",
+            status: "open"
+          }
         ]
       })
     ];

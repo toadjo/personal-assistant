@@ -8,26 +8,45 @@ describe("calendar", () => {
     const monthDate = new Date(2026, 0, 1); // January 2026
     const remindersByDate = new Map<string, Reminder[]>();
     const tasksByDate = new Map<string, Task[]>();
-    
+
     const reminderDateKey = "2026-01-15";
     remindersByDate.set(reminderDateKey, [
-      { id: "r1", text: "Test reminder", dueAt: "2026-01-15T10:00:00", recurrence: "none", status: "pending", notifyChannel: "desktop" }
+      {
+        id: "r1",
+        text: "Test reminder",
+        dueAt: "2026-01-15T10:00:00",
+        recurrence: "none",
+        status: "pending",
+        notifyChannel: "desktop"
+      }
     ]);
-    
+
     const taskDateKey = "2026-01-16";
     tasksByDate.set(taskDateKey, [
-      { id: "t1", title: "Test task", notes: "", dueAt: "2026-01-16T10:00:00", priority: "normal", status: "open", recurrence: "none", notifyChannel: "desktop", createdAt: "2026-01-01T00:00:00", updatedAt: "2026-01-01T00:00:00", lastCompletedAt: null }
+      {
+        id: "t1",
+        title: "Test task",
+        notes: "",
+        dueAt: "2026-01-16T10:00:00",
+        priority: "normal",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2026-01-01T00:00:00",
+        updatedAt: "2026-01-01T00:00:00",
+        lastCompletedAt: null
+      }
     ]);
-    
+
     const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
-    
-    const reminderCell = cells.find(c => c.dateKey === reminderDateKey);
+
+    const reminderCell = cells.find((c) => c.dateKey === reminderDateKey);
     expect(reminderCell).toBeDefined();
     expect(reminderCell?.events).toHaveLength(1);
     expect(reminderCell?.events[0]?.source).toBe("reminder");
     expect(reminderCell?.events[0]?.title).toBe("Test reminder");
-    
-    const taskCell = cells.find(c => c.dateKey === taskDateKey);
+
+    const taskCell = cells.find((c) => c.dateKey === taskDateKey);
     expect(taskCell).toBeDefined();
     expect(taskCell?.events).toHaveLength(1);
     expect(taskCell?.events[0]?.source).toBe("task");
@@ -37,13 +56,13 @@ describe("calendar", () => {
   it("buildCalendarCells starts week on Monday", () => {
     const monthDate = new Date(2026, 0, 1); // January 1, 2026 is Thursday
     const cells = buildCalendarCells(monthDate, new Map(), new Map(), new Map());
-    
+
     // First cell should be Monday (Dec 29, 2025)
     expect(cells[0]?.dayNumber).toBe(29);
     expect(cells[0]?.isCurrentMonth).toBe(false);
-    
+
     // Thursday (Jan 1) should be at index 3
-    const jan1 = cells.find(c => c.dateKey === "2026-01-01");
+    const jan1 = cells.find((c) => c.dateKey === "2026-01-01");
     expect(jan1).toBeDefined();
     expect(jan1?.dayNumber).toBe(1);
     expect(jan1?.isCurrentMonth).toBe(true);
@@ -53,19 +72,45 @@ describe("calendar", () => {
     const monthDate = new Date(2026, 0, 1);
     const remindersByDate = new Map<string, Reminder[]>();
     const tasksByDate = new Map<string, Task[]>();
-    
+
     const dateKey = "2026-01-15";
     remindersByDate.set(dateKey, [
-      { id: "r1", text: "Reminder 1", dueAt: "2026-01-15T10:00:00", recurrence: "none", status: "pending", notifyChannel: "desktop" },
-      { id: "r2", text: "Reminder 2", dueAt: "2026-01-15T11:00:00", recurrence: "none", status: "pending", notifyChannel: "desktop" }
+      {
+        id: "r1",
+        text: "Reminder 1",
+        dueAt: "2026-01-15T10:00:00",
+        recurrence: "none",
+        status: "pending",
+        notifyChannel: "desktop"
+      },
+      {
+        id: "r2",
+        text: "Reminder 2",
+        dueAt: "2026-01-15T11:00:00",
+        recurrence: "none",
+        status: "pending",
+        notifyChannel: "desktop"
+      }
     ]);
     tasksByDate.set(dateKey, [
-      { id: "t1", title: "Task 1", notes: "", dueAt: "2026-01-15T12:00:00", priority: "normal", status: "open", recurrence: "none", notifyChannel: "desktop", createdAt: "2026-01-01T00:00:00", updatedAt: "2026-01-01T00:00:00", lastCompletedAt: null }
+      {
+        id: "t1",
+        title: "Task 1",
+        notes: "",
+        dueAt: "2026-01-15T12:00:00",
+        priority: "normal",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2026-01-01T00:00:00",
+        updatedAt: "2026-01-01T00:00:00",
+        lastCompletedAt: null
+      }
     ]);
-    
+
     const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
-    const cell = cells.find(c => c.dateKey === dateKey);
-    
+    const cell = cells.find((c) => c.dateKey === dateKey);
+
     expect(cell).toBeDefined();
     expect(cell?.events).toHaveLength(3);
     expect(cell?.count).toBe(3);
@@ -75,15 +120,27 @@ describe("calendar", () => {
     const monthDate = new Date(2026, 0, 1);
     const remindersByDate = new Map<string, Reminder[]>();
     const tasksByDate = new Map<string, Task[]>();
-    
+
     const dateKey = "2026-01-15";
     tasksByDate.set(dateKey, [
-      { id: "t1", title: "Completed task", notes: "", dueAt: "2026-01-15T10:00:00", priority: "normal", status: "done", recurrence: "none", notifyChannel: "desktop", createdAt: "2026-01-01T00:00:00", updatedAt: "2026-01-01T00:00:00", lastCompletedAt: "2026-01-15T10:00:00" }
+      {
+        id: "t1",
+        title: "Completed task",
+        notes: "",
+        dueAt: "2026-01-15T10:00:00",
+        priority: "normal",
+        status: "done",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2026-01-01T00:00:00",
+        updatedAt: "2026-01-01T00:00:00",
+        lastCompletedAt: "2026-01-15T10:00:00"
+      }
     ]);
-    
+
     const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
-    const cell = cells.find(c => c.dateKey === dateKey);
-    
+    const cell = cells.find((c) => c.dateKey === dateKey);
+
     expect(cell).toBeDefined();
     expect(cell?.events[0]?.status).toBe("done");
   });
@@ -92,15 +149,27 @@ describe("calendar", () => {
     const monthDate = new Date(2026, 0, 1);
     const remindersByDate = new Map<string, Reminder[]>();
     const tasksByDate = new Map<string, Task[]>();
-    
+
     const dateKey = "2026-01-15";
     tasksByDate.set(dateKey, [
-      { id: "t1", title: "High priority task", notes: "", dueAt: "2026-01-15T10:00:00", priority: "high", status: "open", recurrence: "none", notifyChannel: "desktop", createdAt: "2026-01-01T00:00:00", updatedAt: "2026-01-01T00:00:00", lastCompletedAt: null }
+      {
+        id: "t1",
+        title: "High priority task",
+        notes: "",
+        dueAt: "2026-01-15T10:00:00",
+        priority: "high",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2026-01-01T00:00:00",
+        updatedAt: "2026-01-01T00:00:00",
+        lastCompletedAt: null
+      }
     ]);
-    
+
     const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
-    const cell = cells.find(c => c.dateKey === dateKey);
-    
+    const cell = cells.find((c) => c.dateKey === dateKey);
+
     expect(cell).toBeDefined();
     expect(cell?.events[0]?.priority).toBe("high");
   });

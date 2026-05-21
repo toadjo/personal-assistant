@@ -9,7 +9,9 @@ export interface TeamRealtimeDependencies {
   refreshTasks: () => void | Promise<void>;
   startRealtime: () => void | Promise<void>;
   stopRealtime: () => void | Promise<void>;
-  onTeamDataUpdated: (callback: (event: unknown, payload: { workspaceId: string; tables: string[] }) => void) => () => void;
+  onTeamDataUpdated: (
+    callback: (event: unknown, payload: { workspaceId: string; tables: string[] }) => void
+  ) => () => void;
   refreshProjectsEnabled: boolean;
   refreshTasksEnabled: boolean;
   debounceMs?: number;

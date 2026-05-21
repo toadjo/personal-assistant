@@ -39,7 +39,7 @@ describe("automation focus intent", () => {
       createdAt: Date.now() - 31000 // 31 seconds ago
     };
     localStorage.setItem("assistant-automation-focus-intent", JSON.stringify(oldIntent));
-    
+
     const ruleId = getAutomationFocusIntent();
     expect(ruleId).toBeNull();
   });
@@ -50,7 +50,7 @@ describe("automation focus intent", () => {
       createdAt: Date.now() - 29000 // 29 seconds ago
     };
     localStorage.setItem("assistant-automation-focus-intent", JSON.stringify(recentIntent));
-    
+
     const ruleId = getAutomationFocusIntent();
     expect(ruleId).toBe("rule-123");
   });
@@ -67,9 +67,9 @@ describe("automation focus intent", () => {
     localStorage.setItem = vi.fn(() => {
       throw new Error("localStorage unavailable");
     });
-    
+
     expect(() => setAutomationFocusIntent("rule-123")).not.toThrow();
-    
+
     localStorage.setItem = originalSetItem;
   });
 
@@ -78,10 +78,10 @@ describe("automation focus intent", () => {
     localStorage.getItem = vi.fn(() => {
       throw new Error("localStorage unavailable");
     });
-    
+
     expect(() => getAutomationFocusIntent()).not.toThrow();
     expect(getAutomationFocusIntent()).toBeNull();
-    
+
     localStorage.getItem = originalGetItem;
   });
 
@@ -90,9 +90,9 @@ describe("automation focus intent", () => {
     localStorage.removeItem = vi.fn(() => {
       throw new Error("localStorage unavailable");
     });
-    
+
     expect(() => clearAutomationFocusIntent()).not.toThrow();
-    
+
     localStorage.removeItem = originalRemoveItem;
   });
 });

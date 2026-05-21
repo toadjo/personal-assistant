@@ -63,9 +63,7 @@ export async function routeCommandThroughAi(
  * Format tools for AI context.
  */
 function formatToolsForAi(registry: AiToolRegistry): string {
-  return registry.tools
-    .map((tool) => `- ${tool.name} (${tool.id}): ${tool.description}`)
-    .join("\n");
+  return registry.tools.map((tool) => `- ${tool.name} (${tool.id}): ${tool.description}`).join("\n");
 }
 
 /**

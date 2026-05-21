@@ -7,7 +7,14 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockClient, mockAuth, mockGetAuthenticatedSupabaseClient, mockGetTeamConfig, mockSetTeamActiveWorkspaceId, mockInvalidateSupabaseClient } = vi.hoisted(() => ({
+const {
+  mockClient,
+  mockAuth,
+  mockGetAuthenticatedSupabaseClient,
+  mockGetTeamConfig,
+  mockSetTeamActiveWorkspaceId,
+  mockInvalidateSupabaseClient
+} = vi.hoisted(() => ({
   mockClient: {
     auth: {
       getUser: vi.fn()
@@ -34,12 +41,7 @@ vi.mock("./config", () => ({
   setTeamActiveWorkspaceId: mockSetTeamActiveWorkspaceId
 }));
 
-import {
-  createWorkspace,
-  joinWorkspace,
-  listWorkspaces,
-  setActiveWorkspace
-} from "./workspaces";
+import { createWorkspace, joinWorkspace, listWorkspaces, setActiveWorkspace } from "./workspaces";
 
 function createMockQueryBuilder() {
   const builder = {
@@ -232,9 +234,7 @@ describe("workspaces", () => {
 
       mockClient.from.mockReturnValue(mockQueryBuilder);
 
-      await expect(setActiveWorkspace("ws-123")).rejects.toThrow(
-        "You are not a member of this workspace"
-      );
+      await expect(setActiveWorkspace("ws-123")).rejects.toThrow("You are not a member of this workspace");
     });
 
     it("sets active workspace and invalidates client", async () => {

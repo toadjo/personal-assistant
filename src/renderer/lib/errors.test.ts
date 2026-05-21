@@ -38,9 +38,7 @@ describe("getAssistantInvokeErrorMessage", () => {
     });
     const wrapped = new Error(`Error invoking remote method 'ai:chat': Error: ${encoded.message}`);
 
-    expect(getAssistantInvokeErrorMessage(wrapped)).toBe(
-      "OpenAI rate limit exceeded. You can try again in a moment."
-    );
+    expect(getAssistantInvokeErrorMessage(wrapped)).toBe("OpenAI rate limit exceeded. You can try again in a moment.");
   });
 
   it("formats legacy Home Assistant payloads", () => {

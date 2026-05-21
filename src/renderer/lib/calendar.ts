@@ -69,7 +69,7 @@ export function getWeekDaysForDate(dateKey: string): string[] {
   const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const monday = new Date(date);
   monday.setDate(date.getDate() - mondayOffset);
-  
+
   const days: string[] = [];
   for (let i = 0; i < 7; i++) {
     const day = new Date(monday);
@@ -98,7 +98,7 @@ export function getUpcomingDays(dateKey: string, days: number = 14): string[] {
 export function getOverdueEvents(events: CalendarEventItem[], todayKey: string): CalendarEventItem[] {
   return events.filter((e) => {
     const eventDateKey = toLocalDateKey(new Date(e.startsAt));
-    return eventDateKey < todayKey && (e.status !== "completed" && e.status !== "done");
+    return eventDateKey < todayKey && e.status !== "completed" && e.status !== "done";
   });
 }
 

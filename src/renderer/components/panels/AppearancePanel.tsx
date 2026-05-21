@@ -65,7 +65,16 @@ const TOKEN_GROUPS: { label: string; keys: ThemeTokenKey[] }[] = [
   { label: "Stats", keys: ["statBg", "statBorder", "statText"] },
   {
     label: "Calendar",
-    keys: ["calReminderBg", "calTaskBg", "calTaskHighBg", "calCompletedBg", "calMemoBg", "calEventText", "calGridBg", "calGridBorder"]
+    keys: [
+      "calReminderBg",
+      "calTaskBg",
+      "calTaskHighBg",
+      "calCompletedBg",
+      "calMemoBg",
+      "calEventText",
+      "calGridBg",
+      "calGridBorder"
+    ]
   }
 ];
 

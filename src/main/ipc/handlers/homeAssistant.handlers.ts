@@ -11,12 +11,16 @@ import {
 } from "../../services/homeAssistant";
 import { registerInvoke } from "../invoke-handle";
 import { haConfigSchema, haEntityIdSchema } from "../schemas";
+import { isHomeAssistantAllowed } from "../../security/policy";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
 /** Registers IPC handlers for Home Assistant configuration, health checks, entity cache, and toggles. */
 export function registerHomeAssistantHandlers(assertSender: AssertSender): void {
   registerInvoke(IpcInvoke.haConfigure, assertSender, (_event, payload) => {
+    if (!isHomeAssistantAllowed()) {
+      throw new Error("Home Assistant integration is disabled by corporate policy.");
+    }
     const parsed = haConfigSchema.parse(payload);
     return configureHomeAssistant(parsed.url, parsed.token);
   });
@@ -24,15 +28,27 @@ export function registerHomeAssistantHandlers(assertSender: AssertSender): void 
     return getHomeAssistantConfig();
   });
   registerInvoke(IpcInvoke.haTest, assertSender, () => {
+    if (!isHomeAssistantAllowed()) {
+      throw new Error("Home Assistant integration is disabled by corporate policy.");
+    }
     return testConnection();
   });
   registerInvoke(IpcInvoke.haRefresh, assertSender, () => {
+    if (!isHomeAssistantAllowed()) {
+      throw new Error("Home Assistant integration is disabled by corporate policy.");
+    }
     return refreshEntities();
   });
   registerInvoke(IpcInvoke.haToggle, assertSender, (_event, entityId) => {
+    if (!isHomeAssistantAllowed()) {
+      throw new Error("Home Assistant integration is disabled by corporate policy.");
+    }
     return toggleEntity(haEntityIdSchema.parse(entityId));
   });
   registerInvoke(IpcInvoke.haListDevices, assertSender, () => {
+    if (!isHomeAssistantAllowed()) {
+      throw new Error("Home Assistant integration is disabled by corporate policy.");
+    }
     return getDb().prepare("SELECT * FROM devices_cache ORDER BY friendlyName ASC").all();
   });
   /**

@@ -15,9 +15,7 @@ const NO_ACTIVE_WORKSPACE_ERROR = "No active workspace selected. Please select a
  * Creates a new project in the active workspace.
  * Returns the created project.
  */
-export async function createProject(input: {
-  name: string;
-}): Promise<TeamProject> {
+export async function createProject(input: { name: string }): Promise<TeamProject> {
   const config = getTeamConfig();
   if (!config.activeWorkspaceId) {
     throw new Error(NO_ACTIVE_WORKSPACE_ERROR);
@@ -62,27 +60,20 @@ export async function listProjects(): Promise<TeamProject[]> {
 
   const { client } = await getAuthenticatedSupabaseClient();
 
-  const { data, error } = await client
-    .from("team_projects")
-    .select()
-    .eq("workspace_id", config.activeWorkspaceId);
+  const { data, error } = await client.from("team_projects").select().eq("workspace_id", config.activeWorkspaceId);
 
   if (error) {
     mainLog.error("[team:projects] listProjects failed", error);
     throw error;
   }
 
-  return (data || []).map((p: {
-    id: string;
-    workspace_id: string;
-    name: string;
-    created_by: string;
-    created_at: string;
-  }) => ({
-    id: p.id,
-    workspaceId: p.workspace_id,
-    name: p.name,
-    createdAt: p.created_at,
-    createdBy: p.created_by
-  }));
+  return (data || []).map(
+    (p: { id: string; workspace_id: string; name: string; created_by: string; created_at: string }) => ({
+      id: p.id,
+      workspaceId: p.workspace_id,
+      name: p.name,
+      createdAt: p.created_at,
+      createdBy: p.created_by
+    })
+  );
 }

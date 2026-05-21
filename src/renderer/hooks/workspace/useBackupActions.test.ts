@@ -81,9 +81,7 @@ describe("useBackupActions", () => {
     expect(importResult).toEqual(mockResult);
     expect(window.assistantApi.importData).toHaveBeenCalled();
     expect(mockRefreshAll).toHaveBeenCalled();
-    expect(mockSetStatus).toHaveBeenCalledWith(
-      "Import complete: 5 notes, 3 reminders, 2 tasks, 1 rules, 1 settings."
-    );
+    expect(mockSetStatus).toHaveBeenCalledWith("Import complete: 5 notes, 3 reminders, 2 tasks, 1 rules, 1 settings.");
     expect(result.current.isImporting).toBe(false);
   });
 

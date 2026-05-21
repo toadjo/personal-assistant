@@ -74,7 +74,7 @@ if (check) {
   const preloadInvokeBody = extractInlineBlock(preload, "invokeChannelMap");
   const preloadPushBody = extractInlineBlock(preload, "pushChannelMap");
   const preloadInline = buildInlineOutput(preloadInvokeBody, preloadPushBody);
-  
+
   if (normalizeLf(preloadInline) !== normalizeLf(expectedInline)) {
     console.error("Inline IPC channel maps in preload.ts are out of date with src/shared/ipc-channels.ts.");
     console.error("Run: node scripts/generate-preload-ipc.mjs to update preload.ts");
@@ -87,7 +87,7 @@ if (check) {
     /const invokeChannelMap = \{[\s\S]*?\} as const;\s*const pushChannelMap = \{[\s\S]*?\} as const;\s*const invoke = invokeChannelMap;\s*const push = pushChannelMap;/,
     expectedInline.trim()
   );
-  
+
   writeFileSync(preloadPath, updatedPreload, "utf8");
   console.log(`Updated ${preloadPath} with inline IPC channel maps from ${sourcePath}`);
 }

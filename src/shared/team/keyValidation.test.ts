@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { TEAM_WORKSPACE_KEY_ALPHABET, TEAM_WORKSPACE_KEY_LENGTH, generateWorkspaceKey, validateWorkspaceKey } from "./keyValidation";
+import {
+  TEAM_WORKSPACE_KEY_ALPHABET,
+  TEAM_WORKSPACE_KEY_LENGTH,
+  generateWorkspaceKey,
+  validateWorkspaceKey
+} from "./keyValidation";
 
 describe("validateWorkspaceKey", () => {
   it("accepts a well-formed key", () => {

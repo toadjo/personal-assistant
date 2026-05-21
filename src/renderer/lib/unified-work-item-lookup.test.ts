@@ -3,7 +3,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { findUnifiedWorkItem, getUnifiedWorkItemSourceLabel, getUnifiedWorkItemSourceForBriefKind } from "./unified-work-item-lookup";
+import {
+  findUnifiedWorkItem,
+  getUnifiedWorkItemSourceLabel,
+  getUnifiedWorkItemSourceForBriefKind
+} from "./unified-work-item-lookup";
 import type { UnifiedWorkItem } from "./derived/unified-work";
 
 function makeUnifiedItem(overrides: Partial<UnifiedWorkItem> = {}): UnifiedWorkItem {
@@ -59,9 +63,7 @@ describe("findUnifiedWorkItem", () => {
   });
 
   it("missing items report a clear error (return null)", () => {
-    const unifiedItems = [
-      makeUnifiedItem({ source: "local-note", sourceId: "note-123" })
-    ];
+    const unifiedItems = [makeUnifiedItem({ source: "local-note", sourceId: "note-123" })];
 
     const result = findUnifiedWorkItem(unifiedItems, "local-task", "task-456");
 

@@ -35,12 +35,7 @@ export function AiActionPreview({ draft, onConfirm, onCancel, isConfirming }: Pr
       <div style={{ marginBottom: "var(--space-2)", fontSize: "0.9em", fontWeight: 500 }}>AI Suggestion:</div>
       <div style={{ marginBottom: "var(--space-2)", fontSize: "0.85em" }}>{getDraftDescription()}</div>
       <div className="row" style={{ gap: "0.5rem" }}>
-        <button
-          type="button"
-          className="ghostButton"
-          onClick={() => void onConfirm()}
-          disabled={isConfirming}
-        >
+        <button type="button" className="ghostButton" onClick={() => void onConfirm()} disabled={isConfirming}>
           <Check size={14} />
           {isConfirming ? "Confirming..." : "Confirm"}
         </button>

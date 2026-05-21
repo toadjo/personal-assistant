@@ -160,13 +160,21 @@ declare global {
       teamTasksList: () => Promise<TeamProjectTask[]>;
       teamRealtimeStart: () => Promise<void>;
       teamRealtimeStop: () => Promise<void>;
-      onTeamDataUpdated: (callback: (event: Electron.IpcRendererEvent, payload: { workspaceId: string; tables: Array<"projects" | "tasks"> }) => void) => () => void;
+      onTeamDataUpdated: (
+        callback: (
+          event: Electron.IpcRendererEvent,
+          payload: { workspaceId: string; tables: Array<"projects" | "tasks"> }
+        ) => void
+      ) => () => void;
       // AI configuration (slice 1: storage + status only).
       getAiConfig: () => Promise<AiConfigStatus>;
       setAiKey: (payload: { provider: AiProvider; apiKey: string }) => Promise<AiConfigStatus>;
       clearAiKey: () => Promise<AiConfigStatus>;
       testAiKey: () => Promise<{ success: true; model: string }>;
-      aiChat: (payload: { message: string; context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number } }) => Promise<{ reply: string; actionDraft?: AiActionDraft }>;
+      aiChat: (payload: {
+        message: string;
+        context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number };
+      }) => Promise<{ reply: string; actionDraft?: AiActionDraft }>;
     };
   }
 }

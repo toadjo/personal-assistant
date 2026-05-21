@@ -45,7 +45,6 @@ vi.mock("../log", () => ({
 import { getSupabaseClient, invalidateSupabaseClient, getAuthenticatedSupabaseClient } from "./supabaseClient";
 
 describe("supabaseClient", () => {
-
   beforeEach(() => {
     mockCreateClient.mockReturnValue({ auth: mockAuth });
     vi.clearAllMocks();
@@ -53,6 +52,10 @@ describe("supabaseClient", () => {
   });
 
   describe("getSupabaseClient", () => {
+    beforeEach(() => {
+      mockSafeStorage.isEncryptionAvailable.mockReturnValue(true);
+    });
+
     it("returns null when team config is missing", () => {
       mockGetTeamCredentials.mockReturnValue(null);
       expect(getSupabaseClient()).toBeNull();
@@ -107,20 +110,22 @@ describe("supabaseClient", () => {
       expect(mockCreateClient).toHaveBeenCalledTimes(1);
     });
 
-    it("logs warning when safeStorage encryption is not available", () => {
+    it("throws SecureStorageUnavailableError when safeStorage encryption is not available", () => {
       mockGetTeamCredentials.mockReturnValue({
         supabaseUrl: "https://example.supabase.co",
         supabaseAnonKey: "anon-key-123"
       });
       mockSafeStorage.isEncryptionAvailable.mockReturnValue(false);
-      getSupabaseClient();
-      expect(mockMainLog.warn).toHaveBeenCalledWith(
-        expect.stringContaining("safeStorage encryption")
-      );
+      expect(() => getSupabaseClient()).toThrow("Secure storage (OS encryption) is required");
+      expect(mockMainLog.error).toHaveBeenCalledWith(expect.stringContaining("safeStorage encryption"));
     });
   });
 
   describe("invalidateSupabaseClient", () => {
+    beforeEach(() => {
+      mockSafeStorage.isEncryptionAvailable.mockReturnValue(true);
+    });
+
     it("clears the cached client", () => {
       mockGetTeamCredentials.mockReturnValue({
         supabaseUrl: "https://example.supabase.co",
@@ -142,6 +147,10 @@ describe("supabaseClient", () => {
   });
 
   describe("getAuthenticatedSupabaseClient", () => {
+    beforeEach(() => {
+      mockSafeStorage.isEncryptionAvailable.mockReturnValue(true);
+    });
+
     it("throws when team config is missing", async () => {
       mockGetTeamCredentials.mockReturnValue(null);
       await expect(getAuthenticatedSupabaseClient()).rejects.toThrow("Team mode is not configured");

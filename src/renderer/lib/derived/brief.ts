@@ -104,10 +104,10 @@ export function deriveFocusBrief(params: {
     const key = getDedupeKey("team-task", teamTask.id);
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);
-    
-    const project = teamProjects.find(p => p.id === teamTask.projectId);
+
+    const project = teamProjects.find((p) => p.id === teamTask.projectId);
     const urgency = getUrgencyForTeamTask(teamTask, now);
-    
+
     const detailParts: string[] = [];
     if (teamTask.dueAt) {
       detailParts.push(formatDateTime(teamTask.dueAt));
@@ -118,7 +118,7 @@ export function deriveFocusBrief(params: {
     if (teamTask.assigneeDisplayName) {
       detailParts.push(teamTask.assigneeDisplayName);
     }
-    
+
     items.push({
       kind: "team-task",
       label: teamTask.title,

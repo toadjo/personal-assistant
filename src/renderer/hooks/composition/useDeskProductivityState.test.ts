@@ -67,7 +67,15 @@ describe("useDeskProductivityState inbox integration", () => {
     const removeNoteById = vi.fn();
 
     const notes: Note[] = [
-      { id: "1", title: "Note 1", content: "Content", tags: [], pinned: false, createdAt: "2024-01-01T00:00:00Z", updatedAt: "2024-01-01T00:00:00Z" }
+      {
+        id: "1",
+        title: "Note 1",
+        content: "Content",
+        tags: [],
+        pinned: false,
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z"
+      }
     ];
     const tasks: Task[] = [
       {

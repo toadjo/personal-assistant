@@ -185,17 +185,14 @@ export function runReminderSchedulerTick(getWindows: () => readonly (BrowserWind
       continue;
     }
 
-    const result = showNotificationSafe(
-      { title: "Reminder", body: item.text },
-      () => {
-        for (const w of getWindows()) {
-          if (w && !w.isDestroyed()) {
-            showMainWindow(w);
-            break;
-          }
+    const result = showNotificationSafe({ title: "Reminder", body: item.text }, () => {
+      for (const w of getWindows()) {
+        if (w && !w.isDestroyed()) {
+          showMainWindow(w);
+          break;
         }
       }
-    );
+    });
 
     if (result === "shown") {
       // Clear any previous failure cooldown on success

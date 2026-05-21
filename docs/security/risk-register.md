@@ -4,21 +4,22 @@ This document identifies key security risks for Personal Assistant and their mit
 
 ## Risk Assessment
 
-| Risk                          | Likelihood | Impact | Risk Level | Mitigation Status       | Mitigation Measures                                                                                                                                |
-| ----------------------------- | ---------- | ------ | ---------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Legacy plaintext secrets      | Low        | High   | Medium     | **Mitigated**           | Fail-closed secret storage implemented in v2.1.4. If OS encryption unavailable, secrets cannot be stored.                                          |
-| Local database exposure       | Medium     | Medium | Medium     | **Partially Mitigated** | Database stored in app data directory with OS file system controls. No encryption at rest (local-only data). User responsible for device security. |
-| Backup data exposure          | Low        | High   | Medium     | **Mitigated**           | Secrets excluded from backup export. Import rejects secret settings.                                                                               |
-| Third-party provider risk     | Low        | Medium | Medium     | **Partially Mitigated** | AI providers (OpenAI, Anthropic) and Supabase used with encrypted credentials. No formal vendor risk management process.                           |
-| Dependency vulnerability risk | Medium     | Medium | Medium     | **Mitigated**           | npm audit --audit-level=high as CI gate. Regular dependency updates. Electron 41.0.0 with better-sqlite3 12.10.0.                                  |
-| AI data minimization risk     | Low        | Medium | Low        | **Mitigated**           | AI chat context limited to count-only data (notesCount, tasksCount, remindersCount, devicesCount). No note/task content sent.                      |
-| Manual release integrity risk | Low        | Medium | Low        | **Mitigated**           | SHA256 checksums for installer verification. Git-based release evidence tracking. Manual upload to separate repo.                                  |
-| Renderer process compromise   | Low        | High   | Medium     | **Mitigated**           | Sandbox enabled, contextBridge, hardened CSP in packaged builds. No Node.js access in renderer.                                                    |
-| Secret leakage in logs        | Low        | High   | Medium     | **Mitigated**           | Secret redaction implemented in renderer error persistence.                                                                                        |
-| Local database corruption     | Low        | Medium | Low        | **Not Mitigated**       | No automatic backup. User responsible for manual backup via export.                                                                                |
-| Unauthorized device access    | Medium     | Medium | Medium     | **Not Mitigated**       | No app-level authentication. User responsible for OS-level access controls (Windows Hello, device encryption).                                     |
-| Supply chain attack           | Low        | High   | Medium     | **Partially Mitigated** | npm audit gate, public source code, manual review of dependencies. No formal SBOM or supply chain monitoring.                                      |
-| Backup file exposure          | Low        | High   | Medium     | **Mitigated**           | Secrets excluded from backup export. User responsible for backup file storage security.                                                            |
+| Risk                          | Likelihood | Impact | Risk Level | Mitigation Status       | Mitigation Measures                                                                                                                                                                             |
+| ----------------------------- | ---------- | ------ | ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Legacy plaintext secrets      | Low        | High   | Medium     | **Mitigated**           | Fail-closed secret storage implemented in v2.1.4. If OS encryption unavailable, secrets cannot be stored.                                                                                       |
+| Local database exposure       | Medium     | Medium | Medium     | **Partially Mitigated** | Database stored in app data directory with OS file system controls. No encryption at rest (local-only data). User responsible for device security.                                              |
+| Backup data exposure          | Low        | High   | Medium     | **Mitigated**           | Secrets excluded from backup export. Import rejects secret settings.                                                                                                                            |
+| Third-party provider risk     | Low        | Medium | Medium     | **Mitigated**           | AI providers (OpenAI, Anthropic) and Supabase used with encrypted credentials. Corporate mode allows administrators to disable outbound integrations. No formal vendor risk management process. |
+| Dependency vulnerability risk | Medium     | Medium | Medium     | **Mitigated**           | npm audit --audit-level=high as CI gate. Regular dependency updates. Electron 41.0.0 with better-sqlite3 12.10.0.                                                                               |
+| AI data minimization risk     | Low        | Medium | Low        | **Mitigated**           | AI chat context limited to count-only data (notesCount, tasksCount, remindersCount, devicesCount). No note/task content sent.                                                                   |
+| Manual release integrity risk | Low        | Medium | Low        | **Mitigated**           | SHA256 checksums for installer verification. Git-based release evidence tracking. Manual upload to separate repo.                                                                               |
+| Renderer process compromise   | Low        | High   | Medium     | **Mitigated**           | Sandbox enabled, contextBridge, hardened CSP in packaged builds. No Node.js access in renderer.                                                                                                 |
+| Secret leakage in logs        | Low        | High   | Medium     | **Mitigated**           | Secret redaction implemented in renderer error persistence.                                                                                                                                     |
+| Local database corruption     | Low        | Medium | Low        | **Not Mitigated**       | No automatic backup. User responsible for manual backup via export.                                                                                                                             |
+| Unauthorized device access    | Medium     | Medium | Medium     | **Not Mitigated**       | No app-level authentication. User responsible for OS-level access controls (Windows Hello, device encryption).                                                                                  |
+| Supply chain attack           | Low        | High   | Medium     | **Partially Mitigated** | npm audit gate, public source code, manual review of dependencies. No formal SBOM or supply chain monitoring.                                                                                   |
+| Backup file exposure          | Low        | High   | Medium     | **Mitigated**           | Secrets excluded from backup export. User responsible for backup file storage security.                                                                                                         |
+| Outbound data exfiltration    | Low        | High   | Medium     | **Mitigated**           | Corporate mode allows administrators to disable all outbound integrations (AI, Team sync, Home Assistant, crash reporting) via policy file. Enforcement happens in main process IPC handlers.   |
 
 ## Detailed Risk Descriptions
 
@@ -50,7 +51,7 @@ This document identifies key security risks for Personal Assistant and their mit
 
 **Description:** Use of AI providers (OpenAI, Anthropic), Supabase for team mode, and Home Assistant introduces third-party dependency risks.
 
-**Mitigation:** Credentials encrypted with OS encryption. Minimal data sent to AI providers (count-only context). No formal vendor risk management process.
+**Mitigation:** Credentials encrypted with OS encryption. Minimal data sent to AI providers (count-only context). Corporate mode allows administrators to disable all outbound integrations via policy file. No formal vendor risk management process.
 
 **Residual Risk:** No formal vendor assessment, SLA monitoring, or incident response coordination. Users choose to enable these optional features.
 
@@ -126,15 +127,24 @@ This document identifies key security risks for Personal Assistant and their mit
 
 **Residual Risk:** User responsible for secure storage of backup files. No automatic encryption of backup files.
 
+### 14. Outbound Data Exfiltration
+
+**Description:** Optional integrations (AI, Team sync, Home Assistant, crash reporting) could send data to external services without user awareness or administrative control.
+
+**Mitigation:** Corporate mode allows administrators to disable all outbound integrations via policy file at `%ProgramData%\PersonalAssistant\policy.json`. Policy enforcement happens in main process IPC handlers, preventing renderer bypass. Default behavior is personal mode (all integrations enabled). Corporate mode defaults to all integrations disabled unless explicitly allowed.
+
+**Residual Risk:** Policy file must be deployed and maintained by administrators. No automated policy enforcement beyond application startup. Device-level controls (firewall, proxy) may be needed for comprehensive outbound control.
+
 ## Risk Treatment Summary
 
-**Fully Mitigated Risks:** 5
+**Fully Mitigated Risks:** 6
 
 - Legacy plaintext secrets
 - Backup data exposure
 - AI data minimization risk
 - Manual release integrity risk
 - Secret leakage in logs
+- Outbound data exfiltration
 
 **Partially Mitigated Risks:** 5
 

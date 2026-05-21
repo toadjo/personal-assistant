@@ -14,10 +14,7 @@ import type { TeamWorkspace } from "../../shared/team/types";
  * Creates a new workspace with the given name and workspace key.
  * Returns the created workspace.
  */
-export async function createWorkspace(input: {
-  name: string;
-  workspaceKey: string;
-}): Promise<TeamWorkspace> {
+export async function createWorkspace(input: { name: string; workspaceKey: string }): Promise<TeamWorkspace> {
   const { client } = await getAuthenticatedSupabaseClient();
   const { displayName } = getTeamConfig();
 
@@ -84,10 +81,7 @@ export async function joinWorkspace(workspaceKey: string): Promise<TeamWorkspace
 export async function listWorkspaces(): Promise<TeamWorkspace[]> {
   const { client, userId } = await getAuthenticatedSupabaseClient();
 
-  const { data, error } = await client
-    .from("team_workspace_members")
-    .select("workspace_id")
-    .eq("user_id", userId);
+  const { data, error } = await client.from("team_workspace_members").select("workspace_id").eq("user_id", userId);
 
   if (error) {
     mainLog.error("[team:workspaces] listWorkspaces failed", error);
@@ -110,19 +104,15 @@ export async function listWorkspaces(): Promise<TeamWorkspace[]> {
     throw workspacesError;
   }
 
-  return (workspaces || []).map((w: {
-    id: string;
-    name: string;
-    workspace_key: string;
-    created_by: string;
-    created_at: string;
-  }) => ({
-    id: w.id,
-    name: w.name,
-    workspaceKey: w.workspace_key,
-    createdAt: w.created_at,
-    createdBy: w.created_by
-  }));
+  return (workspaces || []).map(
+    (w: { id: string; name: string; workspace_key: string; created_by: string; created_at: string }) => ({
+      id: w.id,
+      name: w.name,
+      workspaceKey: w.workspace_key,
+      createdAt: w.created_at,
+      createdBy: w.created_by
+    })
+  );
 }
 
 /**

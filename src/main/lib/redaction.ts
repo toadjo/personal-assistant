@@ -36,11 +36,11 @@ const REDACTION_PLACEHOLDER = "[REDACTED]";
  */
 export function redactSecrets(value: string): string {
   let redacted = value;
-  
+
   for (const pattern of SECRET_PATTERNS) {
     redacted = redacted.replace(pattern, REDACTION_PLACEHOLDER);
   }
-  
+
   return redacted;
 }
 
@@ -50,13 +50,13 @@ export function redactSecrets(value: string): string {
  */
 export function redactSecretsFromObject<T extends Record<string, unknown>>(obj: T): T {
   const result = { ...obj };
-  
+
   for (const key in result) {
     const value = result[key];
     if (typeof value === "string") {
       result[key] = redactSecrets(value) as T[Extract<keyof T, string>];
     }
   }
-  
+
   return result;
 }

@@ -117,27 +117,15 @@ export const InboxPanel = memo(function InboxPanel({
       {captureMode === "none" ? (
         <div className="panelContent">
           <div className="captureOptions">
-            <button
-              type="button"
-              className="captureOption"
-              onClick={() => setCaptureMode("note")}
-            >
+            <button type="button" className="captureOption" onClick={() => setCaptureMode("note")}>
               <FileText size={20} />
               <span>Note</span>
             </button>
-            <button
-              type="button"
-              className="captureOption"
-              onClick={() => setCaptureMode("task")}
-            >
+            <button type="button" className="captureOption" onClick={() => setCaptureMode("task")}>
               <ListTodo size={20} />
               <span>Task</span>
             </button>
-            <button
-              type="button"
-              className="captureOption"
-              onClick={() => setCaptureMode("reminder")}
-            >
+            <button type="button" className="captureOption" onClick={() => setCaptureMode("reminder")}>
               <Bell size={20} />
               <span>Reminder</span>
             </button>
@@ -152,12 +140,10 @@ export const InboxPanel = memo(function InboxPanel({
                   const Icon = getIconForSource(item.source);
                   return (
                     <li key={item.id} className="itemRow">
-                      <button
-                        type="button"
-                        className="itemRowButton"
-                        onClick={() => onOpenItem?.(item)}
-                      >
-                        <div className="itemIcon"><Icon size={16} /></div>
+                      <button type="button" className="itemRowButton" onClick={() => onOpenItem?.(item)}>
+                        <div className="itemIcon">
+                          <Icon size={16} />
+                        </div>
                         <div className="itemContent">
                           <div className="itemLabel">{item.label}</div>
                           <div className="itemMeta">
@@ -227,12 +213,10 @@ export const InboxPanel = memo(function InboxPanel({
                   const Icon = getIconForSource(item.source);
                   return (
                     <li key={item.id} className="itemRow">
-                      <button
-                        type="button"
-                        className="itemRowButton"
-                        onClick={() => onOpenItem?.(item)}
-                      >
-                        <div className="itemIcon"><Icon size={16} /></div>
+                      <button type="button" className="itemRowButton" onClick={() => onOpenItem?.(item)}>
+                        <div className="itemIcon">
+                          <Icon size={16} />
+                        </div>
                         <div className="itemContent">
                           <div className="itemLabel">{item.label}</div>
                           <div className="itemMeta">
@@ -246,11 +230,7 @@ export const InboxPanel = memo(function InboxPanel({
                     </li>
                   );
                 })}
-                {unifiedItems.length > 10 && (
-                  <div className="showMore">
-                    +{unifiedItems.length - 10} more items
-                  </div>
-                )}
+                {unifiedItems.length > 10 && <div className="showMore">+{unifiedItems.length - 10} more items</div>}
               </ul>
             </div>
           )}
@@ -275,11 +255,7 @@ export const InboxPanel = memo(function InboxPanel({
                 onChange={(event) => setCaptureTitle(event.currentTarget.value)}
                 autoFocus
               />
-              <IconButton
-                icon={Plus}
-                label="Capture"
-                onClick={() => void handleCapture()}
-              />
+              <IconButton icon={Plus} label="Capture" onClick={() => void handleCapture()} />
             </div>
             {captureMode !== "reminder" && (
               <textarea

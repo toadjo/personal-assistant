@@ -1,5 +1,6 @@
 import type { AiProvider, AiChatRequest, AiChatResponse } from "../../shared/ai/types";
 import { throwAssistantInvoke } from "./structuredInvokeError";
+import { checkAiAllowed, checkHostAllowed } from "../security/outboundGuard";
 
 /**
  * Model IDs for each provider. Configurable in code; can be changed without database migration.
@@ -56,6 +57,8 @@ export class OpenAiAdapter implements AiProviderAdapter {
   private readonly baseUrl = "https://api.openai.com/v1";
 
   async testConnection(apiKey: string): Promise<AiTestResult> {
+    checkAiAllowed();
+    checkHostAllowed(new URL(this.baseUrl).hostname);
     if (!apiKey) {
       throwAi({ code: "NOT_CONFIGURED", message: "OpenAI API key is not configured.", retryable: false });
     }
@@ -104,7 +107,13 @@ export class OpenAiAdapter implements AiProviderAdapter {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "OpenAI API request timed out.", retryable: true });
       }
-      if (error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "ECONNREFUSED") {
+      if (
+        error instanceof Error &&
+        error.cause &&
+        typeof error.cause === "object" &&
+        "code" in error.cause &&
+        error.cause.code === "ECONNREFUSED"
+      ) {
         throwAi({ code: "NETWORK_FAILURE", message: "Network error connecting to OpenAI.", retryable: true });
       }
       // Re-throw structured errors from above
@@ -113,6 +122,8 @@ export class OpenAiAdapter implements AiProviderAdapter {
   }
 
   async chat(apiKey: string, request: AiChatRequest): Promise<AiChatResponse> {
+    checkAiAllowed();
+    checkHostAllowed(new URL(this.baseUrl).hostname);
     if (!apiKey) {
       throwAi({ code: "NOT_CONFIGURED", message: "OpenAI API key is not configured.", retryable: false });
     }
@@ -129,7 +140,8 @@ export class OpenAiAdapter implements AiProviderAdapter {
           messages: [
             {
               role: "system",
-              content: "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields."
+              content:
+                "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields."
             },
             { role: "user", content: request.message }
           ],
@@ -187,7 +199,13 @@ export class OpenAiAdapter implements AiProviderAdapter {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "OpenAI API request timed out.", retryable: true });
       }
-      if (error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "ECONNREFUSED") {
+      if (
+        error instanceof Error &&
+        error.cause &&
+        typeof error.cause === "object" &&
+        "code" in error.cause &&
+        error.cause.code === "ECONNREFUSED"
+      ) {
         throwAi({ code: "NETWORK_FAILURE", message: "Network error connecting to OpenAI.", retryable: true });
       }
       // Re-throw structured errors from above
@@ -205,6 +223,8 @@ export class AnthropicAdapter implements AiProviderAdapter {
   private readonly baseUrl = "https://api.anthropic.com/v1";
 
   async testConnection(apiKey: string): Promise<AiTestResult> {
+    checkAiAllowed();
+    checkHostAllowed(new URL(this.baseUrl).hostname);
     if (!apiKey) {
       throwAi({ code: "NOT_CONFIGURED", message: "Anthropic API key is not configured.", retryable: false });
     }
@@ -271,7 +291,13 @@ export class AnthropicAdapter implements AiProviderAdapter {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "Anthropic API request timed out.", retryable: true });
       }
-      if (error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "ECONNREFUSED") {
+      if (
+        error instanceof Error &&
+        error.cause &&
+        typeof error.cause === "object" &&
+        "code" in error.cause &&
+        error.cause.code === "ECONNREFUSED"
+      ) {
         throwAi({ code: "NETWORK_FAILURE", message: "Network error connecting to Anthropic.", retryable: true });
       }
       // Re-throw structured errors from above
@@ -280,6 +306,8 @@ export class AnthropicAdapter implements AiProviderAdapter {
   }
 
   async chat(apiKey: string, request: AiChatRequest): Promise<AiChatResponse> {
+    checkAiAllowed();
+    checkHostAllowed(new URL(this.baseUrl).hostname);
     if (!apiKey) {
       throwAi({ code: "NOT_CONFIGURED", message: "Anthropic API key is not configured.", retryable: false });
     }
@@ -295,7 +323,8 @@ export class AnthropicAdapter implements AiProviderAdapter {
         body: JSON.stringify({
           model: this.modelId,
           max_tokens: 500,
-          system: "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields.",
+          system:
+            "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields.",
           messages: [{ role: "user", content: request.message }]
         }),
         signal: AbortSignal.timeout(30_000)
@@ -348,7 +377,13 @@ export class AnthropicAdapter implements AiProviderAdapter {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "Anthropic API request timed out.", retryable: true });
       }
-      if (error instanceof Error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "ECONNREFUSED") {
+      if (
+        error instanceof Error &&
+        error.cause &&
+        typeof error.cause === "object" &&
+        "code" in error.cause &&
+        error.cause.code === "ECONNREFUSED"
+      ) {
         throwAi({ code: "NETWORK_FAILURE", message: "Network error connecting to Anthropic.", retryable: true });
       }
       // Re-throw structured errors from above

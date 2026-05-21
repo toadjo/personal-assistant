@@ -54,9 +54,7 @@ describe("projects", () => {
         userId: "user-123"
       });
       mockGetTeamConfig.mockReturnValue({ configured: true, displayName: "Alice", activeWorkspaceId: null });
-      await expect(createProject({ name: "Test Project" })).rejects.toThrow(
-        "No active workspace selected"
-      );
+      await expect(createProject({ name: "Test Project" })).rejects.toThrow("No active workspace selected");
     });
 
     it("creates project and returns it", async () => {

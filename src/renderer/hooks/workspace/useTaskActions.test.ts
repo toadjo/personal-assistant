@@ -24,7 +24,7 @@ const mockSetError = vi.fn();
 const mockRefreshTasks = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("../../lib/errors", () => ({
-  getAssistantInvokeErrorMessage: vi.fn((err) => err instanceof Error ? err.message : "Unknown error")
+  getAssistantInvokeErrorMessage: vi.fn((err) => (err instanceof Error ? err.message : "Unknown error"))
 }));
 
 describe("useTaskActions", () => {
@@ -41,9 +41,7 @@ describe("useTaskActions", () => {
   });
 
   it("updateDetailsById calls assistantApi.updateTask with only id, title, and notes", async () => {
-    const { result } = renderHook(() =>
-      useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks)
-    );
+    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks));
 
     await result.current.updateDetailsById("task-1", "Updated Title", "Updated Notes");
 
@@ -70,9 +68,7 @@ describe("useTaskActions", () => {
   });
 
   it("updateDetailsById refreshes tasks and sets status on success", async () => {
-    const { result } = renderHook(() =>
-      useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks)
-    );
+    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks));
 
     await result.current.updateDetailsById("task-1", "Updated Title", "Updated Notes");
 
@@ -83,11 +79,13 @@ describe("useTaskActions", () => {
   });
 
   it("updateDetailsById sets error on failure", async () => {
-    ((window as unknown as { assistantApi: { updateTask: unknown } }).assistantApi.updateTask as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("API Error"));
+    (
+      (window as unknown as { assistantApi: { updateTask: unknown } }).assistantApi.updateTask as ReturnType<
+        typeof vi.fn
+      >
+    ).mockRejectedValue(new Error("API Error"));
 
-    const { result } = renderHook(() =>
-      useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks)
-    );
+    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks));
 
     await result.current.updateDetailsById("task-1", "Updated Title", "Updated Notes");
 

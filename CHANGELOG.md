@@ -4,6 +4,44 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.7] - 2026-05-21
+
+Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Added
+
+- Corporate security mode with policy file enforcement for managed deployments.
+- Outbound network guard with host allowlisting for controlled external connections.
+- Encrypted backup export in corporate mode using OS-level encryption.
+- Policy controls for backup export/import, external URLs, and secret storage requirements.
+- Content Security Policy (CSP) generation from policy in corporate mode.
+- Security audit scripts: SBOM generation, npm audit, and release evidence collection.
+- Windows code signing support via electron-builder environment variables.
+- Corporate security documentation: IT Review Packet, database-at-rest strategy, and updated corporate mode guide.
+- Release notes panel that shows once per installed version.
+
+### Changed
+
+- Dashboard polish with improved visual hierarchy and spacing.
+- Light theme distinction for better readability.
+- Windows icon identity fix for consistent taskbar and title bar appearance.
+- Policy file ACL validation with fail-closed behavior in corporate mode.
+- Secret storage fail-closed behavior when OS encryption is unavailable.
+
+### Security
+
+- All secrets (AI API keys, Home Assistant tokens, Supabase keys) encrypted via OS safeStorage.
+- Backup export excludes secret settings and imports reject secret fields.
+- Outbound guard enforces host allowlisting at service layer and CSP layer.
+- Policy file validation prevents user-writable policy files in corporate mode.
+- Database-at-rest strategy documented with OS-level encryption recommendations.
+
+### Tests
+
+- All 868 unit tests passing.
+- Lint, typecheck, and production builds all passing.
+- Security verification suite (audit, SBOM, release evidence) passing.
+
 ## [2.1.6] - 2026-05-20
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
@@ -336,7 +374,8 @@ Final minimal corporate pass. Version bump rolling up 1.5.2 – 1.5.4.
 
 History prior to 1.4.3 is in git log; no curated changelog exists for those versions. See `git log v1.4.2 --no-merges` for details.
 
-[2.1.5]: https://github.com/toadjo/personal-assistant/compare/v2.1.4...v2.1.5
+[2.1.6]: https://github.com/toadjo/personal-assistant/compare/v2.1.5...v2.1.6
+[2.1.7]: https://github.com/toadjo/personal-assistant/compare/v2.1.6...v2.1.7
 [2.1.4]: https://github.com/toadjo/personal-assistant/compare/v2.1.3...v2.1.4
 [2.1.3]: https://github.com/toadjo/personal-assistant/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/toadjo/personal-assistant/compare/v2.1.1...v2.1.2

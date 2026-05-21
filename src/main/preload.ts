@@ -31,6 +31,7 @@ const invokeChannelMap = {
   settingsGetAssistant: "settings:getAssistant",
   settingsSetAssistantName: "settings:setAssistantName",
   settingsSetUserPreferredName: "settings:setUserPreferredName",
+  settingsGetSecurityPolicy: "settings:getSecurityPolicy",
   automationLogs: "automation:logs",
   automationRulesList: "automation:rules:list",
   automationRulesCreate: "automation:rules:create",
@@ -195,19 +196,15 @@ contextBridge.exposeInMainWorld("assistantApi", {
   // Team mode operations
   teamSetConfig: (payload: { supabaseUrl: string; supabaseAnonKey: string; displayName: string }) =>
     ipcRenderer.invoke(invoke.teamSetConfig, payload),
-  teamSetDisplayName: (payload: { displayName: string }) =>
-    ipcRenderer.invoke(invoke.teamSetDisplayName, payload),
+  teamSetDisplayName: (payload: { displayName: string }) => ipcRenderer.invoke(invoke.teamSetDisplayName, payload),
   teamGetConfig: () => ipcRenderer.invoke(invoke.teamGetConfig),
   teamClearConfig: () => ipcRenderer.invoke(invoke.teamClearConfig),
-  teamWorkspacesCreate: (payload: { name: string }) =>
-    ipcRenderer.invoke(invoke.teamWorkspacesCreate, payload),
-  teamWorkspacesJoin: (payload: { workspaceKey: string }) =>
-    ipcRenderer.invoke(invoke.teamWorkspacesJoin, payload),
+  teamWorkspacesCreate: (payload: { name: string }) => ipcRenderer.invoke(invoke.teamWorkspacesCreate, payload),
+  teamWorkspacesJoin: (payload: { workspaceKey: string }) => ipcRenderer.invoke(invoke.teamWorkspacesJoin, payload),
   teamWorkspacesList: () => ipcRenderer.invoke(invoke.teamWorkspacesList),
   teamWorkspacesSetActive: (payload: { workspaceId: string | null }) =>
     ipcRenderer.invoke(invoke.teamWorkspacesSetActive, payload),
-  teamProjectsCreate: (payload: { name: string }) =>
-    ipcRenderer.invoke(invoke.teamProjectsCreate, payload),
+  teamProjectsCreate: (payload: { name: string }) => ipcRenderer.invoke(invoke.teamProjectsCreate, payload),
   teamProjectsList: () => ipcRenderer.invoke(invoke.teamProjectsList),
   teamTasksCreate: (payload: {
     projectId: string;
@@ -242,6 +239,8 @@ contextBridge.exposeInMainWorld("assistantApi", {
     ipcRenderer.invoke(invoke.aiSetKey, payload),
   clearAiKey: () => ipcRenderer.invoke(invoke.aiClearKey),
   testAiKey: () => ipcRenderer.invoke(invoke.aiTestKey),
-  aiChat: (payload: { message: string; context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number } }) =>
-    ipcRenderer.invoke(invoke.aiChat, payload)
+  aiChat: (payload: {
+    message: string;
+    context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number };
+  }) => ipcRenderer.invoke(invoke.aiChat, payload)
 });

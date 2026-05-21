@@ -13,14 +13,7 @@ type Props = {
   onClose: () => void;
 };
 
-export function AiSettingsPanel({
-  config,
-  onSetKey,
-  onClearKey,
-  onTestKey,
-  onRefresh,
-  onClose
-}: Props): JSX.Element {
+export function AiSettingsPanel({ config, onSetKey, onClearKey, onTestKey, onRefresh, onClose }: Props): JSX.Element {
   const [selectedProvider, setSelectedProvider] = useState<AiProvider | null>(null);
   const [apiKey, setApiKey] = useState("");
   const [isTesting, setIsTesting] = useState(false);
@@ -106,12 +99,7 @@ export function AiSettingsPanel({
             AI is connected. Type natural-language requests in the command box above.
           </p>
           <div className="row" style={{ gap: "0.5rem", marginTop: "var(--space-2)" }}>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => void handleTest()}
-              disabled={isTesting}
-            >
+            <button type="button" className="ghostButton" onClick={() => void handleTest()} disabled={isTesting}>
               <Check size={14} />
               {isTesting ? "Testing..." : "Test connection"}
             </button>
@@ -126,7 +114,14 @@ export function AiSettingsPanel({
             </button>
           </div>
           {testResult && (
-            <div style={{ marginTop: "var(--space-2)", padding: "var(--space-2)", backgroundColor: "var(--successBg)", borderRadius: "4px" }}>
+            <div
+              style={{
+                marginTop: "var(--space-2)",
+                padding: "var(--space-2)",
+                backgroundColor: "var(--successBg)",
+                borderRadius: "4px"
+              }}
+            >
               <div className="row" style={{ gap: "0.5rem", alignItems: "center" }}>
                 <Check size={14} style={{ color: "var(--success)" }} />
                 <span style={{ color: "var(--success)" }}>Connection successful. Model: {testResult.model}</span>
@@ -137,7 +132,9 @@ export function AiSettingsPanel({
       ) : (
         <div style={{ padding: "var(--space-2) 0" }}>
           <div className="row" style={{ gap: "0.5rem", marginBottom: "var(--space-2)" }}>
-            <label htmlFor="ai-provider-select" className="muted">Provider:</label>
+            <label htmlFor="ai-provider-select" className="muted">
+              Provider:
+            </label>
             <select
               id="ai-provider-select"
               value={selectedProvider ?? ""}
@@ -146,19 +143,28 @@ export function AiSettingsPanel({
             >
               <option value="">Select provider...</option>
               {providerOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
             </select>
           </div>
           <div className="row" style={{ gap: "0.5rem", marginBottom: "var(--space-2)" }}>
-            <label htmlFor="ai-key-input" className="muted">API key:</label>
+            <label htmlFor="ai-key-input" className="muted">
+              API key:
+            </label>
             <input
               id="ai-key-input"
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="sk-..."
-              style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "4px", border: "1px solid var(--borderColor)" }}
+              style={{
+                flex: 1,
+                padding: "0.25rem 0.5rem",
+                borderRadius: "4px",
+                border: "1px solid var(--borderColor)"
+              }}
             />
           </div>
           <div className="row" style={{ gap: "0.5rem", marginTop: "var(--space-2)" }}>
@@ -176,12 +182,21 @@ export function AiSettingsPanel({
       )}
 
       {error && (
-        <div style={{ marginTop: "var(--space-2)", padding: "var(--space-2)", backgroundColor: "var(--errorBg)", borderRadius: "4px" }}>
+        <div
+          style={{
+            marginTop: "var(--space-2)",
+            padding: "var(--space-2)",
+            backgroundColor: "var(--errorBg)",
+            borderRadius: "4px"
+          }}
+        >
           <span style={{ color: "var(--error)" }}>{error}</span>
         </div>
       )}
 
-      <div style={{ marginTop: "var(--space-2)", paddingTop: "var(--space-2)", borderTop: "1px solid var(--borderColor)" }}>
+      <div
+        style={{ marginTop: "var(--space-2)", paddingTop: "var(--space-2)", borderTop: "1px solid var(--borderColor)" }}
+      >
         <button type="button" className="ghostButton" onClick={onClose}>
           <X size={14} />
           Close

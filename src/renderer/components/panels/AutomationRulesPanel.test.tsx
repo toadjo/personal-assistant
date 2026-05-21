@@ -25,9 +25,7 @@ describe("AutomationRulesPanel", () => {
     }
   ];
 
-  const mockDevices: HaDeviceRow[] = [
-    { entityId: "light.kitchen", friendlyName: "Kitchen Light", state: "on" }
-  ];
+  const mockDevices: HaDeviceRow[] = [{ entityId: "light.kitchen", friendlyName: "Kitchen Light", state: "on" }];
 
   const defaultProps = {
     isRefreshing: false,
@@ -44,7 +42,7 @@ describe("AutomationRulesPanel", () => {
 
     expect(screen.getByText(/Morning reminder/)).toBeInTheDocument();
     expect(screen.getByText(/Evening lights/)).toBeInTheDocument();
-    
+
     const listRows = document.querySelectorAll(".listRow");
     expect(listRows).toHaveLength(2);
     expect(listRows[0]).not.toHaveClass("listRowFocused");

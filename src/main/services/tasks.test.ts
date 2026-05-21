@@ -22,7 +22,15 @@ vi.mock("../window", () => ({
   showMainWindow: vi.fn()
 }));
 
-import { completeTask, createTask, deleteTask, listOverdueOpenTasks, listTasks, updateTask, runTaskSchedulerTick } from "./tasks";
+import {
+  completeTask,
+  createTask,
+  deleteTask,
+  listOverdueOpenTasks,
+  listTasks,
+  updateTask,
+  runTaskSchedulerTick
+} from "./tasks";
 import type { NotificationResult } from "../notification";
 
 describe("tasks service", () => {

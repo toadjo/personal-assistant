@@ -72,6 +72,33 @@ describe("Theme token system (v1.5.6)", () => {
         }
       }
     });
+
+    it("light themes are not token-identical across key visible tokens", () => {
+      const glassTokens = getPresetTokens("glass")!;
+      const paperTokens = getPresetTokens("paper")!;
+      const corporateTokens = getPresetTokens("corporate")!;
+
+      const visibleTokens: ThemeTokenKey[] = [
+        "bg",
+        "panelBg",
+        "panelBorder",
+        "surfaceBorderStrong",
+        "primary",
+        "muted",
+        "ghostBg",
+        "ghostBorder",
+        "statBg"
+      ];
+
+      for (const token of visibleTokens) {
+        // Glass vs Paper should differ
+        expect(glassTokens[token]).not.toBe(paperTokens[token]);
+        // Glass vs Corporate should differ
+        expect(glassTokens[token]).not.toBe(corporateTokens[token]);
+        // Paper vs Corporate should differ
+        expect(paperTokens[token]).not.toBe(corporateTokens[token]);
+      }
+    });
   });
 
   describe("THEME_IDS", () => {
@@ -169,7 +196,7 @@ describe("Theme token system (v1.5.6)", () => {
       applyPreset("paper", { primary: "#ff0000" });
 
       expect(document.documentElement.style.getPropertyValue("--primary")).toBe("#ff0000");
-      expect(document.documentElement.style.getPropertyValue("--bg")).toBe("#f6f6f8");
+      expect(document.documentElement.style.getPropertyValue("--bg")).toBe("#faf9f7");
     });
   });
 

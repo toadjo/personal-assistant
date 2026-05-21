@@ -116,17 +116,17 @@ export function buildSearchIndex(
   });
 
   teamTasks.forEach((tt) => {
-    const project = teamProjects.find(p => p.id === tt.projectId);
+    const project = teamProjects.find((p) => p.id === tt.projectId);
     const subtitleParts: string[] = [];
-    
+
     if (tt.status === "done") subtitleParts.push("Done");
     else subtitleParts.push("Open");
-    
+
     if (project?.name) subtitleParts.push(project.name);
     if (tt.assigneeDisplayName) subtitleParts.push(tt.assigneeDisplayName);
     if (tt.dueAt) subtitleParts.push(new Date(tt.dueAt).toLocaleDateString());
     if (tt.notes) subtitleParts.push(tt.notes.slice(0, 60)); // Include notes for searchability
-    
+
     results.push({
       id: `team-task:${tt.id}`,
       category: "team-task",

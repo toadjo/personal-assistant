@@ -9,15 +9,7 @@ import { TodayStrip } from "./TodayStrip";
 
 describe("TodayStrip", () => {
   it("renders all local chips when team props are omitted", () => {
-    render(
-      <TodayStrip
-        overdueCount={3}
-        dueTodayCount={5}
-        remindersCount={2}
-        notesCount={10}
-        automationsCount={4}
-      />
-    );
+    render(<TodayStrip overdueCount={3} dueTodayCount={5} remindersCount={2} notesCount={10} automationsCount={4} />);
 
     expect(screen.getByText("Overdue")).toBeInTheDocument();
     expect(screen.getByText("Due today")).toBeInTheDocument();

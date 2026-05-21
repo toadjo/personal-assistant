@@ -87,7 +87,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
 
   // Reset project filter if selected project no longer exists
   useEffect(() => {
-    if (selectedProjectId !== "all" && !team.projects.find(p => p.id === selectedProjectId)) {
+    if (selectedProjectId !== "all" && !team.projects.find((p) => p.id === selectedProjectId)) {
       setSelectedProjectId("all");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,7 +95,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
 
   // Close editor if selected task no longer exists
   useEffect(() => {
-    if (editingTaskId && !team.tasks.find(t => t.id === editingTaskId)) {
+    if (editingTaskId && !team.tasks.find((t) => t.id === editingTaskId)) {
       setEditingTaskId(null);
       setEditValidationError(null);
     }
@@ -236,7 +236,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
 
   const handleSaveEdit = async () => {
     setEditValidationError(null);
-    const task = team.tasks.find(t => t.id === editingTaskId);
+    const task = team.tasks.find((t) => t.id === editingTaskId);
     if (!task) return;
 
     // Validate required fields
@@ -289,7 +289,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
 
   // Create project lookup map to avoid repeated find calls in task rendering
   const projectMap = useMemo(() => {
-    return new Map(team.projects.map(p => [p.id, p]));
+    return new Map(team.projects.map((p) => [p.id, p]));
   }, [team.projects]);
 
   // Setup state: team mode not configured
@@ -394,11 +394,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                     <span>Create a workspace or join one with an invite code.</span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="button buttonPrimary"
-                  onClick={() => setShowSetupForm(true)}
-                >
+                <button type="button" className="button buttonPrimary" onClick={() => setShowSetupForm(true)}>
                   Start setup
                 </button>
               </>
@@ -436,11 +432,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
               >
                 {team.isLoadingConfig ? <Loader2 size={16} className="spin" /> : "Continue"}
               </button>
-              <button
-                type="button"
-                className="button buttonSecondary"
-                onClick={() => setShowSetupForm(false)}
-              >
+              <button type="button" className="button buttonSecondary" onClick={() => setShowSetupForm(false)}>
                 Cancel
               </button>
             </div>
@@ -481,11 +473,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
               </>
             )}
             {!showAdvancedSetup && (
-              <button
-                type="button"
-                className="button buttonSecondary"
-                onClick={() => setShowAdvancedSetup(true)}
-              >
+              <button type="button" className="button buttonSecondary" onClick={() => setShowAdvancedSetup(true)}>
                 Advanced self-hosted backend
               </button>
             )}
@@ -497,11 +485,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
               title="Team Projects"
               description="Enter your display name to start collaborating on shared projects and tasks."
             />
-            <button
-              type="button"
-              className="button buttonPrimary"
-              onClick={() => setShowSetupForm(true)}
-            >
+            <button type="button" className="button buttonPrimary" onClick={() => setShowSetupForm(true)}>
               Continue
             </button>
           </div>
@@ -591,29 +575,17 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                   >
                     {team.isLoadingWorkspaces ? <Loader2 size={16} className="spin" /> : "Join"}
                   </button>
-                  <button
-                    type="button"
-                    className="button buttonSecondary"
-                    onClick={() => setShowJoinWorkspace(false)}
-                  >
+                  <button type="button" className="button buttonSecondary" onClick={() => setShowJoinWorkspace(false)}>
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
               <div className="formActions">
-                <button
-                  type="button"
-                  className="button buttonPrimary"
-                  onClick={() => setShowCreateWorkspace(true)}
-                >
+                <button type="button" className="button buttonPrimary" onClick={() => setShowCreateWorkspace(true)}>
                   <Plus size={16} /> Create Workspace
                 </button>
-                <button
-                  type="button"
-                  className="button buttonSecondary"
-                  onClick={() => setShowJoinWorkspace(true)}
-                >
+                <button type="button" className="button buttonSecondary" onClick={() => setShowJoinWorkspace(true)}>
                   <Key size={16} /> Join Workspace
                 </button>
               </div>
@@ -678,11 +650,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
             </div>
           )}
           {validationError && <StatusBanner status="" error={validationError} />}
-          <EmptyState
-            icon={Users}
-            title="No Projects"
-            description="Create a project to organize your team tasks."
-          />
+          <EmptyState icon={Users} title="No Projects" description="Create a project to organize your team tasks." />
           {showCreateProject ? (
             <div className="formGroup">
               <input
@@ -701,21 +669,13 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                 >
                   Create
                 </button>
-                <button
-                  type="button"
-                  className="button buttonSecondary"
-                  onClick={() => setShowCreateProject(false)}
-                >
+                <button type="button" className="button buttonSecondary" onClick={() => setShowCreateProject(false)}>
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
-            <button
-              type="button"
-              className="button buttonPrimary"
-              onClick={() => setShowCreateProject(true)}
-            >
+            <button type="button" className="button buttonPrimary" onClick={() => setShowCreateProject(true)}>
               Create Project
             </button>
           )}
@@ -779,11 +739,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
         <div className="projectList">
           <div className="projectListHeader">
             <h3>Projects</h3>
-            <button
-              type="button"
-              className="button buttonSecondary"
-              onClick={() => setShowCreateProject(true)}
-            >
+            <button type="button" className="button buttonSecondary" onClick={() => setShowCreateProject(true)}>
               <Plus size={16} /> Add
             </button>
           </div>
@@ -811,11 +767,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
               >
                 {team.isLoadingProjects ? <Loader2 size={16} className="spin" /> : "Create"}
               </button>
-              <button
-                type="button"
-                className="button buttonSecondary"
-                onClick={() => setShowCreateProject(false)}
-              >
+              <button type="button" className="button buttonSecondary" onClick={() => setShowCreateProject(false)}>
                 Cancel
               </button>
             </div>
@@ -845,7 +797,9 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                 >
                   <option value="all">All projects</option>
                   {team.projects.map((project) => (
-                    <option key={project.id} value={project.id}>{project.name}</option>
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -949,20 +903,10 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                 </select>
               </div>
               <div className="formActions">
-                <button
-                  type="button"
-                  className="button buttonPrimary"
-                  onClick={handleSaveEdit}
-                  disabled={isSaving}
-                >
+                <button type="button" className="button buttonPrimary" onClick={handleSaveEdit} disabled={isSaving}>
                   {isSaving ? <Loader2 size={16} className="spin" /> : "Save"}
                 </button>
-                <button
-                  type="button"
-                  className="button buttonSecondary"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                >
+                <button type="button" className="button buttonSecondary" onClick={handleCancelEdit} disabled={isSaving}>
                   Cancel
                 </button>
               </div>
@@ -980,7 +924,9 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                 >
                   <option value="">Select a project</option>
                   {team.projects.map((project) => (
-                    <option key={project.id} value={project.id}>{project.name}</option>
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1063,11 +1009,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
                 >
                   {team.isLoadingTasks ? <Loader2 size={16} className="spin" /> : "Create Task"}
                 </button>
-                <button
-                  type="button"
-                  className="button buttonSecondary"
-                  onClick={() => setShowCreateTask(false)}
-                >
+                <button type="button" className="button buttonSecondary" onClick={() => setShowCreateTask(false)}>
                   Cancel
                 </button>
               </div>
@@ -1077,7 +1019,11 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
             <EmptyState
               icon={Users}
               title={team.tasks.length === 0 ? "No Tasks" : "No Tasks Match Filters"}
-              description={team.tasks.length === 0 ? "Create tasks to collaborate with your team." : "No tasks match these filters."}
+              description={
+                team.tasks.length === 0
+                  ? "Create tasks to collaborate with your team."
+                  : "No tasks match these filters."
+              }
             />
           ) : (
             <div className="teamTaskList">

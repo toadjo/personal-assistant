@@ -6,7 +6,7 @@
 
 export function getDefaultTimeForDate(date: Date, now?: Date): string {
   const effectiveNow = now ?? new Date();
-  const isToday = 
+  const isToday =
     date.getFullYear() === effectiveNow.getFullYear() &&
     date.getMonth() === effectiveNow.getMonth() &&
     date.getDate() === effectiveNow.getDate();

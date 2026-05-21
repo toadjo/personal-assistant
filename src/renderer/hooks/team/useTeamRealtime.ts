@@ -16,10 +16,7 @@ type RefreshOptions = {
   enabled?: boolean;
 };
 
-export function useTeamRealtime(
-  team: TeamState,
-  options: RefreshOptions = {}
-): void {
+export function useTeamRealtime(team: TeamState, options: RefreshOptions = {}): void {
   const { enabled = true, projects, tasks } = options;
 
   useEffect(() => {

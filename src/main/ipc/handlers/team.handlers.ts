@@ -1,12 +1,7 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { IpcInvoke } from "../../../shared/ipc-channels";
 import { setTeamConfig, getTeamConfig, clearTeamConfig, setTeamDisplayName } from "../../team/config";
-import {
-  createWorkspace,
-  joinWorkspace,
-  listWorkspaces,
-  setActiveWorkspace
-} from "../../team/workspaces";
+import { createWorkspace, joinWorkspace, listWorkspaces, setActiveWorkspace } from "../../team/workspaces";
 import { createProject, listProjects } from "../../team/projects";
 import { createTask, updateTask, listTasks } from "../../team/tasks";
 import {
@@ -29,6 +24,7 @@ import {
   teamTaskCreateSchema,
   teamTaskUpdateSchema
 } from "../schemas";
+import { isTeamSyncAllowed } from "../../security/policy";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
 
@@ -36,9 +32,15 @@ type AssertSender = (event: IpcMainInvokeEvent) => void;
 export function registerTeamHandlers(assertSender: AssertSender): void {
   // Config operations
   registerInvoke(IpcInvoke.teamSetConfig, assertSender, (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     return setTeamConfig(teamSetConfigSchema.parse(payload));
   });
   registerInvoke(IpcInvoke.teamSetDisplayName, assertSender, (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     return setTeamDisplayName(teamSetDisplayNameSchema.parse(payload).displayName);
   });
   registerInvoke(IpcInvoke.teamGetConfig, assertSender, () => {
@@ -51,6 +53,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
 
   // Workspace operations
   registerInvoke(IpcInvoke.teamWorkspacesCreate, assertSender, async (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     const data = teamWorkspaceCreateSchema.parse(payload);
     const workspaceKey = generateWorkspaceKey();
     try {
@@ -60,6 +65,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
     }
   });
   registerInvoke(IpcInvoke.teamWorkspacesJoin, assertSender, async (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     try {
       return await joinWorkspace(teamWorkspaceJoinSchema.parse(payload).workspaceKey);
     } catch (error) {
@@ -67,6 +75,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
     }
   });
   registerInvoke(IpcInvoke.teamWorkspacesList, assertSender, async () => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     try {
       return await listWorkspaces();
     } catch (error) {
@@ -74,6 +85,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
     }
   });
   registerInvoke(IpcInvoke.teamWorkspacesSetActive, assertSender, async (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     const workspaceId = teamWorkspaceSetActiveSchema.parse(payload).workspaceId;
     if (!workspaceId) {
       throw new Error("workspaceId is required");
@@ -89,6 +103,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
 
   // Project operations
   registerInvoke(IpcInvoke.teamProjectsCreate, assertSender, async (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     try {
       return await createProject(teamProjectCreateSchema.parse(payload));
     } catch (error) {
@@ -96,6 +113,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
     }
   });
   registerInvoke(IpcInvoke.teamProjectsList, assertSender, async () => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     try {
       return await listProjects();
     } catch (error) {
@@ -105,6 +125,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
 
   // Task operations
   registerInvoke(IpcInvoke.teamTasksCreate, assertSender, async (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     const data = teamTaskCreateSchema.parse(payload);
     try {
       return await createTask({
@@ -122,6 +145,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
     }
   });
   registerInvoke(IpcInvoke.teamTasksUpdate, assertSender, async (_event, payload) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     const data = teamTaskUpdateSchema.parse(payload);
     try {
       return await updateTask({
@@ -139,6 +165,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
     }
   });
   registerInvoke(IpcInvoke.teamTasksList, assertSender, async () => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     try {
       return await listTasks();
     } catch (error) {
@@ -148,6 +177,9 @@ export function registerTeamHandlers(assertSender: AssertSender): void {
 
   // Realtime control
   registerInvoke(IpcInvoke.teamRealtimeStart, assertSender, async (event) => {
+    if (!isTeamSyncAllowed()) {
+      throw new Error("Team sync is disabled by corporate policy.");
+    }
     const senderId = event.sender.id;
     try {
       await startTeamRealtime(senderId);

@@ -659,7 +659,7 @@ describe("deriveFocusBrief", () => {
       });
 
       expect(result).toHaveLength(2);
-      expect(result.every(item => item.urgency === "context")).toBe(true);
+      expect(result.every((item) => item.urgency === "context")).toBe(true);
       expect(result[0]?.kind).toBe("automation");
       expect(result[1]?.kind).toBe("note");
     });

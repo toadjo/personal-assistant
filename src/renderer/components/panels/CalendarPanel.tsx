@@ -1,7 +1,16 @@
 import { memo, useState } from "react";
 import type { CalendarCell, CalendarEventItem } from "../../lib/calendar";
 import { Calendar, ChevronLeft, ChevronRight, ListTodo, Bell, X } from "lucide-react";
-import { parseLocalDateKey, toLocalDateKey, getHourlyEventsForDate, getAllDayEventsForDate, getWeekDaysForDate, getWorkWeekDaysForDate, getUpcomingDays, getOverdueEvents } from "../../lib/calendar";
+import {
+  parseLocalDateKey,
+  toLocalDateKey,
+  getHourlyEventsForDate,
+  getAllDayEventsForDate,
+  getWeekDaysForDate,
+  getWorkWeekDaysForDate,
+  getUpcomingDays,
+  getOverdueEvents
+} from "../../lib/calendar";
 import { getDefaultTimeForDate } from "../../lib/calendar-default-time";
 import { parseLocalDateTimeInput } from "../../lib/dateTime";
 import { PanelHeader } from "../ui/PanelHeader";
@@ -209,9 +218,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                       title={event.title}
                     />
                   ))}
-                  {overflowCount > 0 && (
-                    <span className="calendarOverflow">+{overflowCount}</span>
-                  )}
+                  {overflowCount > 0 && <span className="calendarOverflow">+{overflowCount}</span>}
                 </div>
               </button>
             );
@@ -224,16 +231,25 @@ export const CalendarPanel = memo(function CalendarPanel({
             <h3>{selectedDayHeading(selectedDateKey, todayKey)}</h3>
           </div>
           <div className="calendarAllDayStrip">
-            {getAllDayEventsForDate(selectedDateKey, monthCells.find(c => c.dateKey === selectedDateKey)?.events || []).map((event) => (
-              <div key={event.id} className="calendarAllDayEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+            {getAllDayEventsForDate(
+              selectedDateKey,
+              monthCells.find((c) => c.dateKey === selectedDateKey)?.events || []
+            ).map((event) => (
+              <div
+                key={event.id}
+                className="calendarAllDayEvent"
+                style={{ backgroundColor: getEventBackgroundColor(event) }}
+              >
                 {event.title}
               </div>
             ))}
           </div>
           <div className="calendarHourlyGrid">
             {(() => {
-              const selectedDate = monthCells.find(c => c.dateKey === selectedDateKey);
-              const hourlyEvents = selectedDate ? getHourlyEventsForDate(selectedDateKey, selectedDate.events, START_HOUR, END_HOUR) : [];
+              const selectedDate = monthCells.find((c) => c.dateKey === selectedDateKey);
+              const hourlyEvents = selectedDate
+                ? getHourlyEventsForDate(selectedDateKey, selectedDate.events, START_HOUR, END_HOUR)
+                : [];
               if (hourlyEvents.length === 0) {
                 return (
                   <>
@@ -257,7 +273,11 @@ export const CalendarPanel = memo(function CalendarPanel({
                 <div key={`${hour}-${event.id}`} className="calendarHourRow">
                   <div className="calendarHourLabel">{hour}:00</div>
                   <div className="calendarHourContent">
-                    <div key={event.id} className="calendarHourEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
+                    <div
+                      key={event.id}
+                      className="calendarHourEvent"
+                      style={{ backgroundColor: getEventBackgroundColor(event) }}
+                    >
                       {event.title}
                     </div>
                   </div>
@@ -274,9 +294,12 @@ export const CalendarPanel = memo(function CalendarPanel({
           </div>
           <div className="calendarWeekGrid">
             {(() => {
-              const days = calendarView === "workWeek" ? getWorkWeekDaysForDate(selectedDateKey) : getWeekDaysForDate(selectedDateKey);
-              const allHourlyEvents = days.flatMap(dayKey => {
-                const dayCell = monthCells.find(c => c.dateKey === dayKey);
+              const days =
+                calendarView === "workWeek"
+                  ? getWorkWeekDaysForDate(selectedDateKey)
+                  : getWeekDaysForDate(selectedDateKey);
+              const allHourlyEvents = days.flatMap((dayKey) => {
+                const dayCell = monthCells.find((c) => c.dateKey === dayKey);
                 return dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR) : [];
               });
               if (allHourlyEvents.length === 0) {
@@ -286,8 +309,12 @@ export const CalendarPanel = memo(function CalendarPanel({
                 const dateRange = `${startDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
                 return (
                   <>
-                    <p className="muted" style={{ gridColumn: "1 / -1", marginBottom: "var(--space-1)" }}>{dateRange}</p>
-                    <div className="muted" style={{ gridColumn: "1 / -1" }}>No events scheduled for this {calendarView === "workWeek" ? "work week" : "week"}.</div>
+                    <p className="muted" style={{ gridColumn: "1 / -1", marginBottom: "var(--space-1)" }}>
+                      {dateRange}
+                    </p>
+                    <div className="muted" style={{ gridColumn: "1 / -1" }}>
+                      No events scheduled for this {calendarView === "workWeek" ? "work week" : "week"}.
+                    </div>
                     <div className="row" style={{ gap: "0.5rem", marginTop: "var(--space-2)", gridColumn: "1 / -1" }}>
                       {onCreateReminder && (
                         <button type="button" className="ghostButton" onClick={handleOpenReminder}>
@@ -303,35 +330,49 @@ export const CalendarPanel = memo(function CalendarPanel({
                   </>
                 );
               }
-              const hoursWithEvents = [...new Set(allHourlyEvents.map(he => he.hour))];
+              const hoursWithEvents = [...new Set(allHourlyEvents.map((he) => he.hour))];
               return (
                 <>
                   <div className="calendarWeekHeaderRow">
                     <div className="calendarWeekHeaderCell calendarWeekTimeHeader">Time</div>
                     {days.map((dayKey) => (
                       <div key={dayKey} className="calendarWeekHeaderCell">
-                        {parseLocalDateKey(dayKey).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                        {parseLocalDateKey(dayKey).toLocaleDateString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric"
+                        })}
                       </div>
                     ))}
                   </div>
-                  {hoursWithEvents.sort((a, b) => a - b).map((hour) => (
-                    <div key={hour} className="calendarWeekRow">
-                      <div className="calendarWeekTimeCell">{hour}:00</div>
-                      {days.map((dayKey) => {
-                        const dayCell = monthCells.find(c => c.dateKey === dayKey);
-                        const eventsForHour = dayCell ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(he => he.hour === hour) : [];
-                        return (
-                          <div key={dayKey} className="calendarWeekDayCell">
-                            {eventsForHour.map(({ event }) => (
-                              <div key={event.id} className="calendarWeekEvent" style={{ backgroundColor: getEventBackgroundColor(event) }}>
-                                {event.title}
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+                  {hoursWithEvents
+                    .sort((a, b) => a - b)
+                    .map((hour) => (
+                      <div key={hour} className="calendarWeekRow">
+                        <div className="calendarWeekTimeCell">{hour}:00</div>
+                        {days.map((dayKey) => {
+                          const dayCell = monthCells.find((c) => c.dateKey === dayKey);
+                          const eventsForHour = dayCell
+                            ? getHourlyEventsForDate(dayKey, dayCell.events, START_HOUR, END_HOUR).filter(
+                                (he) => he.hour === hour
+                              )
+                            : [];
+                          return (
+                            <div key={dayKey} className="calendarWeekDayCell">
+                              {eventsForHour.map(({ event }) => (
+                                <div
+                                  key={event.id}
+                                  className="calendarWeekEvent"
+                                  style={{ backgroundColor: getEventBackgroundColor(event) }}
+                                >
+                                  {event.title}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
                 </>
               );
             })()}
@@ -386,7 +427,7 @@ export const CalendarPanel = memo(function CalendarPanel({
             <h3>Upcoming (Next 14 Days)</h3>
           </div>
           {(() => {
-            const allEvents = monthCells.flatMap(c => c.events);
+            const allEvents = monthCells.flatMap((c) => c.events);
             const overdue = getOverdueEvents(allEvents, todayKey);
             const upcomingDays = getUpcomingDays(todayKey, 14);
             return (
@@ -397,7 +438,9 @@ export const CalendarPanel = memo(function CalendarPanel({
                     <ul className="agendaList">
                       {overdue.map((event) => (
                         <li key={event.id} className="agendaListItem">
-                          <span className={`agendaListItemIcon ${event.source === "reminder" ? "" : event.source === "task" ? "" : ""}`}>
+                          <span
+                            className={`agendaListItemIcon ${event.source === "reminder" ? "" : event.source === "task" ? "" : ""}`}
+                          >
                             {event.source === "reminder" && <Bell size={14} />}
                             {event.source === "task" && <ListTodo size={14} />}
                             {event.source === "note" && <span>📝</span>}
@@ -409,17 +452,25 @@ export const CalendarPanel = memo(function CalendarPanel({
                   </div>
                 )}
                 {upcomingDays.map((dayKey) => {
-                  const dayCell = monthCells.find(c => c.dateKey === dayKey);
+                  const dayCell = monthCells.find((c) => c.dateKey === dayKey);
                   if (!dayCell || dayCell.events.length === 0) return null;
                   return (
                     <div key={dayKey} className="calendarUpcomingSection">
                       <h4 className="calendarUpcomingSectionTitle">
-                        {dayKey === todayKey ? "Today" : parseLocalDateKey(dayKey).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                        {dayKey === todayKey
+                          ? "Today"
+                          : parseLocalDateKey(dayKey).toLocaleDateString(undefined, {
+                              weekday: "long",
+                              month: "short",
+                              day: "numeric"
+                            })}
                       </h4>
                       <ul className="agendaList">
                         {dayCell.events.map((event) => (
                           <li key={event.id} className="agendaListItem">
-                            <span className={`agendaListItemIcon ${event.source === "reminder" ? "" : event.source === "task" ? "" : ""}`}>
+                            <span
+                              className={`agendaListItemIcon ${event.source === "reminder" ? "" : event.source === "task" ? "" : ""}`}
+                            >
                               {event.source === "reminder" && <Bell size={14} />}
                               {event.source === "task" && <ListTodo size={14} />}
                               {event.source === "note" && <span>📝</span>}
@@ -493,7 +544,9 @@ export const CalendarPanel = memo(function CalendarPanel({
       {createMode === "reminder" && (
         <div className="calendarCreateForm">
           <div className="calendarCreateFormHeader">
-            <span className="calendarCreateFormTitle">Add reminder for {selectedDayHeading(selectedDateKey, todayKey)}</span>
+            <span className="calendarCreateFormTitle">
+              Add reminder for {selectedDayHeading(selectedDateKey, todayKey)}
+            </span>
             <IconButton icon={X} label="Cancel" onClick={handleCloseForm} variant="ghost" size={14} />
           </div>
           <div className="calendarCreateFormBody">
@@ -530,7 +583,9 @@ export const CalendarPanel = memo(function CalendarPanel({
       {createMode === "task" && (
         <div className="calendarCreateForm">
           <div className="calendarCreateFormHeader">
-            <span className="calendarCreateFormTitle">Add task for {selectedDayHeading(selectedDateKey, todayKey)}</span>
+            <span className="calendarCreateFormTitle">
+              Add task for {selectedDayHeading(selectedDateKey, todayKey)}
+            </span>
             <IconButton icon={X} label="Cancel" onClick={handleCloseForm} variant="ghost" size={14} />
           </div>
           <div className="calendarCreateFormBody">
@@ -580,12 +635,7 @@ export const CalendarPanel = memo(function CalendarPanel({
               <button type="button" className="ghostButton" onClick={handleCloseForm}>
                 Cancel
               </button>
-              <button
-                type="button"
-                className="primaryButton"
-                onClick={handleSaveTask}
-                disabled={!taskTitle.trim()}
-              >
+              <button type="button" className="primaryButton" onClick={handleSaveTask} disabled={!taskTitle.trim()}>
                 Save
               </button>
             </div>

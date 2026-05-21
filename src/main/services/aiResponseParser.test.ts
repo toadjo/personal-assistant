@@ -123,7 +123,9 @@ describe("parseAiResponse", () => {
   });
 
   it("validates create_reminder requires dueAt", () => {
-    const result = parseAiResponse('{"reply": "Hello", "actionDraft": {"type": "create_reminder", "text": "Buy milk"}}');
+    const result = parseAiResponse(
+      '{"reply": "Hello", "actionDraft": {"type": "create_reminder", "text": "Buy milk"}}'
+    );
     expect(result.reply).toBe("Hello");
     expect(result.actionDraft).toBeUndefined();
   });

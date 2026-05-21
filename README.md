@@ -31,7 +31,7 @@ cd personal-assistant
 npm install
 ```
 
-Native module **`better-sqlite3`** is rebuilt in `postinstall` for Electron. **`npm test`** temporarily rebuilds it for Node (Vitest), then restores the Electron build. **`npm run dev`** starts with **`npm run rebuild:electron`** (**`electron-rebuild -f -w better-sqlite3`**) so `better-sqlite3` always matches **Electron's** Node ABI (Vitest/`npm rebuild` leave a Node-target binary; `electron-builder install-app-deps` alone can skip a rebuild). **`dev.bat`** calls **`npm run dev`**, so it gets the same behavior. Home Assistant tokens are stored with Electron **`safeStorage`** when the OS supports it (otherwise a warning is logged and the token falls back to SQLite plaintext).
+Native module **`better-sqlite3`** is rebuilt in `postinstall` for Electron. **`npm test`** temporarily rebuilds it for Node (Vitest), then restores the Electron build. **`npm run dev`** starts with **`npm run rebuild:electron`** (**`electron-rebuild -f -w better-sqlite3`**) so `better-sqlite3` always matches **Electron's** Node ABI (Vitest/`npm rebuild` leave a Node-target binary; `electron-builder install-app-deps` alone can skip a rebuild). **`dev.bat`** calls **`npm run dev`**, so it gets the same behavior. Home Assistant tokens are stored with Electron **`safeStorage`** when the OS supports it; if encryption is unavailable, the app refuses to store secrets and prompts the user to ensure their system supports secure storage.
 
 **Windows:** Prefer a clone path **without spaces** (e.g. not `...\project 430\...`); node-gyp can fail there. If **`npm rebuild better-sqlite3`** reports **EBUSY** / **EPERM**, quit the Electron app (and anything else using that `.node` file), then retry **`npm test`** or **`npm run rebuild:electron`**.
 

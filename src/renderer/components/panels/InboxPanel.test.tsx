@@ -104,7 +104,12 @@ describe("InboxPanel", () => {
     const unifiedItems = [
       makeUnifiedItem({ source: "local-note", label: "Note 1" }),
       makeUnifiedItem({ source: "local-task", label: "Task 1", priority: "overdue", dueAt: "2024-01-14T12:00:00Z" }),
-      makeUnifiedItem({ source: "local-reminder", label: "Reminder 1", priority: "today", dueAt: "2024-01-15T12:00:00Z" })
+      makeUnifiedItem({
+        source: "local-reminder",
+        label: "Reminder 1",
+        priority: "today",
+        dueAt: "2024-01-15T12:00:00Z"
+      })
     ];
 
     render(

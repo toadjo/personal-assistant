@@ -162,45 +162,44 @@ export async function listTasks(): Promise<TeamProjectTask[]> {
 
   const { client } = await getAuthenticatedSupabaseClient();
 
-  const { data, error } = await client
-    .from("team_project_tasks")
-    .select()
-    .eq("workspace_id", config.activeWorkspaceId);
+  const { data, error } = await client.from("team_project_tasks").select().eq("workspace_id", config.activeWorkspaceId);
 
   if (error) {
     mainLog.error("[team:tasks] listTasks failed", error);
     throw error;
   }
 
-  return (data || []).map((t: {
-    id: string;
-    workspace_id: string;
-    project_id: string;
-    title: string;
-    notes: string;
-    due_at: string | null;
-    priority: "low" | "normal" | "high";
-    status: "open" | "done";
-    recurrence: "none" | "daily" | "weekly" | "monthly";
-    assignee_display_name: string | null;
-    created_by: string;
-    created_at: string;
-    updated_by: string;
-    updated_at: string;
-  }) => ({
-    id: t.id,
-    workspaceId: t.workspace_id,
-    projectId: t.project_id,
-    title: t.title,
-    notes: t.notes,
-    dueAt: t.due_at,
-    priority: t.priority,
-    status: t.status,
-    recurrence: t.recurrence,
-    assigneeDisplayName: t.assignee_display_name,
-    createdAt: t.created_at,
-    createdBy: t.created_by,
-    updatedAt: t.updated_at,
-    updatedBy: t.updated_by
-  }));
+  return (data || []).map(
+    (t: {
+      id: string;
+      workspace_id: string;
+      project_id: string;
+      title: string;
+      notes: string;
+      due_at: string | null;
+      priority: "low" | "normal" | "high";
+      status: "open" | "done";
+      recurrence: "none" | "daily" | "weekly" | "monthly";
+      assignee_display_name: string | null;
+      created_by: string;
+      created_at: string;
+      updated_by: string;
+      updated_at: string;
+    }) => ({
+      id: t.id,
+      workspaceId: t.workspace_id,
+      projectId: t.project_id,
+      title: t.title,
+      notes: t.notes,
+      dueAt: t.due_at,
+      priority: t.priority,
+      status: t.status,
+      recurrence: t.recurrence,
+      assigneeDisplayName: t.assignee_display_name,
+      createdAt: t.created_at,
+      createdBy: t.created_by,
+      updatedAt: t.updated_at,
+      updatedBy: t.updated_by
+    })
+  );
 }

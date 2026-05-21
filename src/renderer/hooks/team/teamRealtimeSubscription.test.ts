@@ -12,9 +12,7 @@ describe("teamRealtimeSubscription", () => {
   let mockStartRealtime: ReturnType<typeof vi.fn>;
   let mockStopRealtime: ReturnType<typeof vi.fn>;
   let mockUnsubscribe: ReturnType<typeof vi.fn>;
-  let capturedListener:
-    | ((event: unknown, payload: { workspaceId: string; tables: string[] }) => void)
-    | null = null;
+  let capturedListener: ((event: unknown, payload: { workspaceId: string; tables: string[] }) => void) | null = null;
   let mockOnTeamDataUpdated: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {

@@ -4,7 +4,11 @@ import { app, nativeImage } from "electron";
 
 export function resolveAppIconPath(): string | undefined {
   const assetRoot = app.isPackaged ? path.join(app.getAppPath(), "assets") : path.join(process.cwd(), "assets");
-  const candidates = [path.join(assetRoot, "app-icon.png"), path.join(assetRoot, "app-icon.ico")];
+  // Prefer .ico on Windows for native surfaces (taskbar, window), .png for tray rendering
+  const candidates =
+    process.platform === "win32"
+      ? [path.join(assetRoot, "app-icon.ico"), path.join(assetRoot, "app-icon.png")]
+      : [path.join(assetRoot, "app-icon.png"), path.join(assetRoot, "app-icon.ico")];
   return candidates.find((candidate) => existsSync(candidate));
 }
 

@@ -4,6 +4,7 @@ import { app, BrowserWindow, session } from "electron";
 import { resolveAppIconPath } from "./icons";
 import { getConfiguredDevServerUrl } from "./config/dev-server";
 import { isTrustedNavigationTarget } from "./security";
+import { getSecurityPolicy, isCorporateMode } from "./security/policy";
 
 let defaultContentSecurityPolicyInstalled = false;
 
@@ -11,6 +12,8 @@ let defaultContentSecurityPolicyInstalled = false;
  * Tight CSP for packaged builds; dev relaxes script/connect so Vite HMR and the dev server keep working.
  * Safe to call before `app` is ready (defers until `ready`) and safe to call more than once (no-op after first install).
  * This avoids crashes when stale `dist/` or another caller touches `session.defaultSession` too early.
+ *
+ * In corporate mode, connect-src is built from the policy's allowedHosts list.
  */
 export function installDefaultContentSecurityPolicy(): void {
   const apply = (): void => {
@@ -18,23 +21,7 @@ export function installDefaultContentSecurityPolicy(): void {
     defaultContentSecurityPolicyInstalled = true;
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       const responseHeaders = { ...(details.responseHeaders ?? {}) };
-      const csp = app.isPackaged
-        ? [
-            "default-src 'self'",
-            "script-src 'self'",
-            "style-src 'self'",
-            "img-src 'self' data: blob:",
-            "font-src 'self' data:",
-            "connect-src 'self' https://api.openai.com https://api.anthropic.com https://*.supabase.co"
-          ].join("; ")
-        : [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-            "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: blob:",
-            "font-src 'self' data:",
-            "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* wss://127.0.0.1:* wss://localhost:*"
-          ].join("; ");
+      const csp = app.isPackaged ? buildPackagedCsp() : buildDevCsp();
       responseHeaders["Content-Security-Policy"] = [csp];
       callback({ responseHeaders });
     });
@@ -45,6 +32,53 @@ export function installDefaultContentSecurityPolicy(): void {
   } else {
     app.once("ready", apply);
   }
+}
+
+/**
+ * Builds CSP for packaged (production) builds.
+ * In corporate mode, connect-src is restricted to allowedHosts.
+ * In personal mode, connect-src allows known integration endpoints.
+ */
+function buildPackagedCsp(): string {
+  const baseCsp = [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:"
+  ];
+
+  let connectSrc: string;
+  if (isCorporateMode()) {
+    const policy = getSecurityPolicy();
+    const allowedHosts = policy.allowedHosts;
+    if (allowedHosts.length > 0) {
+      connectSrc = `'self' ${allowedHosts.map((h) => `https://${h}`).join(" ")}`;
+    } else {
+      // Corporate mode with no allowed hosts: restrict to self only
+      connectSrc = "'self'";
+    }
+  } else {
+    // Personal mode: allow known integration endpoints
+    connectSrc = "'self' https://api.openai.com https://api.anthropic.com https://*.supabase.co";
+  }
+
+  return [...baseCsp, `connect-src ${connectSrc}`].join("; ");
+}
+
+/**
+ * Builds CSP for development builds.
+ * Relaxes script/connect to allow Vite HMR and dev server.
+ */
+function buildDevCsp(): string {
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* wss://127.0.0.1:* wss://localhost:*"
+  ].join("; ");
 }
 
 export type AppWindowRole = "desk" | "household";

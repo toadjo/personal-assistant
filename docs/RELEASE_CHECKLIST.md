@@ -130,3 +130,67 @@ Use this path for all releases while GitHub Actions budget is unavailable. macOS
 - [ ] Upload assets to GitHub release
 - [ ] Verify download links work
 - [ ] Monitor for platform-specific issues in first 24 hours
+
+## Corporate Security Checklist
+
+This checklist applies to corporate mode deployments. Use this in addition to the standard release checklist above.
+
+### Pre-Release Security Verification
+
+- [ ] Run `npm run security:audit` - no high/critical vulnerabilities
+- [ ] Run `npm run security:sbom` - generate Software Bill of Materials
+- [ ] Run `npm run security:release-evidence` - generate release evidence
+- [ ] Verify security policy controls are enforced (check policy.ts)
+- [ ] Verify outbound guard is integrated in all external paths
+- [ ] Verify CSP generation uses policy-based connect-src in corporate mode
+
+### Policy File Verification
+
+- [ ] Verify policy file path is correct: `%ProgramData%\PersonalAssistant\policy.json` (Windows)
+- [ ] Verify policy file ACLs are set correctly (Administrators write, Users read)
+- [ ] Verify policy file is not user-writable in corporate mode
+- [ ] Test corporate mode with allowAi=false - AI integration blocked
+- [ ] Test corporate mode with allowTeamSync=false - Team sync blocked
+- [ ] Test corporate mode with allowHomeAssistant=false - HA blocked
+- [ ] Test corporate mode with allowCrashReporting=false - Crash reporting disabled
+
+### Secret Storage Verification
+
+- [ ] Verify AI API keys are encrypted via safeStorage
+- [ ] Verify Home Assistant tokens are encrypted via safeStorage
+- [ ] Verify Supabase keys are encrypted via safeStorage
+- [ ] Verify secure storage unavailability causes fail-closed behavior
+- [ ] Test that app rejects plaintext secrets (requires reconnection)
+
+### Backup Security Verification
+
+- [ ] Verify backup export excludes secret settings (ha.token, ai.apiKey, etc.)
+- [ ] Verify backup export is encrypted in corporate mode
+- [ ] Verify backup import rejects secret settings
+- [ ] Test backup import with encrypted backup
+- [ ] Verify backup export/import is blocked when policy disallows
+
+### Outbound Network Verification
+
+- [ ] Verify AI provider checks outbound guard before API calls
+- [ ] Verify Home Assistant checks outbound guard before fetch calls
+- [ ] Verify Supabase client checks outbound guard before connection
+- [ ] Test host allowlisting with allowedHosts set
+- [ ] Test host allowlisting with empty allowedHosts (blocks all)
+- [ ] Verify CSP connect-src matches policy in corporate mode
+
+### Windows Signing Verification
+
+- [ ] Verify Windows signing is enabled in electron-builder config
+- [ ] Set CSC_LINK environment variable for signing certificate
+- [ ] Set CSC_KEY_PASSWORD environment variable for certificate password
+- [ ] Verify signed installer shows valid signature in Windows properties
+- [ ] Verify signed installer passes SmartScreen reputation checks
+
+### Documentation Verification
+
+- [ ] Verify database-at-rest strategy is documented
+- [ ] Verify residual risks are clearly stated in security docs
+- [ ] Verify IT review packet is up to date
+- [ ] Verify corporate deployment guide is complete
+- [ ] Verify release notes mention security changes

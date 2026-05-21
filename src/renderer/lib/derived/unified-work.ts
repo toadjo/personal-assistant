@@ -126,7 +126,7 @@ export function deriveUnifiedWorkItems(input: UnifiedWorkInput): UnifiedWorkItem
   // Team tasks
   for (const teamTask of input.teamTasks) {
     const priority = getPriorityForTeamTask(teamTask, now);
-    const project = input.teamProjects.find(p => p.id === teamTask.projectId);
+    const project = input.teamProjects.find((p) => p.id === teamTask.projectId);
     items.push({
       id: `team-task-${teamTask.id}`,
       source: "team-task",
@@ -168,10 +168,7 @@ export function deriveUnifiedWorkItems(input: UnifiedWorkInput): UnifiedWorkItem
 /**
  * Filters unified work items by source.
  */
-export function filterUnifiedWorkItemsBySource(
-  items: UnifiedWorkItem[],
-  source: UnifiedWorkSource
-): UnifiedWorkItem[] {
+export function filterUnifiedWorkItemsBySource(items: UnifiedWorkItem[], source: UnifiedWorkSource): UnifiedWorkItem[] {
   return items.filter((item) => item.source === source);
 }
 
@@ -188,10 +185,7 @@ export function filterUnifiedWorkItemsByPriority(
 /**
  * Filters unified work items by completion status.
  */
-export function filterUnifiedWorkItemsByCompletion(
-  items: UnifiedWorkItem[],
-  isCompleted: boolean
-): UnifiedWorkItem[] {
+export function filterUnifiedWorkItemsByCompletion(items: UnifiedWorkItem[], isCompleted: boolean): UnifiedWorkItem[] {
   return items.filter((item) => item.isCompleted === isCompleted);
 }
 

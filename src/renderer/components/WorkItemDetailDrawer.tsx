@@ -429,11 +429,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                   </>
                 )}
               </div>
-              <button
-                type="button"
-                className="primaryButton"
-                onClick={handleEdit}
-              >
+              <button type="button" className="primaryButton" onClick={handleEdit}>
                 Edit
               </button>
             </>
