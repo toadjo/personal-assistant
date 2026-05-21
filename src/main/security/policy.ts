@@ -202,20 +202,27 @@ export function isExternalUrlsAllowed(): boolean {
 }
 
 export function isSecureSecretStorageRequired(): boolean {
-  const policy = loadSecurityPolicy();
-  return policy.requireSecureSecretStorage;
+  return getSecurityPolicy().requireSecureSecretStorage;
 }
 
 /**
  * Checks if a hostname is allowed based on the policy's allowedHosts list.
- * If allowedHosts is empty, all hosts are allowed (no restriction).
- * If allowedHosts is non-empty, only hosts in the list are allowed.
+ * 
+ * In personal mode: empty allowedHosts means unrestricted (current behavior).
+ * In corporate mode: empty allowedHosts means no public outbound hosts allowed.
+ * If allowedHosts is non-empty in either mode, only hosts in the list are allowed.
  */
 export function isHostAllowed(hostname: string): boolean {
-  const policy = loadSecurityPolicy();
+  const policy = getSecurityPolicy();
   const allowedHosts = policy.allowedHosts;
+  
+  // If the list is empty, behavior depends on mode
   if (allowedHosts.length === 0) {
-    return true; // No restriction when list is empty
+    // Personal mode: unrestricted
+    // Corporate mode: block all public hosts
+    return policy.mode === "personal";
   }
+  
+  // If the list is non-empty, check if hostname is in the list
   return allowedHosts.includes(hostname);
 }

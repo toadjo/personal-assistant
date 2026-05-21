@@ -277,11 +277,11 @@ const backupAppSettingSchema = z.object({
 export const backupPayloadSchema = z.object({
   version: z.string().min(1),
   exportedAt: z.string().min(1),
-  notes: z.array(backupNoteSchema),
-  reminders: z.array(backupReminderSchema),
-  tasks: z.array(backupTaskSchema),
-  automation_rules: z.array(backupAutomationRuleSchema),
-  app_settings: z.array(backupAppSettingSchema),
+  notes: z.array(backupNoteSchema).optional(),
+  reminders: z.array(backupReminderSchema).optional(),
+  tasks: z.array(backupTaskSchema).optional(),
+  automation_rules: z.array(backupAutomationRuleSchema).optional(),
+  app_settings: z.array(backupAppSettingSchema).optional(),
   _encrypted: z.string().optional()
 });
 

@@ -11,7 +11,7 @@ const SECRET_SETTING_KEYS = ["ha.token", "ai.apiKey", "ai.provider", "ai.configu
 export type BackupPayload = {
   version: string;
   exportedAt: string;
-  notes: Array<{
+  notes?: Array<{
     id: string;
     title: string;
     content: string;
@@ -20,7 +20,7 @@ export type BackupPayload = {
     createdAt: string;
     updatedAt: string;
   }>;
-  reminders: Array<{
+  reminders?: Array<{
     id: string;
     text: string;
     dueAt: string;
@@ -28,7 +28,7 @@ export type BackupPayload = {
     status: string;
     notifyChannel: string;
   }>;
-  tasks: Array<{
+  tasks?: Array<{
     id: string;
     title: string;
     notes: string;
@@ -41,7 +41,7 @@ export type BackupPayload = {
     updatedAt: string;
     lastCompletedAt: string | null;
   }>;
-  automation_rules: Array<{
+  automation_rules?: Array<{
     id: string;
     name: string;
     triggerType: string;
@@ -51,7 +51,7 @@ export type BackupPayload = {
     enabled: number;
     lastFiredAt: string | null;
   }>;
-  app_settings: Array<{
+  app_settings?: Array<{
     key: string;
     value: string;
     updatedAt: string;
@@ -76,7 +76,7 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
-  const app_settings = allSettings.filter(
+  const app_settings = (allSettings || []).filter(
     (setting) => !SECRET_SETTING_KEYS.includes(setting.key as (typeof SECRET_SETTING_KEYS)[number])
   );
 
@@ -96,10 +96,23 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     try {
       const json = JSON.stringify(payload);
       const encrypted = encryptSecret(json);
-      return { ...payload, _encrypted: encrypted } as BackupPayload & { _encrypted: string };
+      
+      // When encrypted, return ONLY metadata + _encrypted, no plaintext arrays
+      return {
+        version: payload.version,
+        exportedAt: payload.exportedAt,
+        _encrypted: encrypted
+      };
     } catch (error) {
       if (error instanceof SecureStorageUnavailableError) {
-        // Fall back to unencrypted if secure storage is unavailable
+        // In corporate mode, fail closed when secure storage is unavailable
+        if (isCorporateMode()) {
+          throw new Error(
+            "Corporate mode requires encrypted backup, but secure storage is unavailable. " +
+            "Ensure your system supports safeStorage or enable encryption in your security settings."
+          );
+        }
+        // In personal mode, fall back to unencrypted if secure storage is unavailable
         return payload;
       }
       throw error;
@@ -123,7 +136,7 @@ export function importBackup(
   let actualPayload = payload;
 
   // Decrypt if payload is encrypted
-  const isEncrypted = payload._encrypted !== undefined;
+  const isEncrypted = payload._encrypted !== undefined && !payload.notes;
   if (isEncrypted && payload._encrypted) {
     const decrypted = decryptSecret(payload._encrypted);
     if (!decrypted) {
@@ -135,6 +148,13 @@ export function importBackup(
       throw new Error("Failed to parse decrypted backup. The backup may be corrupted.");
     }
   }
+
+  // Ensure required fields exist after decryption
+  if (!actualPayload.notes) actualPayload.notes = [];
+  if (!actualPayload.reminders) actualPayload.reminders = [];
+  if (!actualPayload.tasks) actualPayload.tasks = [];
+  if (!actualPayload.automation_rules) actualPayload.automation_rules = [];
+  if (!actualPayload.app_settings) actualPayload.app_settings = [];
 
   const db = getDb();
   let rejectedSecretSettings = 0;
@@ -149,35 +169,35 @@ export function importBackup(
     const noteStmt = db.prepare(
       "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (@id, @title, @content, @tags, @pinned, @createdAt, @updatedAt)"
     );
-    for (const row of actualPayload.notes) {
+    for (const row of actualPayload.notes || []) {
       noteStmt.run(row);
     }
 
     const reminderStmt = db.prepare(
       "INSERT INTO reminders (id, text, dueAt, recurrence, status, notifyChannel) VALUES (@id, @text, @dueAt, @recurrence, @status, @notifyChannel)"
     );
-    for (const row of actualPayload.reminders) {
+    for (const row of actualPayload.reminders || []) {
       reminderStmt.run(row);
     }
 
     const taskStmt = db.prepare(
       "INSERT INTO tasks (id, title, notes, dueAt, priority, status, recurrence, notifyChannel, createdAt, updatedAt, lastCompletedAt) VALUES (@id, @title, @notes, @dueAt, @priority, @status, @recurrence, @notifyChannel, @createdAt, @updatedAt, @lastCompletedAt)"
     );
-    for (const row of actualPayload.tasks) {
+    for (const row of actualPayload.tasks || []) {
       taskStmt.run(row);
     }
 
     const ruleStmt = db.prepare(
       "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled, lastFiredAt) VALUES (@id, @name, @triggerType, @triggerConfig, @actionType, @actionConfig, @enabled, @lastFiredAt)"
     );
-    for (const row of actualPayload.automation_rules) {
+    for (const row of actualPayload.automation_rules || []) {
       ruleStmt.run(row);
     }
 
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
-    for (const row of actualPayload.app_settings) {
+    for (const row of actualPayload.app_settings || []) {
       // Reject secret settings from import
       if (SECRET_SETTING_KEYS.includes(row.key as (typeof SECRET_SETTING_KEYS)[number])) {
         rejectedSecretSettings++;
@@ -188,11 +208,11 @@ export function importBackup(
   })();
 
   return {
-    notes: actualPayload.notes.length,
-    reminders: actualPayload.reminders.length,
-    tasks: actualPayload.tasks.length,
-    automation_rules: actualPayload.automation_rules.length,
-    app_settings: actualPayload.app_settings.length - rejectedSecretSettings,
+    notes: actualPayload.notes?.length ?? 0,
+    reminders: actualPayload.reminders?.length ?? 0,
+    tasks: actualPayload.tasks?.length ?? 0,
+    automation_rules: actualPayload.automation_rules?.length ?? 0,
+    app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
 }

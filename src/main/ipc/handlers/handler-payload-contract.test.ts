@@ -339,16 +339,11 @@ describe("IPC handler payload contracts", () => {
     expect(parsed.context?.notesCount).toBe(5);
   });
 
-  it("backupPayloadSchema rejects missing top-level key", () => {
+  it("backupPayloadSchema rejects missing required fields", () => {
     expect(() =>
       backupPayloadSchema.parse({
-        version: "1.7.1",
-        exportedAt: "2024-01-01T00:00:00.000Z",
-        notes: [],
-        reminders: [],
-        tasks: [],
-        automation_rules: []
-        // app_settings intentionally omitted
+        // version intentionally omitted
+        exportedAt: "2024-01-01T00:00:00.000Z"
       })
     ).toThrow();
   });

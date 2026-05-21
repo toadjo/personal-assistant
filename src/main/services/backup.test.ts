@@ -15,7 +15,25 @@ vi.mock("../db", () => ({
   getDb: () => testDb
 }));
 
+vi.mock("./secureSecrets", () => ({
+  encryptSecret: vi.fn((data: string) => `encrypted:${data}`),
+  decryptSecret: vi.fn((encrypted: string) => encrypted.replace("encrypted:", "")),
+  SecureStorageUnavailableError: class extends Error {
+    constructor() {
+      super("Secure storage unavailable");
+      this.name = "SecureStorageUnavailableError";
+    }
+  },
+  isEncrypted: vi.fn(() => false)
+}));
+
+vi.mock("../security/policy", () => ({
+  isCorporateMode: vi.fn(() => false)
+}));
+
 import { exportBackup, importBackup, resetAllData } from "./backup";
+import { encryptSecret, SecureStorageUnavailableError } from "./secureSecrets";
+import { isCorporateMode } from "../security/policy";
 
 describe("backup service", () => {
   beforeEach(() => {
@@ -93,11 +111,11 @@ describe("backup service", () => {
     expect(imported.app_settings).toBe(1);
 
     const reExported = exportBackup();
-    expect(reExported.notes[0]!.id).toBe("n1");
-    expect(reExported.reminders[0]!.id).toBe("r1");
-    expect(reExported.tasks[0]!.id).toBe("t1");
-    expect(reExported.automation_rules[0]!.id).toBe("a1");
-    expect(reExported.app_settings[0]!.key).toBe("assistant.name");
+    expect(reExported.notes?.[0]?.id).toBe("n1");
+    expect(reExported.reminders?.[0]?.id).toBe("r1");
+    expect(reExported.tasks?.[0]?.id).toBe("t1");
+    expect(reExported.automation_rules?.[0]?.id).toBe("a1");
+    expect(reExported.app_settings?.[0]?.key).toBe("assistant.name");
   });
 
   it("resetAllData clears all user tables", () => {
@@ -130,5 +148,107 @@ describe("backup service", () => {
     expect(errorCount.c).toBe(0);
     const deviceCount = testDb.prepare("SELECT COUNT(*) as c FROM devices_cache").get() as { c: number };
     expect(deviceCount.c).toBe(0);
+  });
+
+  describe("encrypted backup security", () => {
+    beforeEach(() => {
+      testDb = createMemoryDatabase();
+    });
+
+    it("corporate export returns no plaintext arrays when encrypted", () => {
+      vi.mocked(isCorporateMode).mockReturnValue(true);
+
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+
+      const exported = exportBackup({ encrypt: true });
+      
+      expect(exported.version).toBe("1.7.1");
+      expect(exported.exportedAt).toBeDefined();
+      expect(exported._encrypted).toBeDefined();
+      expect(exported.notes).toBeUndefined();
+      expect(exported.reminders).toBeUndefined();
+      expect(exported.tasks).toBeUndefined();
+      expect(exported.automation_rules).toBeUndefined();
+      expect(exported.app_settings).toBeUndefined();
+    });
+
+    it("corporate export fails when secure storage is unavailable", () => {
+      vi.mocked(isCorporateMode).mockReturnValue(true);
+      vi.mocked(encryptSecret).mockImplementation(() => {
+        throw new SecureStorageUnavailableError();
+      });
+
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+
+      expect(() => exportBackup({ encrypt: true })).toThrow(
+        "Corporate mode requires encrypted backup, but secure storage is unavailable"
+      );
+    });
+
+    it("personal mode falls back to unencrypted when secure storage unavailable", () => {
+      vi.mocked(isCorporateMode).mockReturnValue(false);
+      vi.mocked(encryptSecret).mockImplementation(() => {
+        throw new SecureStorageUnavailableError();
+      });
+
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+
+      const exported = exportBackup({ encrypt: true });
+      
+      expect(exported._encrypted).toBeUndefined();
+      expect(exported.notes).toBeDefined();
+      expect(exported.notes?.length).toBe(1);
+    });
+
+    it("encrypted import decrypts and restores data", () => {
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+
+      const exported = exportBackup({ encrypt: true });
+      
+      // Clear the database
+      testDb.prepare("DELETE FROM notes").run();
+
+      // Import encrypted backup
+      const imported = importBackup(exported);
+      expect(imported.notes).toBe(1);
+
+      // Verify data was restored
+      const noteCount = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
+      expect(noteCount.c).toBe(1);
+    });
+
+    it("plaintext import still works in personal mode", () => {
+      const plaintextPayload = {
+        version: "1.7.1",
+        exportedAt: new Date().toISOString(),
+        notes: [{ id: "n1", title: "Hello", content: "World", tags: "[]", pinned: 0, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: []
+      };
+
+      const imported = importBackup(plaintextPayload);
+      expect(imported.notes).toBe(1);
+
+      const noteCount = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
+      expect(noteCount.c).toBe(1);
+    });
   });
 });
