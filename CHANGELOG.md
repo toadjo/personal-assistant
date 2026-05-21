@@ -4,6 +4,18 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.8] - 2026-05-21
+
+Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Fixed
+
+- Windows desktop and Start menu shortcuts now use the PersonalAssistant icon even when executable resource editing is disabled.
+
+### Tests
+
+- NSIS installer build and smoke check verified shortcut icon packaging.
+
 ## [2.1.7] - 2026-05-21
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.

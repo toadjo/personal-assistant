@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "2.1.7",
+  "version": "2.1.8",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -106,6 +106,12 @@
       "node_modules/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "assets/app-icon.ico",
+        "to": "app-icon.ico"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "assets/app-icon.ico",
@@ -114,6 +120,7 @@
     "nsis": {
       "installerIcon": "assets/app-icon.ico",
       "uninstallerIcon": "assets/app-icon.ico",
+      "include": "build/installer.nsh",
       "deleteAppDataOnUninstall": false
     },
     "linux": {

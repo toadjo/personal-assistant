@@ -5,12 +5,16 @@ import type { TeamProjectTask } from "../../../shared/team/types";
 import type { TeamState } from "../../hooks/team/useTeamState";
 
 type Props = {
-  task: TeamProjectTask;
+  task: TeamProjectTask | null;
   team: TeamState;
   onCancel: () => void;
 };
 
 export function TaskEditor({ task, team, onCancel }: Props): JSX.Element {
+  if (!task) {
+    return <></>;
+  }
+
   const [editTaskTitle, setEditTaskTitle] = useState(task.title);
   const [editTaskNotes, setEditTaskNotes] = useState(task.notes || "");
   const [editTaskDueAt, setEditTaskDueAt] = useState(task.dueAt ? new Date(task.dueAt).toISOString().slice(0, 16) : "");
