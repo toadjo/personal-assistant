@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { StatusBanner } from "../layout/StatusBanner";
 import type { TeamProjectTask } from "../../../shared/team/types";
@@ -10,37 +10,50 @@ type Props = {
   onCancel: () => void;
 };
 
-export function TaskEditor({ task, team, onCancel }: Props): JSX.Element {
-  if (!task) {
-    return <></>;
-  }
-
-  const [editTaskTitle, setEditTaskTitle] = useState(task.title);
-  const [editTaskNotes, setEditTaskNotes] = useState(task.notes || "");
-  const [editTaskDueAt, setEditTaskDueAt] = useState(task.dueAt ? new Date(task.dueAt).toISOString().slice(0, 16) : "");
-  const [editTaskPriority, setEditTaskPriority] = useState<"low" | "normal" | "high">(task.priority);
-  const [editTaskRecurrence, setEditTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">(task.recurrence);
-  const [editTaskAssigneeDisplayName, setEditTaskAssigneeDisplayName] = useState(task.assigneeDisplayName || "");
-  const [editTaskStatus, setEditTaskStatus] = useState<"open" | "done">(task.status);
+export function TaskEditor({ task, team, onCancel }: Props): JSX.Element | null {
+  const [editTaskTitle, setEditTaskTitle] = useState(task?.title ?? "");
+  const [editTaskNotes, setEditTaskNotes] = useState(task?.notes ?? "");
+  const [editTaskDueAt, setEditTaskDueAt] = useState(
+    task?.dueAt ? new Date(task.dueAt).toISOString().slice(0, 16) : ""
+  );
+  const [editTaskPriority, setEditTaskPriority] = useState<"low" | "normal" | "high">(task?.priority ?? "normal");
+  const [editTaskRecurrence, setEditTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">(
+    task?.recurrence ?? "none"
+  );
+  const [editTaskAssigneeDisplayName, setEditTaskAssigneeDisplayName] = useState(task?.assigneeDisplayName ?? "");
+  const [editTaskStatus, setEditTaskStatus] = useState<"open" | "done">(task?.status ?? "open");
   const [isSaving, setIsSaving] = useState(false);
   const [editValidationError, setEditValidationError] = useState<string | null>(null);
+
+  const taskId = task?.id;
+  useEffect(() => {
+    if (!task) return;
+    setEditTaskTitle(task.title);
+    setEditTaskNotes(task.notes || "");
+    setEditTaskDueAt(task.dueAt ? new Date(task.dueAt).toISOString().slice(0, 16) : "");
+    setEditTaskPriority(task.priority);
+    setEditTaskRecurrence(task.recurrence);
+    setEditTaskAssigneeDisplayName(task.assigneeDisplayName || "");
+    setEditTaskStatus(task.status);
+    setEditValidationError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId]);
+
+  if (!task) return null;
 
   const handleSaveEdit = async () => {
     setEditValidationError(null);
 
-    // Validate required fields
     if (!editTaskTitle.trim()) {
       setEditValidationError("Task title is required");
       return;
     }
 
-    // Validate recurrence requires due date
     if (editTaskRecurrence !== "none" && !editTaskDueAt.trim()) {
       setEditValidationError("Recurring tasks require a due date");
       return;
     }
 
-    // Convert datetime-local to ISO string if provided
     const dueAtIso = editTaskDueAt.trim() ? new Date(editTaskDueAt).toISOString() : null;
 
     setIsSaving(true);

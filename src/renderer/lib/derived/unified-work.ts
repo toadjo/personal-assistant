@@ -52,6 +52,12 @@ export interface UnifiedWorkItem {
   assigneeDisplayName?: string;
   /** Optional project name (for team tasks). */
   projectName?: string;
+  /** Source priority for team tasks. */
+  teamPriority?: "low" | "normal" | "high";
+  /** Recurrence for team tasks. */
+  teamRecurrence?: "none" | "daily" | "weekly" | "monthly";
+  /** Status for team tasks. */
+  teamStatus?: "open" | "done";
 }
 
 /**
@@ -139,7 +145,10 @@ export function deriveUnifiedWorkItems(input: UnifiedWorkInput): UnifiedWorkItem
       createdAt: teamTask.createdAt,
       updatedAt: teamTask.updatedAt,
       assigneeDisplayName: teamTask.assigneeDisplayName || undefined,
-      projectName: project?.name || undefined
+      projectName: project?.name || undefined,
+      teamPriority: teamTask.priority,
+      teamRecurrence: teamTask.recurrence,
+      teamStatus: teamTask.status
     });
   }
 

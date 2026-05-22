@@ -862,12 +862,9 @@ export function AssistantShell(): JSX.Element {
             }
             const updatedTask = {
               ...existingTask,
-              ...patch,
-              updatedAt: new Date().toISOString(),
-              updatedBy: "user"
+              ...patch
             };
             await team.updateTask(updatedTask);
-            ui.showSuccess("Team task updated.");
           }}
           onConvertNoteToTask={inbox.convertNoteToTask}
           onConvertNoteToReminder={inbox.convertNoteToReminder}

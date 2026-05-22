@@ -263,6 +263,45 @@ describe("deriveUnifiedWorkItems", () => {
     expect(doneReminderItem?.isCompleted).toBe(true);
   });
 
+  it("populates teamPriority, teamRecurrence, and teamStatus for team tasks", () => {
+    const teamTask = makeTeamTask({
+      title: "Deploy",
+      priority: "high",
+      recurrence: "weekly",
+      status: "done"
+    });
+
+    const result = deriveUnifiedWorkItems({
+      localTasks: [],
+      localReminders: [],
+      localNotes: [],
+      teamTasks: [teamTask],
+      teamProjects: []
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.teamPriority).toBe("high");
+    expect(result[0]?.teamRecurrence).toBe("weekly");
+    expect(result[0]?.teamStatus).toBe("done");
+  });
+
+  it("does not set team fields for local items", () => {
+    const task = makeTask({ title: "Local" });
+
+    const result = deriveUnifiedWorkItems({
+      localTasks: [task],
+      localReminders: [],
+      localNotes: [],
+      teamTasks: [],
+      teamProjects: []
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.teamPriority).toBeUndefined();
+    expect(result[0]?.teamRecurrence).toBeUndefined();
+    expect(result[0]?.teamStatus).toBeUndefined();
+  });
+
   it("generates unique IDs for each item", () => {
     const task = makeTask({ id: "task-1" });
     const reminder = makeReminder({ id: "reminder-1" });
