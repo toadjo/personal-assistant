@@ -4,6 +4,37 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.9] - 2026-05-22
+
+Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Added
+
+- Inbox capture now guides task and reminder captures directly into Today.
+- Today review rows now expose Details, Complete, Snooze, and Open Inbox actions.
+
+### Changed
+
+- Home, Today, and Inbox empty states now guide the daily workflow instead of ending in passive states.
+- Daily Flow navigation now feels continuous across Home, Inbox, Today, and the unified drawer.
+- Inbox row actions and spacing were tightened for better visual density.
+
+### Fixed
+
+- Undated captured tasks now appear in Today Context.
+- Captured reminders are deduplicated in Today review.
+- Electron main-process build output now matches the packaged app entry contract.
+- Inbox capture controls remain visible after CSS token normalization.
+
+### Security
+
+- Security audit completed with zero critical, high, or medium findings.
+
+### Tests
+
+- Full local gates passed.
+- Electron manual QA passed for Inbox to Today capture, task completion, reminder snooze, note capture, empty states, and narrow viewport layout.
+
 ## [2.1.8] - 2026-05-21
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
@@ -386,7 +417,8 @@ Final minimal corporate pass. Version bump rolling up 1.5.2 – 1.5.4.
 
 History prior to 1.4.3 is in git log; no curated changelog exists for those versions. See `git log v1.4.2 --no-merges` for details.
 
-[2.1.6]: https://github.com/toadjo/personal-assistant/compare/v2.1.5...v2.1.6
+[2.1.9]: https://github.com/toadjo/personal-assistant/compare/v2.1.8...v2.1.9
+[2.1.8]: https://github.com/toadjo/personal-assistant/compare/v2.1.7...v2.1.8
 [2.1.7]: https://github.com/toadjo/personal-assistant/compare/v2.1.6...v2.1.7
 [2.1.4]: https://github.com/toadjo/personal-assistant/compare/v2.1.3...v2.1.4
 [2.1.3]: https://github.com/toadjo/personal-assistant/compare/v2.1.2...v2.1.3
