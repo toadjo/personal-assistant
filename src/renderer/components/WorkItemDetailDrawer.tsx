@@ -4,6 +4,14 @@ import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import { IconButton } from "./ui/IconButton";
 import "./WorkItemDetailDrawer.css";
 
+type LocalTaskPatch = {
+  title: string;
+  notes: string;
+  dueAt: string | null;
+  priority: "low" | "normal" | "high";
+  recurrence: "none" | "daily" | "weekly" | "monthly";
+};
+
 type Props = {
   item: UnifiedWorkItem | null;
   onClose: () => void;
@@ -14,7 +22,7 @@ type Props = {
   onDeleteReminder?: (id: string) => Promise<void>;
   onDeleteNote?: (id: string) => Promise<void>;
   onUpdateNote?: (id: string, title: string, content: string) => Promise<void>;
-  onUpdateTask?: (id: string, title: string, notes: string) => Promise<void>;
+  onUpdateTask?: (id: string, patch: LocalTaskPatch) => Promise<void>;
   onUpdateReminder?: (id: string, text?: string, dueAt?: string) => Promise<void>;
   onUpdateTeamTask?: (id: string, patch: Partial<TeamProjectTaskFields>) => Promise<void>;
   onConvertNoteToTask?: (noteId: string) => Promise<void>;
@@ -77,6 +85,11 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
       setEditRecurrence(item.teamRecurrence ?? "none");
       setEditAssignee(item.assigneeDisplayName ?? "");
       setEditStatus(item.teamStatus ?? "open");
+    } else if (item.source === "local-task") {
+      setEditPriority(item.localPriority ?? "normal");
+      setEditRecurrence(item.localRecurrence ?? "none");
+      setEditAssignee("");
+      setEditStatus("open");
     } else {
       setEditPriority("normal");
       setEditRecurrence("none");
@@ -98,8 +111,8 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
       }
     }
 
-    if (item.source === "team-task" && editRecurrence !== "none" && !editDueAt.trim()) {
-      setEditValidationError("Recurring team tasks require a due date.");
+    if ((item.source === "team-task" || item.source === "local-task") && editRecurrence !== "none" && !editDueAt.trim()) {
+      setEditValidationError("Recurring tasks require a due date.");
       return;
     }
 
@@ -109,9 +122,16 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
         onShowSuccess?.("Note updated.");
         onClose();
       } else if (item.source === "local-task" && onUpdateTask) {
-        await onUpdateTask(item.sourceId, editTitle, editContent);
+        const dueAt = editDueAt ? new Date(editDueAt).toISOString() : null;
+        await onUpdateTask(item.sourceId, {
+          title: editTitle,
+          notes: editContent,
+          dueAt,
+          priority: editPriority,
+          recurrence: editRecurrence
+        });
         onShowSuccess?.("Task updated.");
-        onClose();
+        setIsEditing(false);
       } else if (item.source === "local-reminder" && onUpdateReminder) {
         const dueAt = editDueAt ? new Date(editDueAt).toISOString() : item.dueAt || null;
         if (dueAt) {
@@ -198,7 +218,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
               </div>
               {item.source !== "local-reminder" && (
                 <div className="formGroup">
-                  <label htmlFor="edit-content">Content</label>
+                  <label htmlFor="edit-content">{item.source === "local-task" || item.source === "team-task" ? "Notes" : "Content"}</label>
                   <textarea
                     id="edit-content"
                     value={editContent}
@@ -207,6 +227,47 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
                     rows={4}
                   />
                 </div>
+              )}
+              {item.source === "local-task" && (
+                <>
+                  <div className="formGroup">
+                    <label htmlFor="edit-dueAt">Due Date</label>
+                    <input
+                      id="edit-dueAt"
+                      type="datetime-local"
+                      value={editDueAt}
+                      onChange={(e) => setEditDueAt(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div className="formGroup">
+                    <label htmlFor="edit-priority">Priority</label>
+                    <select
+                      id="edit-priority"
+                      value={editPriority}
+                      onChange={(e) => setEditPriority(e.target.value as "low" | "normal" | "high")}
+                      className="input"
+                    >
+                      <option value="low">Low</option>
+                      <option value="normal">Normal</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                  <div className="formGroup">
+                    <label htmlFor="edit-recurrence">Recurrence</label>
+                    <select
+                      id="edit-recurrence"
+                      value={editRecurrence}
+                      onChange={(e) => setEditRecurrence(e.target.value as "none" | "daily" | "weekly" | "monthly")}
+                      className="input"
+                    >
+                      <option value="none">None</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                </>
               )}
               {item.source === "local-reminder" && (
                 <div className="formGroup">
@@ -315,8 +376,22 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
               )}
               <div className="itemMeta">
                 <span className="metaLabel">Priority:</span>
-                <span className="metaValue">{item.priority}</span>
+                <span className="metaValue">
+                  {item.source === "local-task" ? (item.localPriority ?? item.priority) : item.source === "team-task" ? (item.teamPriority ?? item.priority) : item.priority}
+                </span>
               </div>
+              {item.source === "local-task" && item.localRecurrence && item.localRecurrence !== "none" && (
+                <div className="itemMeta">
+                  <span className="metaLabel">Recurrence:</span>
+                  <span className="metaValue">{item.localRecurrence}</span>
+                </div>
+              )}
+              {item.source === "team-task" && item.teamRecurrence && item.teamRecurrence !== "none" && (
+                <div className="itemMeta">
+                  <span className="metaLabel">Recurrence:</span>
+                  <span className="metaValue">{item.teamRecurrence}</span>
+                </div>
+              )}
               {item.dueAt && (
                 <div className="itemMeta">
                   <span className="metaLabel">Due:</span>

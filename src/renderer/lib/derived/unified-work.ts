@@ -58,6 +58,10 @@ export interface UnifiedWorkItem {
   teamRecurrence?: "none" | "daily" | "weekly" | "monthly";
   /** Status for team tasks. */
   teamStatus?: "open" | "done";
+  /** Source priority for local tasks. */
+  localPriority?: "low" | "normal" | "high";
+  /** Recurrence for local tasks. */
+  localRecurrence?: "none" | "daily" | "weekly" | "monthly";
 }
 
 /**
@@ -92,7 +96,9 @@ export function deriveUnifiedWorkItems(input: UnifiedWorkInput): UnifiedWorkItem
       dueAt: task.dueAt || undefined,
       isCompleted: task.status === "done",
       createdAt: task.createdAt,
-      updatedAt: task.updatedAt
+      updatedAt: task.updatedAt,
+      localPriority: task.priority,
+      localRecurrence: task.recurrence
     });
   }
 

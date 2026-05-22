@@ -778,6 +778,11 @@ export function AssistantShell(): JSX.Element {
               convertNoteToTask={inbox.convertNoteToTask}
               convertNoteToReminder={inbox.convertNoteToReminder}
               sendTaskToTeam={inbox.sendTaskToTeam}
+              completeTask={tasks.completeById}
+              completeReminder={reminders.completeById}
+              deleteTask={tasks.deleteById}
+              deleteReminder={reminders.deleteById}
+              deleteNote={(id) => memos.deleteNote(id, "Item")}
               onOpenItem={setSelectedWorkItem}
               onShowSuccess={ui.showSuccess}
               onError={ui.reportError}
@@ -852,7 +857,7 @@ export function AssistantShell(): JSX.Element {
           onDeleteReminder={reminders.deleteById}
           onDeleteNote={(id) => memos.deleteNote(id, "Item")}
           onUpdateNote={(id, title, content) => memos.updateNote({ id, title, content })}
-          onUpdateTask={(id, title, notes) => tasks.updateDetailsById(id, title, notes)}
+          onUpdateTask={(id, patch) => tasks.saveTask({ id, ...patch })}
           onUpdateReminder={(id, text, dueAt) => reminders.updateById(id, text, dueAt)}
           onUpdateTeamTask={async (id, patch) => {
             const existingTask = team.tasks.find((t) => t.id === id);

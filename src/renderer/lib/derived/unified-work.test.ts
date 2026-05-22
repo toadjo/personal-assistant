@@ -400,3 +400,39 @@ describe("filterUnifiedWorkItemsByCompletion", () => {
     expect(filterUnifiedWorkItemsByCompletion(items, true)).toHaveLength(1);
   });
 });
+
+describe("local task fields in unified items", () => {
+  it("populates localPriority and localRecurrence from local tasks", () => {
+    const task = makeTask({ priority: "high", recurrence: "weekly" });
+    const items = deriveUnifiedWorkItems({
+      localTasks: [task],
+      localReminders: [],
+      localNotes: [],
+      teamTasks: [],
+      teamProjects: []
+    });
+
+    expect(items).toHaveLength(1);
+    const item = items[0]!;
+    expect(item.localPriority).toBe("high");
+    expect(item.localRecurrence).toBe("weekly");
+  });
+
+  it("does not set localPriority on non-task items", () => {
+    const note = makeNote();
+    const reminder = makeReminder();
+    const items = deriveUnifiedWorkItems({
+      localTasks: [],
+      localReminders: [reminder],
+      localNotes: [note],
+      teamTasks: [],
+      teamProjects: []
+    });
+
+    expect(items).toHaveLength(2);
+    for (const item of items) {
+      expect(item.localPriority).toBeUndefined();
+      expect(item.localRecurrence).toBeUndefined();
+    }
+  });
+});

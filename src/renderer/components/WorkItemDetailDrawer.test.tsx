@@ -271,7 +271,7 @@ describe("WorkItemDetailDrawer", () => {
       fireEvent.click(editButton);
 
       expect(screen.getByLabelText("Title")).toBeDefined();
-      expect(screen.getByLabelText("Content")).toBeDefined();
+      expect(screen.getByLabelText("Notes")).toBeDefined();
       expect(screen.getByLabelText("Due Date")).toBeDefined();
       expect(screen.getByLabelText("Priority")).toBeDefined();
       expect(screen.getByLabelText("Recurrence")).toBeDefined();
@@ -300,7 +300,7 @@ describe("WorkItemDetailDrawer", () => {
       const titleInput = screen.getByLabelText("Title");
       fireEvent.change(titleInput, { target: { value: "Update PR" } });
 
-      const contentInput = screen.getByLabelText("Content");
+      const contentInput = screen.getByLabelText("Notes");
       fireEvent.change(contentInput, { target: { value: "Updated notes" } });
 
       const priorityInput = screen.getByLabelText("Priority");
@@ -400,7 +400,7 @@ describe("WorkItemDetailDrawer", () => {
       fireEvent.click(screen.getByText("Edit"));
 
       expect(screen.getByLabelText("Title")).toHaveValue("Deploy v2");
-      expect(screen.getByLabelText("Content")).toHaveValue("Release notes");
+      expect(screen.getByLabelText("Notes")).toHaveValue("Release notes");
       expect(screen.getByLabelText("Due Date")).toHaveValue("2024-08-01T09:00");
       expect(screen.getByLabelText("Priority")).toHaveValue("high");
       expect(screen.getByLabelText("Recurrence")).toHaveValue("weekly");
@@ -476,7 +476,7 @@ describe("WorkItemDetailDrawer", () => {
       await vi.waitFor(() =>
         expect(screen.getByRole("alert")).toBeDefined()
       );
-      expect(screen.getByText("Recurring team tasks require a due date.")).toBeDefined();
+      expect(screen.getByText("Recurring tasks require a due date.")).toBeDefined();
       expect(onUpdateTeamTask).not.toHaveBeenCalled();
     });
 
@@ -506,6 +506,140 @@ describe("WorkItemDetailDrawer", () => {
       );
       expect(screen.getByText("Title is required.")).toBeDefined();
       expect(onUpdateTeamTask).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("local task editing", () => {
+    it("shows priority, recurrence, and due date fields for local tasks", () => {
+      const item = makeUnifiedItem({
+        source: "local-task",
+        localPriority: "high",
+        localRecurrence: "weekly"
+      });
+      render(<WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTask={vi.fn()} />);
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      expect(screen.getByLabelText("Title")).toBeDefined();
+      expect(screen.getByLabelText("Notes")).toBeDefined();
+      expect(screen.getByLabelText("Due Date")).toBeDefined();
+      expect(screen.getByLabelText("Priority")).toBeDefined();
+      expect(screen.getByLabelText("Recurrence")).toBeDefined();
+    });
+
+    it("preloads local task priority and recurrence in edit form", () => {
+      const item = makeUnifiedItem({
+        source: "local-task",
+        label: "Fix bug",
+        detail: "Stack trace attached",
+        dueAt: "2024-09-15T14:00:00.000Z",
+        localPriority: "high",
+        localRecurrence: "daily"
+      });
+      render(<WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTask={vi.fn()} />);
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      expect(screen.getByLabelText("Title")).toHaveValue("Fix bug");
+      expect(screen.getByLabelText("Notes")).toHaveValue("Stack trace attached");
+      expect(screen.getByLabelText("Due Date")).toHaveValue("2024-09-15T14:00");
+      expect(screen.getByLabelText("Priority")).toHaveValue("high");
+      expect(screen.getByLabelText("Recurrence")).toHaveValue("daily");
+    });
+
+    it("calls onUpdateTask with full patch including priority and recurrence", async () => {
+      const item = makeUnifiedItem({
+        source: "local-task",
+        label: "Deploy",
+        detail: "Notes here",
+        localPriority: "normal",
+        localRecurrence: "none"
+      });
+      const onUpdateTask = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={vi.fn()}
+          onUpdateTask={onUpdateTask}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      fireEvent.change(screen.getByLabelText("Priority"), { target: { value: "high" } });
+      fireEvent.change(screen.getByLabelText("Recurrence"), { target: { value: "weekly" } });
+      fireEvent.change(screen.getByLabelText("Due Date"), { target: { value: "2024-10-01T10:00" } });
+
+      fireEvent.click(screen.getByText("Save"));
+
+      await vi.waitFor(() => expect(onUpdateTask).toHaveBeenCalled());
+
+      expect(onUpdateTask).toHaveBeenCalledWith("task-1", {
+        title: "Deploy",
+        notes: "Notes here",
+        dueAt: "2024-10-01T10:00:00.000Z",
+        priority: "high",
+        recurrence: "weekly"
+      });
+      expect(onShowSuccess).toHaveBeenCalledWith("Task updated.");
+    });
+
+    it("rejects recurring local task without due date", async () => {
+      const item = makeUnifiedItem({
+        source: "local-task",
+        label: "Recurring task",
+        localPriority: "normal",
+        localRecurrence: "none"
+      });
+      const onUpdateTask = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTask={onUpdateTask} />
+      );
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      fireEvent.change(screen.getByLabelText("Recurrence"), { target: { value: "daily" } });
+
+      fireEvent.click(screen.getByText("Save"));
+
+      await vi.waitFor(() =>
+        expect(screen.getByRole("alert")).toBeDefined()
+      );
+      expect(screen.getByText("Recurring tasks require a due date.")).toBeDefined();
+      expect(onUpdateTask).not.toHaveBeenCalled();
+    });
+
+    it("stays in view mode after save instead of closing drawer", async () => {
+      const item = makeUnifiedItem({
+        source: "local-task",
+        label: "Stay open",
+        localPriority: "normal",
+        localRecurrence: "none"
+      });
+      const onUpdateTask = vi.fn().mockResolvedValue(undefined);
+      const onClose = vi.fn();
+      const onShowSuccess = vi.fn();
+
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateTask={onUpdateTask}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      fireEvent.click(screen.getByText("Edit"));
+      fireEvent.click(screen.getByText("Save"));
+
+      await vi.waitFor(() => expect(onShowSuccess).toHaveBeenCalledWith("Task updated."));
+
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByText("Edit")).toBeDefined();
     });
   });
 });
