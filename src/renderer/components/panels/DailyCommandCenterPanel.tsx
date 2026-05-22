@@ -1,4 +1,4 @@
-import type { DailyCommandCenter } from "../../lib/derived/daily-command-center";
+import type { DailyCommandCenter, DailyCommandCenterNowItem } from "../../lib/derived/daily-command-center";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import {
@@ -13,7 +13,8 @@ import {
   X,
   ExternalLink,
   Inbox,
-  ListTodo
+  ListTodo,
+  FileText
 } from "lucide-react";
 import type { BriefItem } from "../../types";
 import type { AwayBriefItem } from "../../types";
@@ -106,6 +107,241 @@ function getTaskFilterForUrgency(urgency: BriefItem["urgency"]): TaskFilter {
   return urgency === "overdue" ? "overdue" : "open";
 }
 
+interface RowActionProps {
+  item: BriefItem | DailyCommandCenterNowItem;
+  onCompleteTask: (id: string) => void;
+  onCompleteReminder: (id: string) => void;
+  onSnoozeReminder: (id: string) => void;
+  onOpenTasks?: (filter: TaskFilter) => void;
+  onOpenReminders?: (filter: ReminderFilter) => void;
+  onOpenNotes?: () => void;
+  onOpenWorkItem?: (item: BriefItem) => void;
+  onOpenAutomations?: (item: BriefItem) => void;
+  onOpenInbox?: () => void;
+  isNowSection?: boolean;
+}
+
+function RowActions({
+  item,
+  onCompleteTask,
+  onCompleteReminder,
+  onSnoozeReminder,
+  onOpenTasks,
+  onOpenReminders,
+  onOpenNotes,
+  onOpenWorkItem,
+  onOpenAutomations,
+  onOpenInbox,
+  isNowSection = false
+}: RowActionProps): JSX.Element {
+  const actions: JSX.Element[] = [];
+
+  // Details button for reviewable work (tasks, reminders, team tasks)
+  if (onOpenWorkItem && (item.kind === "task" || item.kind === "reminder" || item.kind === "team-task")) {
+    actions.push(
+      <IconButton
+        key="details"
+        icon={FileText}
+        size={16}
+        onClick={() => onOpenWorkItem(item)}
+        label={`Details: ${item.label}`}
+        title="Details"
+        className="dccActionButton"
+      />
+    );
+  }
+
+  // Now section uses item.action, other sections use item.kind
+  if (isNowSection && "action" in item) {
+    const nowItem = item as DailyCommandCenterNowItem;
+    if (nowItem.action === "complete-task") {
+      actions.push(
+        <IconButton
+          key="complete"
+          icon={Check}
+          size={16}
+          onClick={() => onCompleteTask(nowItem.sourceId)}
+          label={`Complete task: ${nowItem.label}`}
+          title="Done"
+          className="dccActionButton"
+        />
+      );
+      if (onOpenTasks) {
+        actions.push(
+          <IconButton
+            key="open-tasks"
+            icon={ExternalLink}
+            size={16}
+            onClick={() => onOpenTasks(getTaskFilterForUrgency(nowItem.urgency))}
+            label={`Open tasks: ${nowItem.label}`}
+            title="Open"
+            className="dccActionButton"
+          />
+        );
+      }
+    } else if (nowItem.action === "complete-reminder") {
+      actions.push(
+        <IconButton
+          key="complete"
+          icon={Check}
+          size={16}
+          onClick={() => onCompleteReminder(nowItem.sourceId)}
+          label={`Complete reminder: ${nowItem.label}`}
+          title="Done"
+          className="dccActionButton"
+        />
+      );
+      actions.push(
+        <IconButton
+          key="snooze"
+          icon={Snooze}
+          size={16}
+          onClick={() => onSnoozeReminder(nowItem.sourceId)}
+          label={`Snooze reminder ten minutes: ${nowItem.label}`}
+          title="Snooze"
+          className="dccActionButton"
+        />
+      );
+      if (onOpenReminders) {
+        actions.push(
+          <IconButton
+            key="open-reminders"
+            icon={ExternalLink}
+            size={16}
+            onClick={() => onOpenReminders("pending")}
+            label={`Open reminders: ${nowItem.label}`}
+            title="Open"
+            className="dccActionButton"
+          />
+        );
+      }
+    }
+  } else {
+    // Attention and Context sections use item.kind
+    if (item.kind === "task") {
+      actions.push(
+        <IconButton
+          key="complete"
+          icon={Check}
+          size={16}
+          onClick={() => onCompleteTask(item.sourceId)}
+          label={`Complete task: ${item.label}`}
+          title="Done"
+          className="dccActionButton"
+        />
+      );
+      if (onOpenTasks) {
+        actions.push(
+          <IconButton
+            key="open-tasks"
+            icon={ExternalLink}
+            size={16}
+            onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
+            label={`Open tasks: ${item.label}`}
+            title="Open"
+            className="dccActionButton"
+          />
+        );
+      }
+    } else if (item.kind === "team-task") {
+      actions.push(
+        <IconButton
+          key="open"
+          icon={ExternalLink}
+          size={16}
+          onClick={() => onOpenWorkItem?.(item)}
+          label={`Open team task: ${item.label}`}
+          title="Open"
+          className="dccActionButton"
+        />
+      );
+    } else if (item.kind === "reminder" || item.kind === "agenda") {
+      actions.push(
+        <IconButton
+          key="complete"
+          icon={Check}
+          size={16}
+          onClick={() => onCompleteReminder(item.sourceId)}
+          label={`Complete reminder: ${item.label}`}
+          title="Done"
+          className="dccActionButton"
+        />
+      );
+      actions.push(
+        <IconButton
+          key="snooze"
+          icon={Snooze}
+          size={16}
+          onClick={() => onSnoozeReminder(item.sourceId)}
+          label={`Snooze reminder ten minutes: ${item.label}`}
+          title="Snooze"
+          className="dccActionButton"
+        />
+      );
+      if (onOpenReminders) {
+        actions.push(
+          <IconButton
+            key="open-reminders"
+            icon={ExternalLink}
+            size={16}
+            onClick={() => onOpenReminders("pending")}
+            label={`Open reminders: ${item.label}`}
+            title="Open"
+            className="dccActionButton"
+          />
+        );
+      }
+    } else if (item.kind === "note") {
+      if (onOpenInbox) {
+        actions.push(
+          <IconButton
+            key="inbox"
+            icon={Inbox}
+            size={16}
+            onClick={() => onOpenInbox()}
+            label={`Open in Inbox: ${item.label}`}
+            title="Inbox"
+            className="dccActionButton"
+          />
+        );
+      }
+      if (onOpenNotes) {
+        actions.push(
+          <IconButton
+            key="open-notes"
+            icon={ExternalLink}
+            size={16}
+            onClick={() => onOpenNotes()}
+            label={`Open notes: ${item.label}`}
+            title="Open"
+            className="dccActionButton"
+          />
+        );
+      }
+    } else if (item.kind === "automation" && onOpenAutomations) {
+      actions.push(
+        <IconButton
+          key="open-automations"
+          icon={ExternalLink}
+          size={16}
+          onClick={() => onOpenAutomations(item)}
+          label={`Open automations: ${item.label}`}
+          title="Open"
+          className="dccActionButton"
+        />
+      );
+    }
+  }
+
+  return <div className="dccItemActions">{actions}</div>;
+}
+
+function hasActionableContextItems(contextItems: BriefItem[]): boolean {
+  return contextItems.some(
+    (item) => item.kind === "task" || item.kind === "reminder" || item.kind === "team-task"
+  );
+}
+
 export function DailyCommandCenterPanel({
   data,
   showAllSecondary = false,
@@ -140,6 +376,14 @@ export function DailyCommandCenterPanel({
             {pressure.upcoming > 0 ? ` / ${pressure.upcoming} upcoming` : null}
             {pressure.context > 0 ? ` / ${pressure.context} context` : null}
           </p>
+          {onOpenInbox && (
+            <div className="dccSummaryActions">
+              <button type="button" className="textButton" onClick={onOpenInbox}>
+                <Inbox size={14} />
+                Open Inbox
+              </button>
+            </div>
+          )}
         </article>
 
         {/* Now queue */}
@@ -165,60 +409,19 @@ export function DailyCommandCenterPanel({
                         {getUrgencyLabel(item.urgency)} / {item.kind}
                       </div>
                     </div>
-                    <div className="dccItemActions">
-                      {item.action === "complete-task" && (
-                        <>
-                          <IconButton
-                            icon={Check}
-                            size={16}
-                            onClick={() => onCompleteTask(item.sourceId)}
-                            label={`Complete task: ${item.label}`}
-                            title="Done"
-                            className="dccActionButton"
-                          />
-                          {onOpenTasks && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
-                              label={`Open tasks: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                        </>
-                      )}
-                      {item.action === "complete-reminder" && (
-                        <>
-                          <IconButton
-                            icon={Check}
-                            size={16}
-                            onClick={() => onCompleteReminder(item.sourceId)}
-                            label={`Complete reminder: ${item.label}`}
-                            title="Done"
-                            className="dccActionButton"
-                          />
-                          <IconButton
-                            icon={Snooze}
-                            size={16}
-                            onClick={() => onSnoozeReminder(item.sourceId)}
-                            label={`Snooze reminder ten minutes: ${item.label}`}
-                            title="Snooze"
-                            className="dccActionButton"
-                          />
-                          {onOpenReminders && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenReminders("pending")}
-                              label={`Open reminders: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                        </>
-                      )}
-                    </div>
+                    <RowActions
+                      item={item}
+                      onCompleteTask={onCompleteTask}
+                      onCompleteReminder={onCompleteReminder}
+                      onSnoozeReminder={onSnoozeReminder}
+                      onOpenTasks={onOpenTasks}
+                      onOpenReminders={onOpenReminders}
+                      onOpenNotes={onOpenNotes}
+                      onOpenWorkItem={onOpenWorkItem}
+                      onOpenAutomations={onOpenAutomations}
+                      onOpenInbox={onOpenInbox}
+                      isNowSection={true}
+                    />
                   </li>
                 );
               })}
@@ -283,90 +486,19 @@ export function DailyCommandCenterPanel({
                             {getUrgencyLabel(item.urgency)} / {item.kind}
                           </div>
                         </div>
-                        <div className="dccItemActions">
-                          {item.kind === "task" && (
-                            <>
-                              <IconButton
-                                icon={Check}
-                                size={16}
-                                onClick={() => onCompleteTask(item.sourceId)}
-                                label={`Complete task: ${item.label}`}
-                                title="Done"
-                                className="dccActionButton"
-                              />
-                              {onOpenTasks && (
-                                <IconButton
-                                  icon={ExternalLink}
-                                  size={16}
-                                  onClick={() => onOpenTasks(getTaskFilterForUrgency(item.urgency))}
-                                  label={`Open tasks: ${item.label}`}
-                                  title="Open"
-                                  className="dccActionButton"
-                                />
-                              )}
-                            </>
-                          )}
-                          {item.kind === "team-task" && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenWorkItem?.(item)}
-                              label={`Open team task: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                          {(item.kind === "reminder" || item.kind === "agenda") && (
-                            <>
-                              <IconButton
-                                icon={Check}
-                                size={16}
-                                onClick={() => onCompleteReminder(item.sourceId)}
-                                label={`Complete reminder: ${item.label}`}
-                                title="Done"
-                                className="dccActionButton"
-                              />
-                              <IconButton
-                                icon={Snooze}
-                                size={16}
-                                onClick={() => onSnoozeReminder(item.sourceId)}
-                                label={`Snooze reminder ten minutes: ${item.label}`}
-                                title="Snooze"
-                                className="dccActionButton"
-                              />
-                              {onOpenReminders && (
-                                <IconButton
-                                  icon={ExternalLink}
-                                  size={16}
-                                  onClick={() => onOpenReminders("pending")}
-                                  label={`Open reminders: ${item.label}`}
-                                  title="Open"
-                                  className="dccActionButton"
-                                />
-                              )}
-                            </>
-                          )}
-                          {item.kind === "note" && onOpenInbox && (
-                            <IconButton
-                              icon={Inbox}
-                              size={16}
-                              onClick={() => onOpenInbox()}
-                              label={`Open in Inbox: ${item.label}`}
-                              title="Inbox"
-                              className="dccActionButton"
-                            />
-                          )}
-                          {item.kind === "note" && onOpenNotes && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenNotes()}
-                              label={`Open notes: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                        </div>
+                        <RowActions
+                          item={item}
+                          onCompleteTask={onCompleteTask}
+                          onCompleteReminder={onCompleteReminder}
+                          onSnoozeReminder={onSnoozeReminder}
+                          onOpenTasks={onOpenTasks}
+                          onOpenReminders={onOpenReminders}
+                          onOpenNotes={onOpenNotes}
+                          onOpenWorkItem={onOpenWorkItem}
+                          onOpenAutomations={onOpenAutomations}
+                          onOpenInbox={onOpenInbox}
+                          isNowSection={false}
+                        />
                       </li>
                     );
                   })}
@@ -394,48 +526,19 @@ export function DailyCommandCenterPanel({
                             {getUrgencyLabel(item.urgency)} / {item.kind}
                           </div>
                         </div>
-                        <div className="dccItemActions">
-                          {item.kind === "note" && onOpenInbox && (
-                            <IconButton
-                              icon={Inbox}
-                              size={16}
-                              onClick={() => onOpenInbox()}
-                              label={`Open in Inbox: ${item.label}`}
-                              title="Inbox"
-                              className="dccActionButton"
-                            />
-                          )}
-                          {item.kind === "note" && onOpenNotes && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenNotes()}
-                              label={`Open notes: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                          {item.kind === "automation" && onOpenAutomations && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenAutomations(item)}
-                              label={`Open automations: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                          {item.kind === "reminder" && onOpenReminders && (
-                            <IconButton
-                              icon={ExternalLink}
-                              size={16}
-                              onClick={() => onOpenReminders("pending")}
-                              label={`Open reminders: ${item.label}`}
-                              title="Open"
-                              className="dccActionButton"
-                            />
-                          )}
-                        </div>
+                        <RowActions
+                          item={item}
+                          onCompleteTask={onCompleteTask}
+                          onCompleteReminder={onCompleteReminder}
+                          onSnoozeReminder={onSnoozeReminder}
+                          onOpenTasks={onOpenTasks}
+                          onOpenReminders={onOpenReminders}
+                          onOpenNotes={onOpenNotes}
+                          onOpenWorkItem={onOpenWorkItem}
+                          onOpenAutomations={onOpenAutomations}
+                          onOpenInbox={onOpenInbox}
+                          isNowSection={false}
+                        />
                       </li>
                     );
                   })}
@@ -446,7 +549,17 @@ export function DailyCommandCenterPanel({
           if (showAllSecondary) {
             return <>{sections}</>;
           }
-          return sections[0] ?? null;
+
+          // When showing only one secondary section, prefer actionable work over passive history
+          // Priority: Attention > actionable Context > Away > passive Context
+          const attentionSection = sections.find((s) => s.key === "attention");
+          const contextSection = sections.find((s) => s.key === "context");
+          const awaySection = sections.find((s) => s.key === "away");
+
+          if (attentionSection) return attentionSection;
+          if (contextSection && hasActionableContextItems(contextItems)) return contextSection;
+          if (awaySection) return awaySection;
+          return contextSection ?? null;
         })()}
 
         {/* Empty state when nothing at all */}

@@ -26,6 +26,19 @@
   color: var(--text, #141418);
 }
 
+.dccSummaryActions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dccSummaryActions button {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+}
+
 .dccPressure {
   font-size: 0.8125rem;
   color: var(--muted, #6b6b76);

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import { DailyCommandCenterPanel } from "./DailyCommandCenterPanel";
 import type { DailyCommandCenter } from "../../lib/derived/daily-command-center";
 
@@ -54,7 +55,8 @@ describe("DailyCommandCenterPanel", () => {
       />
     );
 
-    expect(screen.getByText("Open Inbox")).toBeInTheDocument();
+    const openInboxButtons = screen.getAllByText("Open Inbox");
+    expect(openInboxButtons.length).toBeGreaterThan(0);
     expect(screen.getByText("Open Tasks")).toBeInTheDocument();
   });
 
@@ -697,5 +699,300 @@ describe("DailyCommandCenterPanel", () => {
         sourceId: "rule-1"
       })
     );
+  });
+
+  it("shows Details button for tasks and calls onOpenWorkItem when clicked", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      attentionItems: [{ kind: "task", label: "Task with details", urgency: "overdue", sourceId: "t1" }],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    const detailsButton = screen.getByLabelText("Details: Task with details");
+    expect(detailsButton).toBeInTheDocument();
+    detailsButton.click();
+
+    expect(onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "task",
+        label: "Task with details",
+        sourceId: "t1"
+      })
+    );
+  });
+
+  it("shows Details button for reminders and calls onOpenWorkItem when clicked", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      attentionItems: [{ kind: "reminder", label: "Reminder with details", urgency: "today", sourceId: "r1" }],
+      summary: "Now: 1 due today."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    const detailsButton = screen.getByLabelText("Details: Reminder with details");
+    expect(detailsButton).toBeInTheDocument();
+    detailsButton.click();
+
+    expect(onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "reminder",
+        label: "Reminder with details",
+        sourceId: "r1"
+      })
+    );
+  });
+
+  it("shows Details button for team tasks and calls onOpenWorkItem when clicked", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      attentionItems: [{ kind: "team-task", label: "Team task with details", urgency: "overdue", sourceId: "tt1" }],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    const detailsButton = screen.getByLabelText("Details: Team task with details");
+    expect(detailsButton).toBeInTheDocument();
+    detailsButton.click();
+
+    expect(onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "team-task",
+        label: "Team task with details",
+        sourceId: "tt1"
+      })
+    );
+  });
+
+  it("shows Open Inbox button in summary when onOpenInbox is provided", () => {
+    const onOpenInbox = vi.fn();
+    render(
+      <DailyCommandCenterPanel
+        data={makeData()}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenInbox={onOpenInbox}
+      />
+    );
+
+    const openInboxButtons = screen.getAllByText("Open Inbox");
+    expect(openInboxButtons.length).toBeGreaterThan(0);
+  });
+
+  it("calls onOpenInbox when Open Inbox button in summary is clicked", () => {
+    const onOpenInbox = vi.fn();
+    render(
+      <DailyCommandCenterPanel
+        data={makeData()}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenInbox={onOpenInbox}
+      />
+    );
+
+    const openInboxButtons = screen.getAllByText("Open Inbox");
+    // Click the first one (in the summary area)
+    expect(openInboxButtons.length).toBeGreaterThan(0);
+    openInboxButtons[0]?.click();
+
+    expect(onOpenInbox).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show Details button when onOpenWorkItem is not provided", () => {
+    render(
+      <DailyCommandCenterPanel
+        data={makeData({
+          attentionItems: [{ kind: "task", label: "Task without details", urgency: "overdue", sourceId: "t1" }]
+        })}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+      />
+    );
+
+    expect(screen.queryByLabelText(/Details:/)).not.toBeInTheDocument();
+  });
+
+  it("complete and snooze buttons still call their existing handlers", () => {
+    const data = makeData({
+      nowItems: [
+        {
+          kind: "task",
+          label: "Task to complete",
+          urgency: "overdue",
+          sourceId: "t1",
+          action: "complete-task"
+        }
+      ],
+      attentionItems: [{ kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }],
+      summary: "Now: 1 overdue."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+      />
+    );
+
+    screen.getAllByLabelText(/Complete task: Task to complete/)[0]!.click();
+    expect(onCompleteTask).toHaveBeenCalledWith("t1");
+  });
+
+  it("context task row shows Details and Complete actions", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      contextItems: [{ kind: "task", label: "Context task", urgency: "context", sourceId: "t1" }],
+      summary: "Focus: 1 context items."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    expect(screen.getByLabelText("Details: Context task")).toBeInTheDocument();
+    expect(screen.getByLabelText("Complete task: Context task")).toBeInTheDocument();
+  });
+
+  it("duplicated reminder produces one Details, one Complete, and one Snooze button", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      attentionItems: [{ kind: "reminder", label: "Duplicated reminder", urgency: "today", sourceId: "r1" }],
+      summary: "Now: 1 due today."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+      />
+    );
+
+    // Should have exactly one Details button
+    const detailsButtons = screen.getAllByLabelText(/Details: Duplicated reminder/);
+    expect(detailsButtons).toHaveLength(1);
+
+    // Should have exactly one Complete button
+    const completeButtons = screen.getAllByLabelText(/Complete reminder: Duplicated reminder/);
+    expect(completeButtons).toHaveLength(1);
+
+    // Should have exactly one Snooze button
+    const snoozeButtons = screen.getAllByLabelText(/Snooze reminder ten minutes: Duplicated reminder/);
+    expect(snoozeButtons).toHaveLength(1);
+  });
+
+  it("prefers actionable Context over Away when showing one secondary section", () => {
+    const onOpenWorkItem = vi.fn();
+    const data = makeData({
+      awayItems: [
+        {
+          kind: "task",
+          reason: "new",
+          label: "Away task",
+          sourceId: "t1",
+          changedAt: "2024-01-15T10:00:00Z"
+        }
+      ],
+      contextItems: [{ kind: "task", label: "Context task", urgency: "context", sourceId: "t2" }],
+      summary: "Focus: 1 context items."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenWorkItem={onOpenWorkItem}
+        showAllSecondary={false}
+      />
+    );
+
+    // Should show Context section with actionable task, not Away section
+    expect(screen.getByText("Context")).toBeInTheDocument();
+    expect(screen.getByText("Context task")).toBeInTheDocument();
+    expect(screen.queryByText("Since You Were Away")).not.toBeInTheDocument();
+  });
+
+  it("shows Away when Context has only passive items", () => {
+    const data = makeData({
+      awayItems: [
+        {
+          kind: "task",
+          reason: "new",
+          label: "Away task",
+          sourceId: "t1",
+          changedAt: "2024-01-15T10:00:00Z"
+        }
+      ],
+      contextItems: [{ kind: "note", label: "Context note", urgency: "context", sourceId: "n1" }],
+      summary: "Focus: 1 context items."
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        showAllSecondary={false}
+      />
+    );
+
+    // Should show Away section since Context has only passive note
+    expect(screen.getByText("Since You Were Away")).toBeInTheDocument();
+    expect(screen.getByText("Away task")).toBeInTheDocument();
+    expect(screen.queryByText("Context")).not.toBeInTheDocument();
   });
 });

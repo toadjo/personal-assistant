@@ -222,10 +222,9 @@ describe("deriveFocusBrief", () => {
       now
     });
 
-    // With source-aware dedupe, reminder and agenda are different kinds, so both appear
-    expect(result).toHaveLength(2);
+    // With reminder agenda deduplication, reminder and agenda with same source id appear only once
+    expect(result).toHaveLength(1);
     expect(result[0]?.kind).toBe("reminder");
-    expect(result[1]?.kind).toBe("agenda");
   });
 
   describe("team tasks", () => {
@@ -662,6 +661,171 @@ describe("deriveFocusBrief", () => {
       expect(result.every((item) => item.urgency === "context")).toBe(true);
       expect(result[0]?.kind).toBe("automation");
       expect(result[1]?.kind).toBe("note");
+    });
+  });
+
+  describe("undated open local tasks", () => {
+    it("should include undated open local tasks as context items", () => {
+      const undatedTask: Task = {
+        id: "1",
+        title: "Undated task",
+        notes: "",
+        dueAt: null,
+        priority: "normal",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        lastCompletedAt: null
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        undatedOpenTasks: [undatedTask],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.kind).toBe("task");
+      expect(result[0]?.urgency).toBe("context");
+      expect(result[0]?.label).toBe("Undated task");
+      expect(result[0]?.detail).toBeUndefined();
+    });
+
+    it("should exclude completed undated tasks", () => {
+      const completedUndatedTask: Task = {
+        id: "1",
+        title: "Completed undated task",
+        notes: "",
+        dueAt: null,
+        priority: "normal",
+        status: "done",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        lastCompletedAt: "2024-01-15T12:00:00Z"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        undatedOpenTasks: [completedUndatedTask],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        now
+      });
+
+      expect(result).toHaveLength(0);
+    });
+
+    it("should deduplicate undated tasks with same id as dated tasks", () => {
+      const undatedTask: Task = {
+        id: "same-id",
+        title: "Undated task",
+        notes: "",
+        dueAt: null,
+        priority: "normal",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        lastCompletedAt: null
+      };
+
+      const datedTask: Task = {
+        id: "same-id",
+        title: "Dated task",
+        notes: "",
+        dueAt: "2024-01-15T12:00:00Z",
+        priority: "normal",
+        status: "open",
+        recurrence: "none",
+        notifyChannel: "desktop",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        lastCompletedAt: null
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [datedTask],
+        undatedOpenTasks: [undatedTask],
+        upcomingReminders: [],
+        selectedDayAgenda: [],
+        pinnedNotes: [],
+        now
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.sourceId).toBe("same-id");
+    });
+  });
+
+  describe("reminder agenda deduplication", () => {
+    it("should skip agenda reminder if already included as pending reminder", () => {
+      const reminder: Reminder = {
+        id: "1",
+        text: "Same reminder",
+        dueAt: "2024-01-15T12:00:00Z",
+        recurrence: "none",
+        status: "pending",
+        notifyChannel: "desktop"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [reminder],
+        selectedDayAgenda: [reminder],
+        pinnedNotes: [],
+        now
+      });
+
+      // Should only appear once as reminder, not duplicated as agenda
+      expect(result).toHaveLength(1);
+      expect(result[0]?.kind).toBe("reminder");
+      expect(result[0]?.sourceId).toBe("1");
+    });
+
+    it("should include agenda reminder if not in pending reminders", () => {
+      const agendaReminder: Reminder = {
+        id: "1",
+        text: "Agenda-only reminder",
+        dueAt: "2024-01-15T12:00:00Z",
+        recurrence: "none",
+        status: "pending",
+        notifyChannel: "desktop"
+      };
+
+      const pendingReminder: Reminder = {
+        id: "2",
+        text: "Pending reminder",
+        dueAt: "2024-01-16T12:00:00Z",
+        recurrence: "none",
+        status: "pending",
+        notifyChannel: "desktop"
+      };
+
+      const result = deriveFocusBrief({
+        overdueTasks: [],
+        dueTodayTasks: [],
+        upcomingReminders: [pendingReminder],
+        selectedDayAgenda: [agendaReminder],
+        pinnedNotes: [],
+        now
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result.some((item) => item.kind === "reminder" && item.sourceId === "2")).toBe(true);
+      expect(result.some((item) => item.kind === "agenda" && item.sourceId === "1")).toBe(true);
     });
   });
 });

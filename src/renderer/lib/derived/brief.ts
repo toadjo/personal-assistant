@@ -52,6 +52,7 @@ function formatDateTime(isoString: string): string {
 export function deriveFocusBrief(params: {
   overdueTasks: Task[];
   dueTodayTasks: Task[];
+  undatedOpenTasks?: Task[];
   upcomingReminders: Reminder[];
   selectedDayAgenda: Reminder[];
   pinnedNotes: Note[];
@@ -94,6 +95,22 @@ export function deriveFocusBrief(params: {
       label: task.title,
       detail: task.dueAt ? formatDateTime(task.dueAt) : undefined,
       urgency: getUrgencyForTask(task, now),
+      sourceId: task.id
+    });
+  }
+
+  // Undated open local tasks (context priority)
+  const undatedOpenTasks = params.undatedOpenTasks || [];
+  for (const task of undatedOpenTasks) {
+    if (task.status !== "open") continue;
+    const key = getDedupeKey("task", task.id);
+    if (seenSourceIds.has(key)) continue;
+    seenSourceIds.add(key);
+    items.push({
+      kind: "task",
+      label: task.title,
+      detail: undefined,
+      urgency: "context",
       sourceId: task.id
     });
   }
@@ -146,6 +163,10 @@ export function deriveFocusBrief(params: {
 
   // Selected day agenda
   for (const reminder of params.selectedDayAgenda) {
+    // Skip if this reminder is already included as a reminder item (deduplication)
+    const reminderKey = getDedupeKey("reminder", reminder.id);
+    if (seenSourceIds.has(reminderKey)) continue;
+    
     const key = getDedupeKey("agenda", reminder.id);
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);

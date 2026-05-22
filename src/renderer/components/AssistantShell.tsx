@@ -177,6 +177,7 @@ export function AssistantShell(): JSX.Element {
     const focusBrief = deriveFocusBrief({
       overdueTasks: tasks.overdueOpen,
       dueTodayTasks: tasks.dueTodayOpen,
+      undatedOpenTasks: data.tasks.filter((task) => task.status === "open" && !task.dueAt),
       upcomingReminders: reminders.pending,
       selectedDayAgenda: calendar.selectedDayAgenda
         .filter(
