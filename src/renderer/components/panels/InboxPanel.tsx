@@ -11,7 +11,7 @@
  */
 
 import { memo, useState } from "react";
-import { Inbox, Plus, FileText, ListTodo, Bell, Users, Check, Trash2 } from "lucide-react";
+import { Inbox, Plus, FileText, ListTodo, Bell, Users, Check, Trash2, ArrowRight } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import { EmptyState } from "../ui/EmptyState";
@@ -35,6 +35,7 @@ type Props = {
   deleteReminder?: (id: string) => Promise<void>;
   deleteNote?: (id: string) => Promise<void>;
   onOpenItem?: (item: UnifiedWorkItem) => void;
+  onOpenToday?: () => void;
   onShowSuccess?: (message: string) => void;
   onError?: (message: string) => void;
 };
@@ -212,6 +213,7 @@ export const InboxPanel = memo(function InboxPanel({
   deleteReminder,
   deleteNote,
   onOpenItem,
+  onOpenToday,
   onShowSuccess,
   onError
 }: Props): JSX.Element {
@@ -219,6 +221,7 @@ export const InboxPanel = memo(function InboxPanel({
   const [captureTitle, setCaptureTitle] = useState("");
   const [captureContent, setCaptureContent] = useState("");
   const [selectedProjectIds, setSelectedProjectIds] = useState<Record<string, string>>({});
+  const [lastCaptureType, setLastCaptureType] = useState<"task" | "reminder" | "note" | null>(null);
 
   async function handleCapture(): Promise<void> {
     if (!captureTitle.trim()) return;
@@ -226,10 +229,13 @@ export const InboxPanel = memo(function InboxPanel({
     try {
       if (captureMode === "note") {
         await createQuickNote(captureTitle, captureContent);
+        setLastCaptureType("note");
       } else if (captureMode === "task") {
         await createQuickTask(captureTitle, captureContent);
+        setLastCaptureType("task");
       } else if (captureMode === "reminder") {
         await createQuickReminder(captureTitle);
+        setLastCaptureType("reminder");
       }
       setCaptureTitle("");
       setCaptureContent("");
@@ -254,6 +260,26 @@ export const InboxPanel = memo(function InboxPanel({
       {/* Quick Capture */}
       {captureMode === "none" ? (
         <div className="panelContent">
+          {/* Post-capture success guidance */}
+          {lastCaptureType && (lastCaptureType === "task" || lastCaptureType === "reminder") && onOpenToday && (
+            <div className="captureSuccess">
+              <p className="captureSuccessText">
+                {lastCaptureType === "task" ? "Task captured." : "Reminder captured."}
+              </p>
+              <button type="button" className="ghostButton captureSuccessAction" onClick={onOpenToday}>
+                Open Today
+                <ArrowRight size={14} />
+              </button>
+              <button
+                type="button"
+                className="textButton"
+                onClick={() => setLastCaptureType(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           <div className="captureOptions">
             <button type="button" className="captureOption" onClick={() => setCaptureMode("note")}>
               <FileText size={20} />

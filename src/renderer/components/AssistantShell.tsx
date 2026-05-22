@@ -787,6 +787,7 @@ export function AssistantShell(): JSX.Element {
               deleteReminder={reminders.deleteById}
               deleteNote={(id) => memos.deleteNote(id, "Item")}
               onOpenItem={setSelectedWorkItem}
+              onOpenToday={() => setActivePersonalModule("today")}
               onShowSuccess={ui.showSuccess}
               onError={ui.reportError}
             />

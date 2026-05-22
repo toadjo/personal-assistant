@@ -1,5 +1,31 @@
 /* Unified Inbox Panel Styles */
 
+.captureSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.captureSuccessText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+  text-align: center;
+}
+
+.captureSuccessAction {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
 .captureOptions {
   display: flex;
   gap: 8px;

@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import "@testing-library/jest-dom";
 import { InboxPanel } from "./InboxPanel";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
 import type { TeamProject } from "../../../shared/team/types";
@@ -613,6 +615,182 @@ describe("InboxPanel", () => {
       expect(screen.queryByLabelText("Complete task")).toBeNull();
       expect(screen.queryByLabelText("Delete task")).toBeNull();
       expect(screen.queryByLabelText("Convert to task")).toBeNull();
+    });
+  });
+
+  describe("Post-capture success guidance", () => {
+    it("shows success guidance with Open Today action after task capture", async () => {
+      const user = userEvent.setup();
+      const onOpenToday = vi.fn();
+      const createQuickTask = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={createQuickTask}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          onOpenToday={onOpenToday}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      // Click Task capture option
+      await user.click(screen.getByText("Task"));
+
+      // Fill in the task title
+      const titleInput = screen.getByPlaceholderText("Title");
+      await user.type(titleInput, "New task");
+
+      // Submit the form
+      await user.click(screen.getByLabelText("Capture"));
+
+      // Verify success callback was called
+      expect(onShowSuccess).toHaveBeenCalledWith("Item captured.");
+
+      // Verify success guidance is shown
+      expect(screen.getByText("Task captured.")).toBeInTheDocument();
+      expect(screen.getByText("Open Today")).toBeInTheDocument();
+
+      // Click Open Today
+      await user.click(screen.getByText("Open Today"));
+
+      // Verify onOpenToday was called
+      expect(onOpenToday).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows success guidance with Open Today action after reminder capture", async () => {
+      const user = userEvent.setup();
+      const onOpenToday = vi.fn();
+      const createQuickReminder = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={createQuickReminder}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          onOpenToday={onOpenToday}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      // Click Reminder capture option
+      await user.click(screen.getByText("Reminder"));
+
+      // Fill in the reminder text
+      const reminderInput = screen.getByPlaceholderText("Reminder text");
+      await user.type(reminderInput, "New reminder");
+
+      // Submit the form
+      await user.click(screen.getByLabelText("Capture"));
+
+      // Verify success callback was called
+      expect(onShowSuccess).toHaveBeenCalledWith("Item captured.");
+
+      // Verify success guidance is shown
+      expect(screen.getByText("Reminder captured.")).toBeInTheDocument();
+      expect(screen.getByText("Open Today")).toBeInTheDocument();
+
+      // Click Open Today
+      await user.click(screen.getByText("Open Today"));
+
+      // Verify onOpenToday was called
+      expect(onOpenToday).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not show success guidance after note capture", async () => {
+      const user = userEvent.setup();
+      const onOpenToday = vi.fn();
+      const createQuickNote = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={createQuickNote}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          onOpenToday={onOpenToday}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      // Click Note capture option
+      await user.click(screen.getByText("Note"));
+
+      // Fill in the note title
+      const titleInput = screen.getByPlaceholderText("Title");
+      await user.type(titleInput, "New note");
+
+      // Submit the form
+      await user.click(screen.getByLabelText("Capture"));
+
+      // Verify success callback was called
+      expect(onShowSuccess).toHaveBeenCalledWith("Item captured.");
+
+      // Verify success guidance is NOT shown for notes
+      expect(screen.queryByText("Note captured.")).not.toBeInTheDocument();
+      expect(screen.queryByText("Open Today")).not.toBeInTheDocument();
+
+      // Verify onOpenToday was NOT called
+      expect(onOpenToday).not.toHaveBeenCalled();
+    });
+
+    it("dismisses success guidance when Dismiss is clicked", async () => {
+      const user = userEvent.setup();
+      const onOpenToday = vi.fn();
+      const createQuickTask = vi.fn().mockResolvedValue(undefined);
+      const onShowSuccess = vi.fn();
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={createQuickTask}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          onOpenToday={onOpenToday}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      // Capture a task
+      await user.click(screen.getByText("Task"));
+      const titleInput = screen.getByPlaceholderText("Title");
+      await user.type(titleInput, "New task");
+      await user.click(screen.getByLabelText("Capture"));
+
+      // Verify success guidance is shown
+      expect(screen.getByText("Task captured.")).toBeInTheDocument();
+
+      // Click Dismiss
+      await user.click(screen.getByText("Dismiss"));
+
+      // Verify success guidance is hidden
+      expect(screen.queryByText("Task captured.")).not.toBeInTheDocument();
+      expect(screen.queryByText("Open Today")).not.toBeInTheDocument();
     });
   });
 });
