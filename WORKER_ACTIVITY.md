@@ -224,3 +224,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Changes: Restored the main-process TypeScript output directory to `dist/main` so it matches the existing Electron entry contract (`dist/main/main/main.js`) and dev wait-on paths. Removed generated `src/shared/**/*.js` artifacts from the worktree and added a narrow ignore guard so TypeScript build outputs do not appear beside shared source files.
 - Checks run: `npm.cmd run build:main`, `npm.cmd run build`, `npm.cmd run test:smoke`, `npm.cmd run typecheck`, `npm.cmd run lint`, `git diff --check`. Confirmed configured main/preload outputs exist and `src/shared` has zero `.js` artifacts after builds.
 - Next action: Continue from a clean build baseline.
+
+## 2026-05-22: Today-To-Inbox Continuity
+
+- Files touched: `src/renderer/components/AssistantShell.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.tsx`, `src/renderer/components/panels/HomeDashboardPanel.test.tsx`, `src/renderer/components/panels/DailyCommandCenterPanel.test.tsx`
+- Changes: Created shared `openBriefItemInDrawer` helper in AssistantShell to centralize drawer opening logic from Home Dashboard and Daily Command Center; updated both panels to use the shared helper; added `onOpenInbox` prop to DailyCommandCenterPanel with Inbox icon button for notes in context/attention sections; added tests for shared drawer opening behavior and Inbox button visibility.
+- Checks run: typecheck (passed), lint (passed), targeted tests (35 passed: HomeDashboardPanel 5, DailyCommandCenterPanel 22, TodayStrip 8).
+- Next action: Visual QA for the unified drawer opening workflow and Inbox action from DCC.
