@@ -208,3 +208,11 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Checks run: `npx prettier --check`, `git diff --check`
 - CI status: GitHub Actions run 26016357304 blocked by budget exhaustion — jobs not started, same infrastructure issue as before.
 - Next action: Continue using Windows-only manual release flow until Actions budget restored.
+
+## 2026-05-22: Personal OS v3 Inbox Polish
+
+- Files touched: `src/renderer/components/panels/InboxPanel.tsx`, `src/renderer/components/panels/InboxPanel.css`, `src/renderer/components/panels/InboxPanel.test.tsx`
+- Changes: Created UnifiedItemRow component to eliminate duplication between Needs Sorting and All Items sections; centralized icon/label logic and action visibility rules; extracted shared action handlers (handleComplete, handleDelete, handleSendToTeam); tightened visual density (reduced row padding from 12px to 8px 12px, added min-width and justify-content to action area for stability); added 8 new tests for section-specific action behavior.
+- Checks run: InboxPanel.test.tsx (25 passed), typecheck (passed), lint (passed), full test (909 passed, 2 pre-existing timezone failures, 2 skipped).
+- Note: Timezone failures are pre-existing UTC+0 vs UTC+3 mismatches in WorkItemDetailDrawer.test.tsx, unrelated to this refactor.
+- Next action: Visual QA for Inbox and drawer workflow (desktop and narrow widths, action button spacing, drawer edit/save/refresh/complete/delete/note conversion smoothness).
