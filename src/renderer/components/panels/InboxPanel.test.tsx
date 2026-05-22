@@ -413,6 +413,48 @@ describe("InboxPanel", () => {
       expect(screen.getByLabelText("Delete task")).toBeDefined();
     });
 
+    it("shows delete button for reminders in All Items", () => {
+      const unifiedItems = [makeUnifiedItem({ source: "local-reminder", label: "Reminder to delete" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={unifiedItems}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          deleteReminder={vi.fn()}
+        />
+      );
+
+      expect(screen.getByLabelText("Delete reminder")).toBeDefined();
+    });
+
+    it("shows delete button for notes in All Items", () => {
+      const unifiedItems = [makeUnifiedItem({ source: "local-note", label: "Note to delete" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={unifiedItems}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          deleteNote={vi.fn()}
+        />
+      );
+
+      expect(screen.getByLabelText("Delete note")).toBeDefined();
+    });
+
     it("shows convert buttons for notes in All Items", () => {
       const unifiedItems = [makeUnifiedItem({ source: "local-note", label: "Note in all" })];
 
@@ -456,6 +498,121 @@ describe("InboxPanel", () => {
       );
 
       expect(screen.queryByLabelText("Complete task")).toBeNull();
+    });
+
+    it("team task has no local complete/delete/convert action in All Items", () => {
+      const unifiedItems = [makeUnifiedItem({ source: "team-task", label: "Team task in all" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={unifiedItems}
+          needsSorting={[]}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          completeTask={vi.fn()}
+          deleteTask={vi.fn()}
+          deleteNote={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByLabelText("Complete task")).toBeNull();
+      expect(screen.queryByLabelText("Delete task")).toBeNull();
+      expect(screen.queryByLabelText("Convert to task")).toBeNull();
+    });
+  });
+
+  describe("inline actions on Needs Sorting", () => {
+    it("shows complete button for tasks in Needs Sorting", () => {
+      const needsSorting = [makeUnifiedItem({ source: "local-task", label: "Task in needs sorting" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          completeTask={vi.fn()}
+        />
+      );
+
+      expect(screen.getByLabelText("Complete task")).toBeDefined();
+    });
+
+    it("shows complete button for reminders in Needs Sorting", () => {
+      const needsSorting = [makeUnifiedItem({ source: "local-reminder", label: "Reminder in needs sorting" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          completeReminder={vi.fn()}
+        />
+      );
+
+      expect(screen.getByLabelText("Complete reminder")).toBeDefined();
+    });
+
+    it("does not show delete button in Needs Sorting", () => {
+      const needsSorting = [makeUnifiedItem({ source: "local-task", label: "Task in needs sorting" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          deleteTask={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByLabelText("Delete task")).toBeNull();
+    });
+
+    it("team task has no local complete/delete/convert action in Needs Sorting", () => {
+      const needsSorting = [makeUnifiedItem({ source: "team-task", label: "Team task in needs sorting" })];
+
+      render(
+        <InboxPanel
+          unifiedItems={[]}
+          needsSorting={needsSorting}
+          teamProjects={[]}
+          createQuickNote={vi.fn()}
+          createQuickTask={vi.fn()}
+          createQuickReminder={vi.fn()}
+          convertNoteToTask={vi.fn()}
+          convertNoteToReminder={vi.fn()}
+          sendTaskToTeam={vi.fn()}
+          completeTask={vi.fn()}
+          deleteTask={vi.fn()}
+          deleteNote={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByLabelText("Complete task")).toBeNull();
+      expect(screen.queryByLabelText("Delete task")).toBeNull();
+      expect(screen.queryByLabelText("Convert to task")).toBeNull();
     });
   });
 });

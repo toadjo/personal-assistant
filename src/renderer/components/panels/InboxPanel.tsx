@@ -16,7 +16,6 @@ import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
 import { EmptyState } from "../ui/EmptyState";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
-import type { LucideIcon } from "lucide-react";
 import type { TeamProject } from "../../../shared/team/types";
 import "./InboxPanel.css";
 
@@ -39,6 +38,163 @@ type Props = {
   onShowSuccess?: (message: string) => void;
   onError?: (message: string) => void;
 };
+
+type UnifiedItemRowProps = {
+  item: UnifiedWorkItem;
+  section: "needsSorting" | "allItems";
+  teamProjects: TeamProject[];
+  selectedProjectIds: Record<string, string>;
+  onSelectedProjectChange: (itemId: string, projectId: string) => void;
+  onOpenItem?: (item: UnifiedWorkItem) => void;
+  onShowSuccess?: (message: string) => void;
+  onError?: (message: string) => void;
+  completeTask?: (id: string) => Promise<void>;
+  completeReminder?: (id: string) => Promise<void>;
+  deleteTask?: (id: string) => Promise<void>;
+  deleteReminder?: (id: string) => Promise<void>;
+  deleteNote?: (id: string) => Promise<void>;
+  convertNoteToTask: (noteId: string) => Promise<void>;
+  convertNoteToReminder: (noteId: string) => Promise<void>;
+  sendTaskToTeam: (taskId: string, projectId: string) => Promise<void>;
+};
+
+function UnifiedItemRow({
+  item,
+  section,
+  teamProjects,
+  selectedProjectIds,
+  onSelectedProjectChange,
+  onOpenItem,
+  onShowSuccess,
+  onError,
+  completeTask,
+  completeReminder,
+  deleteTask,
+  deleteReminder,
+  deleteNote,
+  convertNoteToTask,
+  convertNoteToReminder,
+  sendTaskToTeam
+}: UnifiedItemRowProps): JSX.Element {
+  const Icon = (() => {
+    switch (item.source) {
+      case "local-note":
+        return FileText;
+      case "local-task":
+        return ListTodo;
+      case "local-reminder":
+        return Bell;
+      case "team-task":
+        return ListTodo;
+    }
+  })();
+
+  const sourceLabel = (() => {
+    switch (item.source) {
+      case "local-note":
+        return "Note";
+      case "local-task":
+        return "Task";
+      case "local-reminder":
+        return "Reminder";
+      case "team-task":
+        return "Team Task";
+    }
+  })();
+
+  const showComplete = (item.source === "local-task" || item.source === "local-reminder") && !item.isCompleted;
+  const showDelete = section === "allItems" && (item.source === "local-task" || item.source === "local-reminder" || item.source === "local-note");
+  const showConvert = item.source === "local-note";
+  const showSendToTeam = section === "needsSorting" && item.source === "local-task" && teamProjects.length > 0;
+
+  async function handleComplete(): Promise<void> {
+    try {
+      if (item.source === "local-task") {
+        await completeTask?.(item.sourceId);
+      } else {
+        await completeReminder?.(item.sourceId);
+      }
+      onShowSuccess?.(`${sourceLabel} completed.`);
+    } catch {
+      onError?.("Failed to complete item.");
+    }
+  }
+
+  async function handleDelete(): Promise<void> {
+    try {
+      if (item.source === "local-task") {
+        await deleteTask?.(item.sourceId);
+      } else if (item.source === "local-reminder") {
+        await deleteReminder?.(item.sourceId);
+      } else {
+        await deleteNote?.(item.sourceId);
+      }
+      onShowSuccess?.(`${sourceLabel} deleted.`);
+    } catch {
+      onError?.("Failed to delete item.");
+    }
+  }
+
+  async function handleSendToTeam(): Promise<void> {
+    const projectId = selectedProjectIds[item.id] || teamProjects[0]?.id;
+    if (projectId) {
+      try {
+        await sendTaskToTeam(item.sourceId, projectId);
+        onShowSuccess?.("Task sent to team.");
+      } catch {
+        onError?.("Failed to send task to team.");
+      }
+    }
+  }
+
+  return (
+    <li className="itemRow">
+      <button type="button" className="itemRowButton" onClick={() => onOpenItem?.(item)}>
+        <div className="itemIcon">
+          <Icon size={16} />
+        </div>
+        <div className="itemContent">
+          <div className="itemLabel">{item.label}</div>
+          <div className="itemMeta">
+            {sourceLabel}
+            {item.projectName && ` | ${item.projectName}`}
+            {item.assigneeDisplayName && ` | ${item.assigneeDisplayName}`}
+            {section === "allItems" && item.priority !== "context" && ` | ${item.priority}`}
+            {section === "allItems" && item.dueAt && ` | ${new Date(item.dueAt).toLocaleDateString()}`}
+          </div>
+        </div>
+      </button>
+      <div className="itemActions">
+        {showComplete && (
+          <IconButton icon={Check} label={`Complete ${sourceLabel.toLowerCase()}`} onClick={handleComplete} />
+        )}
+        {showConvert && (
+          <>
+            <IconButton icon={ListTodo} label="Convert to task" onClick={() => void convertNoteToTask(item.sourceId)} />
+            <IconButton icon={Bell} label="Convert to reminder" onClick={() => void convertNoteToReminder(item.sourceId)} />
+          </>
+        )}
+        {showSendToTeam && (
+          <>
+            <select
+              className="projectSelector"
+              value={selectedProjectIds[item.id] || teamProjects[0]?.id || ""}
+              onChange={(e) => onSelectedProjectChange(item.id, e.currentTarget.value)}
+            >
+              {teamProjects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            <IconButton icon={Users} label="Send to team" onClick={handleSendToTeam} />
+          </>
+        )}
+        {showDelete && <IconButton icon={Trash2} label={`Delete ${sourceLabel.toLowerCase()}`} onClick={handleDelete} />}
+      </div>
+    </li>
+  );
+}
 
 export const InboxPanel = memo(function InboxPanel({
   unifiedItems,
@@ -84,39 +240,11 @@ export const InboxPanel = memo(function InboxPanel({
     }
   }
 
-  async function handleSendToTeam(itemId: string, projectId: string): Promise<void> {
-    try {
-      await sendTaskToTeam(itemId, projectId);
-      onShowSuccess?.("Task sent to team.");
-    } catch {
-      onError?.("Failed to send task to team.");
-    }
-  }
-
-  function getIconForSource(source: UnifiedWorkItem["source"]): LucideIcon {
-    switch (source) {
-      case "local-note":
-        return FileText;
-      case "local-task":
-        return ListTodo;
-      case "local-reminder":
-        return Bell;
-      case "team-task":
-        return ListTodo;
-    }
-  }
-
-  function getSourceLabel(source: UnifiedWorkItem["source"]) {
-    switch (source) {
-      case "local-note":
-        return "Note";
-      case "local-task":
-        return "Task";
-      case "local-reminder":
-        return "Reminder";
-      case "team-task":
-        return "Team Task";
-    }
+  function handleSelectedProjectChange(itemId: string, projectId: string): void {
+    setSelectedProjectIds((prev) => ({
+      ...prev,
+      [itemId]: projectId
+    }));
   }
 
   return (
@@ -146,90 +274,27 @@ export const InboxPanel = memo(function InboxPanel({
             <div className="needsSorting">
               <h3>Needs Sorting ({needsSorting.length})</h3>
               <ul className="itemList">
-                {needsSorting.map((item) => {
-                  const Icon = getIconForSource(item.source);
-                  return (
-                    <li key={item.id} className="itemRow">
-                      <button type="button" className="itemRowButton" onClick={() => onOpenItem?.(item)}>
-                        <div className="itemIcon">
-                          <Icon size={16} />
-                        </div>
-                        <div className="itemContent">
-                          <div className="itemLabel">{item.label}</div>
-                          <div className="itemMeta">
-                            {getSourceLabel(item.source)}
-                            {item.projectName && ` | ${item.projectName}`}
-                            {item.assigneeDisplayName && ` | ${item.assigneeDisplayName}`}
-                          </div>
-                        </div>
-                      </button>
-                      <div className="itemActions">
-                        {(item.source === "local-task" || item.source === "local-reminder") && !item.isCompleted && (
-                          <IconButton
-                            icon={Check}
-                            label={`Complete ${getSourceLabel(item.source).toLowerCase()}`}
-                            onClick={async () => {
-                              try {
-                                if (item.source === "local-task") {
-                                  await completeTask?.(item.sourceId);
-                                } else {
-                                  await completeReminder?.(item.sourceId);
-                                }
-                                onShowSuccess?.(`${getSourceLabel(item.source)} completed.`);
-                              } catch {
-                                onError?.("Failed to complete item.");
-                              }
-                            }}
-                          />
-                        )}
-                        {item.source === "local-note" && (
-                          <>
-                            <IconButton
-                              icon={ListTodo}
-                              label="Convert to task"
-                              onClick={() => void convertNoteToTask(item.sourceId)}
-                            />
-                            <IconButton
-                              icon={Bell}
-                              label="Convert to reminder"
-                              onClick={() => void convertNoteToReminder(item.sourceId)}
-                            />
-                          </>
-                        )}
-                        {item.source === "local-task" && teamProjects.length > 0 && (
-                          <>
-                            <select
-                              className="projectSelector"
-                              value={selectedProjectIds[item.id] || teamProjects[0]?.id || ""}
-                              onChange={(e) => {
-                                setSelectedProjectIds((prev) => ({
-                                  ...prev,
-                                  [item.id]: e.currentTarget.value
-                                }));
-                              }}
-                            >
-                              {teamProjects.map((project) => (
-                                <option key={project.id} value={project.id}>
-                                  {project.name}
-                                </option>
-                              ))}
-                            </select>
-                            <IconButton
-                              icon={Users}
-                              label="Send to team"
-                              onClick={() => {
-                                const projectId = selectedProjectIds[item.id] || teamProjects[0]?.id;
-                                if (projectId) {
-                                  void handleSendToTeam(item.sourceId, projectId);
-                                }
-                              }}
-                            />
-                          </>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+                {needsSorting.map((item) => (
+                  <UnifiedItemRow
+                    key={item.id}
+                    item={item}
+                    section="needsSorting"
+                    teamProjects={teamProjects}
+                    selectedProjectIds={selectedProjectIds}
+                    onSelectedProjectChange={handleSelectedProjectChange}
+                    onOpenItem={onOpenItem}
+                    onShowSuccess={onShowSuccess}
+                    onError={onError}
+                    completeTask={completeTask}
+                    completeReminder={completeReminder}
+                    deleteTask={deleteTask}
+                    deleteReminder={deleteReminder}
+                    deleteNote={deleteNote}
+                    convertNoteToTask={convertNoteToTask}
+                    convertNoteToReminder={convertNoteToReminder}
+                    sendTaskToTeam={sendTaskToTeam}
+                  />
+                ))}
               </ul>
             </div>
           )}
@@ -239,81 +304,27 @@ export const InboxPanel = memo(function InboxPanel({
             <div className="allItems">
               <h3>All Items ({unifiedItems.length})</h3>
               <ul className="itemList">
-                {unifiedItems.slice(0, 10).map((item) => {
-                  const Icon = getIconForSource(item.source);
-                  return (
-                    <li key={item.id} className="itemRow">
-                      <button type="button" className="itemRowButton" onClick={() => onOpenItem?.(item)}>
-                        <div className="itemIcon">
-                          <Icon size={16} />
-                        </div>
-                        <div className="itemContent">
-                          <div className="itemLabel">{item.label}</div>
-                          <div className="itemMeta">
-                            {getSourceLabel(item.source)}
-                            {item.projectName && ` | ${item.projectName}`}
-                            {item.priority !== "context" && ` | ${item.priority}`}
-                            {item.dueAt && ` | ${new Date(item.dueAt).toLocaleDateString()}`}
-                          </div>
-                        </div>
-                      </button>
-                      <div className="itemActions">
-                        {(item.source === "local-task" || item.source === "local-reminder") && !item.isCompleted && (
-                          <IconButton
-                            icon={Check}
-                            label={`Complete ${getSourceLabel(item.source).toLowerCase()}`}
-                            onClick={async () => {
-                              try {
-                                if (item.source === "local-task") {
-                                  await completeTask?.(item.sourceId);
-                                } else {
-                                  await completeReminder?.(item.sourceId);
-                                }
-                                onShowSuccess?.(`${getSourceLabel(item.source)} completed.`);
-                              } catch {
-                                onError?.("Failed to complete item.");
-                              }
-                            }}
-                          />
-                        )}
-                        {item.source === "local-note" && (
-                          <>
-                            <IconButton
-                              icon={ListTodo}
-                              label="Convert to task"
-                              onClick={() => void convertNoteToTask(item.sourceId)}
-                            />
-                            <IconButton
-                              icon={Bell}
-                              label="Convert to reminder"
-                              onClick={() => void convertNoteToReminder(item.sourceId)}
-                            />
-                          </>
-                        )}
-                        {(item.source === "local-task" || item.source === "local-reminder" || item.source === "local-note") && (
-                          <IconButton
-                            icon={Trash2}
-                            label={`Delete ${getSourceLabel(item.source).toLowerCase()}`}
-                            onClick={async () => {
-                              try {
-                                if (item.source === "local-task") {
-                                  await deleteTask?.(item.sourceId);
-                                } else if (item.source === "local-reminder") {
-                                  await deleteReminder?.(item.sourceId);
-                                } else {
-                                  await deleteNote?.(item.sourceId);
-                                }
-                                onShowSuccess?.(`${getSourceLabel(item.source)} deleted.`);
-                              } catch {
-                                onError?.("Failed to delete item.");
-                              }
-                            }}
-                          />
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+                {unifiedItems.slice(0, 10).map((item) => (
+                  <UnifiedItemRow
+                    key={item.id}
+                    item={item}
+                    section="allItems"
+                    teamProjects={teamProjects}
+                    selectedProjectIds={selectedProjectIds}
+                    onSelectedProjectChange={handleSelectedProjectChange}
+                    onOpenItem={onOpenItem}
+                    onShowSuccess={onShowSuccess}
+                    onError={onError}
+                    completeTask={completeTask}
+                    completeReminder={completeReminder}
+                    deleteTask={deleteTask}
+                    deleteReminder={deleteReminder}
+                    deleteNote={deleteNote}
+                    convertNoteToTask={convertNoteToTask}
+                    convertNoteToReminder={convertNoteToReminder}
+                    sendTaskToTeam={sendTaskToTeam}
+                  />
+                ))}
                 {unifiedItems.length > 10 && <div className="showMore">+{unifiedItems.length - 10} more items</div>}
               </ul>
             </div>
