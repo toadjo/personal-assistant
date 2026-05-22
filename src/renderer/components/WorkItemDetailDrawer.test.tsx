@@ -509,6 +509,24 @@ describe("WorkItemDetailDrawer", () => {
     });
   });
 
+  describe("prop refresh behavior", () => {
+    it("updates displayed content when item prop changes", () => {
+      const initialItem = makeUnifiedItem({ label: "Initial Title", detail: "Initial detail" });
+      const { rerender } = render(<WorkItemDetailDrawer item={initialItem} onClose={vi.fn()} />);
+
+      expect(screen.getByText("Initial Title")).toBeDefined();
+      expect(screen.getByText("Initial detail")).toBeDefined();
+
+      const updatedItem = makeUnifiedItem({ label: "Updated Title", detail: "Updated detail" });
+      rerender(<WorkItemDetailDrawer item={updatedItem} onClose={vi.fn()} />);
+
+      expect(screen.getByText("Updated Title")).toBeDefined();
+      expect(screen.getByText("Updated detail")).toBeDefined();
+      expect(screen.queryByText("Initial Title")).toBeNull();
+      expect(screen.queryByText("Initial detail")).toBeNull();
+    });
+  });
+
   describe("local task editing", () => {
     it("shows priority, recurrence, and due date fields for local tasks", () => {
       const item = makeUnifiedItem({

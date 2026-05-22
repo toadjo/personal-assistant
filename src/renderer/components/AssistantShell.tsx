@@ -263,11 +263,13 @@ export function AssistantShell(): JSX.Element {
     return config;
   };
 
-  // Close drawer if selected item is no longer in inbox after data refresh
+  // Refresh selected drawer item from inbox.unifiedItems, or close if deleted
   useEffect(() => {
     if (selectedWorkItem) {
-      const itemExists = inbox.unifiedItems.some((item) => item.id === selectedWorkItem.id);
-      if (!itemExists) {
+      const refreshedItem = inbox.unifiedItems.find((item) => item.id === selectedWorkItem.id);
+      if (refreshedItem) {
+        setSelectedWorkItem(refreshedItem);
+      } else {
         setSelectedWorkItem(null);
       }
     }
