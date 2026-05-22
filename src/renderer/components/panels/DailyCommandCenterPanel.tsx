@@ -12,7 +12,8 @@ import {
   History,
   X,
   ExternalLink,
-  Inbox
+  Inbox,
+  ListTodo
 } from "lucide-react";
 import type { BriefItem } from "../../types";
 import type { AwayBriefItem } from "../../types";
@@ -223,7 +224,7 @@ export function DailyCommandCenterPanel({
               })}
             </ul>
           ) : (
-            <p className="dccEmptyState">No urgent actions right now. Check below.</p>
+            <p className="dccEmptyState">No urgent actions right now.</p>
           )}
         </article>
 
@@ -451,7 +452,21 @@ export function DailyCommandCenterPanel({
         {/* Empty state when nothing at all */}
         {!hasAnything && (
           <article className="dccCard dccEmpty">
-            <p className="dccEmptyState">Add tasks, reminders, or pin notes to populate your daily view.</p>
+            <p className="dccEmptyState">Your day is clear. Add a task, reminder, or note to get started.</p>
+            <div className="dccEmptyActions">
+              {onOpenInbox && (
+                <button type="button" className="ghostButton" onClick={onOpenInbox}>
+                  <Inbox size={14} />
+                  Open Inbox
+                </button>
+              )}
+              {onOpenTasks && (
+                <button type="button" className="ghostButton" onClick={() => onOpenTasks("open")}>
+                  <ListTodo size={14} />
+                  Open Tasks
+                </button>
+              )}
+            </div>
           </article>
         )}
       </div>

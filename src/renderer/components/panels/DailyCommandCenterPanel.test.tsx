@@ -36,7 +36,26 @@ describe("DailyCommandCenterPanel", () => {
 
     expect(screen.getByText("Daily Command Center")).toBeInTheDocument();
     expect(screen.getByText("All clear - nothing needs attention right now.")).toBeInTheDocument();
-    expect(screen.getByText(/Add tasks, reminders, or pin notes to populate your daily view/)).toBeInTheDocument();
+    expect(screen.getByText(/Your day is clear. Add a task, reminder, or note to get started./)).toBeInTheDocument();
+  });
+
+  it("renders empty state actions when callbacks are provided", () => {
+    const onOpenInbox = vi.fn();
+    const onOpenTasks = vi.fn();
+    render(
+      <DailyCommandCenterPanel
+        data={makeData()}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenInbox={onOpenInbox}
+        onOpenTasks={onOpenTasks}
+      />
+    );
+
+    expect(screen.getByText("Open Inbox")).toBeInTheDocument();
+    expect(screen.getByText("Open Tasks")).toBeInTheDocument();
   });
 
   it("renders Now section with actionable items", () => {

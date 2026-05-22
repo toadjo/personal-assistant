@@ -137,7 +137,7 @@ export function HomeDashboardPanel({
               </div>
             </div>
           ) : (
-            <p className="homeDashboardHeroEmpty">No urgent actions are waiting.</p>
+            <p className="homeDashboardHeroEmpty">Your desk is clear. Capture something in Inbox or review your Today list.</p>
           )}
         </div>
         <div className="homeDashboardHeroActions" aria-label="Primary dashboard actions">

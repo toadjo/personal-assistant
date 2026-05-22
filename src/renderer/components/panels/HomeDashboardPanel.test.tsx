@@ -155,7 +155,7 @@ describe("HomeDashboardPanel", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Clear desk" })).toBeInTheDocument();
-    expect(screen.getByText("No urgent actions are waiting.")).toBeInTheDocument();
+    expect(screen.getByText("Your desk is clear. Capture something in Inbox or review your Today list.")).toBeInTheDocument();
     // Verify no separate action queue block exists
     expect(screen.queryByText("Action queue")).not.toBeInTheDocument();
   });
