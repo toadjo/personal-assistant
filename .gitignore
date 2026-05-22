@@ -36,3 +36,6 @@ blob-report/
 
 # Generated assets
 assets/generated/
+
+# TypeScript build artifacts should never be emitted beside source files
+src/shared/**/*.js

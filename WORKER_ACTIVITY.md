@@ -217,3 +217,10 @@ A concise, durable record of meaningful worker slices for cross-machine continui
 - Note: Timezone failures are pre-existing UTC+0 vs UTC+3 mismatches in WorkItemDetailDrawer.test.tsx, unrelated to this refactor.
 - Visual QA: Passed — desktop and narrow viewport checks confirmed compact rows, aligned actions, no overlap, clean truncation, accessible buttons. Workflow checks confirmed drawer edit/save/refresh/complete/delete/convert all smooth.
 - Next action: Personal OS v3 Inbox phase complete.
+
+## 2026-05-22: Electron Build Output Hygiene
+
+- Files touched: `.gitignore`, `tsconfig.main.json`, `WORKER_ACTIVITY.md`
+- Changes: Restored the main-process TypeScript output directory to `dist/main` so it matches the existing Electron entry contract (`dist/main/main/main.js`) and dev wait-on paths. Removed generated `src/shared/**/*.js` artifacts from the worktree and added a narrow ignore guard so TypeScript build outputs do not appear beside shared source files.
+- Checks run: `npm.cmd run build:main`, `npm.cmd run build`, `npm.cmd run test:smoke`, `npm.cmd run typecheck`, `npm.cmd run lint`, `git diff --check`. Confirmed configured main/preload outputs exist and `src/shared` has zero `.js` artifacts after builds.
+- Next action: Continue from a clean build baseline.
