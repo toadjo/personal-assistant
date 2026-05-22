@@ -59,6 +59,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
   const [editRecurrence, setEditRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
   const [editAssignee, setEditAssignee] = useState("");
   const [editStatus, setEditStatus] = useState<"open" | "done">("open");
+  const [editValidationError, setEditValidationError] = useState<string | null>(null);
 
   if (!item) return null;
 
@@ -71,15 +72,36 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
     } else {
       setEditDueAt("");
     }
-    // Reset team task fields to defaults for non-team items
-    setEditPriority("normal");
-    setEditRecurrence("none");
-    setEditAssignee("");
-    setEditStatus("open");
+    if (item.source === "team-task") {
+      setEditPriority(item.teamPriority ?? "normal");
+      setEditRecurrence(item.teamRecurrence ?? "none");
+      setEditAssignee(item.assigneeDisplayName ?? "");
+      setEditStatus(item.teamStatus ?? "open");
+    } else {
+      setEditPriority("normal");
+      setEditRecurrence("none");
+      setEditAssignee("");
+      setEditStatus("open");
+    }
+    setEditValidationError(null);
   };
 
   const handleSave = async () => {
     if (!item.source) return;
+
+    setEditValidationError(null);
+
+    if (item.source === "team-task" || item.source === "local-task") {
+      if (!editTitle.trim()) {
+        setEditValidationError("Title is required.");
+        return;
+      }
+    }
+
+    if (item.source === "team-task" && editRecurrence !== "none" && !editDueAt.trim()) {
+      setEditValidationError("Recurring team tasks require a due date.");
+      return;
+    }
 
     try {
       if (item.source === "local-note" && onUpdateNote) {
@@ -126,6 +148,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
     setEditRecurrence("none");
     setEditAssignee("");
     setEditStatus("open");
+    setEditValidationError(null);
   };
 
   const getIcon = () => {
@@ -159,6 +182,9 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
         <div className="drawerContent">
           {isEditing ? (
             <div className="editForm">
+              {editValidationError && (
+                <div className="validationError" role="alert">{editValidationError}</div>
+              )}
               <div className="formGroup">
                 <label htmlFor="edit-title">Title</label>
                 <input

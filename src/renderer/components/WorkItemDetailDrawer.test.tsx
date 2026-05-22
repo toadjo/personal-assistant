@@ -383,5 +383,129 @@ describe("WorkItemDetailDrawer", () => {
       expect(screen.queryByLabelText("Delete task")).toBeNull();
       expect(screen.queryByLabelText("Delete team task")).toBeNull();
     });
+
+    it("preloads real team-task priority, recurrence, assignee, due date, and status in edit form", () => {
+      const item = makeUnifiedItem({
+        source: "team-task",
+        label: "Deploy v2",
+        detail: "Release notes",
+        dueAt: "2024-08-01T09:00:00.000Z",
+        assigneeDisplayName: "Carol",
+        teamPriority: "high",
+        teamRecurrence: "weekly",
+        teamStatus: "done"
+      });
+      render(<WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={vi.fn()} />);
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      expect(screen.getByLabelText("Title")).toHaveValue("Deploy v2");
+      expect(screen.getByLabelText("Content")).toHaveValue("Release notes");
+      expect(screen.getByLabelText("Due Date")).toHaveValue("2024-08-01T09:00");
+      expect(screen.getByLabelText("Priority")).toHaveValue("high");
+      expect(screen.getByLabelText("Recurrence")).toHaveValue("weekly");
+      expect(screen.getByLabelText("Assignee")).toHaveValue("Carol");
+      expect(screen.getByLabelText("Status")).toHaveValue("done");
+    });
+
+    it("saves a team task preserving untouched metadata", async () => {
+      const item = makeUnifiedItem({
+        source: "team-task",
+        label: "Original Title",
+        detail: "Original notes",
+        dueAt: "2024-08-01T09:00:00.000Z",
+        assigneeDisplayName: "Carol",
+        teamPriority: "high",
+        teamRecurrence: "weekly",
+        teamStatus: "open"
+      });
+      const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
+      const onClose = vi.fn();
+      const onShowSuccess = vi.fn();
+
+      render(
+        <WorkItemDetailDrawer
+          item={item}
+          onClose={onClose}
+          onUpdateTeamTask={onUpdateTeamTask}
+          onShowSuccess={onShowSuccess}
+        />
+      );
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      const titleInput = screen.getByLabelText("Title");
+      fireEvent.change(titleInput, { target: { value: "Updated Title" } });
+
+      fireEvent.click(screen.getByText("Save"));
+
+      await vi.waitFor(() => expect(onUpdateTeamTask).toHaveBeenCalled());
+
+      expect(onUpdateTeamTask).toHaveBeenCalledWith("task-1", {
+        title: "Updated Title",
+        notes: "Original notes",
+        dueAt: "2024-08-01T09:00:00.000Z",
+        priority: "high",
+        recurrence: "weekly",
+        assigneeDisplayName: "Carol",
+        status: "open"
+      });
+    });
+
+    it("rejects recurring team task without due date before IPC", async () => {
+      const item = makeUnifiedItem({
+        source: "team-task",
+        label: "Recurring task",
+        teamPriority: "normal",
+        teamRecurrence: "none",
+        teamStatus: "open"
+      });
+      const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={onUpdateTeamTask} />
+      );
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      const recurrenceSelect = screen.getByLabelText("Recurrence");
+      fireEvent.change(recurrenceSelect, { target: { value: "daily" } });
+
+      fireEvent.click(screen.getByText("Save"));
+
+      await vi.waitFor(() =>
+        expect(screen.getByRole("alert")).toBeDefined()
+      );
+      expect(screen.getByText("Recurring team tasks require a due date.")).toBeDefined();
+      expect(onUpdateTeamTask).not.toHaveBeenCalled();
+    });
+
+    it("rejects team task with empty title", async () => {
+      const item = makeUnifiedItem({
+        source: "team-task",
+        label: "Some task",
+        teamPriority: "normal",
+        teamRecurrence: "none",
+        teamStatus: "open"
+      });
+      const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
+
+      render(
+        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={onUpdateTeamTask} />
+      );
+
+      fireEvent.click(screen.getByText("Edit"));
+
+      const titleInput = screen.getByLabelText("Title");
+      fireEvent.change(titleInput, { target: { value: "   " } });
+
+      fireEvent.click(screen.getByText("Save"));
+
+      await vi.waitFor(() =>
+        expect(screen.getByRole("alert")).toBeDefined()
+      );
+      expect(screen.getByText("Title is required.")).toBeDefined();
+      expect(onUpdateTeamTask).not.toHaveBeenCalled();
+    });
   });
 });
