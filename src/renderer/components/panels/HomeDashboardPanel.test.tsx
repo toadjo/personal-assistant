@@ -100,21 +100,44 @@ describe("HomeDashboardPanel", () => {
         nowItems: [
           {
             kind: "automation",
-            label: "Evening lights",
+            label: "Morning routine",
             urgency: "today",
-            sourceId: "automation-1",
-            action: "complete-reminder"
+            sourceId: "rule-1",
+            action: "complete-task"
           }
         ]
       })
     );
 
-    await user.click(screen.getByRole("button", { name: "Open item: Evening lights" }));
+    await user.click(screen.getByRole("button", { name: "Open item: Morning routine" }));
 
     expect(handlers.onOpenAutomations).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: "automation", sourceId: "automation-1" })
+      expect.objectContaining({ kind: "automation", sourceId: "rule-1" })
     );
-    expect(handlers.onCompleteReminder).not.toHaveBeenCalled();
+    expect(handlers.onOpenWorkItem).not.toHaveBeenCalled();
+  });
+
+  it("calls onOpenWorkItem for non-automation items", async () => {
+    const user = userEvent.setup();
+    const handlers = renderDashboard(
+      makeDashboard({
+        nowItems: [
+          {
+            kind: "task",
+            label: "Review proposal",
+            urgency: "overdue",
+            sourceId: "task-1",
+            action: "complete-task"
+          }
+        ]
+      })
+    );
+
+    await user.click(screen.getByRole("button", { name: "Review proposal Overdue / Task" }));
+
+    expect(handlers.onOpenWorkItem).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "task", sourceId: "task-1" })
+    );
   });
 
   it("shows calm clear-desk message when no urgent actions are waiting", () => {

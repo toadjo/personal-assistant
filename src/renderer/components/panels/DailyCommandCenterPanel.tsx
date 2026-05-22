@@ -11,7 +11,8 @@ import {
   Clock as Snooze,
   History,
   X,
-  ExternalLink
+  ExternalLink,
+  Inbox
 } from "lucide-react";
 import type { BriefItem } from "../../types";
 import type { AwayBriefItem } from "../../types";
@@ -30,6 +31,7 @@ type Props = {
   onOpenNotes?: () => void;
   onOpenWorkItem?: (item: BriefItem) => void;
   onOpenAutomations?: (item: BriefItem) => void;
+  onOpenInbox?: () => void;
 };
 
 function getIconForUrgency(urgency: BriefItem["urgency"]) {
@@ -114,7 +116,8 @@ export function DailyCommandCenterPanel({
   onOpenReminders,
   onOpenNotes,
   onOpenWorkItem,
-  onOpenAutomations
+  onOpenAutomations,
+  onOpenInbox
 }: Props): JSX.Element {
   const { nowItems, attentionItems, contextItems, awayItems, summary, pressure } = data;
 
@@ -342,6 +345,16 @@ export function DailyCommandCenterPanel({
                               )}
                             </>
                           )}
+                          {item.kind === "note" && onOpenInbox && (
+                            <IconButton
+                              icon={Inbox}
+                              size={16}
+                              onClick={() => onOpenInbox()}
+                              label={`Open in Inbox: ${item.label}`}
+                              title="Inbox"
+                              className="dccActionButton"
+                            />
+                          )}
                           {item.kind === "note" && onOpenNotes && (
                             <IconButton
                               icon={ExternalLink}
@@ -381,6 +394,16 @@ export function DailyCommandCenterPanel({
                           </div>
                         </div>
                         <div className="dccItemActions">
+                          {item.kind === "note" && onOpenInbox && (
+                            <IconButton
+                              icon={Inbox}
+                              size={16}
+                              onClick={() => onOpenInbox()}
+                              label={`Open in Inbox: ${item.label}`}
+                              title="Inbox"
+                              className="dccActionButton"
+                            />
+                          )}
                           {item.kind === "note" && onOpenNotes && (
                             <IconButton
                               icon={ExternalLink}

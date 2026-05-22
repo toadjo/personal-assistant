@@ -97,6 +97,66 @@ describe("DailyCommandCenterPanel", () => {
     expect(screen.getAllByLabelText(/Snooze reminder ten minutes: Today reminder/)[0]).toBeInTheDocument();
   });
 
+  it("calls onOpenInbox when Inbox button is clicked for context notes", async () => {
+    const onOpenInbox = vi.fn();
+    const onOpenNotes = vi.fn();
+    const data = makeData({
+      contextItems: [
+        {
+          kind: "note",
+          label: "Meeting notes",
+          urgency: "context",
+          sourceId: "note-1"
+        }
+      ]
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenInbox={onOpenInbox}
+        onOpenNotes={onOpenNotes}
+      />
+    );
+
+    const inboxButton = screen.getByLabelText(/Open in Inbox: Meeting notes/);
+    expect(inboxButton).toBeInTheDocument();
+  });
+
+  it("calls onOpenInbox when Inbox button is clicked for attention notes", async () => {
+    const onOpenInbox = vi.fn();
+    const onOpenNotes = vi.fn();
+    const data = makeData({
+      attentionItems: [
+        {
+          kind: "note",
+          label: "Quick thought",
+          urgency: "today",
+          sourceId: "note-2"
+        }
+      ]
+    });
+
+    render(
+      <DailyCommandCenterPanel
+        data={data}
+        onCompleteTask={onCompleteTask}
+        onCompleteReminder={onCompleteReminder}
+        onSnoozeReminder={onSnoozeReminder}
+        onMarkSeen={onMarkSeen}
+        onOpenInbox={onOpenInbox}
+        onOpenNotes={onOpenNotes}
+      />
+    );
+
+    const inboxButton = screen.getByLabelText(/Open in Inbox: Quick thought/);
+    expect(inboxButton).toBeInTheDocument();
+  });
+
   it("calls onCompleteTask when complete task button is clicked", () => {
     const data = makeData({
       nowItems: [

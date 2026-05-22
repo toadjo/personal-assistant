@@ -88,6 +88,22 @@ export function AssistantShell(): JSX.Element {
     }
   }
 
+  function openBriefItemInDrawer(briefItem: BriefItem): void {
+    const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
+    if (!source) {
+      ui.reportError(`Cannot open ${briefItem.kind} in drawer.`);
+      return;
+    }
+
+    const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
+    if (unifiedItem) {
+      setSelectedWorkItem(unifiedItem);
+      ui.setStatus(`${getUnifiedWorkItemSourceLabel(source)} opened.`);
+    } else {
+      ui.reportError(`${getUnifiedWorkItemSourceLabel(source)} not found in unified items.`);
+    }
+  }
+
   const team = useTeamState();
 
   // Keep team data fresh across Personal mode surfaces
@@ -618,15 +634,7 @@ export function AssistantShell(): JSX.Element {
                 data={dailyCommandCenter}
                 onOpenToday={() => setActivePersonalModule("today")}
                 onOpenInbox={() => setActivePersonalModule("inbox")}
-                onOpenWorkItem={(briefItem) => {
-                  const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
-                  if (!source) return;
-
-                  const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
-                  if (unifiedItem) {
-                    setSelectedWorkItem(unifiedItem);
-                  }
-                }}
+                onOpenWorkItem={openBriefItemInDrawer}
                 onOpenAutomations={(briefItem) => {
                   if (briefItem.kind === "automation") {
                     setAutomationFocusIntent(briefItem.sourceId);
@@ -756,15 +764,8 @@ export function AssistantShell(): JSX.Element {
                   }
                   handleOpenHouseholdWindow();
                 }}
-                onOpenWorkItem={(briefItem) => {
-                  const source = getUnifiedWorkItemSourceForBriefKind(briefItem.kind);
-                  if (!source) return;
-
-                  const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, briefItem.sourceId);
-                  if (unifiedItem) {
-                    setSelectedWorkItem(unifiedItem);
-                  }
-                }}
+                onOpenWorkItem={openBriefItemInDrawer}
+                onOpenInbox={() => setActivePersonalModule("inbox")}
               />
             </>
           )}
