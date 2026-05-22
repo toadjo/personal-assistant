@@ -9,6 +9,11 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    "version": "2.1.9",
+    "date": "2026-05-22",
+    "markdown": "Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.\n\n### Added\n\n- Inbox capture now guides task and reminder captures directly into Today.\n- Today review rows now expose Details, Complete, Snooze, and Open Inbox actions.\n\n### Changed\n\n- Home, Today, and Inbox empty states now guide the daily workflow instead of ending in passive states.\n- Daily Flow navigation now feels continuous across Home, Inbox, Today, and the unified drawer.\n- Inbox row actions and spacing were tightened for better visual density.\n\n### Fixed\n\n- Undated captured tasks now appear in Today Context.\n- Captured reminders are deduplicated in Today review.\n- Electron main-process build output now matches the packaged app entry contract.\n- Inbox capture controls remain visible after CSS token normalization.\n\n### Security\n\n- Security audit completed with zero critical, high, or medium findings.\n\n### Tests\n\n- Full local gates passed.\n- Electron manual QA passed for Inbox to Today capture, task completion, reminder snooze, note capture, empty states, and narrow viewport layout."
+  },
+  {
     "version": "2.1.8",
     "date": "2026-05-21",
     "markdown": "Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.\n\n### Fixed\n\n- Windows desktop and Start menu shortcuts now use the PersonalAssistant icon even when executable resource editing is disabled.\n\n### Tests\n\n- NSIS installer build and smoke check verified shortcut icon packaging."
