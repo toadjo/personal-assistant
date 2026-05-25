@@ -52,6 +52,7 @@ describe("HomeDashboardPanel", () => {
         },
         nowItems: [
           {
+            id: "local-task-task-1",
             kind: "task",
             label: "Review proposal",
             urgency: "overdue",
@@ -75,6 +76,7 @@ describe("HomeDashboardPanel", () => {
       makeDashboard({
         nowItems: [
           {
+            id: "team-task-team-task-1",
             kind: "team-task",
             label: "Coordinate rollout",
             urgency: "today",
@@ -99,6 +101,7 @@ describe("HomeDashboardPanel", () => {
       makeDashboard({
         nowItems: [
           {
+            id: "automation-rule-1",
             kind: "automation",
             label: "Morning routine",
             urgency: "today",
@@ -123,6 +126,7 @@ describe("HomeDashboardPanel", () => {
       makeDashboard({
         nowItems: [
           {
+            id: "local-task-task-1",
             kind: "task",
             label: "Review proposal",
             urgency: "overdue",

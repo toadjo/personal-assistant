@@ -23,6 +23,160 @@ export type DailyCommandCenter = {
   filter: DailyCommandCenterFilter;
 };
 
+/**
+ * Plan Today queue item for v2.3.0 workflow improvement.
+ */
+export type PlanTodayItem = BriefItem & {
+  source: "local-task" | "local-reminder" | "local-note";
+  queueReason: "overdue" | "due-today" | "unsorted";
+  queuePriority: number; // Lower number = higher priority
+  id: string; // Unique identifier for the queue item
+};
+
+export type PlanTodayQueue = {
+  items: PlanTodayItem[];
+  summary: string;
+  totalItems: number;
+};
+
+/**
+ * Derives the Plan Today queue from local tasks, reminders, and notes.
+ * 
+ * The queue prioritizes:
+ * 1. Overdue tasks (priority 0)
+ * 2. Due today reminders (priority 1) 
+ * 3. Overdue reminders (priority 2)
+ * 4. Due today tasks (priority 3)
+ * 5. Unsorted notes (priority 4)
+ */
+export function derivePlanTodayQueue(params: {
+  localTasks: BriefItem[];
+  localReminders: BriefItem[];
+  localNotes: BriefItem[];
+  now?: Date;
+}): PlanTodayQueue {
+  const now = params.now || new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const items: PlanTodayItem[] = [];
+
+  // Overdue tasks (highest priority)
+  for (const task of params.localTasks) {
+    if (task.kind === "task" && task.dueAt && new Date(task.dueAt) < todayStart) {
+      items.push({
+        ...task,
+        source: "local-task",
+        queueReason: "overdue",
+        queuePriority: 0,
+        id: `local-task-${task.sourceId}`
+      });
+    }
+  }
+
+  // Due today reminders
+  for (const reminder of params.localReminders) {
+    if (reminder.kind === "reminder" && reminder.dueAt) {
+      const dueDate = new Date(reminder.dueAt);
+      if (dueDate >= todayStart && dueDate <= todayEnd) {
+        items.push({
+          ...reminder,
+          source: "local-reminder",
+          queueReason: "due-today",
+          queuePriority: 1,
+          id: `local-reminder-${reminder.sourceId}`
+        });
+      }
+    }
+  }
+
+  // Overdue reminders
+  for (const reminder of params.localReminders) {
+    if (reminder.kind === "reminder" && reminder.dueAt && new Date(reminder.dueAt) < todayStart) {
+      items.push({
+        ...reminder,
+        source: "local-reminder",
+        queueReason: "overdue",
+        queuePriority: 2,
+        id: `local-reminder-${reminder.sourceId}`
+      });
+    }
+  }
+
+  // Due today tasks
+  for (const task of params.localTasks) {
+    if (task.kind === "task" && task.dueAt) {
+      const dueDate = new Date(task.dueAt);
+      if (dueDate >= todayStart && dueDate <= todayEnd) {
+        items.push({
+          ...task,
+          source: "local-task",
+          queueReason: "due-today",
+          queuePriority: 3,
+          id: `local-task-${task.sourceId}`
+        });
+      }
+    }
+  }
+
+  // Unsorted notes (notes without due dates or priorities)
+  for (const note of params.localNotes) {
+    if (note.kind === "note") {
+      items.push({
+        ...note,
+        source: "local-note",
+        queueReason: "unsorted",
+        queuePriority: 4,
+        id: `local-note-${note.sourceId}`
+      });
+    }
+  }
+
+  // Sort by queue priority, then by due date (if available)
+  const sortedItems = items.sort((a, b) => {
+    if (a.queuePriority !== b.queuePriority) {
+      return a.queuePriority - b.queuePriority;
+    }
+    
+    // Secondary sort by due date for items with due dates
+    if (a.dueAt && b.dueAt) {
+      return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+    }
+    
+    // Tertiary sort by label
+    return a.label.localeCompare(b.label);
+  });
+
+  const totalItems = sortedItems.length;
+  const summary = buildPlanTodaySummary(sortedItems);
+
+  return {
+    items: sortedItems,
+    summary,
+    totalItems
+  };
+}
+
+function buildPlanTodaySummary(items: PlanTodayItem[]): string {
+  if (items.length === 0) {
+    return "All clear - nothing needs planning today.";
+  }
+
+  const overdueCount = items.filter(item => item.queueReason === "overdue").length;
+  const dueTodayCount = items.filter(item => item.queueReason === "due-today").length;
+  const unsortedCount = items.filter(item => item.queueReason === "unsorted").length;
+
+  const parts: string[] = [];
+  if (overdueCount > 0) parts.push(`${overdueCount} overdue`);
+  if (dueTodayCount > 0) parts.push(`${dueTodayCount} due today`);
+  if (unsortedCount > 0) parts.push(`${unsortedCount} unsorted`);
+
+  return `Plan Today: ${parts.join(", ")}.`;
+}
+
 function getActionForItem(item: BriefItem): DailyCommandCenterAction {
   if (item.kind === "task" || item.kind === "team-task") return "complete-task";
   return "complete-reminder";

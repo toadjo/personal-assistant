@@ -77,6 +77,7 @@ export function deriveFocusBrief(params: {
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);
     items.push({
+      id: `local-task-${task.id}`,
       kind: "task",
       label: task.title,
       detail: task.dueAt ? formatDateTime(task.dueAt) : undefined,
@@ -91,6 +92,7 @@ export function deriveFocusBrief(params: {
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);
     items.push({
+      id: `local-task-${task.id}`,
       kind: "task",
       label: task.title,
       detail: task.dueAt ? formatDateTime(task.dueAt) : undefined,
@@ -107,6 +109,7 @@ export function deriveFocusBrief(params: {
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);
     items.push({
+      id: `local-task-${task.id}`,
       kind: "task",
       label: task.title,
       detail: undefined,
@@ -137,6 +140,7 @@ export function deriveFocusBrief(params: {
     }
 
     items.push({
+      id: `team-task-${teamTask.id}`,
       kind: "team-task",
       label: teamTask.title,
       detail: detailParts.length > 0 ? detailParts.join(" | ") : undefined,
@@ -152,6 +156,7 @@ export function deriveFocusBrief(params: {
       if (seenSourceIds.has(key)) continue;
       seenSourceIds.add(key);
       items.push({
+        id: `local-reminder-${reminder.id}`,
         kind: "reminder",
         label: reminder.text,
         detail: formatDateTime(reminder.dueAt),
@@ -171,6 +176,7 @@ export function deriveFocusBrief(params: {
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);
     items.push({
+      id: `agenda-${reminder.id}`,
       kind: "agenda",
       label: reminder.text,
       detail: formatDateTime(reminder.dueAt),
@@ -185,6 +191,7 @@ export function deriveFocusBrief(params: {
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);
     items.push({
+      id: `local-note-${note.id}`,
       kind: "note",
       label: note.title,
       detail: note.content ? note.content.slice(0, 100) : undefined,
@@ -210,6 +217,7 @@ export function deriveFocusBrief(params: {
     const detail = `Runs at ${rule.triggerConfig.at} | ${actionLabel}`;
 
     items.push({
+      id: `automation-${rule.id}`,
       kind: "automation",
       label: rule.name,
       detail,

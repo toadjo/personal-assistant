@@ -4,6 +4,25 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-05-25
+
+### Added
+
+- Plan Today panel: prioritized queue of overdue tasks, due today reminders, and unsorted notes for daily planning workflow
+- Performance instrumentation (dev-only) for app startup, Today/Inbox render times, and drawer latency
+- Memoization of deriveDailyCommandCenter function for expensive operations
+
+### Changed
+
+- Enhanced type system: added required `id` field to BriefItem for better item tracking and deduplication
+- Improved Plan Today queue derivation with priority-based sorting (overdue > due-today > unsorted)
+
+### Tests
+
+- Added 6 unit tests for derivePlanTodayQueue derivation logic
+- Added 11 renderer tests for PlanTodayPanel component states and actions
+- All existing tests updated to support new BriefItem type requirements
+
 ## [2.2.0] - 2026-05-25
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.

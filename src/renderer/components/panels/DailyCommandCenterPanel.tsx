@@ -19,6 +19,7 @@ import {
 import type { BriefItem } from "../../types";
 import type { AwayBriefItem } from "../../types";
 import type { TaskFilter, ReminderFilter } from "../../types";
+import { logMetric } from "../../lib/performance";
 import "./DailyCommandCenterPanel.css";
 
 type Props = {
@@ -361,7 +362,7 @@ export function DailyCommandCenterPanel({
   const hasAnything =
     nowItems.length > 0 || attentionItems.length > 0 || contextItems.length > 0 || awayItems.length > 0;
 
-  return (
+  const content = logMetric('today-render', () => (
     <section className="panel" aria-labelledby="daily-command-center-heading">
       <PanelHeader icon={Command} title="Daily Command Center" />
 
@@ -584,5 +585,7 @@ export function DailyCommandCenterPanel({
         )}
       </div>
     </section>
-  );
+  ));
+
+  return content;
 }

@@ -17,6 +17,7 @@ import { IconButton } from "../ui/IconButton";
 import { EmptyState } from "../ui/EmptyState";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
 import type { TeamProject } from "../../../shared/team/types";
+import { logMetric } from "../../lib/performance";
 import "./InboxPanel.css";
 
 type Props = {
@@ -253,7 +254,7 @@ export const InboxPanel = memo(function InboxPanel({
     }));
   }
 
-  return (
+  const content = logMetric('inbox-render', () => (
     <section className="panel" aria-labelledby="inbox-panel-heading">
       <PanelHeader icon={Inbox} title="Inbox" />
 
@@ -404,5 +405,7 @@ export const InboxPanel = memo(function InboxPanel({
         </div>
       )}
     </section>
-  );
+  ));
+
+  return content;
 });

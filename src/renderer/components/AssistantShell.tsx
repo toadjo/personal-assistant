@@ -46,6 +46,7 @@ import { getAssistantInvokeErrorMessage } from "../lib/errors";
 import { getAssistantApi, requireAssistantApi } from "../lib/assistantApi";
 import { getReleaseNote } from "../lib/release-notes.generated";
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
+import { measurePerformance, endMetric } from "../lib/performance";
 import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
@@ -54,6 +55,9 @@ import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations";
 
 export function AssistantShell(): JSX.Element {
+  // Measure app startup performance
+  const startupMetric = measurePerformance('app-startup');
+  
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);
@@ -238,8 +242,12 @@ export function AssistantShell(): JSX.Element {
         setAiConfig(config);
       } catch {
         // Ignore errors if AI is not configured
+      } finally {
+        // End app startup measurement after initial setup
+        endMetric(startupMetric);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Show release notes if version changed

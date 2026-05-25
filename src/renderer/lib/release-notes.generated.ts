@@ -9,6 +9,11 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    "version": "2.3.0",
+    "date": "2026-05-25",
+    "markdown": "### Added\n\n- Plan Today panel: prioritized queue of overdue tasks, due today reminders, and unsorted notes for daily planning workflow\n- Performance instrumentation (dev-only) for app startup, Today/Inbox render times, and drawer latency\n- Memoization of deriveDailyCommandCenter function for expensive operations\n\n### Changed\n\n- Enhanced type system: added required `id` field to BriefItem for better item tracking and deduplication\n- Improved Plan Today queue derivation with priority-based sorting (overdue > due-today > unsorted)\n\n### Tests\n\n- Added 6 unit tests for derivePlanTodayQueue derivation logic\n- Added 11 renderer tests for PlanTodayPanel component states and actions\n- All existing tests updated to support new BriefItem type requirements"
+  },
+  {
     "version": "2.2.0",
     "date": "2026-05-25",
     "markdown": "Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.\n\n### Fixed\n\n- Drawer date editing now uses local datetime-local semantics consistently across timezones.\n- Due dates no longer shift when editing local tasks, team tasks, and reminders.\n\n### Tests\n\n- All unit tests passing with timezone-aware date handling."

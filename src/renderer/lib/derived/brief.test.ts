@@ -838,8 +838,8 @@ describe("getBriefSummary", () => {
 
   it("should count overdue items", () => {
     const items = [
-      { kind: "task" as const, label: "Task", urgency: "overdue" as const, sourceId: "1" },
-      { kind: "reminder" as const, label: "Reminder", urgency: "overdue" as const, sourceId: "2" }
+      { id: "task-1", kind: "task" as const, label: "Task", urgency: "overdue" as const, sourceId: "1" },
+      { id: "reminder-2", kind: "reminder" as const, label: "Reminder", urgency: "overdue" as const, sourceId: "2" }
     ];
     const result = getBriefSummary(items);
     expect(result).toBe("Focus: 2 overdue.");
@@ -847,24 +847,24 @@ describe("getBriefSummary", () => {
 
   it("should count today items", () => {
     const items = [
-      { kind: "task" as const, label: "Task", urgency: "today" as const, sourceId: "1" },
-      { kind: "reminder" as const, label: "Reminder", urgency: "today" as const, sourceId: "2" }
+      { id: "task-1", kind: "task" as const, label: "Task", urgency: "today" as const, sourceId: "1" },
+      { id: "reminder-2", kind: "reminder" as const, label: "Reminder", urgency: "today" as const, sourceId: "2" }
     ];
     const result = getBriefSummary(items);
     expect(result).toBe("Focus: 2 due today.");
   });
 
   it("should count context items", () => {
-    const items = [{ kind: "note" as const, label: "Note", urgency: "context" as const, sourceId: "1" }];
+    const items = [{ id: "note-1", kind: "note" as const, label: "Note", urgency: "context" as const, sourceId: "1" }];
     const result = getBriefSummary(items);
     expect(result).toBe("Focus: 1 context items.");
   });
 
   it("should combine multiple urgency counts", () => {
     const items = [
-      { kind: "task" as const, label: "Overdue", urgency: "overdue" as const, sourceId: "1" },
-      { kind: "task" as const, label: "Today", urgency: "today" as const, sourceId: "2" },
-      { kind: "note" as const, label: "Context", urgency: "context" as const, sourceId: "3" }
+      { id: "task-1", kind: "task" as const, label: "Overdue", urgency: "overdue" as const, sourceId: "1" },
+      { id: "task-2", kind: "task" as const, label: "Today", urgency: "today" as const, sourceId: "2" },
+      { id: "note-3", kind: "note" as const, label: "Context", urgency: "context" as const, sourceId: "3" }
     ];
     const result = getBriefSummary(items);
     expect(result).toBe("Focus: 1 overdue, 1 due today, 1 context items.");

@@ -254,7 +254,7 @@ describe("WorkItemDetailDrawer", () => {
       fireEvent.click(saveButton);
 
       await vi.waitFor(() => expect(onUpdateReminder).toHaveBeenCalled());
-      expect(onError).toHaveBeenCalledWith("Failed to update item.");
+      await vi.waitFor(() => expect(onError).toHaveBeenCalledWith("Failed to update item."));
       expect(onClose).not.toHaveBeenCalled();
     });
   });

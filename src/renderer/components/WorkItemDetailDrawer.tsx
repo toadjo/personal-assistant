@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { X, Check, Trash2, Clock, FileText, ListTodo, Bell } from "lucide-react";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import { IconButton } from "./ui/IconButton";
+import { measurePerformance, endMetric, logMetricAsync } from "../lib/performance";
 import "./WorkItemDetailDrawer.css";
 
 type LocalTaskPatch = {
@@ -83,6 +84,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
   if (!item) return null;
 
   const handleEdit = () => {
+    const openMetric = measurePerformance('drawer-open');
     setIsEditing(true);
     setEditTitle(item.label);
     setEditContent(item.detail || "");
@@ -108,6 +110,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
       setEditStatus("open");
     }
     setEditValidationError(null);
+    endMetric(openMetric);
   };
 
   const handleSave = async () => {
@@ -128,17 +131,18 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
     }
 
     try {
-      if (item.source === "local-note" && onUpdateNote) {
-        await onUpdateNote(item.sourceId, editTitle, editContent);
-        onShowSuccess?.("Note updated.");
-        onClose();
-      } else if (item.source === "local-task" && onUpdateTask) {
-        const dueAt = editDueAt ? new Date(editDueAt).toISOString() : null;
-        await onUpdateTask(item.sourceId, {
-          title: editTitle,
-          notes: editContent,
-          dueAt,
-          priority: editPriority,
+      await logMetricAsync('drawer-save', async () => {
+        if (item.source === "local-note" && onUpdateNote) {
+          await onUpdateNote(item.sourceId, editTitle, editContent);
+          onShowSuccess?.("Note updated.");
+          onClose();
+        } else if (item.source === "local-task" && onUpdateTask) {
+          const dueAt = editDueAt ? new Date(editDueAt).toISOString() : null;
+          await onUpdateTask(item.sourceId, {
+            title: editTitle,
+            notes: editContent,
+            dueAt,
+            priority: editPriority,
           recurrence: editRecurrence
         });
         onShowSuccess?.("Task updated.");
@@ -165,6 +169,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
         onShowSuccess?.("Team task updated.");
         onClose();
       }
+      });
     } catch {
       onError?.("Failed to update item.");
     }

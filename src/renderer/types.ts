@@ -24,11 +24,13 @@ export type AutomationRuleListItem = Omit<AutomationRule, "actionConfig"> & {
 export type BriefItemKind = "task" | "reminder" | "note" | "agenda" | "team-task" | "automation";
 export type BriefItemUrgency = "overdue" | "today" | "upcoming" | "context";
 export type BriefItem = {
+  id: string;
   kind: BriefItemKind;
   label: string;
   detail?: string;
   urgency: BriefItemUrgency;
   sourceId: string;
+  dueAt?: string;
 };
 
 export type AwayBriefItemKind = "task" | "reminder" | "note";
