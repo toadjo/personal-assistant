@@ -16,6 +16,7 @@ import { AboutPanel } from "./panels/AboutPanel";
 import { ReleaseNotesPanel } from "./panels/ReleaseNotesPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
+import { PlanTodayPanel } from "./panels/PlanTodayPanel";
 import { HomeDashboardPanel } from "./panels/HomeDashboardPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
@@ -32,7 +33,7 @@ import {
   STORAGE_ONBOARDING_DEFERRED,
   STORAGE_LAST_SEEN_RELEASE_VERSION
 } from "../constants/storageKeys";
-import { deriveDailyCommandCenter } from "../lib/derived/daily-command-center";
+import { deriveDailyCommandCenter, derivePlanTodayQueue } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
@@ -47,7 +48,7 @@ import { getAssistantApi, requireAssistantApi } from "../lib/assistantApi";
 import { getReleaseNote } from "../lib/release-notes.generated";
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
 import { measurePerformance, endMetric } from "../lib/performance";
-import type { DailyCommandCenter, DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
+import type { DailyCommandCenter, DailyCommandCenterFilter, PlanTodayQueue } from "../lib/derived/daily-command-center";
 import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
@@ -76,6 +77,12 @@ export function AssistantShell(): JSX.Element {
     summary: "All clear - nothing needs attention right now.",
     pressure: { overdue: 0, dueToday: 0, upcoming: 0, context: 0 },
     filter: "all"
+  });
+
+  const [planTodayQueue, setPlanTodayQueue] = useState<PlanTodayQueue>({
+    items: [],
+    summary: "All clear - nothing needs planning today.",
+    totalItems: 0
   });
 
   const setDailyCommandCenterFilter = (filter: DailyCommandCenterFilter) => {
@@ -211,6 +218,45 @@ export function AssistantShell(): JSX.Element {
     focusBriefRef.current = focusBrief;
     const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief, filter: dailyCommandCenter.filter });
     setDailyCommandCenter(dcc);
+    
+    // Derive Plan Today queue for v2.5.0
+    // Convert raw data to BriefItem format
+    const localTasks: BriefItem[] = data.tasks.map(task => ({
+      id: `local-task-${task.id}`,
+      kind: "task",
+      label: task.title,
+      detail: task.dueAt ? new Date(task.dueAt).toLocaleString() : undefined,
+      urgency: task.dueAt ? (new Date(task.dueAt) < new Date(new Date().setHours(0,0,0,0)) ? "overdue" : "today") : "context",
+      sourceId: task.id,
+      dueAt: task.dueAt || undefined
+    }));
+    
+    const localReminders: BriefItem[] = data.reminders.map(reminder => ({
+      id: `local-reminder-${reminder.id}`,
+      kind: "reminder",
+      label: reminder.text,
+      detail: reminder.dueAt ? new Date(reminder.dueAt).toLocaleString() : undefined,
+      urgency: reminder.dueAt ? (new Date(reminder.dueAt) < new Date(new Date().setHours(0,0,0,0)) ? "overdue" : "today") : "context",
+      sourceId: reminder.id,
+      dueAt: reminder.dueAt || undefined
+    }));
+    
+    const localNotes: BriefItem[] = data.notes.map(note => ({
+      id: `local-note-${note.id}`,
+      kind: "note",
+      label: note.title,
+      detail: note.content ? note.content.substring(0, 50) : undefined,
+      urgency: "context",
+      sourceId: note.id
+    }));
+    
+    const planToday = derivePlanTodayQueue({
+      localTasks,
+      localReminders,
+      localNotes,
+      now: new Date()
+    });
+    setPlanTodayQueue(planToday);
   }, [
     tasks.overdueOpen,
     tasks.dueTodayOpen,
@@ -755,6 +801,30 @@ export function AssistantShell(): JSX.Element {
                   setDailyCommandCenterFilter("team");
                   ui.setStatus("Showing team tasks.");
                 }}
+              />
+
+              <PlanTodayPanel
+                queue={planTodayQueue}
+                onCompleteTask={tasks.completeById}
+                onCompleteReminder={reminders.completeById}
+                onBulkCompleteTasks={tasks.bulkComplete}
+                onSnoozeReminder={async (id: string, minutes: number) => await reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)}
+                onUpdateTaskDueAt={async (id: string, dueAt: string | null) => {
+                  const task = data.tasks.find(t => t.id === id);
+                  if (task) {
+                    await tasks.saveTask({ id, title: task.title, notes: task.notes, dueAt, priority: task.priority, recurrence: task.recurrence });
+                  }
+                }}
+                onUpdateReminderDueAt={async (id: string, dueAt: string) => {
+                  const reminder = data.reminders.find(r => r.id === id);
+                  if (reminder) {
+                    await reminders.updateById(id, reminder.text, dueAt);
+                  }
+                }}
+                onOpenWorkItem={openBriefItemInDrawer}
+                onOpenInbox={() => setActivePersonalModule("inbox")}
+                onShowSuccess={ui.showSuccess}
+                onError={ui.reportError}
               />
 
               <DailyCommandCenterPanel

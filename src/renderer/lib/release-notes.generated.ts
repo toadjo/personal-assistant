@@ -9,6 +9,16 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    "version": "2.5.0",
+    "date": "2026-05-25",
+    "markdown": "### Added\n\n- Quick Reschedule: calendar action button for tasks and reminders with preset options (Today, Tomorrow, Next Week, Custom)\n- Batch Snooze: Snooze button for selected reminders with preset options (10 minutes, 1 hour, Tomorrow, Next Week)\n- Enhanced Plan Today panel with scheduling controls for efficient daily planning\n- Dropdown menus for quick scheduling actions with keyboard navigation support\n\n### Changed\n\n- Plan Today panel now includes both completion and scheduling workflows\n- Quick Reschedule uses existing task and reminder update APIs for consistency\n- Batch Snooze only affects selected reminders, leaving tasks unchanged\n- Improved scheduling UX with preset time options for common workflows\n\n### Tests\n\n- Added 18 renderer tests for Quick Reschedule and Batch Snooze functionality\n- Tests cover calendar actions, preset selection, batch operations, and error handling\n- All 951 tests passing"
+  },
+  {
+    "version": "2.4.0",
+    "date": "2026-05-25",
+    "markdown": "### Added\n\n- Plan Today panel integration into Today module with live queue of overdue tasks, due today reminders, and unsorted notes\n- Batch complete functionality: checkbox selection for tasks and reminders with Select All / Deselect All\n- Complete N Selected action for bulk completing multiple items at once\n- Smart selection logic: only completable items (tasks and reminders) can be selected, notes are excluded\n\n### Changed\n\n- Plan Today queue now integrated into the Today module alongside Daily Command Center\n- Bulk completion uses source IDs for proper API calls\n- Enhanced Plan Today panel with selection state management and batch processing UI\n\n### Tests\n\n- Added 9 renderer tests for batch complete functionality\n- Tests cover checkbox selection, Select All, bulk completion, and state clearing\n- All 933 tests passing"
+  },
+  {
     "version": "2.3.0",
     "date": "2026-05-25",
     "markdown": "### Added\n\n- Plan Today panel: prioritized queue of overdue tasks, due today reminders, and unsorted notes for daily planning workflow\n- Performance instrumentation (dev-only) for app startup, Today/Inbox render times, and drawer latency\n- Memoization of deriveDailyCommandCenter function for expensive operations\n\n### Changed\n\n- Enhanced type system: added required `id` field to BriefItem for better item tracking and deduplication\n- Improved Plan Today queue derivation with priority-based sorting (overdue > due-today > unsorted)\n\n### Tests\n\n- Added 6 unit tests for derivePlanTodayQueue derivation logic\n- Added 11 renderer tests for PlanTodayPanel component states and actions\n- All existing tests updated to support new BriefItem type requirements"

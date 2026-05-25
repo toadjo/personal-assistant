@@ -4,6 +4,49 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-05-25
+
+### Added
+
+- Quick Reschedule: calendar action button for tasks and reminders with preset options (Today, Tomorrow, Next Week, Custom)
+- Batch Snooze: Snooze button for selected reminders with preset options (10 minutes, 1 hour, Tomorrow, Next Week)
+- Enhanced Plan Today panel with scheduling controls for efficient daily planning
+- Dropdown menus for quick scheduling actions with keyboard navigation support
+
+### Changed
+
+- Plan Today panel now includes both completion and scheduling workflows
+- Quick Reschedule uses existing task and reminder update APIs for consistency
+- Batch Snooze only affects selected reminders, leaving tasks unchanged
+- Improved scheduling UX with preset time options for common workflows
+
+### Tests
+
+- Added 18 renderer tests for Quick Reschedule and Batch Snooze functionality
+- Tests cover calendar actions, preset selection, batch operations, and error handling
+- All 951 tests passing
+
+## [2.4.0] - 2026-05-25
+
+### Added
+
+- Plan Today panel integration into Today module with live queue of overdue tasks, due today reminders, and unsorted notes
+- Batch complete functionality: checkbox selection for tasks and reminders with Select All / Deselect All
+- Complete N Selected action for bulk completing multiple items at once
+- Smart selection logic: only completable items (tasks and reminders) can be selected, notes are excluded
+
+### Changed
+
+- Plan Today queue now integrated into the Today module alongside Daily Command Center
+- Bulk completion uses source IDs for proper API calls
+- Enhanced Plan Today panel with selection state management and batch processing UI
+
+### Tests
+
+- Added 9 renderer tests for batch complete functionality
+- Tests cover checkbox selection, Select All, bulk completion, and state clearing
+- All 933 tests passing
+
 ## [2.3.0] - 2026-05-25
 
 ### Added
