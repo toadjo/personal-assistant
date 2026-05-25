@@ -46,7 +46,25 @@ export function createTray(options: TrayOptions): Tray {
         const w = options.getDeskWindow();
         if (!w) return;
         showMainWindow(w);
-        safeWebContentsSend(w.webContents, IpcRendererEvent.command, "new note");
+        safeWebContentsSend(w.webContents, IpcRendererEvent.command, "capture note ");
+      }
+    },
+    {
+      label: "Quick task",
+      click: () => {
+        const w = options.getDeskWindow();
+        if (!w) return;
+        showMainWindow(w);
+        safeWebContentsSend(w.webContents, IpcRendererEvent.command, "capture task ");
+      }
+    },
+    {
+      label: "Quick reminder",
+      click: () => {
+        const w = options.getDeskWindow();
+        if (!w) return;
+        showMainWindow(w);
+        safeWebContentsSend(w.webContents, IpcRendererEvent.command, "capture reminder ");
       }
     },
     {

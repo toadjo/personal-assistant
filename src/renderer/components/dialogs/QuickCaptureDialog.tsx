@@ -23,6 +23,7 @@ type Props = {
   initialText?: string;
   onShowSuccess?: (message: string) => void;
   onError?: (message: string) => void;
+  onSaved?: (type: CaptureType) => void;
 };
 
 function getTypeIcon(type: CaptureType) {
@@ -57,7 +58,8 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
   initialType = "inbox",
   initialText = "",
   onShowSuccess,
-  onError
+  onError,
+  onSaved
 }: Props): JSX.Element | null {
   const [captureType, setCaptureType] = useState<CaptureType>(initialType);
   const [text, setText] = useState(initialText);
@@ -101,7 +103,6 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
             tags: [],
             pinned: false
           });
-          onShowSuccess?.("Note created.");
           break;
         }
         case "task": {
@@ -113,7 +114,6 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
             priority: taskPriority,
             recurrence: "none"
           });
-          onShowSuccess?.("Task created.");
           break;
         }
         case "reminder": {
@@ -125,7 +125,6 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
             dueAt: dueDate,
             recurrence: "none"
           });
-          onShowSuccess?.("Reminder created.");
           break;
         }
         case "inbox": {
@@ -136,9 +135,27 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
             tags: [],
             pinned: false
           });
-          onShowSuccess?.("Captured to Inbox.");
           break;
         }
+      }
+
+      // Trigger refresh after successful save
+      await onSaved?.(captureType);
+
+      // Show success message after refresh completes
+      switch (captureType) {
+        case "note":
+          onShowSuccess?.("Note created.");
+          break;
+        case "task":
+          onShowSuccess?.("Task created.");
+          break;
+        case "reminder":
+          onShowSuccess?.("Reminder created.");
+          break;
+        case "inbox":
+          onShowSuccess?.("Captured to Inbox.");
+          break;
       }
 
       // Reset and close
@@ -152,7 +169,7 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
     } finally {
       setIsSubmitting(false);
     }
-  }, [text, captureType, taskDueAt, taskPriority, reminderDueAt, onShowSuccess, onError, onClose]);
+  }, [text, captureType, taskDueAt, taskPriority, reminderDueAt, onShowSuccess, onError, onClose, onSaved]);
 
   // Handle keyboard shortcuts
   useEffect(() => {

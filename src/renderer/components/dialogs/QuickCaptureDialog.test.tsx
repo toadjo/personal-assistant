@@ -6,6 +6,7 @@ describe("QuickCaptureDialog", () => {
   const mockOnShowSuccess = vi.fn();
   const mockOnError = vi.fn();
   const mockOnClose = vi.fn();
+  const mockOnSaved = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
     // Mock the assistantApi directly on window
@@ -30,6 +31,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -43,6 +45,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -57,6 +60,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -73,6 +77,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -89,6 +94,7 @@ describe("QuickCaptureDialog", () => {
         initialType="task"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -104,6 +110,7 @@ describe("QuickCaptureDialog", () => {
         initialText="buy milk"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -118,6 +125,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -135,6 +143,7 @@ describe("QuickCaptureDialog", () => {
         initialType="task"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -150,6 +159,7 @@ describe("QuickCaptureDialog", () => {
         initialType="reminder"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -164,6 +174,7 @@ describe("QuickCaptureDialog", () => {
         initialType="note"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -181,6 +192,7 @@ describe("QuickCaptureDialog", () => {
         initialType="note"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -199,6 +211,7 @@ describe("QuickCaptureDialog", () => {
       tags: [],
       pinned: false
     });
+    expect(mockOnSaved).toHaveBeenCalledWith("note");
     expect(mockOnShowSuccess).toHaveBeenCalledWith("Note created.");
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -213,6 +226,7 @@ describe("QuickCaptureDialog", () => {
         initialType="task"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -232,6 +246,7 @@ describe("QuickCaptureDialog", () => {
       priority: "normal",
       recurrence: "none"
     });
+    expect(mockOnSaved).toHaveBeenCalledWith("task");
     expect(mockOnShowSuccess).toHaveBeenCalledWith("Task created.");
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -246,6 +261,7 @@ describe("QuickCaptureDialog", () => {
         initialType="reminder"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -263,6 +279,7 @@ describe("QuickCaptureDialog", () => {
       dueAt: expect.any(String),
       recurrence: "none"
     });
+    expect(mockOnSaved).toHaveBeenCalledWith("reminder");
     expect(mockOnShowSuccess).toHaveBeenCalledWith("Reminder created.");
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -277,6 +294,7 @@ describe("QuickCaptureDialog", () => {
         initialType="inbox"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -295,6 +313,7 @@ describe("QuickCaptureDialog", () => {
       tags: [],
       pinned: false
     });
+    expect(mockOnSaved).toHaveBeenCalledWith("inbox");
     expect(mockOnShowSuccess).toHaveBeenCalledWith("Captured to Inbox.");
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -306,6 +325,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -321,6 +341,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -335,6 +356,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -351,6 +373,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -367,6 +390,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -388,6 +412,7 @@ describe("QuickCaptureDialog", () => {
         initialType="note"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -412,6 +437,7 @@ describe("QuickCaptureDialog", () => {
         initialText="initial text"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -429,6 +455,7 @@ describe("QuickCaptureDialog", () => {
         onClose={mockOnClose}
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
@@ -444,10 +471,35 @@ describe("QuickCaptureDialog", () => {
         initialText="new initial"
         onShowSuccess={mockOnShowSuccess}
         onError={mockOnError}
+        onSaved={mockOnSaved}
       />
     );
 
     const newInput = screen.getByPlaceholderText("What do you want to capture?");
     expect(newInput).toHaveValue("new initial");
+  });
+
+  it("calls onSaved with correct type after successful capture", async () => {
+    render(
+      <QuickCaptureDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        initialType="task"
+        onShowSuccess={mockOnShowSuccess}
+        onError={mockOnError}
+        onSaved={mockOnSaved}
+      />
+    );
+
+    const input = screen.getByPlaceholderText("What do you want to capture?");
+    fireEvent.change(input, { target: { value: "test task" } });
+
+    const submitButton = screen.getByText("Capture");
+    fireEvent.click(submitButton);
+
+    // Wait for async operation
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(mockOnSaved).toHaveBeenCalledWith("task");
   });
 });

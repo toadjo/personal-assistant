@@ -4,12 +4,32 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] - 2026-05-25
+
+### Fixed
+
+- Quick Capture now refreshes data after successful save, ensuring captured items appear immediately in panels and counters
+- Corrected shortcut documentation to reflect actual binding: Quick Capture uses `Ctrl+Alt+N` / `Command+Alt+N` (not `Ctrl+Shift+N`)
+- Added missing tray menu items for Quick task and Quick reminder to complete Windows tray QA coverage
+
+### Changed
+
+- QuickCaptureDialog now accepts an `onSaved` callback to trigger data refresh after successful capture
+- AssistantShell implements `handleQuickCaptureSaved` to refresh appropriate data slices (notes, tasks, or reminders) based on capture type
+- Success messages now display after data refresh completes for better user feedback
+
+### Tests
+
+- Added test for `onSaved` callback with correct capture type
+- Updated tray-ipc-wiring tests for new Quick task and Quick reminder menu items
+- All verification commands passing: lint, typecheck, test (1002 tests), build, smoke check, preload smoke, npm audit
+
 ## [2.7.0] - 2026-05-25
 
 ### Added
 
 - Quick Capture: global capture surface for rapid note, task, reminder, and inbox entry
-- Global shortcut (Cmd/Ctrl+Shift+N) to open Quick Capture dialog from anywhere
+- Global shortcut (Cmd/Ctrl+Alt+N) to open Quick Capture dialog from anywhere
 - Tray menu integration with Quick Capture options (Quick note, Quick task, Quick reminder)
 - Command support: `capture`, `capture note <text>`, `capture task <text>`, `capture reminder <text>`
 - QuickCaptureDialog component with type selector and optional fields (due date, priority)

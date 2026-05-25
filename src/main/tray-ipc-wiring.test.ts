@@ -66,7 +66,7 @@ describe("tray IPC wiring", () => {
     quickNoteItem.click();
 
     expect(showMainWindowMock).toHaveBeenCalledWith(deskWindow);
-    expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.command, "new note");
+    expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.command, "capture note ");
   });
 
   it("sends show-about channel from tray menu", async () => {
@@ -105,5 +105,43 @@ describe("tray IPC wiring", () => {
 
     expect(showMainWindowMock).toHaveBeenCalledWith(deskWindow);
     expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.command, "quick capture");
+  });
+
+  it("sends quick task command channel from tray menu", async () => {
+    const { createTray } = await import("./tray");
+    const webContents = {};
+    const deskWindow = { webContents } as unknown as BrowserWindow;
+    createTray({
+      getDeskWindow: () => deskWindow,
+      openHouseholdWindow: vi.fn(),
+      onQuit: vi.fn()
+    });
+
+    const quickTaskItem = capturedTemplate.find((item) => item?.label === "Quick task");
+    expect(quickTaskItem).toBeTruthy();
+    if (!quickTaskItem?.click) throw new Error("Quick task tray item not found");
+    quickTaskItem.click();
+
+    expect(showMainWindowMock).toHaveBeenCalledWith(deskWindow);
+    expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.command, "capture task ");
+  });
+
+  it("sends quick reminder command channel from tray menu", async () => {
+    const { createTray } = await import("./tray");
+    const webContents = {};
+    const deskWindow = { webContents } as unknown as BrowserWindow;
+    createTray({
+      getDeskWindow: () => deskWindow,
+      openHouseholdWindow: vi.fn(),
+      onQuit: vi.fn()
+    });
+
+    const quickReminderItem = capturedTemplate.find((item) => item?.label === "Quick reminder");
+    expect(quickReminderItem).toBeTruthy();
+    if (!quickReminderItem?.click) throw new Error("Quick reminder tray item not found");
+    quickReminderItem.click();
+
+    expect(showMainWindowMock).toHaveBeenCalledWith(deskWindow);
+    expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.command, "capture reminder ");
   });
 });

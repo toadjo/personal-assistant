@@ -118,6 +118,22 @@ export function AssistantShell(): JSX.Element {
     setShowQuickCapture(true);
   };
 
+  const handleQuickCaptureSaved = async (type: "note" | "task" | "reminder" | "inbox") => {
+    // Refresh the appropriate data slice based on capture type
+    switch (type) {
+      case "note":
+      case "inbox":
+        await data.refreshNotes();
+        break;
+      case "task":
+        await data.refreshTasks();
+        break;
+      case "reminder":
+        await data.refreshReminders();
+        break;
+    }
+  };
+
   function openUnifiedWorkItem(source: "local-note" | "local-task" | "local-reminder" | "team-task", id: string): void {
     const unifiedItem = findUnifiedWorkItem(inbox.unifiedItems, source, id);
     if (unifiedItem) {
@@ -715,6 +731,7 @@ export function AssistantShell(): JSX.Element {
             initialText={quickCaptureText}
             onShowSuccess={ui.showSuccess}
             onError={ui.reportError}
+            onSaved={handleQuickCaptureSaved}
           />
 
           {showReleaseNotes ? (
