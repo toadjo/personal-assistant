@@ -33,6 +33,7 @@ export function useCommandExecution(args: {
   remindersCount: number;
   aiConfigured: boolean;
   onReviewDay?: () => void;
+  onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
 }) {
   const {
     devices,
@@ -49,7 +50,8 @@ export function useCommandExecution(args: {
     tasksCount,
     remindersCount,
     aiConfigured,
-    onReviewDay
+    onReviewDay,
+    onQuickCapture
   } = args;
 
   const [commandInput, setCommandInput] = useState("");
@@ -78,12 +80,46 @@ export function useCommandExecution(args: {
       return;
     }
     const off = api.onCommand((_event: unknown, command: string) => {
+      // Handle quick capture commands
+      if (command === "quick capture" || command === "capture") {
+        onQuickCapture?.("inbox", "");
+        setStatus("Quick capture opened.");
+        return;
+      }
+      
+      // Handle typed quick capture commands
+      if (command.startsWith("capture note ")) {
+        const text = command.replace("capture note ", "");
+        onQuickCapture?.("note", text);
+        setStatus("Quick capture opened.");
+        return;
+      }
+      if (command.startsWith("capture task ")) {
+        const text = command.replace("capture task ", "");
+        onQuickCapture?.("task", text);
+        setStatus("Quick capture opened.");
+        return;
+      }
+      if (command.startsWith("capture reminder ")) {
+        const text = command.replace("capture reminder ", "");
+        onQuickCapture?.("reminder", text);
+        setStatus("Quick capture opened.");
+        return;
+      }
+      if (command.startsWith("capture ")) {
+        const text = command.replace("capture ", "");
+        onQuickCapture?.("inbox", text);
+        setStatus("Quick capture opened.");
+        return;
+      }
+
+      // Default behavior for other commands
       setCommandInput(command === "new note" ? "new note " : command);
       commandInputRef.current?.focus();
       setStatus(`Quick command: "${command}" - tell me if you want anything else.`);
     });
     return off;
-  }, [setStatus]);
+  }, [setStatus, onQuickCapture]);
 
   useEffect(() => {
     function isEditableTarget(target: EventTarget | null): boolean {
@@ -130,7 +166,8 @@ export function useCommandExecution(args: {
           await api?.refreshHomeAssistantEntities?.();
         },
         runDeviceToggle,
-        onReviewDay
+        onReviewDay,
+        onQuickCapture
       });
       setCommandHistory((prev) => {
         const next = [normalized, ...prev.filter((item) => item.toLowerCase() !== normalized.toLowerCase())];

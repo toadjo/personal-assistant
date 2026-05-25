@@ -15,6 +15,7 @@ function baseDeps(overrides: Partial<Parameters<typeof executeAssistantCommand>[
     refreshHomeAssistantEntities: vi.fn().mockResolvedValue(undefined),
     runDeviceToggle: vi.fn().mockResolvedValue(undefined),
     onReviewDay: vi.fn(),
+    onQuickCapture: vi.fn(),
     ...overrides
   };
 }
@@ -238,6 +239,60 @@ describe("executeAssistantCommand", () => {
     expect(result.mutated).toBe(false);
   });
 
+  it("handles capture command", async () => {
+    const onQuickCapture = vi.fn();
+    const deps = baseDeps({ rawInput: "capture", onQuickCapture });
+    const result = await executeAssistantCommand(deps);
+    expect(onQuickCapture).toHaveBeenCalledWith("inbox", "");
+    expect(deps.setStatus).toHaveBeenCalledWith("Quick capture opened.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles quick capture command", async () => {
+    const onQuickCapture = vi.fn();
+    const deps = baseDeps({ rawInput: "quick capture", onQuickCapture });
+    const result = await executeAssistantCommand(deps);
+    expect(onQuickCapture).toHaveBeenCalledWith("inbox", "");
+    expect(deps.setStatus).toHaveBeenCalledWith("Quick capture opened.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles capture note command", async () => {
+    const onQuickCapture = vi.fn();
+    const deps = baseDeps({ rawInput: "capture note buy milk", onQuickCapture });
+    const result = await executeAssistantCommand(deps);
+    expect(onQuickCapture).toHaveBeenCalledWith("note", "buy milk");
+    expect(deps.setStatus).toHaveBeenCalledWith("Quick capture opened.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles capture task command", async () => {
+    const onQuickCapture = vi.fn();
+    const deps = baseDeps({ rawInput: "capture task pay rent", onQuickCapture });
+    const result = await executeAssistantCommand(deps);
+    expect(onQuickCapture).toHaveBeenCalledWith("task", "pay rent");
+    expect(deps.setStatus).toHaveBeenCalledWith("Quick capture opened.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles capture reminder command", async () => {
+    const onQuickCapture = vi.fn();
+    const deps = baseDeps({ rawInput: "capture reminder call Alex", onQuickCapture });
+    const result = await executeAssistantCommand(deps);
+    expect(onQuickCapture).toHaveBeenCalledWith("reminder", "call Alex");
+    expect(deps.setStatus).toHaveBeenCalledWith("Quick capture opened.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles capture with text command", async () => {
+    const onQuickCapture = vi.fn();
+    const deps = baseDeps({ rawInput: "capture buy groceries", onQuickCapture });
+    const result = await executeAssistantCommand(deps);
+    expect(onQuickCapture).toHaveBeenCalledWith("inbox", "buy groceries");
+    expect(deps.setStatus).toHaveBeenCalledWith("Quick capture opened.");
+    expect(result.mutated).toBe(false);
+  });
+
   it("help text lists local commands before Home Assistant", async () => {
     const deps = baseDeps({ rawInput: "help" });
     await executeAssistantCommand(deps);
@@ -246,6 +301,7 @@ describe("executeAssistantCommand", () => {
     expect(status).toContain("what's next");
     expect(status).toContain("catch me up");
     expect(status).toContain("review day");
+    expect(status).toContain("capture");
     expect(status).toContain("After you link Home Assistant");
   });
 

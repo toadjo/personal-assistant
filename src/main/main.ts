@@ -159,6 +159,18 @@ function startAppAfterDbOpen(): void {
     } catch (error) {
       mainLog.warn(`Global shortcut registration failed (${hideDeskShortcut})`, error);
     }
+
+    const quickCaptureShortcut = "CommandOrControl+Alt+N";
+    try {
+      globalShortcut.register(quickCaptureShortcut, () => {
+        const w = deskWin;
+        if (!w) return;
+        showMainWindow(w);
+        safeWebContentsSend(w.webContents, IpcRendererEvent.command, "quick capture");
+      });
+    } catch (error) {
+      mainLog.warn(`Global shortcut registration failed (${quickCaptureShortcut})`, error);
+    }
   }
 
   deskWin = createWindow("desk");

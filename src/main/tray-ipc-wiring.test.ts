@@ -87,4 +87,23 @@ describe("tray IPC wiring", () => {
     expect(showMainWindowMock).toHaveBeenCalledWith(deskWindow);
     expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.showAbout);
   });
+
+  it("sends quick capture command channel from tray menu", async () => {
+    const { createTray } = await import("./tray");
+    const webContents = {};
+    const deskWindow = { webContents } as unknown as BrowserWindow;
+    createTray({
+      getDeskWindow: () => deskWindow,
+      openHouseholdWindow: vi.fn(),
+      onQuit: vi.fn()
+    });
+
+    const quickCaptureItem = capturedTemplate.find((item) => item?.label === "Quick capture");
+    expect(quickCaptureItem).toBeTruthy();
+    if (!quickCaptureItem?.click) throw new Error("Quick capture tray item not found");
+    quickCaptureItem.click();
+
+    expect(showMainWindowMock).toHaveBeenCalledWith(deskWindow);
+    expect(safeWebContentsSendMock).toHaveBeenCalledWith(webContents, IpcRendererEvent.command, "quick capture");
+  });
 });

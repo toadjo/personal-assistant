@@ -29,6 +29,7 @@ import { ThemeSelect } from "./layout/ThemeSelect";
 import { IconButton } from "./ui/IconButton";
 import { InboxPanel } from "./panels/InboxPanel";
 import { WorkItemDetailDrawer } from "./WorkItemDetailDrawer";
+import { QuickCaptureDialog } from "./dialogs/QuickCaptureDialog";
 import {
   STORAGE_ONBOARDED,
   STORAGE_ONBOARDING_DEFERRED,
@@ -98,6 +99,9 @@ export function AssistantShell(): JSX.Element {
     totalCaptured: 0
   });
   const [showEndOfDayReview, setShowEndOfDayReview] = useState(false);
+  const [showQuickCapture, setShowQuickCapture] = useState(false);
+  const [quickCaptureType, setQuickCaptureType] = useState<"note" | "task" | "reminder" | "inbox">("inbox");
+  const [quickCaptureText, setQuickCaptureText] = useState("");
 
   const setDailyCommandCenterFilter = (filter: DailyCommandCenterFilter) => {
     setDailyCommandCenter((prev) => ({ ...prev, filter }));
@@ -106,6 +110,12 @@ export function AssistantShell(): JSX.Element {
   const handleReviewDay = () => {
     setShowEndOfDayReview(true);
     ui.setStatus("Opening your end-of-day review.");
+  };
+
+  const handleQuickCapture = (type: "note" | "task" | "reminder" | "inbox", text: string) => {
+    setQuickCaptureType(type);
+    setQuickCaptureText(text);
+    setShowQuickCapture(true);
   };
 
   function openUnifiedWorkItem(source: "local-note" | "local-task" | "local-reminder" | "team-task", id: string): void {
@@ -174,7 +184,8 @@ export function AssistantShell(): JSX.Element {
       teamProjects: team.projects,
       mergeTeamTask: () => {},
       refreshTeamTasks: team.loadTasks,
-      aiConfigured: aiConfig?.configured ?? false
+      aiConfigured: aiConfig?.configured ?? false,
+      onQuickCapture: handleQuickCapture
     });
 
   const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
@@ -696,6 +707,15 @@ export function AssistantShell(): JSX.Element {
               <AboutPanel version={appVersion} onClose={() => setShowAbout(false)} />
             </div>
           ) : null}
+
+          <QuickCaptureDialog
+            isOpen={showQuickCapture}
+            onClose={() => setShowQuickCapture(false)}
+            initialType={quickCaptureType}
+            initialText={quickCaptureText}
+            onShowSuccess={ui.showSuccess}
+            onError={ui.reportError}
+          />
 
           {showReleaseNotes ? (
             <div className="onboardingHero">

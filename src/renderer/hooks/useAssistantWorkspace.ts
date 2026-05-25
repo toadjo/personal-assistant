@@ -30,6 +30,7 @@ type TeamDataParams = {
   mergeTeamTask?: (task: TeamProjectTask) => void;
   refreshTeamTasks?: () => Promise<void>;
   aiConfigured?: boolean;
+  onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
 };
 
 export function useAssistantWorkspace(
@@ -85,7 +86,8 @@ export function useAssistantWorkspace(
     notesCount: data.notes.length,
     tasksCount: data.tasks.length,
     remindersCount: data.reminders.length,
-    aiConfigured: teamDataParams?.aiConfigured ?? false
+    aiConfigured: teamDataParams?.aiConfigured ?? false,
+    onQuickCapture: teamDataParams?.onQuickCapture
   });
 
   // Effect to dismiss onboarding after first command

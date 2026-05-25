@@ -88,6 +88,7 @@ export type AssistantWorkspace = {
     aiReply: string | null;
     confirmAiDraft: () => Promise<void>;
     cancelAiDraft: () => void;
+    onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
   };
   calendar: {
     calendarCursor: Date;

@@ -44,6 +44,7 @@ export type DeskCommandState = {
   aiReply: string | null;
   confirmAiDraft: () => Promise<void>;
   cancelAiDraft: () => void;
+  onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
 };
 
 export function useDeskCommandState(args: {
@@ -61,6 +62,7 @@ export function useDeskCommandState(args: {
   tasksCount: number;
   remindersCount: number;
   aiConfigured: boolean;
+  onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
 }): DeskCommandState {
   const {
     devices,
@@ -76,7 +78,8 @@ export function useDeskCommandState(args: {
     notesCount,
     tasksCount,
     remindersCount,
-    aiConfigured
+    aiConfigured,
+    onQuickCapture
   } = args;
 
   const command = useCommandExecution({
@@ -93,7 +96,8 @@ export function useDeskCommandState(args: {
     notesCount,
     tasksCount,
     remindersCount,
-    aiConfigured
+    aiConfigured,
+    onQuickCapture
   });
 
   return {
@@ -112,6 +116,7 @@ export function useDeskCommandState(args: {
     aiDraft: command.aiDraft,
     aiReply: command.aiReply,
     confirmAiDraft: command.confirmAiDraft,
-    cancelAiDraft: command.cancelAiDraft
+    cancelAiDraft: command.cancelAiDraft,
+    onQuickCapture: args.onQuickCapture
   };
 }

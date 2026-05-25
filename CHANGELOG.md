@@ -4,6 +4,33 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-05-25
+
+### Added
+
+- Quick Capture: global capture surface for rapid note, task, reminder, and inbox entry
+- Global shortcut (Cmd/Ctrl+Shift+N) to open Quick Capture dialog from anywhere
+- Tray menu integration with Quick Capture options (Quick note, Quick task, Quick reminder)
+- Command support: `capture`, `capture note <text>`, `capture task <text>`, `capture reminder <text>`
+- QuickCaptureDialog component with type selector and optional fields (due date, priority)
+- Typed text pre-fills from command for streamlined capture workflow
+- onQuickCapture callback through workspace composition for dialog state management
+
+### Changed
+
+- Command execution now routes capture commands to Quick Capture dialog
+- External quick commands from Electron IPC open Quick Capture with appropriate type
+- AssistantCommandDeps type includes onQuickCapture for capture routing
+- TeamDataParams type includes onQuickCapture for workspace wiring
+
+### Tests
+
+- Added 21 renderer tests for QuickCaptureDialog component
+- Updated tray-ipc-wiring tests for capture menu items
+- Updated executeAssistantCommand tests for capture command variants
+- Tests cover type selection, text pre-fill, submission, error handling, and state reset
+- All 998 tests passing
+
 ## [2.6.0] - 2026-05-25
 
 ### Added

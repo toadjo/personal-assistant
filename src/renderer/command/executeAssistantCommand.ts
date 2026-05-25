@@ -15,6 +15,7 @@ export type AssistantCommandDeps = {
   refreshHomeAssistantEntities: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
   onReviewDay?: () => void;
+  onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
 };
 
 export async function executeAssistantCommand(deps: AssistantCommandDeps): Promise<{ mutated: boolean }> {
@@ -32,7 +33,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, review day, open household. After you link Home Assistant: toggle ..., refresh devices."
+      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, review day, capture ..., open household. After you link Home Assistant: toggle ..., refresh devices."
     );
     return { mutated: false };
   }
@@ -90,6 +91,35 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   if (lower === "review day") {
     deps.onReviewDay?.();
     deps.setStatus("Opening your end-of-day review.");
+    return { mutated: false };
+  }
+  if (lower === "capture" || lower === "quick capture") {
+    deps.onQuickCapture?.("inbox", "");
+    deps.setStatus("Quick capture opened.");
+    return { mutated: false };
+  }
+  if (lower.startsWith("capture note ")) {
+    const text = normalized.slice(13).trim();
+    deps.onQuickCapture?.("note", text);
+    deps.setStatus("Quick capture opened.");
+    return { mutated: false };
+  }
+  if (lower.startsWith("capture task ")) {
+    const text = normalized.slice(13).trim();
+    deps.onQuickCapture?.("task", text);
+    deps.setStatus("Quick capture opened.");
+    return { mutated: false };
+  }
+  if (lower.startsWith("capture reminder ")) {
+    const text = normalized.slice(17).trim();
+    deps.onQuickCapture?.("reminder", text);
+    deps.setStatus("Quick capture opened.");
+    return { mutated: false };
+  }
+  if (lower.startsWith("capture ")) {
+    const text = normalized.slice(8).trim();
+    deps.onQuickCapture?.("inbox", text);
+    deps.setStatus("Quick capture opened.");
     return { mutated: false };
   }
   if (lower.startsWith("find ")) {

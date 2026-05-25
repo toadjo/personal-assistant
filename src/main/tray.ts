@@ -49,6 +49,15 @@ export function createTray(options: TrayOptions): Tray {
         safeWebContentsSend(w.webContents, IpcRendererEvent.command, "new note");
       }
     },
+    {
+      label: "Quick capture",
+      click: () => {
+        const w = options.getDeskWindow();
+        if (!w) return;
+        showMainWindow(w);
+        safeWebContentsSend(w.webContents, IpcRendererEvent.command, "quick capture");
+      }
+    },
     { type: "separator" },
     {
       label: "About",
