@@ -569,7 +569,17 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({
       rawInput: "open Meeting notes",
       onOpenNote,
-      notes: [{ id: "n1", title: "Meeting notes", content: "", tags: [], pinned: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }],
+      notes: [
+        {
+          id: "n1",
+          title: "Meeting notes",
+          content: "",
+          tags: [],
+          pinned: false,
+          createdAt: "2026-01-01T00:00:00Z",
+          updatedAt: "2026-01-01T00:00:00Z"
+        }
+      ],
       tasks: [],
       reminders: [],
       rules: [],
@@ -600,7 +610,17 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({
       rawInput: "open notes",
       onOpenNote: vi.fn(),
-      notes: [{ id: "n1", title: "Meeting notes", content: "", tags: [], pinned: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }],
+      notes: [
+        {
+          id: "n1",
+          title: "Meeting notes",
+          content: "",
+          tags: [],
+          pinned: false,
+          createdAt: "2026-01-01T00:00:00Z",
+          updatedAt: "2026-01-01T00:00:00Z"
+        }
+      ],
       tasks: [],
       reminders: [],
       rules: [],

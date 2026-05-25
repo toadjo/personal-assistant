@@ -34,13 +34,7 @@ function makeEndOfDayReview(overrides: Partial<EndOfDayReview> = {}): EndOfDayRe
 describe("EndOfDayReviewPanel", () => {
   it("renders empty state when no activity", () => {
     const review = makeEndOfDayReview();
-    render(
-      <EndOfDayReviewPanel
-        review={review}
-        onShowSuccess={vi.fn()}
-        onError={vi.fn()}
-      />
-    );
+    render(<EndOfDayReviewPanel review={review} onShowSuccess={vi.fn()} onError={vi.fn()} />);
 
     expect(screen.getByText("No activity today")).toBeInTheDocument();
     expect(screen.getByText(/You haven't completed any tasks/)).toBeInTheDocument();
@@ -64,13 +58,7 @@ describe("EndOfDayReviewPanel", () => {
       summary: "Day review: 2 completed."
     });
 
-    render(
-      <EndOfDayReviewPanel
-        review={review}
-        onShowSuccess={vi.fn()}
-        onError={vi.fn()}
-      />
-    );
+    render(<EndOfDayReviewPanel review={review} onShowSuccess={vi.fn()} onError={vi.fn()} />);
 
     expect(screen.getByText("Completed Tasks")).toBeInTheDocument();
     expect(screen.getByText("Completed Task 1")).toBeInTheDocument();
@@ -92,13 +80,7 @@ describe("EndOfDayReviewPanel", () => {
       summary: "Day review: 1 completed."
     });
 
-    render(
-      <EndOfDayReviewPanel
-        review={review}
-        onShowSuccess={vi.fn()}
-        onError={vi.fn()}
-      />
-    );
+    render(<EndOfDayReviewPanel review={review} onShowSuccess={vi.fn()} onError={vi.fn()} />);
 
     expect(screen.getByText("Completed Reminders")).toBeInTheDocument();
     expect(screen.getByText("Completed Reminder 1")).toBeInTheDocument();
@@ -175,13 +157,7 @@ describe("EndOfDayReviewPanel", () => {
       summary: "Day review: 1 captured."
     });
 
-    render(
-      <EndOfDayReviewPanel
-        review={review}
-        onShowSuccess={vi.fn()}
-        onError={vi.fn()}
-      />
-    );
+    render(<EndOfDayReviewPanel review={review} onShowSuccess={vi.fn()} onError={vi.fn()} />);
 
     expect(screen.getByText("Notes Captured")).toBeInTheDocument();
     expect(screen.getByText("Captured Note 1")).toBeInTheDocument();
@@ -264,7 +240,7 @@ describe("EndOfDayReviewPanel", () => {
     carryOverButton.click();
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(onUpdateTaskDueAt).toHaveBeenCalledWith("task-1", expect.any(String));
     expect(onShowSuccess).toHaveBeenCalledWith("Task rescheduled to tomorrow.");
@@ -300,7 +276,7 @@ describe("EndOfDayReviewPanel", () => {
     carryOverButton.click();
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(onSnoozeReminder).toHaveBeenCalledWith("reminder-1", 24 * 60);
     expect(onShowSuccess).toHaveBeenCalledWith("Reminder snoozed to tomorrow.");
@@ -335,7 +311,7 @@ describe("EndOfDayReviewPanel", () => {
     carryOverButton.click();
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(onError).toHaveBeenCalledWith("Failed to reschedule task.");
   });
@@ -370,7 +346,7 @@ describe("EndOfDayReviewPanel", () => {
     carryOverButton.click();
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(onError).toHaveBeenCalledWith("Failed to snooze reminder.");
   });
@@ -390,13 +366,7 @@ describe("EndOfDayReviewPanel", () => {
       summary: "Day review: 1 unfinished."
     });
 
-    render(
-      <EndOfDayReviewPanel
-        review={review}
-        onShowSuccess={vi.fn()}
-        onError={vi.fn()}
-      />
-    );
+    render(<EndOfDayReviewPanel review={review} onShowSuccess={vi.fn()} onError={vi.fn()} />);
 
     expect(screen.getByText("No tasks completed today")).toBeInTheDocument();
   });

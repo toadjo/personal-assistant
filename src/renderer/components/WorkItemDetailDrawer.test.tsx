@@ -7,10 +7,10 @@ import type { UnifiedWorkItem, UnifiedWorkPriority } from "../lib/derived/unifie
 function isoToLocalDateTime(isoString: string): string {
   const date = new Date(isoString);
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
@@ -475,9 +475,7 @@ describe("WorkItemDetailDrawer", () => {
       });
       const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
 
-      render(
-        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={onUpdateTeamTask} />
-      );
+      render(<WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={onUpdateTeamTask} />);
 
       fireEvent.click(screen.getByText("Edit"));
 
@@ -486,9 +484,7 @@ describe("WorkItemDetailDrawer", () => {
 
       fireEvent.click(screen.getByText("Save"));
 
-      await vi.waitFor(() =>
-        expect(screen.getByRole("alert")).toBeDefined()
-      );
+      await vi.waitFor(() => expect(screen.getByRole("alert")).toBeDefined());
       expect(screen.getByText("Recurring tasks require a due date.")).toBeDefined();
       expect(onUpdateTeamTask).not.toHaveBeenCalled();
     });
@@ -503,9 +499,7 @@ describe("WorkItemDetailDrawer", () => {
       });
       const onUpdateTeamTask = vi.fn().mockResolvedValue(undefined);
 
-      render(
-        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={onUpdateTeamTask} />
-      );
+      render(<WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTeamTask={onUpdateTeamTask} />);
 
       fireEvent.click(screen.getByText("Edit"));
 
@@ -514,9 +508,7 @@ describe("WorkItemDetailDrawer", () => {
 
       fireEvent.click(screen.getByText("Save"));
 
-      await vi.waitFor(() =>
-        expect(screen.getByRole("alert")).toBeDefined()
-      );
+      await vi.waitFor(() => expect(screen.getByRole("alert")).toBeDefined());
       expect(screen.getByText("Title is required.")).toBeDefined();
       expect(onUpdateTeamTask).not.toHaveBeenCalled();
     });
@@ -590,12 +582,7 @@ describe("WorkItemDetailDrawer", () => {
       const onShowSuccess = vi.fn();
 
       render(
-        <WorkItemDetailDrawer
-          item={item}
-          onClose={vi.fn()}
-          onUpdateTask={onUpdateTask}
-          onShowSuccess={onShowSuccess}
-        />
+        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTask={onUpdateTask} onShowSuccess={onShowSuccess} />
       );
 
       fireEvent.click(screen.getByText("Edit"));
@@ -629,9 +616,7 @@ describe("WorkItemDetailDrawer", () => {
       });
       const onUpdateTask = vi.fn().mockResolvedValue(undefined);
 
-      render(
-        <WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTask={onUpdateTask} />
-      );
+      render(<WorkItemDetailDrawer item={item} onClose={vi.fn()} onUpdateTask={onUpdateTask} />);
 
       fireEvent.click(screen.getByText("Edit"));
 
@@ -639,9 +624,7 @@ describe("WorkItemDetailDrawer", () => {
 
       fireEvent.click(screen.getByText("Save"));
 
-      await vi.waitFor(() =>
-        expect(screen.getByRole("alert")).toBeDefined()
-      );
+      await vi.waitFor(() => expect(screen.getByRole("alert")).toBeDefined());
       expect(screen.getByText("Recurring tasks require a due date.")).toBeDefined();
       expect(onUpdateTask).not.toHaveBeenCalled();
     });
@@ -658,12 +641,7 @@ describe("WorkItemDetailDrawer", () => {
       const onShowSuccess = vi.fn();
 
       render(
-        <WorkItemDetailDrawer
-          item={item}
-          onClose={onClose}
-          onUpdateTask={onUpdateTask}
-          onShowSuccess={onShowSuccess}
-        />
+        <WorkItemDetailDrawer item={item} onClose={onClose} onUpdateTask={onUpdateTask} onShowSuccess={onShowSuccess} />
       );
 
       fireEvent.click(screen.getByText("Edit"));

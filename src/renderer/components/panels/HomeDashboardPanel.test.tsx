@@ -139,9 +139,7 @@ describe("HomeDashboardPanel", () => {
 
     await user.click(screen.getByRole("button", { name: "Review proposal Overdue / Task" }));
 
-    expect(handlers.onOpenWorkItem).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: "task", sourceId: "task-1" })
-    );
+    expect(handlers.onOpenWorkItem).toHaveBeenCalledWith(expect.objectContaining({ kind: "task", sourceId: "task-1" }));
   });
 
   it("shows calm clear-desk message when no urgent actions are waiting", () => {
@@ -159,7 +157,9 @@ describe("HomeDashboardPanel", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Clear desk" })).toBeInTheDocument();
-    expect(screen.getByText("Your desk is clear. Capture something in Inbox or review your Today list.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your desk is clear. Capture something in Inbox or review your Today list.")
+    ).toBeInTheDocument();
     // Verify no separate action queue block exists
     expect(screen.queryByText("Action queue")).not.toBeInTheDocument();
   });

@@ -203,7 +203,7 @@ describe("QuickCaptureDialog", () => {
     fireEvent.click(submitButton);
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(api.createNote).toHaveBeenCalledWith({
       title: "test note",
@@ -237,7 +237,7 @@ describe("QuickCaptureDialog", () => {
     fireEvent.click(submitButton);
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(api.createTask).toHaveBeenCalledWith({
       title: "test task",
@@ -272,7 +272,7 @@ describe("QuickCaptureDialog", () => {
     fireEvent.click(submitButton);
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(api.createReminder).toHaveBeenCalledWith({
       text: "test reminder",
@@ -305,7 +305,7 @@ describe("QuickCaptureDialog", () => {
     fireEvent.click(submitButton);
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(api.createNote).toHaveBeenCalledWith({
       title: "test inbox",
@@ -423,7 +423,7 @@ describe("QuickCaptureDialog", () => {
     fireEvent.click(submitButton);
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockOnError).toHaveBeenCalled();
   });
@@ -498,7 +498,7 @@ describe("QuickCaptureDialog", () => {
     fireEvent.click(submitButton);
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockOnSaved).toHaveBeenCalledWith("task");
   });

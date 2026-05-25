@@ -67,6 +67,20 @@ export type BackupImportOptions = {
   encrypted?: boolean;
 };
 
+export type BackupPreviewResult = {
+  valid: boolean;
+  error?: string;
+  notes: number;
+  reminders: number;
+  tasks: number;
+  automation_rules: number;
+  app_settings: number;
+  unsupported_sections: string[];
+  has_encrypted_content: boolean;
+  version: string;
+  exportedAt: string;
+};
+
 export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const db = getDb();
   const notes = db.prepare("SELECT * FROM notes").all() as BackupPayload["notes"];
@@ -96,7 +110,7 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     try {
       const json = JSON.stringify(payload);
       const encrypted = encryptSecret(json);
-      
+
       // When encrypted, return ONLY metadata + _encrypted, no plaintext arrays
       return {
         version: payload.version,
@@ -109,7 +123,7 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
         if (isCorporateMode()) {
           throw new Error(
             "Corporate mode requires encrypted backup, but secure storage is unavailable. " +
-            "Ensure your system supports safeStorage or enable encryption in your security settings."
+              "Ensure your system supports safeStorage or enable encryption in your security settings."
           );
         }
         // In personal mode, fall back to unencrypted if secure storage is unavailable
@@ -120,6 +134,181 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   }
 
   return payload;
+}
+
+export function previewBackup(payload: BackupPayload): BackupPreviewResult {
+  // Basic structure validation
+  if (!payload || typeof payload !== "object") {
+    return {
+      valid: false,
+      error: "Invalid backup: payload is not an object",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: "unknown",
+      exportedAt: "unknown"
+    };
+  }
+
+  // Check if encrypted
+  const isEncrypted = payload._encrypted !== undefined && !payload.notes;
+  if (isEncrypted) {
+    // For encrypted backups, we can only show metadata
+    return {
+      valid: true,
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: true,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  // Validate required fields
+  if (!payload.version || !payload.exportedAt) {
+    return {
+      valid: false,
+      error: "Invalid backup: missing version or exportedAt field",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  // Validate data structure
+  const unsupported_sections: string[] = [];
+
+  if (payload.notes && !Array.isArray(payload.notes)) {
+    return {
+      valid: false,
+      error: "Invalid backup: notes field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  if (payload.reminders && !Array.isArray(payload.reminders)) {
+    return {
+      valid: false,
+      error: "Invalid backup: reminders field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  if (payload.tasks && !Array.isArray(payload.tasks)) {
+    return {
+      valid: false,
+      error: "Invalid backup: tasks field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  if (payload.automation_rules && !Array.isArray(payload.automation_rules)) {
+    return {
+      valid: false,
+      error: "Invalid backup: automation_rules field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  if (payload.app_settings && !Array.isArray(payload.app_settings)) {
+    return {
+      valid: false,
+      error: "Invalid backup: app_settings field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  // Check for unsupported fields
+  const knownFields = [
+    "version",
+    "exportedAt",
+    "notes",
+    "reminders",
+    "tasks",
+    "automation_rules",
+    "app_settings",
+    "_encrypted"
+  ];
+  const payloadKeys = Object.keys(payload);
+  for (const key of payloadKeys) {
+    if (!knownFields.includes(key)) {
+      unsupported_sections.push(key);
+    }
+  }
+
+  // Count items that would be imported
+  const notes = payload.notes?.length ?? 0;
+  const reminders = payload.reminders?.length ?? 0;
+  const tasks = payload.tasks?.length ?? 0;
+  const automation_rules = payload.automation_rules?.length ?? 0;
+  const app_settings = payload.app_settings?.length ?? 0;
+
+  return {
+    valid: true,
+    notes,
+    reminders,
+    tasks,
+    automation_rules,
+    app_settings,
+    unsupported_sections,
+    has_encrypted_content: false,
+    version: payload.version,
+    exportedAt: payload.exportedAt
+  };
 }
 
 export function importBackup(

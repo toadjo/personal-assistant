@@ -725,11 +725,7 @@ export function ProjectsPanel({ team: externalTeam }: Props = {}): JSX.Element {
             />
           )}
           {showCreateTask && (
-            <TaskCreateForm
-              team={team}
-              projects={team.projects}
-              onCancel={() => setShowCreateTask(false)}
-            />
+            <TaskCreateForm team={team} projects={team.projects} onCancel={() => setShowCreateTask(false)} />
           )}
           {filteredTasks.length === 0 ? (
             <EmptyState

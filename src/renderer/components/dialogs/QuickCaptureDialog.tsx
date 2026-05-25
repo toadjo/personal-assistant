@@ -67,7 +67,7 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
   const [taskPriority, setTaskPriority] = useState<"low" | "normal" | "high">("normal");
   const [reminderDueAt, setReminderDueAt] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens/closes
@@ -117,7 +117,7 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
           break;
         }
         case "reminder": {
-          const dueDate = reminderDueAt 
+          const dueDate = reminderDueAt
             ? new Date(reminderDueAt).toISOString()
             : new Date(Date.now() + 60 * 1000).toISOString(); // Default to 1 minute from now
           await api.createReminder({
@@ -196,12 +196,7 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
       <div className="quick-capture-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="quick-capture-header">
           <h2>Quick Capture</h2>
-          <button
-            type="button"
-            className="quick-capture-close"
-            onClick={onClose}
-            aria-label="Close"
-          >
+          <button type="button" className="quick-capture-close" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
         </div>
@@ -223,7 +218,13 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
           })}
         </div>
 
-        <form className="quick-capture-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <form
+          className="quick-capture-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           <input
             ref={inputRef}
             type="text"
@@ -279,19 +280,10 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
           )}
 
           <div className="quick-capture-actions">
-            <button
-              type="button"
-              className="quick-capture-cancel"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <button type="button" className="quick-capture-cancel" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </button>
-            <button
-              type="submit"
-              className="quick-capture-submit"
-              disabled={isSubmitting || !text.trim()}
-            >
+            <button type="submit" className="quick-capture-submit" disabled={isSubmitting || !text.trim()}>
               {isSubmitting ? "Capturing..." : "Capture"}
             </button>
           </div>

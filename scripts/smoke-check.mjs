@@ -27,13 +27,17 @@ function main() {
 
   const winIconPath = pkg?.build?.win?.icon;
   if (winIconPath !== "assets/app-icon.ico") {
-    throw new Error(`Smoke check failed: build.win.icon must use assets/app-icon.ico, got ${JSON.stringify(winIconPath)}`);
+    throw new Error(
+      `Smoke check failed: build.win.icon must use assets/app-icon.ico, got ${JSON.stringify(winIconPath)}`
+    );
   }
   assertExists(path.normalize("assets/app-icon.ico"), "Windows icon source");
 
   const nsisInclude = pkg?.build?.nsis?.include;
   if (nsisInclude !== "build/installer.nsh") {
-    throw new Error(`Smoke check failed: build.nsis.include must use build/installer.nsh, got ${JSON.stringify(nsisInclude)}`);
+    throw new Error(
+      `Smoke check failed: build.nsis.include must use build/installer.nsh, got ${JSON.stringify(nsisInclude)}`
+    );
   }
   assertExists(path.normalize("build/installer.nsh"), "NSIS shortcut icon override");
 
@@ -57,7 +61,9 @@ function main() {
   }
   assertExists(path.normalize("assets/app-icon.png"), "Linux icon source image");
 
-  console.log("Smoke check passed: build outputs, package entry, installer shortcut icon config, and Linux AppImage config verified.");
+  console.log(
+    "Smoke check passed: build outputs, package entry, installer shortcut icon config, and Linux AppImage config verified."
+  );
 }
 
 main();

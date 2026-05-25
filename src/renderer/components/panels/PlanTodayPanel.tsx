@@ -93,15 +93,15 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
   // Get completable items for selection logic
   const completableItems = queue.items.filter(isCompletable);
-  const selectedCompletableIds = Array.from(selectedIds).filter(id => 
-    completableItems.some(item => item.id === id)
+  const selectedCompletableIds = Array.from(selectedIds).filter((id) =>
+    completableItems.some((item) => item.id === id)
   );
 
-  const allCompletableSelected = completableItems.length > 0 && 
-    completableItems.every(item => selectedIds.has(item.id));
+  const allCompletableSelected =
+    completableItems.length > 0 && completableItems.every((item) => selectedIds.has(item.id));
 
   const toggleSelection = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -113,7 +113,7 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
     if (allCompletableSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(completableItems.map(item => item.id)));
+      setSelectedIds(new Set(completableItems.map((item) => item.id)));
     }
   };
 
@@ -138,10 +138,10 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
   const formatDateForInput = (date: Date): string => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
@@ -205,8 +205,8 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
   const handleBatchSnooze = async (preset: string) => {
     const selectedReminderIds = selectedCompletableIds
-      .filter(id => queue.items.find(item => item.id === id && item.source === "local-reminder"))
-      .map(id => queue.items.find(item => item.id === id)?.sourceId)
+      .filter((id) => queue.items.find((item) => item.id === id && item.source === "local-reminder"))
+      .map((id) => queue.items.find((item) => item.id === id)?.sourceId)
       .filter((id): id is string => id !== undefined);
 
     if (selectedReminderIds.length === 0) {
@@ -234,8 +234,8 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
     setIsBatchProcessing(true);
     try {
-      await Promise.all(selectedReminderIds.map(id => onSnoozeReminder?.(id, minutes)));
-      onShowSuccess?.(`Snoozed ${selectedReminderIds.length} reminder${selectedReminderIds.length > 1 ? 's' : ''}.`);
+      await Promise.all(selectedReminderIds.map((id) => onSnoozeReminder?.(id, minutes)));
+      onShowSuccess?.(`Snoozed ${selectedReminderIds.length} reminder${selectedReminderIds.length > 1 ? "s" : ""}.`);
       setSelectedIds(new Set());
     } catch {
       onError?.("Failed to snooze reminders.");
@@ -247,18 +247,18 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
   const handleBulkComplete = async () => {
     if (selectedCompletableIds.length === 0) return;
-    
+
     setIsBatchProcessing(true);
     try {
       // Separate tasks and reminders, extracting sourceIds
       const taskSourceIds = selectedCompletableIds
-        .filter(id => queue.items.find(item => item.id === id && item.source === "local-task"))
-        .map(id => queue.items.find(item => item.id === id)?.sourceId)
+        .filter((id) => queue.items.find((item) => item.id === id && item.source === "local-task"))
+        .map((id) => queue.items.find((item) => item.id === id)?.sourceId)
         .filter((id): id is string => id !== undefined);
-      
+
       const reminderSourceIds = selectedCompletableIds
-        .filter(id => queue.items.find(item => item.id === id && item.source === "local-reminder"))
-        .map(id => queue.items.find(item => item.id === id)?.sourceId)
+        .filter((id) => queue.items.find((item) => item.id === id && item.source === "local-reminder"))
+        .map((id) => queue.items.find((item) => item.id === id)?.sourceId)
         .filter((id): id is string => id !== undefined);
 
       // Complete tasks in bulk
@@ -268,7 +268,7 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
       // Complete reminders individually
       if (reminderSourceIds.length > 0 && onCompleteReminder) {
-        await Promise.all(reminderSourceIds.map(id => onCompleteReminder(id)));
+        await Promise.all(reminderSourceIds.map((id) => onCompleteReminder(id)));
       }
 
       onShowSuccess?.(`Completed ${selectedCompletableIds.length} items.`);
@@ -294,16 +294,16 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
     return (
       <section className="panel" aria-labelledby="plan-today-heading">
-        <PanelHeader 
-          icon={Calendar} 
+        <PanelHeader
+          icon={Calendar}
           title="Plan Today"
           actions={
             completableItems.length > 0 && (
               <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                 <label className="appearanceToggle" style={{ fontSize: "0.875rem" }}>
-                  <input 
-                    type="checkbox" 
-                    checked={allCompletableSelected} 
+                  <input
+                    type="checkbox"
+                    checked={allCompletableSelected}
                     onChange={toggleAllCompletable}
                     aria-label="Select all"
                   />
@@ -311,18 +311,20 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
                 </label>
                 {selectedCompletableIds.length > 0 && (
                   <>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="commandAction"
                       onClick={handleBulkComplete}
                       disabled={isBatchProcessing}
                     >
                       Complete {selectedCompletableIds.length} Selected
                     </button>
-                    {selectedCompletableIds.some(id => queue.items.find(item => item.id === id && item.source === "local-reminder")) && (
+                    {selectedCompletableIds.some((id) =>
+                      queue.items.find((item) => item.id === id && item.source === "local-reminder")
+                    ) && (
                       <div style={{ position: "relative" }}>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="commandAction"
                           onClick={() => setSnoozeDropdownId(snoozeDropdownId === null ? "batch" : null)}
                           disabled={isBatchProcessing}
@@ -331,11 +333,40 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
                           <ChevronDown size={14} style={{ marginLeft: "0.25rem" }} />
                         </button>
                         {snoozeDropdownId === "batch" && (
-                          <div className="dropdownMenu" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1000, background: "white", border: "1px solid #ccc", borderRadius: "4px", padding: "0.5rem", minWidth: "150px" }}>
-                            <button type="button" className="dropdownItem" onClick={() => handleBatchSnooze("10m")}>10 minutes</button>
-                            <button type="button" className="dropdownItem" onClick={() => handleBatchSnooze("1h")}>1 hour</button>
-                            <button type="button" className="dropdownItem" onClick={() => handleBatchSnooze("tomorrow")}>Tomorrow</button>
-                            <button type="button" className="dropdownItem" onClick={() => handleBatchSnooze("next-week")}>Next week</button>
+                          <div
+                            className="dropdownMenu"
+                            style={{
+                              position: "absolute",
+                              top: "100%",
+                              right: 0,
+                              zIndex: 1000,
+                              background: "white",
+                              border: "1px solid #ccc",
+                              borderRadius: "4px",
+                              padding: "0.5rem",
+                              minWidth: "150px"
+                            }}
+                          >
+                            <button type="button" className="dropdownItem" onClick={() => handleBatchSnooze("10m")}>
+                              10 minutes
+                            </button>
+                            <button type="button" className="dropdownItem" onClick={() => handleBatchSnooze("1h")}>
+                              1 hour
+                            </button>
+                            <button
+                              type="button"
+                              className="dropdownItem"
+                              onClick={() => handleBatchSnooze("tomorrow")}
+                            >
+                              Tomorrow
+                            </button>
+                            <button
+                              type="button"
+                              className="dropdownItem"
+                              onClick={() => handleBatchSnooze("next-week")}
+                            >
+                              Next week
+                            </button>
                           </div>
                         )}
                       </div>
@@ -421,11 +452,48 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
                           size={16}
                         />
                         {rescheduleDropdownId === item.id && (
-                          <div className="dropdownMenu" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1000, background: "white", border: "1px solid #ccc", borderRadius: "4px", padding: "0.5rem", minWidth: "150px" }}>
-                            <button type="button" className="dropdownItem" onClick={() => handleQuickReschedule(item, "today")}>Today</button>
-                            <button type="button" className="dropdownItem" onClick={() => handleQuickReschedule(item, "tomorrow")}>Tomorrow</button>
-                            <button type="button" className="dropdownItem" onClick={() => handleQuickReschedule(item, "next-week")}>Next week</button>
-                            <button type="button" className="dropdownItem" onClick={() => handleQuickReschedule(item, "custom")}>Custom...</button>
+                          <div
+                            className="dropdownMenu"
+                            style={{
+                              position: "absolute",
+                              top: "100%",
+                              right: 0,
+                              zIndex: 1000,
+                              background: "white",
+                              border: "1px solid #ccc",
+                              borderRadius: "4px",
+                              padding: "0.5rem",
+                              minWidth: "150px"
+                            }}
+                          >
+                            <button
+                              type="button"
+                              className="dropdownItem"
+                              onClick={() => handleQuickReschedule(item, "today")}
+                            >
+                              Today
+                            </button>
+                            <button
+                              type="button"
+                              className="dropdownItem"
+                              onClick={() => handleQuickReschedule(item, "tomorrow")}
+                            >
+                              Tomorrow
+                            </button>
+                            <button
+                              type="button"
+                              className="dropdownItem"
+                              onClick={() => handleQuickReschedule(item, "next-week")}
+                            >
+                              Next week
+                            </button>
+                            <button
+                              type="button"
+                              className="dropdownItem"
+                              onClick={() => handleQuickReschedule(item, "custom")}
+                            >
+                              Custom...
+                            </button>
                           </div>
                         )}
                       </div>

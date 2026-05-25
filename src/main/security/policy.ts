@@ -207,7 +207,7 @@ export function isSecureSecretStorageRequired(): boolean {
 
 /**
  * Checks if a hostname is allowed based on the policy's allowedHosts list.
- * 
+ *
  * In personal mode: empty allowedHosts means unrestricted (current behavior).
  * In corporate mode: empty allowedHosts means no public outbound hosts allowed.
  * If allowedHosts is non-empty in either mode, only hosts in the list are allowed.
@@ -215,14 +215,14 @@ export function isSecureSecretStorageRequired(): boolean {
 export function isHostAllowed(hostname: string): boolean {
   const policy = getSecurityPolicy();
   const allowedHosts = policy.allowedHosts;
-  
+
   // If the list is empty, behavior depends on mode
   if (allowedHosts.length === 0) {
     // Personal mode: unrestricted
     // Corporate mode: block all public hosts
     return policy.mode === "personal";
   }
-  
+
   // If the list is non-empty, check if hostname is in the list
   return allowedHosts.includes(hostname);
 }

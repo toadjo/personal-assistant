@@ -82,14 +82,14 @@ export const EndOfDayReviewPanel = memo(function EndOfDayReviewPanel({
 
   const handleCarryOverTask = async (item: EndOfDayReviewItem) => {
     if (!onUpdateTaskDueAt) return;
-    
+
     setProcessingId(item.id);
     try {
       // Carry over to tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(9, 0, 0, 0); // 9 AM tomorrow
-      
+
       await onUpdateTaskDueAt(item.sourceId, tomorrow.toISOString());
       onShowSuccess?.("Task rescheduled to tomorrow.");
     } catch {
@@ -101,7 +101,7 @@ export const EndOfDayReviewPanel = memo(function EndOfDayReviewPanel({
 
   const handleCarryOverReminder = async (item: EndOfDayReviewItem) => {
     if (!onSnoozeReminder) return;
-    
+
     setProcessingId(item.id);
     try {
       // Carry over to tomorrow (24 hours)
@@ -114,11 +114,7 @@ export const EndOfDayReviewPanel = memo(function EndOfDayReviewPanel({
     }
   };
 
-  const renderSection = (
-    title: string,
-    items: EndOfDayReviewItem[],
-    emptyMessage: string
-  ) => {
+  const renderSection = (title: string, items: EndOfDayReviewItem[], emptyMessage: string) => {
     if (items.length === 0) {
       return (
         <div className="review-section">
@@ -169,13 +165,7 @@ export const EndOfDayReviewPanel = memo(function EndOfDayReviewPanel({
                     disabled={processingId === item.id}
                   />
                 )}
-                {onOpenWorkItem && (
-                  <IconButton
-                    icon={Calendar}
-                    label="Details"
-                    onClick={() => onOpenWorkItem(item)}
-                  />
-                )}
+                {onOpenWorkItem && <IconButton icon={Calendar} label="Details" onClick={() => onOpenWorkItem(item)} />}
               </div>
             </div>
           ))}
@@ -194,10 +184,7 @@ export const EndOfDayReviewPanel = memo(function EndOfDayReviewPanel({
     );
   };
 
-  const hasActivity = 
-    review.totalCompleted > 0 || 
-    review.totalUnfinished > 0 || 
-    review.totalCaptured > 0;
+  const hasActivity = review.totalCompleted > 0 || review.totalUnfinished > 0 || review.totalCaptured > 0;
 
   if (!hasActivity) {
     return renderEmptyState();

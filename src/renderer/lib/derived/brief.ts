@@ -171,7 +171,7 @@ export function deriveFocusBrief(params: {
     // Skip if this reminder is already included as a reminder item (deduplication)
     const reminderKey = getDedupeKey("reminder", reminder.id);
     if (seenSourceIds.has(reminderKey)) continue;
-    
+
     const key = getDedupeKey("agenda", reminder.id);
     if (seenSourceIds.has(key)) continue;
     seenSourceIds.add(key);

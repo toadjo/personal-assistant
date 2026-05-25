@@ -105,7 +105,9 @@ function UnifiedItemRow({
   })();
 
   const showComplete = (item.source === "local-task" || item.source === "local-reminder") && !item.isCompleted;
-  const showDelete = section === "allItems" && (item.source === "local-task" || item.source === "local-reminder" || item.source === "local-note");
+  const showDelete =
+    section === "allItems" &&
+    (item.source === "local-task" || item.source === "local-reminder" || item.source === "local-note");
   const showConvert = item.source === "local-note";
   const showSendToTeam = section === "needsSorting" && item.source === "local-task" && teamProjects.length > 0;
 
@@ -173,7 +175,11 @@ function UnifiedItemRow({
         {showConvert && (
           <>
             <IconButton icon={ListTodo} label="Convert to task" onClick={() => void convertNoteToTask(item.sourceId)} />
-            <IconButton icon={Bell} label="Convert to reminder" onClick={() => void convertNoteToReminder(item.sourceId)} />
+            <IconButton
+              icon={Bell}
+              label="Convert to reminder"
+              onClick={() => void convertNoteToReminder(item.sourceId)}
+            />
           </>
         )}
         {showSendToTeam && (
@@ -192,7 +198,9 @@ function UnifiedItemRow({
             <IconButton icon={Users} label="Send to team" onClick={handleSendToTeam} />
           </>
         )}
-        {showDelete && <IconButton icon={Trash2} label={`Delete ${sourceLabel.toLowerCase()}`} onClick={handleDelete} />}
+        {showDelete && (
+          <IconButton icon={Trash2} label={`Delete ${sourceLabel.toLowerCase()}`} onClick={handleDelete} />
+        )}
       </div>
     </li>
   );
@@ -254,7 +262,7 @@ export const InboxPanel = memo(function InboxPanel({
     }));
   }
 
-  const content = logMetric('inbox-render', () => (
+  const content = logMetric("inbox-render", () => (
     <section className="panel" aria-labelledby="inbox-panel-heading">
       <PanelHeader icon={Inbox} title="Inbox" />
 
@@ -271,11 +279,7 @@ export const InboxPanel = memo(function InboxPanel({
                 Open Today
                 <ArrowRight size={14} />
               </button>
-              <button
-                type="button"
-                className="textButton"
-                onClick={() => setLastCaptureType(null)}
-              >
+              <button type="button" className="textButton" onClick={() => setLastCaptureType(null)}>
                 Dismiss
               </button>
             </div>

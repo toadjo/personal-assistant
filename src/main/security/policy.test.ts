@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { 
-  PERSONAL_DEFAULTS, 
-  CORPORATE_DEFAULTS
-} from "./policy";
+import { PERSONAL_DEFAULTS, CORPORATE_DEFAULTS } from "./policy";
 
 describe("Security Policy Constants", () => {
   it("personal defaults allow all integrations", () => {
@@ -26,7 +23,7 @@ describe("Host Allowlist Behavior", () => {
   // Note: These tests document the intended behavior of isHostAllowed
   // The actual implementation depends on the loaded security policy
   // In a real environment, the policy is loaded from disk or defaults
-  
+
   it("personal mode should allow all hosts when allowedHosts is empty", () => {
     const personalPolicy = { ...PERSONAL_DEFAULTS, allowedHosts: [] };
     // When allowedHosts is empty in personal mode, should return true (unrestricted)

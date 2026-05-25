@@ -47,11 +47,11 @@ function isPrefixMatch(query: string, text: string): boolean {
 function isOpenOrActive(item: SearchResult): boolean {
   // Check if item is marked as open or active
   if (item.isOpen) return true;
-  
+
   // Consider tasks/reminders that are not done as "active"
   if (item.category === "task" && !item.subtitle.includes("Done")) return true;
   if (item.category === "reminder" && !item.subtitle.includes("Done")) return true;
-  
+
   return false;
 }
 
@@ -65,38 +65,38 @@ function rankResults(query: string, items: SearchResult[]): SearchResult[] {
 
   const scored = items.map((item) => {
     let score = 0;
-    
+
     // Exact title match: highest priority (100 points)
     if (isExactMatch(query, item.title)) {
       score += 100;
     }
-    
+
     // Prefix match: high priority (50 points)
     else if (isPrefixMatch(query, item.title)) {
       score += 50;
     }
-    
+
     // Fuzzy/content matches
     const titleScore = scoreMatch(queryTokens, item.title) * 3;
     const subtitleScore = scoreMatch(queryTokens, item.subtitle);
     const actionScore = scoreMatch(queryTokens, item.action);
     score += titleScore + subtitleScore + actionScore;
-    
+
     // Boost for recent items (20 points)
     if (item.isRecent) {
       score += 20;
     }
-    
+
     // Boost for open/active items (15 points)
     if (isOpenOrActive(item)) {
       score += 15;
     }
-    
+
     // Penalize completed/done items (10 points)
     if (isCompletedOrDone(item)) {
       score -= 10;
     }
-    
+
     return { ...item, score };
   });
 
@@ -233,12 +233,12 @@ export function search(query: string, index: SearchResult[]): SearchResult[] {
     // When empty, prioritize recent items first, then by timestamp
     const withRecent = index.filter((item) => item.isRecent);
     const withoutRecent = index.filter((item) => !item.isRecent);
-    
+
     // Sort recent by timestamp (most recent first)
     const sortedRecent = withRecent.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     // Sort others by timestamp (most recent first)
     const sortedOthers = withoutRecent.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    
+
     return [...sortedRecent, ...sortedOthers].slice(0, 12);
   }
   return rankResults(trimmed, index).slice(0, 12);

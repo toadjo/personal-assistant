@@ -31,7 +31,7 @@ vi.mock("../security/policy", () => ({
   isCorporateMode: vi.fn(() => false)
 }));
 
-import { exportBackup, importBackup, resetAllData } from "./backup";
+import { exportBackup, importBackup, previewBackup, resetAllData } from "./backup";
 import { encryptSecret, SecureStorageUnavailableError } from "./secureSecrets";
 import { isCorporateMode } from "../security/policy";
 
@@ -150,6 +150,192 @@ describe("backup service", () => {
     expect(deviceCount.c).toBe(0);
   });
 
+  describe("backup preview", () => {
+    beforeEach(() => {
+      testDb = createMemoryDatabase();
+    });
+
+    it("valid backup shows correct counts", () => {
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
+        .prepare("INSERT INTO reminders (id, text, dueAt, recurrence, status, notifyChannel) VALUES (?, ?, ?, ?, ?, ?)")
+        .run("r1", "Test", "2026-01-01T00:00:00Z", "none", "pending", "desktop");
+      testDb
+        .prepare(
+          "INSERT INTO tasks (id, title, notes, dueAt, priority, status, recurrence, notifyChannel, createdAt, updatedAt, lastCompletedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run(
+          "t1",
+          "Task",
+          "",
+          null,
+          "normal",
+          "open",
+          "none",
+          "desktop",
+          "2026-01-01T00:00:00Z",
+          "2026-01-01T00:00:00Z",
+          null
+        );
+      testDb
+        .prepare(
+          "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("a1", "Rule", "time", '{"at":"08:00"}', "localReminder", '{"text":"hello"}', 1);
+      testDb
+        .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
+        .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
+
+      const exported = exportBackup();
+      const preview = previewBackup(exported);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.notes).toBe(1);
+      expect(preview.reminders).toBe(1);
+      expect(preview.tasks).toBe(1);
+      expect(preview.automation_rules).toBe(1);
+      expect(preview.app_settings).toBe(1);
+      expect(preview.unsupported_sections).toEqual([]);
+      expect(preview.has_encrypted_content).toBe(false);
+      expect(preview.version).toBe("1.7.1");
+      expect(preview.exportedAt).toBeDefined();
+    });
+
+    it("malformed backup is rejected", () => {
+      const invalidPayload = { invalid: "data" } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(invalidPayload);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.error).toBe("Invalid backup: missing version or exportedAt field");
+      expect(preview.notes).toBe(0);
+      expect(preview.reminders).toBe(0);
+      expect(preview.tasks).toBe(0);
+      expect(preview.automation_rules).toBe(0);
+      expect(preview.app_settings).toBe(0);
+    });
+
+    it("backup with missing version is rejected", () => {
+      const invalidPayload = {
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: []
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(invalidPayload);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.error).toBe("Invalid backup: missing version or exportedAt field");
+    });
+
+    it("backup with invalid notes array is rejected", () => {
+      const invalidPayload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: "not an array" as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      };
+      const preview = previewBackup(invalidPayload);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.error).toBe("Invalid backup: notes field is not an array");
+    });
+
+    it("backup with unsupported fields reports them", () => {
+      const payload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: [],
+        unsupportedField: "data"
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(payload);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.unsupported_sections).toContain("unsupportedField");
+    });
+
+    it("encrypted backup shows metadata only", () => {
+      const encryptedPayload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        _encrypted: "encrypted:data"
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(encryptedPayload);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.has_encrypted_content).toBe(true);
+      expect(preview.notes).toBe(0);
+      expect(preview.reminders).toBe(0);
+      expect(preview.tasks).toBe(0);
+      expect(preview.automation_rules).toBe(0);
+      expect(preview.app_settings).toBe(0);
+    });
+
+    it("empty backup shows zero counts", () => {
+      const emptyPayload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: [],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: []
+      };
+      const preview = previewBackup(emptyPayload);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.notes).toBe(0);
+      expect(preview.reminders).toBe(0);
+      expect(preview.tasks).toBe(0);
+      expect(preview.automation_rules).toBe(0);
+      expect(preview.app_settings).toBe(0);
+    });
+  });
+
+  describe("backup import security", () => {
+    beforeEach(() => {
+      testDb = createMemoryDatabase();
+    });
+
+    it("secret fields remain rejected during import", () => {
+      const payloadWithSecrets = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: [],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: [
+          { key: "assistant.name", value: "Test", updatedAt: "2026-01-01T00:00:00Z" },
+          { key: "ha.token", value: "secret123", updatedAt: "2026-01-01T00:00:00Z" }
+        ]
+      };
+
+      const imported = importBackup(payloadWithSecrets);
+      expect(imported.rejected_secret_settings).toBe(1);
+      expect(imported.app_settings).toBe(1); // Only non-secret settings imported
+    });
+
+    it("cancel path performs no import", () => {
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+
+      const noteCountBefore = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
+      expect(noteCountBefore.c).toBe(1);
+
+      // Preview should not modify database
+      const exported = exportBackup();
+      const preview = previewBackup(exported);
+      expect(preview.valid).toBe(true);
+
+      const noteCountAfter = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
+      expect(noteCountAfter.c).toBe(1); // Should still be 1, not deleted
+    });
+  });
+
   describe("encrypted backup security", () => {
     beforeEach(() => {
       testDb = createMemoryDatabase();
@@ -165,7 +351,7 @@ describe("backup service", () => {
         .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
 
       const exported = exportBackup({ encrypt: true });
-      
+
       expect(exported.version).toBe("1.7.1");
       expect(exported.exportedAt).toBeDefined();
       expect(exported._encrypted).toBeDefined();
@@ -206,7 +392,7 @@ describe("backup service", () => {
         .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
 
       const exported = exportBackup({ encrypt: true });
-      
+
       expect(exported._encrypted).toBeUndefined();
       expect(exported.notes).toBeDefined();
       expect(exported.notes?.length).toBe(1);
@@ -220,7 +406,7 @@ describe("backup service", () => {
         .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
 
       const exported = exportBackup({ encrypt: true });
-      
+
       // Clear the database
       testDb.prepare("DELETE FROM notes").run();
 
@@ -237,7 +423,17 @@ describe("backup service", () => {
       const plaintextPayload = {
         version: "1.7.1",
         exportedAt: new Date().toISOString(),
-        notes: [{ id: "n1", title: "Hello", content: "World", tags: "[]", pinned: 0, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }],
+        notes: [
+          {
+            id: "n1",
+            title: "Hello",
+            content: "World",
+            tags: "[]",
+            pinned: 0,
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z"
+          }
+        ],
         reminders: [],
         tasks: [],
         automation_rules: [],
@@ -249,6 +445,192 @@ describe("backup service", () => {
 
       const noteCount = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
       expect(noteCount.c).toBe(1);
+    });
+  });
+
+  describe("backup preview", () => {
+    beforeEach(() => {
+      testDb = createMemoryDatabase();
+    });
+
+    it("valid backup shows correct counts", () => {
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
+        .prepare("INSERT INTO reminders (id, text, dueAt, recurrence, status, notifyChannel) VALUES (?, ?, ?, ?, ?, ?)")
+        .run("r1", "Test", "2026-01-01T00:00:00Z", "none", "pending", "desktop");
+      testDb
+        .prepare(
+          "INSERT INTO tasks (id, title, notes, dueAt, priority, status, recurrence, notifyChannel, createdAt, updatedAt, lastCompletedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run(
+          "t1",
+          "Task",
+          "",
+          null,
+          "normal",
+          "open",
+          "none",
+          "desktop",
+          "2026-01-01T00:00:00Z",
+          "2026-01-01T00:00:00Z",
+          null
+        );
+      testDb
+        .prepare(
+          "INSERT INTO automation_rules (id, name, triggerType, triggerConfig, actionType, actionConfig, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("a1", "Rule", "time", '{"at":"08:00"}', "localReminder", '{"text":"hello"}', 1);
+      testDb
+        .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
+        .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
+
+      const exported = exportBackup();
+      const preview = previewBackup(exported);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.notes).toBe(1);
+      expect(preview.reminders).toBe(1);
+      expect(preview.tasks).toBe(1);
+      expect(preview.automation_rules).toBe(1);
+      expect(preview.app_settings).toBe(1);
+      expect(preview.unsupported_sections).toEqual([]);
+      expect(preview.has_encrypted_content).toBe(false);
+      expect(preview.version).toBe("1.7.1");
+      expect(preview.exportedAt).toBeDefined();
+    });
+
+    it("malformed backup is rejected", () => {
+      const invalidPayload = { invalid: "data" } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(invalidPayload);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.error).toBe("Invalid backup: missing version or exportedAt field");
+      expect(preview.notes).toBe(0);
+      expect(preview.reminders).toBe(0);
+      expect(preview.tasks).toBe(0);
+      expect(preview.automation_rules).toBe(0);
+      expect(preview.app_settings).toBe(0);
+    });
+
+    it("backup with missing version is rejected", () => {
+      const invalidPayload = {
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: []
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(invalidPayload);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.error).toBe("Invalid backup: missing version or exportedAt field");
+    });
+
+    it("backup with invalid notes array is rejected", () => {
+      const invalidPayload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: "not an array" as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      };
+      const preview = previewBackup(invalidPayload);
+
+      expect(preview.valid).toBe(false);
+      expect(preview.error).toBe("Invalid backup: notes field is not an array");
+    });
+
+    it("backup with unsupported fields reports them", () => {
+      const payload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: [],
+        unsupportedField: "data"
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(payload);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.unsupported_sections).toContain("unsupportedField");
+    });
+
+    it("encrypted backup shows metadata only", () => {
+      const encryptedPayload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        _encrypted: "encrypted:data"
+      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const preview = previewBackup(encryptedPayload);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.has_encrypted_content).toBe(true);
+      expect(preview.notes).toBe(0);
+      expect(preview.reminders).toBe(0);
+      expect(preview.tasks).toBe(0);
+      expect(preview.automation_rules).toBe(0);
+      expect(preview.app_settings).toBe(0);
+    });
+
+    it("empty backup shows zero counts", () => {
+      const emptyPayload = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: [],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: []
+      };
+      const preview = previewBackup(emptyPayload);
+
+      expect(preview.valid).toBe(true);
+      expect(preview.notes).toBe(0);
+      expect(preview.reminders).toBe(0);
+      expect(preview.tasks).toBe(0);
+      expect(preview.automation_rules).toBe(0);
+      expect(preview.app_settings).toBe(0);
+    });
+  });
+
+  describe("backup import security", () => {
+    beforeEach(() => {
+      testDb = createMemoryDatabase();
+    });
+
+    it("secret fields remain rejected during import", () => {
+      const payloadWithSecrets = {
+        version: "1.7.1",
+        exportedAt: "2026-01-01T00:00:00Z",
+        notes: [],
+        reminders: [],
+        tasks: [],
+        automation_rules: [],
+        app_settings: [
+          { key: "assistant.name", value: "Test", updatedAt: "2026-01-01T00:00:00Z" },
+          { key: "ha.token", value: "secret123", updatedAt: "2026-01-01T00:00:00Z" }
+        ]
+      };
+
+      const imported = importBackup(payloadWithSecrets);
+      expect(imported.rejected_secret_settings).toBe(1);
+      expect(imported.app_settings).toBe(1); // Only non-secret settings imported
+    });
+
+    it("cancel path performs no import", () => {
+      testDb
+        .prepare(
+          "INSERT INTO notes (id, title, content, tags, pinned, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("n1", "Hello", "World", "[]", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+
+      const noteCountBefore = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
+      expect(noteCountBefore.c).toBe(1);
+
+      // Preview should not modify database
+      const exported = exportBackup();
+      const preview = previewBackup(exported);
+      expect(preview.valid).toBe(true);
+
+      const noteCountAfter = testDb.prepare("SELECT COUNT(*) as c FROM notes").get() as { c: number };
+      expect(noteCountAfter.c).toBe(1); // Should still be 1, not deleted
     });
   });
 });

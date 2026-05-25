@@ -19,15 +19,15 @@ describe("recentItems", () => {
   it("updates timestamp for existing item", () => {
     addRecentItem("note:123");
     const firstTimestamp = getRecentItems()[0]?.timestamp;
-    
+
     // Force a different timestamp by mocking Date.now
     const originalNow = Date.now;
     Date.now = () => (firstTimestamp || 0) + 1000;
-    
+
     addRecentItem("note:123");
     const secondTimestamp = getRecentItems()[0]?.timestamp;
     expect(secondTimestamp).toBeGreaterThan(firstTimestamp || 0);
-    
+
     Date.now = originalNow;
   });
 
@@ -40,10 +40,10 @@ describe("recentItems", () => {
   });
 
   it("removes old items beyond TTL", () => {
-    const oldTimestamp = Date.now() - (31 * 24 * 60 * 60 * 1000); // 31 days ago
+    const oldTimestamp = Date.now() - 31 * 24 * 60 * 60 * 1000; // 31 days ago
     const storage = { items: [{ id: "old-item", timestamp: oldTimestamp }] };
     localStorage.setItem("assistant-recent-items", JSON.stringify(storage));
-    
+
     const items = getRecentItems();
     expect(items.length).toBe(0);
   });
@@ -61,9 +61,9 @@ describe("recentItems", () => {
     localStorage.setItem = () => {
       throw new Error("localStorage unavailable");
     };
-    
+
     expect(() => addRecentItem("note:123")).not.toThrow();
-    
+
     localStorage.setItem = originalSetItem;
   });
 });

@@ -35,7 +35,12 @@ import {
   STORAGE_ONBOARDING_DEFERRED,
   STORAGE_LAST_SEEN_RELEASE_VERSION
 } from "../constants/storageKeys";
-import { deriveDailyCommandCenter, derivePlanTodayQueue, deriveEndOfDayReview, type EndOfDayReview } from "../lib/derived/daily-command-center";
+import {
+  deriveDailyCommandCenter,
+  derivePlanTodayQueue,
+  deriveEndOfDayReview,
+  type EndOfDayReview
+} from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
@@ -264,30 +269,38 @@ export function AssistantShell(): JSX.Element {
     focusBriefRef.current = focusBrief;
     const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief, filter: dailyCommandCenter.filter });
     setDailyCommandCenter(dcc);
-    
+
     // Derive Plan Today queue for v2.5.0
     // Convert raw data to BriefItem format
-    const localTasks: BriefItem[] = data.tasks.map(task => ({
+    const localTasks: BriefItem[] = data.tasks.map((task) => ({
       id: `local-task-${task.id}`,
       kind: "task",
       label: task.title,
       detail: task.dueAt ? new Date(task.dueAt).toLocaleString() : undefined,
-      urgency: task.dueAt ? (new Date(task.dueAt) < new Date(new Date().setHours(0,0,0,0)) ? "overdue" : "today") : "context",
+      urgency: task.dueAt
+        ? new Date(task.dueAt) < new Date(new Date().setHours(0, 0, 0, 0))
+          ? "overdue"
+          : "today"
+        : "context",
       sourceId: task.id,
       dueAt: task.dueAt || undefined
     }));
-    
-    const localReminders: BriefItem[] = data.reminders.map(reminder => ({
+
+    const localReminders: BriefItem[] = data.reminders.map((reminder) => ({
       id: `local-reminder-${reminder.id}`,
       kind: "reminder",
       label: reminder.text,
       detail: reminder.dueAt ? new Date(reminder.dueAt).toLocaleString() : undefined,
-      urgency: reminder.dueAt ? (new Date(reminder.dueAt) < new Date(new Date().setHours(0,0,0,0)) ? "overdue" : "today") : "context",
+      urgency: reminder.dueAt
+        ? new Date(reminder.dueAt) < new Date(new Date().setHours(0, 0, 0, 0))
+          ? "overdue"
+          : "today"
+        : "context",
       sourceId: reminder.id,
       dueAt: reminder.dueAt || undefined
     }));
-    
-    const localNotes: BriefItem[] = data.notes.map(note => ({
+
+    const localNotes: BriefItem[] = data.notes.map((note) => ({
       id: `local-note-${note.id}`,
       kind: "note",
       label: note.title,
@@ -295,7 +308,7 @@ export function AssistantShell(): JSX.Element {
       urgency: "context",
       sourceId: note.id
     }));
-    
+
     const planToday = derivePlanTodayQueue({
       localTasks,
       localReminders,
@@ -864,15 +877,24 @@ export function AssistantShell(): JSX.Element {
                 onCompleteTask={tasks.completeById}
                 onCompleteReminder={reminders.completeById}
                 onBulkCompleteTasks={tasks.bulkComplete}
-                onSnoozeReminder={async (id: string, minutes: number) => await reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)}
+                onSnoozeReminder={async (id: string, minutes: number) =>
+                  await reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)
+                }
                 onUpdateTaskDueAt={async (id: string, dueAt: string | null) => {
-                  const task = data.tasks.find(t => t.id === id);
+                  const task = data.tasks.find((t) => t.id === id);
                   if (task) {
-                    await tasks.saveTask({ id, title: task.title, notes: task.notes, dueAt, priority: task.priority, recurrence: task.recurrence });
+                    await tasks.saveTask({
+                      id,
+                      title: task.title,
+                      notes: task.notes,
+                      dueAt,
+                      priority: task.priority,
+                      recurrence: task.recurrence
+                    });
                   }
                 }}
                 onUpdateReminderDueAt={async (id: string, dueAt: string) => {
-                  const reminder = data.reminders.find(r => r.id === id);
+                  const reminder = data.reminders.find((r) => r.id === id);
                   if (reminder) {
                     await reminders.updateById(id, reminder.text, dueAt);
                   }
@@ -907,12 +929,21 @@ export function AssistantShell(): JSX.Element {
                 <EndOfDayReviewPanel
                   review={endOfDayReview}
                   onUpdateTaskDueAt={async (id: string, dueAt: string | null) => {
-                    const task = data.tasks.find(t => t.id === id);
+                    const task = data.tasks.find((t) => t.id === id);
                     if (task) {
-                      await tasks.saveTask({ id, title: task.title, notes: task.notes, dueAt, priority: task.priority, recurrence: task.recurrence });
+                      await tasks.saveTask({
+                        id,
+                        title: task.title,
+                        notes: task.notes,
+                        dueAt,
+                        priority: task.priority,
+                        recurrence: task.recurrence
+                      });
                     }
                   }}
-                  onSnoozeReminder={async (id: string, minutes: number) => await reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)}
+                  onSnoozeReminder={async (id: string, minutes: number) =>
+                    await reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)
+                  }
                   onOpenWorkItem={openBriefItemInDrawer}
                   onShowSuccess={ui.showSuccess}
                   onError={ui.reportError}

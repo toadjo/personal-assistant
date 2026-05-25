@@ -45,7 +45,8 @@
     "activity": "node scripts/activity.mjs",
     "security:sbom": "npm run build && node scripts/generate-sbom.mjs",
     "security:audit": "npm audit --audit-level=high",
-    "security:release-evidence": "node scripts/generate-release-evidence.mjs"
+    "security:release-evidence": "node scripts/generate-release-evidence.mjs",
+    "release:hygiene": "node scripts/release-hygiene.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",

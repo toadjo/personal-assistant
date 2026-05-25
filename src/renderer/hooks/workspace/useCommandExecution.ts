@@ -112,7 +112,7 @@ export function useCommandExecution(args: {
         setStatus("Quick capture opened.");
         return;
       }
-      
+
       // Handle typed quick capture commands
       if (command.startsWith("capture note ")) {
         const text = command.replace("capture note ", "");

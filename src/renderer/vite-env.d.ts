@@ -104,7 +104,43 @@ declare global {
         automation_rules: number;
         app_settings: number;
       }>;
+      previewImportData: (payload: {
+        version: string;
+        exportedAt: string;
+        notes: unknown[];
+        reminders: unknown[];
+        tasks: unknown[];
+        automation_rules: unknown[];
+        app_settings: unknown[];
+      }) => Promise<{
+        valid: boolean;
+        error?: string;
+        notes: number;
+        reminders: number;
+        tasks: number;
+        automation_rules: number;
+        app_settings: number;
+        unsupported_sections: string[];
+        has_encrypted_content: boolean;
+        version: string;
+        exportedAt: string;
+      }>;
       resetData: () => Promise<void>;
+      checkDbHealth: () => Promise<{
+        overall_health: "healthy" | "degraded" | "critical";
+        integrity_check: { passed: boolean; error?: string };
+        schema_check: { passed: boolean; missing_tables: string[]; extra_tables: string[] };
+        data_check: { total_rows: number; orphaned_records: number; corrupted_records: number };
+        performance_check: {
+          page_count: number;
+          page_size: number;
+          database_size_bytes: number;
+          wal_enabled: boolean;
+          wal_checkpoint_pending: boolean;
+        };
+        recommendations: string[];
+      }>;
+      optimizeDatabase: () => Promise<{ success: boolean; message: string }>;
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
       onRemindersUpdated: (cb: () => void) => () => void;
       onCommand: (cb: (_event: unknown, command: string) => void) => () => void;

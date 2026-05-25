@@ -316,7 +316,7 @@ describe("PlanTodayPanel", () => {
     fireEvent.click(selectAllCheckbox);
 
     const checkboxes = screen.getAllByLabelText(/Select item:/);
-    checkboxes.forEach(checkbox => {
+    checkboxes.forEach((checkbox) => {
       expect(checkbox).toBeChecked();
     });
   });
@@ -382,10 +382,17 @@ describe("PlanTodayPanel", () => {
       })
     ]);
 
-    render(<PlanTodayPanel queue={queue} onBulkCompleteTasks={onBulkCompleteTasks} onCompleteReminder={vi.fn()} onShowSuccess={vi.fn()} />);
+    render(
+      <PlanTodayPanel
+        queue={queue}
+        onBulkCompleteTasks={onBulkCompleteTasks}
+        onCompleteReminder={vi.fn()}
+        onShowSuccess={vi.fn()}
+      />
+    );
 
     const checkboxes = screen.getAllByLabelText(/Select item:/);
-    checkboxes.forEach(checkbox => fireEvent.click(checkbox));
+    checkboxes.forEach((checkbox) => fireEvent.click(checkbox));
 
     const completeButton = screen.getByText(/Complete 2 Selected/);
     fireEvent.click(completeButton);
@@ -406,7 +413,14 @@ describe("PlanTodayPanel", () => {
       })
     ]);
 
-    render(<PlanTodayPanel queue={queue} onBulkCompleteTasks={vi.fn()} onCompleteReminder={onCompleteReminder} onShowSuccess={vi.fn()} />);
+    render(
+      <PlanTodayPanel
+        queue={queue}
+        onBulkCompleteTasks={vi.fn()}
+        onCompleteReminder={onCompleteReminder}
+        onShowSuccess={vi.fn()}
+      />
+    );
 
     const checkbox = screen.getByLabelText("Select item: Test Reminder");
     fireEvent.click(checkbox);
@@ -431,7 +445,14 @@ describe("PlanTodayPanel", () => {
       })
     ]);
 
-    render(<PlanTodayPanel queue={queue} onBulkCompleteTasks={onBulkCompleteTasks} onCompleteReminder={vi.fn()} onShowSuccess={onShowSuccess} />);
+    render(
+      <PlanTodayPanel
+        queue={queue}
+        onBulkCompleteTasks={onBulkCompleteTasks}
+        onCompleteReminder={vi.fn()}
+        onShowSuccess={onShowSuccess}
+      />
+    );
 
     const checkbox = screen.getByLabelText("Select item: Test Task");
     fireEvent.click(checkbox);
@@ -440,7 +461,7 @@ describe("PlanTodayPanel", () => {
     fireEvent.click(completeButton);
 
     await vi.waitFor(() => expect(onBulkCompleteTasks).toHaveBeenCalled());
-    
+
     // Wait for checkbox to be unchecked after state update
     await vi.waitFor(() => expect(checkbox).not.toBeChecked());
     expect(screen.queryByText(/Complete 1 Selected/)).toBeNull();
@@ -625,7 +646,7 @@ describe("PlanTodayPanel", () => {
     render(<PlanTodayPanel queue={queue} onSnoozeReminder={onSnoozeReminder} onShowSuccess={vi.fn()} />);
 
     const checkboxes = screen.getAllByLabelText(/Select item:/);
-    checkboxes.forEach(checkbox => fireEvent.click(checkbox));
+    checkboxes.forEach((checkbox) => fireEvent.click(checkbox));
 
     const snoozeButton = screen.getByText("Snooze");
     fireEvent.click(snoozeButton);

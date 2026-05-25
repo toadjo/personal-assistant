@@ -26,15 +26,15 @@ describe("savedSearches", () => {
   it("updates timestamp for existing search", () => {
     addSavedSearch("overdue");
     const firstTimestamp = getSavedSearches()[0]?.timestamp;
-    
+
     // Force a different timestamp by mocking Date.now
     const originalNow = Date.now;
     Date.now = () => (firstTimestamp || 0) + 1000;
-    
+
     addSavedSearch("overdue");
     const secondTimestamp = getSavedSearches()[0]?.timestamp;
     expect(secondTimestamp).toBeGreaterThan(firstTimestamp || 0);
-    
+
     Date.now = originalNow;
   });
 
@@ -68,9 +68,9 @@ describe("savedSearches", () => {
     localStorage.setItem = () => {
       throw new Error("localStorage unavailable");
     };
-    
+
     expect(() => addSavedSearch("overdue")).not.toThrow();
-    
+
     localStorage.setItem = originalSetItem;
   });
 });

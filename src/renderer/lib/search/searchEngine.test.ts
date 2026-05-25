@@ -114,16 +114,7 @@ describe("searchEngine", () => {
 
   it("prioritizes recent items when query is empty", () => {
     const recentIds = new Set(["note:n1"]);
-    const index = buildSearchIndex(
-      [makeNote("n1", "Recent note")],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      recentIds
-    );
+    const index = buildSearchIndex([makeNote("n1", "Recent note")], [], [], [], [], [], [], recentIds);
     const results = search("", index);
     expect(results[0]!.id).toBe("note:n1");
     expect(results[0]!.isRecent).toBe(true);

@@ -9,5 +9,6 @@ import { runMigrations } from "../db/migrate";
 export function createMemoryDatabase(): Database.Database {
   const database = new Database(":memory:");
   runMigrations(database);
+  database.pragma("journal_mode = WAL");
   return database;
 }

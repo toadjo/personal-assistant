@@ -43,16 +43,16 @@ function cleanupOldItems(items: RecentItem[]): RecentItem[] {
 export function addRecentItem(itemId: string): void {
   const storage = getStorage();
   const now = Date.now();
-  
+
   // Remove existing entry if present (to update timestamp)
   const filtered = storage.items.filter((item) => item.id !== itemId);
-  
+
   // Add new entry at the beginning
   filtered.unshift({ id: itemId, timestamp: now });
-  
+
   // Cleanup old items and enforce max limit
   const cleaned = cleanupOldItems(filtered).slice(0, MAX_RECENT_ITEMS);
-  
+
   setStorage({ items: cleaned });
 }
 

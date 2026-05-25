@@ -62,14 +62,14 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     deps.setStatus("Showing saved searches.");
     return { mutated: false };
   }
-  
+
   // Handle "open <item name>" command with confident top match
   if (lower.startsWith("open ")) {
     const query = normalized.slice(5).trim();
     if (!query) {
       throw new Error("Tell me what to open. Example: open meeting notes");
     }
-    
+
     // Build search index and find top match
     const index = buildSearchIndex(
       deps.notes || [],
@@ -80,19 +80,19 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
       deps.teamTasks || [],
       deps.teamProjects || []
     );
-    
+
     const results = search(query, index);
-    
+
     if (results.length === 0) {
       throw new Error(`No matches found for "${query}". Try a different search term.`);
     }
-    
+
     // Only auto-open if top result has high confidence (exact or prefix match)
     const topResult = results[0];
     if (topResult && topResult.score >= 50) {
       const [type, rawId] = topResult.id.split(":", 2);
       const id = rawId ?? "";
-      
+
       switch (type) {
         case "note":
           deps.onOpenNote?.(id);

@@ -109,12 +109,12 @@ export function CommandPalette({
     (result: SearchResult) => {
       const [type, rawId] = result.id.split(":", 2);
       const id = rawId ?? "";
-      
+
       // Track recent item for non-settings
       if (type !== "setting") {
         addRecentItem(result.id);
       }
-      
+
       switch (type) {
         case "note":
           onOpenNote?.(id);
@@ -271,11 +271,7 @@ export function CommandPalette({
           {query.trim() && (
             <>
               <span className="commandPaletteFooterSeparator">|</span>
-              <button
-                className="commandPaletteSaveSearch"
-                onClick={handleSaveSearch}
-                disabled={!query.trim()}
-              >
+              <button className="commandPaletteSaveSearch" onClick={handleSaveSearch} disabled={!query.trim()}>
                 Save Search
               </button>
             </>

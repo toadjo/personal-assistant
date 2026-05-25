@@ -36,19 +36,19 @@ function setStorage(storage: SavedSearchesStorage): void {
 
 export function addSavedSearch(query: string): void {
   if (!query.trim()) return;
-  
+
   const storage = getStorage();
   const trimmedQuery = query.trim();
-  
+
   // Remove existing entry if present (to update timestamp)
   const filtered = storage.searches.filter((s) => s.query !== trimmedQuery);
-  
+
   // Add new entry at the beginning
   filtered.unshift({ query: trimmedQuery, timestamp: Date.now() });
-  
+
   // Enforce max limit
   const limited = filtered.slice(0, MAX_SAVED_SEARCHES);
-  
+
   setStorage({ searches: limited });
 }
 

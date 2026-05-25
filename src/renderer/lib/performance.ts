@@ -1,17 +1,17 @@
 /**
  * Lightweight performance instrumentation for v2.3.0 development.
- * 
+ *
  * This module provides simple timing utilities for measuring key performance metrics
  * during development. No user data is collected, only timing information.
- * 
+ *
  * Usage:
  * ```ts
  * import { measurePerformance, logMetric } from './performance';
- * 
+ *
  * const metric = measurePerformance('app-startup');
  * // ... do work ...
  * metric.end();
- * 
+ *
  * // Or use the helper
  * logMetric('drawer-open', () => {
  *   // ... drawer open logic ...
@@ -22,14 +22,14 @@
 // Enable instrumentation only in development
 const ENABLED = import.meta.env.DEV;
 
-type MetricName = 
-  | 'app-startup'
-  | 'today-render'
-  | 'inbox-render'
-  | 'drawer-open'
-  | 'drawer-save'
-  | 'plan-today-render'
-  | 'plan-today-derive';
+type MetricName =
+  | "app-startup"
+  | "today-render"
+  | "inbox-render"
+  | "drawer-open"
+  | "drawer-save"
+  | "plan-today-render"
+  | "plan-today-derive";
 
 interface Metric {
   name: MetricName;
@@ -52,10 +52,10 @@ export function measurePerformance(name: MetricName): Metric {
     name,
     startTime: performance.now()
   };
-  
+
   const key = `${name}-${Date.now()}`;
   metrics.set(key, metric);
-  
+
   return metric;
 }
 
@@ -64,10 +64,10 @@ export function measurePerformance(name: MetricName): Metric {
  */
 export function endMetric(metric: Metric): void {
   if (!ENABLED) return;
-  
+
   metric.endTime = performance.now();
   metric.duration = metric.endTime - metric.startTime;
-  
+
   console.log(`[Performance] ${metric.name}: ${metric.duration.toFixed(2)}ms`);
 }
 
@@ -78,11 +78,11 @@ export function logMetric<T>(name: MetricName, fn: () => T): T {
   if (!ENABLED) {
     return fn();
   }
-  
+
   const start = performance.now();
   const result = fn();
   const end = performance.now();
-  
+
   console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`);
   return result;
 }
@@ -94,11 +94,11 @@ export async function logMetricAsync<T>(name: MetricName, fn: () => Promise<T>):
   if (!ENABLED) {
     return fn();
   }
-  
+
   const start = performance.now();
   const result = await fn();
   const end = performance.now();
-  
+
   console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`);
   return result;
 }

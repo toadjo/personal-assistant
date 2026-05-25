@@ -338,9 +338,7 @@ function RowActions({
 }
 
 function hasActionableContextItems(contextItems: BriefItem[]): boolean {
-  return contextItems.some(
-    (item) => item.kind === "task" || item.kind === "reminder" || item.kind === "team-task"
-  );
+  return contextItems.some((item) => item.kind === "task" || item.kind === "reminder" || item.kind === "team-task");
 }
 
 export function DailyCommandCenterPanel({
@@ -362,7 +360,7 @@ export function DailyCommandCenterPanel({
   const hasAnything =
     nowItems.length > 0 || attentionItems.length > 0 || contextItems.length > 0 || awayItems.length > 0;
 
-  const content = logMetric('today-render', () => (
+  const content = logMetric("today-render", () => (
     <section className="panel" aria-labelledby="daily-command-center-heading">
       <PanelHeader icon={Command} title="Daily Command Center" />
 

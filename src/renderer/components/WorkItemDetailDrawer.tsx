@@ -46,10 +46,10 @@ type TeamProjectTaskFields = {
 function isoToLocalDateTime(isoString: string): string {
   const date = new Date(isoString);
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
@@ -84,7 +84,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
   if (!item) return null;
 
   const handleEdit = () => {
-    const openMetric = measurePerformance('drawer-open');
+    const openMetric = measurePerformance("drawer-open");
     setIsEditing(true);
     setEditTitle(item.label);
     setEditContent(item.detail || "");
@@ -125,13 +125,17 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
       }
     }
 
-    if ((item.source === "team-task" || item.source === "local-task") && editRecurrence !== "none" && !editDueAt.trim()) {
+    if (
+      (item.source === "team-task" || item.source === "local-task") &&
+      editRecurrence !== "none" &&
+      !editDueAt.trim()
+    ) {
       setEditValidationError("Recurring tasks require a due date.");
       return;
     }
 
     try {
-      await logMetricAsync('drawer-save', async () => {
+      await logMetricAsync("drawer-save", async () => {
         if (item.source === "local-note" && onUpdateNote) {
           await onUpdateNote(item.sourceId, editTitle, editContent);
           onShowSuccess?.("Note updated.");
@@ -143,32 +147,32 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
             notes: editContent,
             dueAt,
             priority: editPriority,
-          recurrence: editRecurrence
-        });
-        onShowSuccess?.("Task updated.");
-        setIsEditing(false);
-      } else if (item.source === "local-reminder" && onUpdateReminder) {
-        const dueAt = editDueAt ? new Date(editDueAt).toISOString() : item.dueAt || null;
-        if (dueAt) {
-          await onUpdateReminder(item.sourceId, editTitle, dueAt);
-          onShowSuccess?.("Reminder updated.");
+            recurrence: editRecurrence
+          });
+          onShowSuccess?.("Task updated.");
+          setIsEditing(false);
+        } else if (item.source === "local-reminder" && onUpdateReminder) {
+          const dueAt = editDueAt ? new Date(editDueAt).toISOString() : item.dueAt || null;
+          if (dueAt) {
+            await onUpdateReminder(item.sourceId, editTitle, dueAt);
+            onShowSuccess?.("Reminder updated.");
+            onClose();
+          }
+        } else if (item.source === "team-task" && onUpdateTeamTask) {
+          const dueAt = editDueAt ? new Date(editDueAt).toISOString() : null;
+          const patch: Partial<TeamProjectTaskFields> = {
+            title: editTitle,
+            notes: editContent,
+            dueAt,
+            priority: editPriority,
+            recurrence: editRecurrence,
+            assigneeDisplayName: editAssignee || null,
+            status: editStatus
+          };
+          await onUpdateTeamTask(item.sourceId, patch);
+          onShowSuccess?.("Team task updated.");
           onClose();
         }
-      } else if (item.source === "team-task" && onUpdateTeamTask) {
-        const dueAt = editDueAt ? new Date(editDueAt).toISOString() : null;
-        const patch: Partial<TeamProjectTaskFields> = {
-          title: editTitle,
-          notes: editContent,
-          dueAt,
-          priority: editPriority,
-          recurrence: editRecurrence,
-          assigneeDisplayName: editAssignee || null,
-          status: editStatus
-        };
-        await onUpdateTeamTask(item.sourceId, patch);
-        onShowSuccess?.("Team task updated.");
-        onClose();
-      }
       });
     } catch {
       onError?.("Failed to update item.");
@@ -219,7 +223,9 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
           {isEditing ? (
             <div className="editForm">
               {editValidationError && (
-                <div className="validationError" role="alert">{editValidationError}</div>
+                <div className="validationError" role="alert">
+                  {editValidationError}
+                </div>
               )}
               <div className="formGroup">
                 <label htmlFor="edit-title">Title</label>
@@ -234,7 +240,9 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
               </div>
               {item.source !== "local-reminder" && (
                 <div className="formGroup">
-                  <label htmlFor="edit-content">{item.source === "local-task" || item.source === "team-task" ? "Notes" : "Content"}</label>
+                  <label htmlFor="edit-content">
+                    {item.source === "local-task" || item.source === "team-task" ? "Notes" : "Content"}
+                  </label>
                   <textarea
                     id="edit-content"
                     value={editContent}
@@ -393,7 +401,11 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
               <div className="itemMeta">
                 <span className="metaLabel">Priority:</span>
                 <span className="metaValue">
-                  {item.source === "local-task" ? (item.localPriority ?? item.priority) : item.source === "team-task" ? (item.teamPriority ?? item.priority) : item.priority}
+                  {item.source === "local-task"
+                    ? (item.localPriority ?? item.priority)
+                    : item.source === "team-task"
+                      ? (item.teamPriority ?? item.priority)
+                      : item.priority}
                 </span>
               </div>
               {item.source === "local-task" && item.localRecurrence && item.localRecurrence !== "none" && (

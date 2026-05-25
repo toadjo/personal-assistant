@@ -62,7 +62,7 @@ export type EndOfDayReview = {
 
 /**
  * Derives the End-of-Day Review from local tasks, reminders, and notes.
- * 
+ *
  * The review shows:
  * - Tasks completed today (status === "done" and lastCompletedAt is today)
  * - Reminders completed today (status === "done" and updatedAt is today)
@@ -79,7 +79,7 @@ export function deriveEndOfDayReview(params: {
   const now = params.now || new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
-  
+
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
 
@@ -125,7 +125,7 @@ export function deriveEndOfDayReview(params: {
       const dueDate = new Date(task.dueAt);
       if (dueDate <= todayEnd) {
         // Assume task is unfinished if it's not in completed tasks
-        const isCompleted = completedTasks.some(ct => ct.sourceId === task.sourceId);
+        const isCompleted = completedTasks.some((ct) => ct.sourceId === task.sourceId);
         if (!isCompleted) {
           unfinishedTasks.push({
             ...task,
@@ -144,7 +144,7 @@ export function deriveEndOfDayReview(params: {
       const dueDate = new Date(reminder.dueAt);
       if (dueDate <= todayEnd) {
         // Assume reminder is unfinished if it's not in completed reminders
-        const isCompleted = completedReminders.some(cr => cr.sourceId === reminder.sourceId);
+        const isCompleted = completedReminders.some((cr) => cr.sourceId === reminder.sourceId);
         if (!isCompleted) {
           unfinishedReminders.push({
             ...reminder,
@@ -202,24 +202,24 @@ export function deriveEndOfDayReview(params: {
 
 function buildEndOfDaySummary(completed: number, unfinished: number, captured: number): string {
   const parts: string[] = [];
-  
+
   if (completed > 0) parts.push(`${completed} completed`);
   if (unfinished > 0) parts.push(`${unfinished} unfinished`);
   if (captured > 0) parts.push(`${captured} captured`);
-  
+
   if (parts.length === 0) {
     return "No activity today.";
   }
-  
+
   return `Day review: ${parts.join(", ")}.`;
 }
 
 /**
  * Derives the Plan Today queue from local tasks, reminders, and notes.
- * 
+ *
  * The queue prioritizes:
  * 1. Overdue tasks (priority 0)
- * 2. Due today reminders (priority 1) 
+ * 2. Due today reminders (priority 1)
  * 3. Overdue reminders (priority 2)
  * 4. Due today tasks (priority 3)
  * 5. Unsorted notes (priority 4)
@@ -233,7 +233,7 @@ export function derivePlanTodayQueue(params: {
   const now = params.now || new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
-  
+
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
 
@@ -315,12 +315,12 @@ export function derivePlanTodayQueue(params: {
     if (a.queuePriority !== b.queuePriority) {
       return a.queuePriority - b.queuePriority;
     }
-    
+
     // Secondary sort by due date for items with due dates
     if (a.dueAt && b.dueAt) {
       return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
     }
-    
+
     // Tertiary sort by label
     return a.label.localeCompare(b.label);
   });
@@ -340,9 +340,9 @@ function buildPlanTodaySummary(items: PlanTodayItem[]): string {
     return "All clear - nothing needs planning today.";
   }
 
-  const overdueCount = items.filter(item => item.queueReason === "overdue").length;
-  const dueTodayCount = items.filter(item => item.queueReason === "due-today").length;
-  const unsortedCount = items.filter(item => item.queueReason === "unsorted").length;
+  const overdueCount = items.filter((item) => item.queueReason === "overdue").length;
+  const dueTodayCount = items.filter((item) => item.queueReason === "due-today").length;
+  const unsortedCount = items.filter((item) => item.queueReason === "unsorted").length;
 
   const parts: string[] = [];
   if (overdueCount > 0) parts.push(`${overdueCount} overdue`);

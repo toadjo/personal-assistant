@@ -17,8 +17,6 @@ function makeData(overrides: Partial<DailyCommandCenter> = {}): DailyCommandCent
   };
 }
 
-
-
 describe("DailyCommandCenterPanel", () => {
   const onCompleteTask = vi.fn();
   const onCompleteReminder = vi.fn();
@@ -77,7 +75,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Overdue task", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Overdue task", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -107,7 +107,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-reminder"
         }
       ],
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Today reminder", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Today reminder", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 
@@ -199,7 +201,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -229,7 +233,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-reminder"
         }
       ],
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Reminder to complete", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Reminder to complete", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 
@@ -259,7 +265,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-reminder"
         }
       ],
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Snooze me", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Snooze me", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 
@@ -394,7 +402,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Overdue task", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Overdue task", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -426,7 +436,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-reminder"
         }
       ],
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Today reminder", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Today reminder", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 
@@ -480,7 +492,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task to open", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Task to open", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -523,7 +537,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-reminder"
         }
       ],
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Reminder to open", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Reminder to open", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 
@@ -566,7 +582,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -598,7 +616,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task without drawer", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Task without drawer", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -619,7 +639,9 @@ describe("DailyCommandCenterPanel", () => {
     onCompleteTask.mockClear();
     const onOpenWorkItem = vi.fn();
     const data = makeData({
-      attentionItems: [{ id: "team-task-tt1", kind: "team-task", label: "Team task", urgency: "overdue", sourceId: "tt1" }],
+      attentionItems: [
+        { id: "team-task-tt1", kind: "team-task", label: "Team task", urgency: "overdue", sourceId: "tt1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -725,7 +747,9 @@ describe("DailyCommandCenterPanel", () => {
   it("shows Details button for tasks and calls onOpenWorkItem when clicked", () => {
     const onOpenWorkItem = vi.fn();
     const data = makeData({
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task with details", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Task with details", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -756,7 +780,9 @@ describe("DailyCommandCenterPanel", () => {
   it("shows Details button for reminders and calls onOpenWorkItem when clicked", () => {
     const onOpenWorkItem = vi.fn();
     const data = makeData({
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Reminder with details", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Reminder with details", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 
@@ -787,7 +813,9 @@ describe("DailyCommandCenterPanel", () => {
   it("shows Details button for team tasks and calls onOpenWorkItem when clicked", () => {
     const onOpenWorkItem = vi.fn();
     const data = makeData({
-      attentionItems: [{ id: "team-task-tt1", kind: "team-task", label: "Team task with details", urgency: "overdue", sourceId: "tt1" }],
+      attentionItems: [
+        { id: "team-task-tt1", kind: "team-task", label: "Team task with details", urgency: "overdue", sourceId: "tt1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -857,7 +885,9 @@ describe("DailyCommandCenterPanel", () => {
     render(
       <DailyCommandCenterPanel
         data={makeData({
-          attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task without details", urgency: "overdue", sourceId: "t1" }]
+          attentionItems: [
+            { id: "local-task-t1", kind: "task", label: "Task without details", urgency: "overdue", sourceId: "t1" }
+          ]
         })}
         onCompleteTask={onCompleteTask}
         onCompleteReminder={onCompleteReminder}
@@ -881,7 +911,9 @@ describe("DailyCommandCenterPanel", () => {
           action: "complete-task"
         }
       ],
-      attentionItems: [{ id: "local-task-t1", kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }],
+      attentionItems: [
+        { id: "local-task-t1", kind: "task", label: "Task to complete", urgency: "overdue", sourceId: "t1" }
+      ],
       summary: "Now: 1 overdue."
     });
 
@@ -924,7 +956,9 @@ describe("DailyCommandCenterPanel", () => {
   it("duplicated reminder produces one Details, one Complete, and one Snooze button", () => {
     const onOpenWorkItem = vi.fn();
     const data = makeData({
-      attentionItems: [{ id: "local-reminder-r1", kind: "reminder", label: "Duplicated reminder", urgency: "today", sourceId: "r1" }],
+      attentionItems: [
+        { id: "local-reminder-r1", kind: "reminder", label: "Duplicated reminder", urgency: "today", sourceId: "r1" }
+      ],
       summary: "Now: 1 due today."
     });
 

@@ -82,14 +82,7 @@ export function TodayStrip({
           onClick={onFilterTeam}
         />
       )}
-      {onReviewDay && (
-        <StripChip
-          icon={CheckCircle}
-          label="Review Day"
-          count={0}
-          onClick={onReviewDay}
-        />
-      )}
+      {onReviewDay && <StripChip icon={CheckCircle} label="Review Day" count={0} onClick={onReviewDay} />}
     </div>
   );
 }

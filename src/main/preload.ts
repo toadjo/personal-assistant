@@ -41,7 +41,10 @@ const invokeChannelMap = {
   automationRulesTestRun: "automation:rules:testRun",
   dataExport: "data:export",
   dataImport: "data:import",
+  dataImportPreview: "data:import:preview",
   dataReset: "data:reset",
+  dbHealthCheck: "db:healthCheck",
+  dbOptimize: "db:optimize",
   rendererLogError: "renderer:logError",
   appOpenHouseholdWindow: "app:openHouseholdWindow",
   appFocusDeskWindow: "app:focusDeskWindow",
@@ -160,7 +163,18 @@ contextBridge.exposeInMainWorld("assistantApi", {
     automation_rules: unknown[];
     app_settings: unknown[];
   }) => ipcRenderer.invoke(invoke.dataImport, payload),
+  previewImportData: (payload: {
+    version: string;
+    exportedAt: string;
+    notes: unknown[];
+    reminders: unknown[];
+    tasks: unknown[];
+    automation_rules: unknown[];
+    app_settings: unknown[];
+  }) => ipcRenderer.invoke(invoke.dataImportPreview, payload),
   resetData: () => ipcRenderer.invoke(invoke.dataReset),
+  checkDbHealth: () => ipcRenderer.invoke(invoke.dbHealthCheck),
+  optimizeDatabase: () => ipcRenderer.invoke(invoke.dbOptimize),
   logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) =>
     ipcRenderer.invoke(invoke.rendererLogError, payload),
   onRemindersUpdated: (cb: () => void) => {

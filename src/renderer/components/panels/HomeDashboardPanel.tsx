@@ -137,7 +137,9 @@ export function HomeDashboardPanel({
               </div>
             </div>
           ) : (
-            <p className="homeDashboardHeroEmpty">Your desk is clear. Capture something in Inbox or review your Today list.</p>
+            <p className="homeDashboardHeroEmpty">
+              Your desk is clear. Capture something in Inbox or review your Today list.
+            </p>
           )}
         </div>
         <div className="homeDashboardHeroActions" aria-label="Primary dashboard actions">
