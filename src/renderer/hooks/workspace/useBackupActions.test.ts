@@ -50,6 +50,7 @@ describe("useBackupActions", () => {
 
   it("imports cancel returns null and does not call the API", async () => {
     (window as any).assistantApi = {
+      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
       importData: vi.fn()
     };
     window.confirm = vi.fn().mockReturnValue(false);
@@ -60,6 +61,7 @@ describe("useBackupActions", () => {
     const importResult = await result.current.importData(file);
 
     expect(importResult).toBeNull();
+    expect(window.assistantApi.previewImportData).toHaveBeenCalled();
     expect(window.assistantApi.importData).not.toHaveBeenCalled();
     expect(mockRefreshAll).not.toHaveBeenCalled();
     expect(result.current.isImporting).toBe(false);
@@ -68,6 +70,7 @@ describe("useBackupActions", () => {
   it("confirmed import parses JSON, calls API, refreshes app data, and reports imported counts", async () => {
     const mockResult: BackupResult = { notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1 };
     (window as any).assistantApi = {
+      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
       importData: vi.fn().mockResolvedValue(mockResult)
     };
     window.confirm = vi.fn().mockReturnValue(true);
@@ -87,6 +90,7 @@ describe("useBackupActions", () => {
 
   it("invalid import JSON reports an error and does not refresh", async () => {
     (window as any).assistantApi = {
+      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
       importData: vi.fn()
     };
     window.confirm = vi.fn().mockReturnValue(true);
@@ -98,6 +102,7 @@ describe("useBackupActions", () => {
     const importResult = await result.current.importData(file);
 
     expect(importResult).toBeNull();
+    expect(window.assistantApi.previewImportData).not.toHaveBeenCalled(); // JSON.parse fails before preview
     expect(window.assistantApi.importData).not.toHaveBeenCalled();
     expect(mockRefreshAll).not.toHaveBeenCalled();
     expect(mockSetError).toHaveBeenCalled();

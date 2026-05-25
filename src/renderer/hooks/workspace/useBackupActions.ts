@@ -77,6 +77,32 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
       const text = await file.text();
       const payload = JSON.parse(text);
       const api = requireAssistantApi();
+      
+      // Preview the backup first
+      const preview = await api.previewImportData(payload);
+      
+      if (!preview.valid) {
+        setError(`Invalid backup: ${preview.error || "Unknown error"}`);
+        return null;
+      }
+      
+      // Show confirmation with preview details
+      const confirmed = window.confirm(
+        `Import backup from ${preview.exportedAt} (version ${preview.version})?\n\n` +
+        `This will import:\n` +
+        `- ${preview.notes} notes\n` +
+        `- ${preview.reminders} reminders\n` +
+        `- ${preview.tasks} tasks\n` +
+        `- ${preview.automation_rules} automation rules\n` +
+        `- ${preview.app_settings} app settings\n\n` +
+        `This will replace your current data. Continue?`
+      );
+      
+      if (!confirmed) {
+        setStatus("Import cancelled.");
+        return null;
+      }
+      
       const result = await api.importData(payload);
       setStatus(
         `Import complete: ${result.notes} notes, ${result.reminders} reminders, ${result.tasks} tasks, ${result.automation_rules} rules, ${result.app_settings} settings.`
