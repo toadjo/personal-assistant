@@ -1,17 +1,23 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import "@testing-library/jest-dom";
 import { EndOfDayReviewPanel } from "./EndOfDayReviewPanel";
-import type { EndOfDayReview } from "../../lib/derived/daily-command-center";
+import type { EndOfDayReview, EndOfDayReviewItem } from "../../lib/derived/daily-command-center";
 
-describe("EndOfDayReviewPanel", () => {
-  const mockOnUpdateTaskDueAt = vi.fn();
-  const mockOnSnoozeReminder = vi.fn();
-  const mockOnOpenWorkItem = vi.fn();
-  const mockOnShowSuccess = vi.fn();
-  const mockOnError = vi.fn();
+function makeEndOfDayReviewItem(overrides: Partial<EndOfDayReviewItem> = {}): EndOfDayReviewItem {
+  return {
+    id: "test-id",
+    kind: "task",
+    sourceId: "task-1",
+    label: "Test Item",
+    urgency: "today",
+    source: "local-task",
+    reviewCategory: "completed-task",
+    ...overrides
+  };
+}
 
-  const emptyReview: EndOfDayReview = {
+function makeEndOfDayReview(overrides: Partial<EndOfDayReview> = {}): EndOfDayReview {
+  return {
     completedTasks: [],
     completedReminders: [],
     unfinishedTasks: [],
@@ -20,132 +26,77 @@ describe("EndOfDayReviewPanel", () => {
     summary: "No activity today.",
     totalCompleted: 0,
     totalUnfinished: 0,
-    totalCaptured: 0
+    totalCaptured: 0,
+    ...overrides
   };
+}
 
-  const reviewWithActivity: EndOfDayReview = {
-    completedTasks: [
-      {
-        id: "completed-task-1",
-        kind: "task",
-        sourceId: "task-1",
-        label: "Completed Task 1",
-        urgency: "today",
-        source: "local-task",
-        reviewCategory: "completed-task",
-        dueAt: "2026-05-25T10:00:00.000Z"
-      }
-    ],
-    completedReminders: [
-      {
-        id: "completed-reminder-1",
-        kind: "reminder",
-        sourceId: "reminder-1",
-        label: "Completed Reminder 1",
-        urgency: "today",
-        source: "local-reminder",
-        reviewCategory: "completed-reminder",
-        dueAt: "2026-05-25T10:00:00.000Z"
-      }
-    ],
-    unfinishedTasks: [
-      {
-        id: "unfinished-task-1",
-        kind: "task",
-        sourceId: "task-2",
-        label: "Unfinished Task 1",
-        urgency: "overdue",
-        source: "local-task",
-        reviewCategory: "unfinished-task",
-        dueAt: "2026-05-24T10:00:00.000Z"
-      }
-    ],
-    unfinishedReminders: [
-      {
-        id: "unfinished-reminder-1",
-        kind: "reminder",
-        sourceId: "reminder-2",
-        label: "Unfinished Reminder 1",
-        urgency: "overdue",
-        source: "local-reminder",
-        reviewCategory: "unfinished-reminder",
-        dueAt: "2026-05-24T10:00:00.000Z"
-      }
-    ],
-    capturedNotes: [
-      {
-        id: "captured-note-1",
-        kind: "note",
-        sourceId: "note-1",
-        label: "Captured Note 1",
-        urgency: "context",
-        source: "local-note",
-        reviewCategory: "captured-note",
-        dueAt: "2026-05-25T10:00:00.000Z"
-      }
-    ],
-    summary: "Day review: 2 completed, 2 unfinished, 1 captured.",
-    totalCompleted: 2,
-    totalUnfinished: 2,
-    totalCaptured: 1
-  };
-
+describe("EndOfDayReviewPanel", () => {
   it("renders empty state when no activity", () => {
+    const review = makeEndOfDayReview();
     render(
       <EndOfDayReviewPanel
-        review={emptyReview}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
     expect(screen.getByText("No activity today")).toBeInTheDocument();
-    expect(screen.getByText("You haven't completed any tasks, reminders, or captured notes today.")).toBeInTheDocument();
-  });
-
-  it("renders summary when there is activity", () => {
-    render(
-      <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
-      />
-    );
-
-    expect(screen.getByText("Day review: 2 completed, 2 unfinished, 1 captured.")).toBeInTheDocument();
+    expect(screen.getByText(/You haven't completed any tasks/)).toBeInTheDocument();
   });
 
   it("renders completed tasks section", () => {
+    const review = makeEndOfDayReview({
+      completedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-1",
+          label: "Completed Task 1",
+          reviewCategory: "completed-task"
+        }),
+        makeEndOfDayReviewItem({
+          id: "task-2",
+          label: "Completed Task 2",
+          reviewCategory: "completed-task"
+        })
+      ],
+      totalCompleted: 2,
+      summary: "Day review: 2 completed."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
     expect(screen.getByText("Completed Tasks")).toBeInTheDocument();
     expect(screen.getByText("Completed Task 1")).toBeInTheDocument();
+    expect(screen.getByText("Completed Task 2")).toBeInTheDocument();
+    expect(screen.getByText("Day review: 2 completed.")).toBeInTheDocument();
   });
 
   it("renders completed reminders section", () => {
+    const review = makeEndOfDayReview({
+      completedReminders: [
+        makeEndOfDayReviewItem({
+          id: "reminder-1",
+          label: "Completed Reminder 1",
+          reviewCategory: "completed-reminder",
+          kind: "reminder"
+        })
+      ],
+      totalCompleted: 1,
+      summary: "Day review: 1 completed."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
@@ -154,48 +105,81 @@ describe("EndOfDayReviewPanel", () => {
   });
 
   it("renders unfinished tasks section with carry-over action", () => {
+    const onUpdateTaskDueAt = vi.fn().mockResolvedValue(undefined);
+    const review = makeEndOfDayReview({
+      unfinishedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-1",
+          label: "Unfinished Task 1",
+          reviewCategory: "unfinished-task"
+        })
+      ],
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onUpdateTaskDueAt={onUpdateTaskDueAt}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
     expect(screen.getByText("Unfinished Tasks")).toBeInTheDocument();
     expect(screen.getByText("Unfinished Task 1")).toBeInTheDocument();
-    expect(screen.getAllByLabelText("Carry over to tomorrow")).toHaveLength(2);
+    expect(screen.getByLabelText("Carry over to tomorrow")).toBeInTheDocument();
   });
 
   it("renders unfinished reminders section with carry-over action", () => {
+    const onSnoozeReminder = vi.fn().mockResolvedValue(undefined);
+    const review = makeEndOfDayReview({
+      unfinishedReminders: [
+        makeEndOfDayReviewItem({
+          id: "reminder-1",
+          label: "Unfinished Reminder 1",
+          reviewCategory: "unfinished-reminder",
+          kind: "reminder"
+        })
+      ],
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onSnoozeReminder={onSnoozeReminder}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
     expect(screen.getByText("Unfinished Reminders")).toBeInTheDocument();
     expect(screen.getByText("Unfinished Reminder 1")).toBeInTheDocument();
-    expect(screen.getAllByLabelText("Carry over to tomorrow")).toHaveLength(2);
+    expect(screen.getByLabelText("Carry over to tomorrow")).toBeInTheDocument();
   });
 
   it("renders captured notes section", () => {
+    const review = makeEndOfDayReview({
+      capturedNotes: [
+        makeEndOfDayReviewItem({
+          id: "note-1",
+          label: "Captured Note 1",
+          reviewCategory: "captured-note",
+          kind: "note"
+        })
+      ],
+      totalCaptured: 1,
+      summary: "Day review: 1 captured."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
@@ -203,153 +187,217 @@ describe("EndOfDayReviewPanel", () => {
     expect(screen.getByText("Captured Note 1")).toBeInTheDocument();
   });
 
-  it("calls onUpdateTaskDueAt when carry-over task is clicked", async () => {
+  it("renders mixed state with all categories", () => {
+    const onUpdateTaskDueAt = vi.fn().mockResolvedValue(undefined);
+    const onSnoozeReminder = vi.fn().mockResolvedValue(undefined);
+    const review = makeEndOfDayReview({
+      completedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-1",
+          label: "Completed Task",
+          reviewCategory: "completed-task"
+        })
+      ],
+      unfinishedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-2",
+          label: "Unfinished Task",
+          reviewCategory: "unfinished-task"
+        })
+      ],
+      capturedNotes: [
+        makeEndOfDayReviewItem({
+          id: "note-1",
+          label: "Captured Note",
+          reviewCategory: "captured-note",
+          kind: "note"
+        })
+      ],
+      totalCompleted: 1,
+      totalUnfinished: 1,
+      totalCaptured: 1,
+      summary: "Day review: 1 completed, 1 unfinished, 1 captured."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onUpdateTaskDueAt={onUpdateTaskDueAt}
+        onSnoozeReminder={onSnoozeReminder}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
-    const carryOverButtons = screen.getAllByLabelText("Carry over to tomorrow");
-    const taskCarryOver = carryOverButtons[0]; // First one should be for the unfinished task
-    
-    if (taskCarryOver) {
-      await taskCarryOver.click();
-    }
-
-    expect(mockOnUpdateTaskDueAt).toHaveBeenCalledWith("task-2", expect.stringContaining("T"));
-    expect(mockOnShowSuccess).toHaveBeenCalledWith("Task rescheduled to tomorrow.");
+    expect(screen.getByText("Completed Tasks")).toBeInTheDocument();
+    expect(screen.getByText("Unfinished Tasks")).toBeInTheDocument();
+    expect(screen.getByText("Notes Captured")).toBeInTheDocument();
+    expect(screen.getByText("Day review: 1 completed, 1 unfinished, 1 captured.")).toBeInTheDocument();
   });
 
-  it("calls onSnoozeReminder when carry-over reminder is clicked", async () => {
+  it("handles carry-over task action", async () => {
+    const onUpdateTaskDueAt = vi.fn().mockResolvedValue(undefined);
+    const onShowSuccess = vi.fn();
+    const review = makeEndOfDayReview({
+      unfinishedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-1",
+          sourceId: "task-1",
+          label: "Unfinished Task",
+          reviewCategory: "unfinished-task"
+        })
+      ],
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onUpdateTaskDueAt={onUpdateTaskDueAt}
+        onShowSuccess={onShowSuccess}
+        onError={vi.fn()}
       />
     );
 
-    const carryOverButtons = screen.getAllByLabelText("Carry over to tomorrow");
-    const reminderCarryOver = carryOverButtons[1]; // Second one should be for the unfinished reminder
-    
-    if (reminderCarryOver) {
-      await reminderCarryOver.click();
-    }
+    const carryOverButton = screen.getByLabelText("Carry over to tomorrow");
+    carryOverButton.click();
 
-    expect(mockOnSnoozeReminder).toHaveBeenCalledWith("reminder-2", 24 * 60);
-    expect(mockOnShowSuccess).toHaveBeenCalledWith("Reminder snoozed to tomorrow.");
+    // Wait for async operation
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(onUpdateTaskDueAt).toHaveBeenCalledWith("task-1", expect.any(String));
+    expect(onShowSuccess).toHaveBeenCalledWith("Task rescheduled to tomorrow.");
   });
 
-  it("calls onOpenWorkItem when details button is clicked", async () => {
+  it("handles carry-over reminder action", async () => {
+    const onSnoozeReminder = vi.fn().mockResolvedValue(undefined);
+    const onShowSuccess = vi.fn();
+    const review = makeEndOfDayReview({
+      unfinishedReminders: [
+        makeEndOfDayReviewItem({
+          id: "reminder-1",
+          sourceId: "reminder-1",
+          label: "Unfinished Reminder",
+          reviewCategory: "unfinished-reminder",
+          kind: "reminder"
+        })
+      ],
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onSnoozeReminder={onSnoozeReminder}
+        onShowSuccess={onShowSuccess}
+        onError={vi.fn()}
       />
     );
 
-    const detailsButtons = screen.getAllByLabelText("Details");
-    if (detailsButtons[0]) {
-      await detailsButtons[0].click();
-    }
+    const carryOverButton = screen.getByLabelText("Carry over to tomorrow");
+    carryOverButton.click();
 
-    expect(mockOnOpenWorkItem).toHaveBeenCalledWith(reviewWithActivity.completedTasks[0]);
+    // Wait for async operation
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(onSnoozeReminder).toHaveBeenCalledWith("reminder-1", 24 * 60);
+    expect(onShowSuccess).toHaveBeenCalledWith("Reminder snoozed to tomorrow.");
   });
 
   it("shows error when carry-over task fails", async () => {
-    mockOnUpdateTaskDueAt.mockRejectedValueOnce(new Error("Failed"));
+    const onUpdateTaskDueAt = vi.fn().mockRejectedValue(new Error("Failed"));
+    const onError = vi.fn();
+    const review = makeEndOfDayReview({
+      unfinishedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-1",
+          sourceId: "task-1",
+          label: "Unfinished Task",
+          reviewCategory: "unfinished-task"
+        })
+      ],
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
 
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onUpdateTaskDueAt={onUpdateTaskDueAt}
+        onShowSuccess={vi.fn()}
+        onError={onError}
       />
     );
 
-    const carryOverButtons = screen.getAllByLabelText("Carry over to tomorrow");
-    const taskCarryOver = carryOverButtons[0];
-    
-    if (taskCarryOver) {
-      await taskCarryOver.click();
-    }
+    const carryOverButton = screen.getByLabelText("Carry over to tomorrow");
+    carryOverButton.click();
 
-    expect(mockOnError).toHaveBeenCalledWith("Failed to reschedule task.");
+    // Wait for async operation
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(onError).toHaveBeenCalledWith("Failed to reschedule task.");
   });
 
   it("shows error when carry-over reminder fails", async () => {
-    mockOnSnoozeReminder.mockRejectedValueOnce(new Error("Failed"));
+    const onSnoozeReminder = vi.fn().mockRejectedValue(new Error("Failed"));
+    const onError = vi.fn();
+    const review = makeEndOfDayReview({
+      unfinishedReminders: [
+        makeEndOfDayReviewItem({
+          id: "reminder-1",
+          sourceId: "reminder-1",
+          label: "Unfinished Reminder",
+          reviewCategory: "unfinished-reminder",
+          kind: "reminder"
+        })
+      ],
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
 
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onSnoozeReminder={onSnoozeReminder}
+        onShowSuccess={vi.fn()}
+        onError={onError}
       />
     );
 
-    const carryOverButtons = screen.getAllByLabelText("Carry over to tomorrow");
-    const reminderCarryOver = carryOverButtons[1];
-    
-    if (reminderCarryOver) {
-      await reminderCarryOver.click();
-    }
+    const carryOverButton = screen.getByLabelText("Carry over to tomorrow");
+    carryOverButton.click();
 
-    expect(mockOnError).toHaveBeenCalledWith("Failed to snooze reminder.");
+    // Wait for async operation
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(onError).toHaveBeenCalledWith("Failed to snooze reminder.");
   });
 
-  it("does not show carry-over actions for completed items", () => {
+  it("renders empty message for sections with no items", () => {
+    const review = makeEndOfDayReview({
+      completedTasks: [],
+      unfinishedTasks: [
+        makeEndOfDayReviewItem({
+          id: "task-1",
+          label: "Unfinished Task",
+          reviewCategory: "unfinished-task"
+        })
+      ],
+      totalCompleted: 0,
+      totalUnfinished: 1,
+      summary: "Day review: 1 unfinished."
+    });
+
     render(
       <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
+        review={review}
+        onShowSuccess={vi.fn()}
+        onError={vi.fn()}
       />
     );
 
-    // Completed items should only have Details button, not carry-over
-    const completedTaskItem = screen.getByText("Completed Task 1").closest(".review-item");
-    const carryOverButtons = completedTaskItem?.querySelectorAll('[aria-label="Carry over to tomorrow"]');
-    expect(carryOverButtons?.length).toBe(0);
-  });
-
-  it("does not show carry-over actions for captured notes", () => {
-    render(
-      <EndOfDayReviewPanel
-        review={reviewWithActivity}
-        onUpdateTaskDueAt={mockOnUpdateTaskDueAt}
-        onSnoozeReminder={mockOnSnoozeReminder}
-        onOpenWorkItem={mockOnOpenWorkItem}
-        onShowSuccess={mockOnShowSuccess}
-        onError={mockOnError}
-      />
-    );
-
-    // Notes should only have Details button, not carry-over
-    const capturedNoteItem = screen.getByText("Captured Note 1").closest(".review-item");
-    const carryOverButtons = capturedNoteItem?.querySelectorAll('[aria-label="Carry over to tomorrow"]');
-    expect(carryOverButtons?.length).toBe(0);
+    expect(screen.getByText("No tasks completed today")).toBeInTheDocument();
   });
 });

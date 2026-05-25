@@ -14,6 +14,7 @@ function baseDeps(overrides: Partial<Parameters<typeof executeAssistantCommand>[
     setStatus: vi.fn(),
     refreshHomeAssistantEntities: vi.fn().mockResolvedValue(undefined),
     runDeviceToggle: vi.fn().mockResolvedValue(undefined),
+    onReviewDay: vi.fn(),
     ...overrides
   };
 }
@@ -228,6 +229,15 @@ describe("executeAssistantCommand", () => {
     expect(result.mutated).toBe(false);
   });
 
+  it("handles review day command", async () => {
+    const onReviewDay = vi.fn();
+    const deps = baseDeps({ rawInput: "review day", onReviewDay });
+    const result = await executeAssistantCommand(deps);
+    expect(onReviewDay).toHaveBeenCalled();
+    expect(deps.setStatus).toHaveBeenCalledWith("Opening your end-of-day review.");
+    expect(result.mutated).toBe(false);
+  });
+
   it("help text lists local commands before Home Assistant", async () => {
     const deps = baseDeps({ rawInput: "help" });
     await executeAssistantCommand(deps);
@@ -235,6 +245,7 @@ describe("executeAssistantCommand", () => {
     expect(status).toContain("add task");
     expect(status).toContain("what's next");
     expect(status).toContain("catch me up");
+    expect(status).toContain("review day");
     expect(status).toContain("After you link Home Assistant");
   });
 

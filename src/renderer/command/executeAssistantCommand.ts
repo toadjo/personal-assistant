@@ -32,7 +32,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, open household. After you link Home Assistant: toggle ..., refresh devices."
+      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, review day, open household. After you link Home Assistant: toggle ..., refresh devices."
     );
     return { mutated: false };
   }
@@ -85,6 +85,11 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   if (lower === "catch me up") {
     deps.setQuery("");
     deps.setStatus("Here's what changed while you were away. See the Daily Command Center for details.");
+    return { mutated: false };
+  }
+  if (lower === "review day") {
+    deps.onReviewDay?.();
+    deps.setStatus("Opening your end-of-day review.");
     return { mutated: false };
   }
   if (lower.startsWith("find ")) {
