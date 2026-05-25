@@ -56,8 +56,8 @@ type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "task
 
 export function AssistantShell(): JSX.Element {
   // Measure app startup performance
-  const startupMetric = measurePerformance('app-startup');
-  
+  const startupMetric = measurePerformance("app-startup");
+
   const [showAbout, setShowAbout] = useState(false);
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);

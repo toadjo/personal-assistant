@@ -180,7 +180,7 @@ describe("PlanTodayPanel", () => {
   });
 
   it("disables buttons while processing", async () => {
-    const onCompleteTask = vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+    const onCompleteTask = vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
     const queue = makeQueue([
       makePlanTodayItem({
         id: "task-1",

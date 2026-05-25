@@ -1,11 +1,11 @@
 /**
  * Plan Today panel for v2.3.0 workflow improvement.
- * 
+ *
  * This panel provides a prioritized queue of items that need attention today:
  * - Overdue tasks
  * - Due today reminders
  * - Unsorted notes
- * 
+ *
  * Users can complete, snooze, open details, or send items to Inbox from this queue.
  */
 
@@ -75,17 +75,13 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 }: Props): JSX.Element {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const content = logMetric('plan-today-render', () => {
+  const content = logMetric("plan-today-render", () => {
     if (queue.items.length === 0) {
       return (
         <section className="panel" aria-labelledby="plan-today-heading">
           <PanelHeader icon={Calendar} title="Plan Today" />
           <div className="panelContent">
-            <EmptyState
-              icon={Calendar}
-              title="All clear"
-              description="No items need planning today."
-            />
+            <EmptyState icon={Calendar} title="All clear" description="No items need planning today." />
           </div>
         </section>
       );
@@ -119,9 +115,7 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
                           {getReasonLabel(item.queueReason)}
                         </span>
                         {item.dueAt && (
-                          <span className="planTodayItemDue">
-                            {new Date(item.dueAt).toLocaleDateString()}
-                          </span>
+                          <span className="planTodayItemDue">{new Date(item.dueAt).toLocaleDateString()}</span>
                         )}
                       </div>
                     </div>
@@ -186,11 +180,7 @@ export const PlanTodayPanel = memo(function PlanTodayPanel({
 
           {onOpenInbox && (
             <div className="planTodayFooter">
-              <button
-                type="button"
-                className="ghostButton"
-                onClick={onOpenInbox}
-              >
+              <button type="button" className="ghostButton" onClick={onOpenInbox}>
                 <Inbox size={16} />
                 Open Inbox
               </button>
