@@ -15,6 +15,8 @@ Releases are built locally and uploaded manually while GitHub Actions budget is 
 
 ## Working on the app
 
+Maintainers should start with [MAINTAINER_GUIDE.md](./MAINTAINER_GUIDE.md) for the architecture map, change workflow, verification checklist, and release cautions.
+
 ### Prerequisites
 
 - **Node.js** **22.12+** LTS (**required:** `>=22.12.0` and `<26`, matching `package.json` `engines` and CI on **22.x**). **24+** is currently outside the documented support window for this project, and `engine-strict` in `.npmrc` will block `npm install` outside the declared range.
