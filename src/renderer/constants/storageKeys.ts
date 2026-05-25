@@ -8,3 +8,7 @@ export const STORAGE_ONBOARDING_DEFERRED = "assistant-onboarding-deferred";
 export const STORAGE_ONBOARDING_PROGRESS = "assistant-onboarding-progress";
 /** Tracks the last app version for which release notes were shown. */
 export const STORAGE_LAST_SEEN_RELEASE_VERSION = "assistant-last-seen-release-version";
+/** Tracks recently opened items for search ranking. JSON string of item IDs with timestamps. */
+export const STORAGE_RECENT_ITEMS = "assistant-recent-items";
+/** Tracks saved searches for quick access. JSON string of saved search queries. */
+export const STORAGE_SAVED_SEARCHES = "assistant-saved-searches";

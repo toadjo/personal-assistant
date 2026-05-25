@@ -11,4 +11,7 @@ export type SearchResult = {
   subtitle: string;
   action: string;
   score: number;
+  isOpen?: boolean;
+  isRecent?: boolean;
+  timestamp?: number;
 };

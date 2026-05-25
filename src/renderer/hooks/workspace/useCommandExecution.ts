@@ -10,6 +10,8 @@ import { persistCommandHistory, loadCommandHistory } from "../../lib/storage/com
 import type { AiActionDraft } from "../../../shared/ai/types";
 import type { HaDeviceRow } from "../../types";
 import { getAssistantApi, requireAssistantApi } from "../../lib/assistantApi";
+import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
@@ -34,6 +36,18 @@ export function useCommandExecution(args: {
   aiConfigured: boolean;
   onReviewDay?: () => void;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
+  onShowRecent?: () => void;
+  onShowSavedSearches?: () => void;
+  notes?: Note[];
+  tasks?: Task[];
+  reminders?: Reminder[];
+  rules?: AutomationRule[];
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
+  onOpenNote?: (noteId: string) => void;
+  onOpenTask?: (taskId: string) => void;
+  onOpenReminder?: (reminderId: string) => void;
+  onOpenTeamTask?: (teamTaskId: string) => void;
 }) {
   const {
     devices,
@@ -51,7 +65,19 @@ export function useCommandExecution(args: {
     remindersCount,
     aiConfigured,
     onReviewDay,
-    onQuickCapture
+    onQuickCapture,
+    onShowRecent,
+    onShowSavedSearches,
+    notes,
+    tasks,
+    reminders,
+    rules,
+    teamTasks,
+    teamProjects,
+    onOpenNote,
+    onOpenTask,
+    onOpenReminder,
+    onOpenTeamTask
   } = args;
 
   const [commandInput, setCommandInput] = useState("");
@@ -167,7 +193,19 @@ export function useCommandExecution(args: {
         },
         runDeviceToggle,
         onReviewDay,
-        onQuickCapture
+        onQuickCapture,
+        onShowRecent,
+        onShowSavedSearches,
+        notes,
+        tasks,
+        reminders,
+        rules,
+        teamTasks,
+        teamProjects,
+        onOpenNote,
+        onOpenTask,
+        onOpenReminder,
+        onOpenTeamTask
       });
       setCommandHistory((prev) => {
         const next = [normalized, ...prev.filter((item) => item.toLowerCase() !== normalized.toLowerCase())];

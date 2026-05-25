@@ -25,6 +25,8 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { ReminderFilter, TaskFilter, HaDeviceRow } from "../../types";
 import type { DailyCommandCenterFilter } from "../../lib/derived/daily-command-center";
 import type { AiActionDraft } from "../../../shared/ai/types";
+import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 import { useCommandExecution } from "../workspace/useCommandExecution";
 
 export type DeskCommandState = {
@@ -45,6 +47,8 @@ export type DeskCommandState = {
   confirmAiDraft: () => Promise<void>;
   cancelAiDraft: () => void;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
+  onShowRecent?: () => void;
+  onShowSavedSearches?: () => void;
 };
 
 export function useDeskCommandState(args: {
@@ -63,6 +67,18 @@ export function useDeskCommandState(args: {
   remindersCount: number;
   aiConfigured: boolean;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
+  onShowRecent?: () => void;
+  onShowSavedSearches?: () => void;
+  notes?: Note[];
+  tasks?: Task[];
+  reminders?: Reminder[];
+  rules?: AutomationRule[];
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
+  onOpenNote?: (noteId: string) => void;
+  onOpenTask?: (taskId: string) => void;
+  onOpenReminder?: (reminderId: string) => void;
+  onOpenTeamTask?: (teamTaskId: string) => void;
 }): DeskCommandState {
   const {
     devices,
@@ -79,7 +95,19 @@ export function useDeskCommandState(args: {
     tasksCount,
     remindersCount,
     aiConfigured,
-    onQuickCapture
+    onQuickCapture,
+    onShowRecent,
+    onShowSavedSearches,
+    notes,
+    tasks,
+    reminders,
+    rules,
+    teamTasks,
+    teamProjects,
+    onOpenNote,
+    onOpenTask,
+    onOpenReminder,
+    onOpenTeamTask
   } = args;
 
   const command = useCommandExecution({
@@ -97,7 +125,19 @@ export function useDeskCommandState(args: {
     tasksCount,
     remindersCount,
     aiConfigured,
-    onQuickCapture
+    onQuickCapture,
+    onShowRecent,
+    onShowSavedSearches,
+    notes,
+    tasks,
+    reminders,
+    rules,
+    teamTasks,
+    teamProjects,
+    onOpenNote,
+    onOpenTask,
+    onOpenReminder,
+    onOpenTeamTask
   });
 
   return {
@@ -117,6 +157,8 @@ export function useDeskCommandState(args: {
     aiReply: command.aiReply,
     confirmAiDraft: command.confirmAiDraft,
     cancelAiDraft: command.cancelAiDraft,
-    onQuickCapture: args.onQuickCapture
+    onQuickCapture: args.onQuickCapture,
+    onShowRecent: args.onShowRecent,
+    onShowSavedSearches: args.onShowSavedSearches
   };
 }

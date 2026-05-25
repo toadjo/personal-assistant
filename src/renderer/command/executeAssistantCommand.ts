@@ -2,6 +2,9 @@ import { normalizeCommandAlias, parseReminderCommand, parseReminderMeCommand, pa
 import type { HaDeviceRow, ReminderFilter, TaskFilter } from "../types";
 import type { DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
 import { requireAssistantApi } from "../lib/assistantApi";
+import { buildSearchIndex, search } from "../lib/search/searchEngine";
+import type { Note, Task, Reminder, AutomationRule } from "../../shared/types";
+import type { TeamProjectTask, TeamProject } from "../../shared/team/types";
 
 export type AssistantCommandDeps = {
   rawInput: string;
@@ -16,6 +19,18 @@ export type AssistantCommandDeps = {
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
   onReviewDay?: () => void;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
+  onShowRecent?: () => void;
+  onShowSavedSearches?: () => void;
+  notes?: Note[];
+  tasks?: Task[];
+  reminders?: Reminder[];
+  rules?: AutomationRule[];
+  teamTasks?: TeamProjectTask[];
+  teamProjects?: TeamProject[];
+  onOpenNote?: (noteId: string) => void;
+  onOpenTask?: (taskId: string) => void;
+  onOpenReminder?: (reminderId: string) => void;
+  onOpenTeamTask?: (teamTaskId: string) => void;
 };
 
 export async function executeAssistantCommand(deps: AssistantCommandDeps): Promise<{ mutated: boolean }> {
@@ -33,9 +48,77 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
   }
   if (lower === "help") {
     deps.setStatus(
-      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, review day, capture ..., open household. After you link Home Assistant: toggle ..., refresh devices."
+      "Here is what I can do: make a note ..., add note ..., add task ..., todo ..., remind me to ... in 15m, remind ... in 15m, search ..., find ..., show notes, show reminders, show tasks, plan today, show personal, show team, show household, show all, what's next, catch me up, review day, capture ..., recent, saved searches, open household. After you link Home Assistant: toggle ..., refresh devices."
     );
     return { mutated: false };
+  }
+  if (lower === "recent") {
+    deps.onShowRecent?.();
+    deps.setStatus("Showing recent items.");
+    return { mutated: false };
+  }
+  if (lower === "saved searches" || lower === "saved") {
+    deps.onShowSavedSearches?.();
+    deps.setStatus("Showing saved searches.");
+    return { mutated: false };
+  }
+  
+  // Handle "open <item name>" command with confident top match
+  if (lower.startsWith("open ")) {
+    const query = normalized.slice(5).trim();
+    if (!query) {
+      throw new Error("Tell me what to open. Example: open meeting notes");
+    }
+    
+    // Build search index and find top match
+    const index = buildSearchIndex(
+      deps.notes || [],
+      deps.tasks || [],
+      deps.reminders || [],
+      deps.rules || [],
+      deps.devices,
+      deps.teamTasks || [],
+      deps.teamProjects || []
+    );
+    
+    const results = search(query, index);
+    
+    if (results.length === 0) {
+      throw new Error(`No matches found for "${query}". Try a different search term.`);
+    }
+    
+    // Only auto-open if top result has high confidence (exact or prefix match)
+    const topResult = results[0];
+    if (topResult && topResult.score >= 50) {
+      const [type, rawId] = topResult.id.split(":", 2);
+      const id = rawId ?? "";
+      
+      switch (type) {
+        case "note":
+          deps.onOpenNote?.(id);
+          deps.setStatus(`Opened note: ${topResult.title}`);
+          return { mutated: false };
+        case "task":
+          deps.onOpenTask?.(id);
+          deps.setStatus(`Opened task: ${topResult.title}`);
+          return { mutated: false };
+        case "reminder":
+          deps.onOpenReminder?.(id);
+          deps.setStatus(`Opened reminder: ${topResult.title}`);
+          return { mutated: false };
+        case "team-task":
+          deps.onOpenTeamTask?.(id);
+          deps.setStatus(`Opened team task: ${topResult.title}`);
+          return { mutated: false };
+        default:
+          throw new Error(`Cannot open ${type} items via command. Use search instead.`);
+      }
+    } else {
+      // Low confidence - show search results instead
+      deps.setQuery(query);
+      deps.setStatus(`Found ${results.length} matches for "${query}". Select one to open.`);
+      return { mutated: false };
+    }
   }
   if (lower === "list reminders" || lower === "show reminders") {
     deps.setReminderFilter("pending");

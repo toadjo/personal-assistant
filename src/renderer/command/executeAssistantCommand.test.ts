@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { executeAssistantCommand } from "./executeAssistantCommand";
 import type { HaDeviceRow } from "../types";
@@ -16,33 +17,37 @@ function baseDeps(overrides: Partial<Parameters<typeof executeAssistantCommand>[
     runDeviceToggle: vi.fn().mockResolvedValue(undefined),
     onReviewDay: vi.fn(),
     onQuickCapture: vi.fn(),
+    onShowRecent: vi.fn(),
+    onShowSavedSearches: vi.fn(),
     ...overrides
   };
 }
 
 describe("executeAssistantCommand", () => {
   beforeEach(() => {
-    vi.stubGlobal("window", {
-      assistantApi: {
-        createNote: vi.fn().mockResolvedValue(undefined),
-        createReminder: vi.fn().mockResolvedValue(undefined),
-        createTask: vi.fn().mockResolvedValue(undefined),
-        openHouseholdWindow: vi.fn().mockResolvedValue(true),
-        focusDeskWindow: vi.fn().mockResolvedValue(true),
-        getAssistantSettings: vi.fn().mockResolvedValue({
-          name: "Assistant",
-          isConfigured: false,
-          userPreferredName: "",
-          userPreferredNameIsSet: false
-        }),
-        setUserPreferredName: vi.fn().mockResolvedValue({
-          name: "Assistant",
-          isConfigured: false,
-          userPreferredName: "",
-          userPreferredNameIsSet: false
-        })
-      }
-    });
+    (window.assistantApi as any) = {
+      createNote: vi.fn().mockResolvedValue(undefined),
+      createReminder: vi.fn().mockResolvedValue(undefined),
+      createTask: vi.fn().mockResolvedValue(undefined),
+      openHouseholdWindow: vi.fn().mockResolvedValue(true),
+      focusDeskWindow: vi.fn().mockResolvedValue(true),
+      getAssistantSettings: vi.fn().mockResolvedValue({
+        name: "Assistant",
+        isConfigured: false,
+        userPreferredName: "",
+        userPreferredNameIsSet: false
+      }),
+      setUserPreferredName: vi.fn().mockResolvedValue({
+        name: "Assistant",
+        isConfigured: false,
+        userPreferredName: "",
+        userPreferredNameIsSet: false
+      })
+    };
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   afterEach(() => {
@@ -67,7 +72,7 @@ describe("executeAssistantCommand", () => {
   it("opens household window", async () => {
     const deps = baseDeps({ rawInput: "open household" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.openHouseholdWindow).toHaveBeenCalled();
+    expect((window.assistantApi as any).openHouseholdWindow).toHaveBeenCalled();
     expect(deps.setStatus).toHaveBeenCalledWith("Opened the Household window for you.");
     expect(result.mutated).toBe(false);
   });
@@ -132,7 +137,7 @@ describe("executeAssistantCommand", () => {
   it("creates a note", async () => {
     const deps = baseDeps({ rawInput: "new note buy eggs" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createNote).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy eggs", content: "buy eggs" })
     );
     expect(result.mutated).toBe(true);
@@ -337,14 +342,14 @@ describe("executeAssistantCommand", () => {
   it("reminder command mutates", async () => {
     const deps = baseDeps({ rawInput: "remind call mom in 15m" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createReminder).toHaveBeenCalled();
+    expect((window.assistantApi as any).createReminder).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
   });
 
   it("handles make a note alias", async () => {
     const deps = baseDeps({ rawInput: "make a note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createNote).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -353,7 +358,7 @@ describe("executeAssistantCommand", () => {
   it("handles add note alias", async () => {
     const deps = baseDeps({ rawInput: "add note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createNote).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -362,7 +367,7 @@ describe("executeAssistantCommand", () => {
   it("handles remember alias", async () => {
     const deps = baseDeps({ rawInput: "remember buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createNote).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -371,14 +376,14 @@ describe("executeAssistantCommand", () => {
   it("handles remind me to alias", async () => {
     const deps = baseDeps({ rawInput: "remind me to call mom in 15m" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createReminder).toHaveBeenCalled();
+    expect((window.assistantApi as any).createReminder).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
   });
 
   it("handles remind me to with hours", async () => {
     const deps = baseDeps({ rawInput: "remind me to call mom in 2h" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createReminder).toHaveBeenCalled();
+    expect((window.assistantApi as any).createReminder).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
   });
 
@@ -406,7 +411,7 @@ describe("executeAssistantCommand", () => {
   it("handles open home alias", async () => {
     const deps = baseDeps({ rawInput: "open home" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.openHouseholdWindow).toHaveBeenCalled();
+    expect((window.assistantApi as any).openHouseholdWindow).toHaveBeenCalled();
     expect(result.mutated).toBe(false);
   });
 
@@ -438,7 +443,7 @@ describe("executeAssistantCommand", () => {
   it("note alias still works", async () => {
     const deps = baseDeps({ rawInput: "note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createNote).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -447,7 +452,7 @@ describe("executeAssistantCommand", () => {
   it("new note alias still works", async () => {
     const deps = baseDeps({ rawInput: "new note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createNote).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -463,7 +468,7 @@ describe("executeAssistantCommand", () => {
   it("creates a task with add task alias", async () => {
     const deps = baseDeps({ rawInput: "add task plan groceries" });
     const result = await executeAssistantCommand(deps);
-    expect(window.assistantApi.createTask).toHaveBeenCalledWith(
+    expect((window.assistantApi as any).createTask).toHaveBeenCalledWith(
       expect.objectContaining({ title: "plan groceries", recurrence: "none" })
     );
     expect(result.mutated).toBe(true);
@@ -529,6 +534,84 @@ describe("executeAssistantCommand", () => {
     const deps = baseDeps({ rawInput: "all" });
     const result = await executeAssistantCommand(deps);
     expect(deps.setDailyCommandCenterFilter).toHaveBeenCalledWith("all");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles recent command", async () => {
+    const onShowRecent = vi.fn();
+    const deps = baseDeps({ rawInput: "recent", onShowRecent });
+    const result = await executeAssistantCommand(deps);
+    expect(onShowRecent).toHaveBeenCalled();
+    expect(deps.setStatus).toHaveBeenCalledWith("Showing recent items.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles saved searches command", async () => {
+    const onShowSavedSearches = vi.fn();
+    const deps = baseDeps({ rawInput: "saved searches", onShowSavedSearches });
+    const result = await executeAssistantCommand(deps);
+    expect(onShowSavedSearches).toHaveBeenCalled();
+    expect(deps.setStatus).toHaveBeenCalledWith("Showing saved searches.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles saved command alias", async () => {
+    const onShowSavedSearches = vi.fn();
+    const deps = baseDeps({ rawInput: "saved", onShowSavedSearches });
+    const result = await executeAssistantCommand(deps);
+    expect(onShowSavedSearches).toHaveBeenCalled();
+    expect(deps.setStatus).toHaveBeenCalledWith("Showing saved searches.");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles open command with exact match", async () => {
+    const onOpenNote = vi.fn();
+    const deps = baseDeps({
+      rawInput: "open Meeting notes",
+      onOpenNote,
+      notes: [{ id: "n1", title: "Meeting notes", content: "", tags: [], pinned: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }],
+      tasks: [],
+      reminders: [],
+      rules: [],
+      teamTasks: [],
+      teamProjects: []
+    });
+    const result = await executeAssistantCommand(deps);
+    expect(onOpenNote).toHaveBeenCalledWith("n1");
+    expect(deps.setStatus).toHaveBeenCalledWith("Opened note: Meeting notes");
+    expect(result.mutated).toBe(false);
+  });
+
+  it("handles open command with no matches", async () => {
+    const deps = baseDeps({
+      rawInput: "open nonexistent",
+      notes: [],
+      tasks: [],
+      reminders: [],
+      rules: [],
+      teamTasks: [],
+      teamProjects: []
+    });
+    await expect(executeAssistantCommand(deps)).rejects.toThrow(/No matches found/);
+  });
+
+  it("handles open command with low confidence match", async () => {
+    const setQuery = vi.fn();
+    const deps = baseDeps({
+      rawInput: "open notes",
+      onOpenNote: vi.fn(),
+      notes: [{ id: "n1", title: "Meeting notes", content: "", tags: [], pinned: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }],
+      tasks: [],
+      reminders: [],
+      rules: [],
+      teamTasks: [],
+      teamProjects: [],
+      setQuery
+    });
+    const result = await executeAssistantCommand(deps);
+    // "notes" matches in title but not as prefix, so score is < 50, should show search results
+    expect(setQuery).toHaveBeenCalledWith("notes");
+    expect(deps.setStatus).toHaveBeenCalledWith(expect.stringMatching(/Found .* matches/));
     expect(result.mutated).toBe(false);
   });
 });

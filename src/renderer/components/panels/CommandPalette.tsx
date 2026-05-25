@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Search, X, FileText, ListTodo, Bell, Zap, Power, Settings, Users } from "lucide-react";
+import { Search, X, FileText, ListTodo, Bell, Zap, Power, Settings, Users, Clock, Bookmark } from "lucide-react";
 import { buildSearchIndex, search } from "../../lib/search/searchEngine";
 import type { SearchResult } from "../../lib/search/types";
 import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
 import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 import type { HaDeviceRow } from "../../types";
 import { IconButton } from "../ui/IconButton";
+import { getRecentItemIds, addRecentItem } from "../../lib/storage/recentItems";
+import { getSavedSearches, addSavedSearch, removeSavedSearch } from "../../lib/storage/savedSearches";
 
 const CATEGORY_ICONS: Record<SearchResult["category"], typeof FileText> = {
   note: FileText,
@@ -16,6 +18,8 @@ const CATEGORY_ICONS: Record<SearchResult["category"], typeof FileText> = {
   setting: Settings,
   "team-task": Users
 };
+
+type DisplayMode = "search" | "recent" | "saved";
 
 type Props = {
   notes: Note[];
@@ -54,19 +58,48 @@ export function CommandPalette({
 }: Props): JSX.Element {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("search");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
+  const recentItemIds = useMemo(() => getRecentItemIds(), []);
+  const savedSearches = useMemo(() => getSavedSearches(), []);
+
   const index = useMemo(
-    () => buildSearchIndex(notes, tasks, reminders, rules, devices, teamTasks, teamProjects),
-    [notes, tasks, reminders, rules, devices, teamTasks, teamProjects]
+    () => buildSearchIndex(notes, tasks, reminders, rules, devices, teamTasks, teamProjects, recentItemIds),
+    [notes, tasks, reminders, rules, devices, teamTasks, teamProjects, recentItemIds]
   );
 
   const results = useMemo(() => search(query, index), [query, index]);
 
   useEffect(() => {
     setSelectedIndex(0);
+  }, [query, displayMode]);
+
+  useEffect(() => {
+    // Switch to recent mode when query is empty
+    if (!query.trim()) {
+      setDisplayMode("search");
+    } else {
+      setDisplayMode("search");
+    }
   }, [query]);
+
+  const handleSaveSearch = useCallback(() => {
+    if (query.trim()) {
+      addSavedSearch(query.trim());
+    }
+  }, [query]);
+
+  const handleSelectSavedSearch = useCallback((savedQuery: string) => {
+    setQuery(savedQuery);
+    setDisplayMode("search");
+  }, []);
+
+  const handleRemoveSavedSearch = useCallback((e: React.MouseEvent, savedQuery: string) => {
+    e.stopPropagation();
+    removeSavedSearch(savedQuery);
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -76,6 +109,12 @@ export function CommandPalette({
     (result: SearchResult) => {
       const [type, rawId] = result.id.split(":", 2);
       const id = rawId ?? "";
+      
+      // Track recent item for non-settings
+      if (type !== "setting") {
+        addRecentItem(result.id);
+      }
+      
       switch (type) {
         case "note":
           onOpenNote?.(id);
@@ -185,7 +224,10 @@ export function CommandPalette({
                 >
                   <Icon size={16} className="commandPaletteItemIcon" />
                   <div className="commandPaletteItemContent">
-                    <div className="commandPaletteItemTitle">{result.title}</div>
+                    <div className="commandPaletteItemTitle">
+                      {result.title}
+                      {result.isRecent && <Clock size={12} className="commandPaletteRecentIcon" />}
+                    </div>
                     <div className="commandPaletteItemSubtitle">
                       {result.subtitle && <span>{result.subtitle} · </span>}
                       <span className="commandPaletteItemAction">{result.action}</span>
@@ -197,8 +239,47 @@ export function CommandPalette({
           </ul>
         )}
 
+        {query.trim() && savedSearches.length > 0 && (
+          <div className="commandPaletteSection">
+            <div className="commandPaletteSectionHeader">
+              <Bookmark size={14} />
+              <span>Saved Searches</span>
+            </div>
+            <ul className="commandPaletteSavedSearches">
+              {savedSearches.slice(0, 5).map((saved) => (
+                <li
+                  key={saved.query}
+                  className="commandPaletteSavedSearch"
+                  onClick={() => handleSelectSavedSearch(saved.query)}
+                >
+                  <span>{saved.query}</span>
+                  <button
+                    className="commandPaletteSavedSearchRemove"
+                    onClick={(e) => handleRemoveSavedSearch(e, saved.query)}
+                    aria-label={`Remove ${saved.query}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="commandPaletteFooter">
           <kbd>Up/Down</kbd> Navigate | <kbd>Enter</kbd> Open | <kbd>Esc</kbd> Close
+          {query.trim() && (
+            <>
+              <span className="commandPaletteFooterSeparator">|</span>
+              <button
+                className="commandPaletteSaveSearch"
+                onClick={handleSaveSearch}
+                disabled={!query.trim()}
+              >
+                Save Search
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

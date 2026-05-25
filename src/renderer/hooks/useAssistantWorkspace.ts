@@ -31,6 +31,8 @@ type TeamDataParams = {
   refreshTeamTasks?: () => Promise<void>;
   aiConfigured?: boolean;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
+  onShowRecent?: () => void;
+  onShowSavedSearches?: () => void;
 };
 
 export function useAssistantWorkspace(
@@ -87,7 +89,19 @@ export function useAssistantWorkspace(
     tasksCount: data.tasks.length,
     remindersCount: data.reminders.length,
     aiConfigured: teamDataParams?.aiConfigured ?? false,
-    onQuickCapture: teamDataParams?.onQuickCapture
+    onQuickCapture: teamDataParams?.onQuickCapture,
+    onShowRecent: teamDataParams?.onShowRecent,
+    onShowSavedSearches: teamDataParams?.onShowSavedSearches,
+    notes: data.notes,
+    tasks: data.tasks,
+    reminders: data.reminders,
+    rules: data.rules,
+    teamTasks: teamDataParams?.teamTasks || [],
+    teamProjects: teamDataParams?.teamProjects || [],
+    onOpenNote: (noteId: string) => productivity.memos.deleteNote(noteId, ""),
+    onOpenTask: (taskId: string) => productivity.tasks.completeById(taskId),
+    onOpenReminder: (reminderId: string) => productivity.reminders.completeById(reminderId),
+    onOpenTeamTask: () => {} // Placeholder for now
   });
 
   // Effect to dismiss onboarding after first command

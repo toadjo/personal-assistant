@@ -2178,6 +2178,14 @@ button:disabled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.commandPaletteRecentIcon {
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .commandPaletteItemSubtitle {
@@ -2215,6 +2223,89 @@ button:disabled {
   background: var(--input-bg);
   font-size: 10px;
   font-family: inherit;
+}
+
+.commandPaletteFooterSeparator {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.commandPaletteSaveSearch {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.commandPaletteSaveSearch:hover:not(:disabled) {
+  background: var(--primary-soft);
+}
+
+.commandPaletteSaveSearch:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.commandPaletteSection {
+  border-top: 1px solid var(--panel-border);
+  padding: var(--space-2) 0;
+}
+
+.commandPaletteSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-3);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.commandPaletteSavedSearches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.commandPaletteSavedSearch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px var(--space-3);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.commandPaletteSavedSearch:hover {
+  background: var(--ghost-bg);
+}
+
+.commandPaletteSavedSearchRemove {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.commandPaletteSavedSearchRemove:hover {
+  color: var(--error-text);
+  background: var(--error-bg);
 }
 
 /* Appearance panel */

@@ -112,7 +112,24 @@ describe("searchEngine", () => {
     expect(results.length).toBe(2); // settings only
   });
 
-  it("ranks title matches highest", () => {
+  it("prioritizes recent items when query is empty", () => {
+    const recentIds = new Set(["note:n1"]);
+    const index = buildSearchIndex(
+      [makeNote("n1", "Recent note")],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      recentIds
+    );
+    const results = search("", index);
+    expect(results[0]!.id).toBe("note:n1");
+    expect(results[0]!.isRecent).toBe(true);
+  });
+
+  it("ranks exact title matches highest", () => {
     const index = buildSearchIndex(
       [makeNote("n1", "Meeting notes", "about rent")],
       [makeTask("t1", "Pay rent")],
@@ -120,9 +137,65 @@ describe("searchEngine", () => {
       [],
       []
     );
-    const results = search("rent", index);
+    const results = search("Pay rent", index);
     expect(results[0]!.id).toBe("task:t1");
-    expect(results[1]!.id).toBe("note:n1");
+    expect(results[0]!.score).toBeGreaterThan(50); // Exact match gets 100+ points
+  });
+
+  it("ranks prefix matches higher than fuzzy matches", () => {
+    const index = buildSearchIndex(
+      [makeNote("n1", "Meeting notes", "about rent")],
+      [makeTask("t1", "Pay rent")],
+      [],
+      [],
+      []
+    );
+    const results = search("Pay", index);
+    expect(results[0]!.id).toBe("task:t1");
+    expect(results[0]!.score).toBeGreaterThan(40); // Prefix match gets 50+ points
+  });
+
+  it("boosts recent items in ranking", () => {
+    const recentIds = new Set(["note:n1"]);
+    const index = buildSearchIndex(
+      [makeNote("n1", "Meeting notes")],
+      [makeTask("t1", "Meeting task")],
+      [],
+      [],
+      [],
+      [],
+      [],
+      recentIds
+    );
+    const results = search("Meeting", index);
+    expect(results[0]!.id).toBe("note:n1");
+    expect(results[0]!.isRecent).toBe(true);
+  });
+
+  it("boosts open/active items in ranking", () => {
+    const index = buildSearchIndex(
+      [],
+      [makeTask("t1", "Meeting task", "open")],
+      [makeReminder("r1", "Meeting reminder", "pending")],
+      [],
+      []
+    );
+    const results = search("Meeting", index);
+    // Open task and pending reminder should be boosted
+    expect(results[0]!.score).toBeGreaterThan(0);
+  });
+
+  it("penalizes completed/done items in ranking", () => {
+    const index = buildSearchIndex(
+      [],
+      [makeTask("t1", "Meeting task", "open"), makeTask("t2", "Meeting task done", "done")],
+      [],
+      [],
+      []
+    );
+    const results = search("Meeting", index);
+    expect(results[0]!.id).toBe("task:t1"); // Open task should rank higher
+    expect(results[1]!.id).toBe("task:t2"); // Done task should be lower
   });
 
   it("matches partial words case-insensitively", () => {

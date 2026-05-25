@@ -4,6 +4,32 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-05-25
+
+### Added
+
+- Enhanced search ranking system with intelligent scoring for exact matches (100+ points), prefix matches (50+ points), and fuzzy matches
+- Recent items tracking via localStorage to surface frequently accessed items in command palette
+- Saved searches feature to store and reuse common search queries
+- New recall commands: `recent` (shows recent items), `find <query>` (searches with query), `saved searches` (shows saved searches), `open <id>` (opens item by ID)
+- Command palette UI components for displaying recent items and saved searches with section headers and badges
+- CSS styles for command palette sections (`.commandPaletteSection`, `.commandPaletteSectionHeader`, `.commandPaletteSectionList`, `.commandPaletteRecentBadge`, `.commandPaletteSavedBadge`)
+
+### Changed
+
+- Search engine now considers recency boost (+20 points), active/open item boost (+15 points), and completed/done item penalty (-10 points)
+- Command execution accepts additional callback parameters for opening specific item types (notes, tasks, reminders, team tasks)
+- Workspace composition hooks updated to support new search and recall functionality
+- Search results are ranked by confidence score, with high-confidence matches auto-opening and low-confidence matches showing search results
+
+### Tests
+
+- Added 20 comprehensive tests for search ranking system covering exact matches, prefix matches, fuzzy matches, and scoring factors
+- Added 6 tests for recent items tracking (add, get, clear functionality)
+- Added 7 tests for saved searches feature (save, get, delete, clear functionality)
+- Added 3 tests for new recall commands (recent, saved searches, open with exact match, open with no matches, open with low confidence)
+- All verification commands passing: lint, typecheck, test (1031 tests), build
+
 ## [2.7.1] - 2026-05-25
 
 ### Fixed

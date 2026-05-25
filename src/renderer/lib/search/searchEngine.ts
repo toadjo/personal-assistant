@@ -34,16 +34,70 @@ function scoreMatch(queryTokens: string[], haystack: string): number {
   return matched / queryTokens.length;
 }
 
+function isExactMatch(query: string, text: string): boolean {
+  return normalize(query) === normalize(text);
+}
+
+function isPrefixMatch(query: string, text: string): boolean {
+  const normalizedQuery = normalize(query);
+  const normalizedText = normalize(text);
+  return normalizedText.startsWith(normalizedQuery);
+}
+
+function isOpenOrActive(item: SearchResult): boolean {
+  // Check if item is marked as open or active
+  if (item.isOpen) return true;
+  
+  // Consider tasks/reminders that are not done as "active"
+  if (item.category === "task" && !item.subtitle.includes("Done")) return true;
+  if (item.category === "reminder" && !item.subtitle.includes("Done")) return true;
+  
+  return false;
+}
+
+function isCompletedOrDone(item: SearchResult): boolean {
+  return item.subtitle.includes("Done");
+}
+
 function rankResults(query: string, items: SearchResult[]): SearchResult[] {
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return items;
 
   const scored = items.map((item) => {
+    let score = 0;
+    
+    // Exact title match: highest priority (100 points)
+    if (isExactMatch(query, item.title)) {
+      score += 100;
+    }
+    
+    // Prefix match: high priority (50 points)
+    else if (isPrefixMatch(query, item.title)) {
+      score += 50;
+    }
+    
+    // Fuzzy/content matches
     const titleScore = scoreMatch(queryTokens, item.title) * 3;
     const subtitleScore = scoreMatch(queryTokens, item.subtitle);
     const actionScore = scoreMatch(queryTokens, item.action);
-    const totalScore = titleScore + subtitleScore + actionScore;
-    return { ...item, score: totalScore };
+    score += titleScore + subtitleScore + actionScore;
+    
+    // Boost for recent items (20 points)
+    if (item.isRecent) {
+      score += 20;
+    }
+    
+    // Boost for open/active items (15 points)
+    if (isOpenOrActive(item)) {
+      score += 15;
+    }
+    
+    // Penalize completed/done items (10 points)
+    if (isCompletedOrDone(item)) {
+      score -= 10;
+    }
+    
+    return { ...item, score };
   });
 
   return scored.filter((r) => r.score > 0).sort((a, b) => b.score - a.score);
@@ -56,7 +110,8 @@ export function buildSearchIndex(
   rules: AutomationRule[],
   devices: HaDeviceRow[],
   teamTasks: TeamProjectTask[] = [],
-  teamProjects: TeamProject[] = []
+  teamProjects: TeamProject[] = [],
+  recentItemIds: Set<string> = new Set()
 ): SearchResult[] {
   const results: SearchResult[] = [];
 
@@ -67,7 +122,9 @@ export function buildSearchIndex(
       title: n.title,
       subtitle: n.content?.slice(0, 80) ?? "",
       action: "Open note",
-      score: 0
+      score: 0,
+      isRecent: recentItemIds.has(`note:${n.id}`),
+      timestamp: new Date(n.updatedAt).getTime()
     });
   });
 
@@ -78,7 +135,10 @@ export function buildSearchIndex(
       title: t.title,
       subtitle: t.status === "open" ? "Open" : "Done",
       action: "Open task",
-      score: 0
+      score: 0,
+      isOpen: t.status === "open",
+      isRecent: recentItemIds.has(`task:${t.id}`),
+      timestamp: new Date(t.updatedAt).getTime()
     });
   });
 
@@ -89,7 +149,10 @@ export function buildSearchIndex(
       title: r.text,
       subtitle: r.status === "done" ? "Done" : "Pending",
       action: "Open reminder",
-      score: 0
+      score: 0,
+      isOpen: r.status === "pending",
+      isRecent: recentItemIds.has(`reminder:${r.id}`),
+      timestamp: new Date(r.dueAt).getTime()
     });
   });
 
@@ -100,7 +163,8 @@ export function buildSearchIndex(
       title: rule.name,
       subtitle: `${rule.triggerConfig.at} | ${rule.actionType}`,
       action: "Open automation",
-      score: 0
+      score: 0,
+      isRecent: recentItemIds.has(`automation:${rule.id}`)
     });
   });
 
@@ -133,7 +197,10 @@ export function buildSearchIndex(
       title: tt.title,
       subtitle: subtitleParts.join(" | "),
       action: "Open team task",
-      score: 0
+      score: 0,
+      isOpen: tt.status === "open",
+      isRecent: recentItemIds.has(`team-task:${tt.id}`),
+      timestamp: new Date(tt.updatedAt).getTime()
     });
   });
 
@@ -162,6 +229,17 @@ export function buildSearchIndex(
 
 export function search(query: string, index: SearchResult[]): SearchResult[] {
   const trimmed = query.trim();
-  if (!trimmed) return index.slice(0, 12);
+  if (!trimmed) {
+    // When empty, prioritize recent items first, then by timestamp
+    const withRecent = index.filter((item) => item.isRecent);
+    const withoutRecent = index.filter((item) => !item.isRecent);
+    
+    // Sort recent by timestamp (most recent first)
+    const sortedRecent = withRecent.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    // Sort others by timestamp (most recent first)
+    const sortedOthers = withoutRecent.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    return [...sortedRecent, ...sortedOthers].slice(0, 12);
+  }
   return rankResults(trimmed, index).slice(0, 12);
 }
