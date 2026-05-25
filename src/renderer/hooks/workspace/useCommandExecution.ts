@@ -32,6 +32,7 @@ export function useCommandExecution(args: {
   tasksCount: number;
   remindersCount: number;
   aiConfigured: boolean;
+  onReviewDay?: () => void;
 }) {
   const {
     devices,
@@ -47,7 +48,8 @@ export function useCommandExecution(args: {
     notesCount,
     tasksCount,
     remindersCount,
-    aiConfigured
+    aiConfigured,
+    onReviewDay
   } = args;
 
   const [commandInput, setCommandInput] = useState("");
@@ -127,7 +129,8 @@ export function useCommandExecution(args: {
           const api = getAssistantApi();
           await api?.refreshHomeAssistantEntities?.();
         },
-        runDeviceToggle
+        runDeviceToggle,
+        onReviewDay
       });
       setCommandHistory((prev) => {
         const next = [normalized, ...prev.filter((item) => item.toLowerCase() !== normalized.toLowerCase())];

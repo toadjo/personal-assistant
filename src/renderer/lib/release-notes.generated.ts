@@ -9,6 +9,11 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    "version": "2.6.0",
+    "date": "2026-05-25",
+    "markdown": "### Added\n\n- End-of-Day Review: daily review workflow showing completed tasks, completed reminders, unfinished items, and captured notes\n- Review Day button in Today strip to trigger end-of-day review\n- \"review day\" command support for keyboard-driven workflow\n- Carry-over actions for unfinished tasks (reschedule to tomorrow) and reminders (snooze to tomorrow)\n- EndOfDayReviewPanel component with categorized sections for different item types\n- deriveEndOfDayReview function to infer today's activity from task, reminder, and note timestamps\n- lastCompletedAt field to BriefItem type for tracking task completion status\n\n### Changed\n\n- BriefItem type now includes optional lastCompletedAt field for accurate completion tracking\n- End-of-day review uses lastCompletedAt timestamp to identify tasks completed today\n- Unfinished items are inferred from due dates and completion status\n\n### Tests\n\n- Added 16 unit tests for deriveEndOfDayReview function\n- Added 14 renderer tests for EndOfDayReviewPanel component\n- Tests cover completion detection, unfinished item identification, carry-over actions, and error handling\n- All 977 tests passing"
+  },
+  {
     "version": "2.5.0",
     "date": "2026-05-25",
     "markdown": "### Added\n\n- Quick Reschedule: calendar action button for tasks and reminders with preset options (Today, Tomorrow, Next Week, Custom)\n- Batch Snooze: Snooze button for selected reminders with preset options (10 minutes, 1 hour, Tomorrow, Next Week)\n- Enhanced Plan Today panel with scheduling controls for efficient daily planning\n- Dropdown menus for quick scheduling actions with keyboard navigation support\n\n### Changed\n\n- Plan Today panel now includes both completion and scheduling workflows\n- Quick Reschedule uses existing task and reminder update APIs for consistency\n- Batch Snooze only affects selected reminders, leaving tasks unchanged\n- Improved scheduling UX with preset time options for common workflows\n\n### Tests\n\n- Added 18 renderer tests for Quick Reschedule and Batch Snooze functionality\n- Tests cover calendar actions, preset selection, batch operations, and error handling\n- All 951 tests passing"

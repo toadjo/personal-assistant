@@ -17,6 +17,7 @@ import { ReleaseNotesPanel } from "./panels/ReleaseNotesPanel";
 import { TasksPanel } from "./panels/TasksPanel";
 import { DailyCommandCenterPanel } from "./panels/DailyCommandCenterPanel";
 import { PlanTodayPanel } from "./panels/PlanTodayPanel";
+import { EndOfDayReviewPanel } from "./panels/EndOfDayReviewPanel";
 import { HomeDashboardPanel } from "./panels/HomeDashboardPanel";
 import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
@@ -33,7 +34,7 @@ import {
   STORAGE_ONBOARDING_DEFERRED,
   STORAGE_LAST_SEEN_RELEASE_VERSION
 } from "../constants/storageKeys";
-import { deriveDailyCommandCenter, derivePlanTodayQueue } from "../lib/derived/daily-command-center";
+import { deriveDailyCommandCenter, derivePlanTodayQueue, deriveEndOfDayReview, type EndOfDayReview } from "../lib/derived/daily-command-center";
 import { deriveFocusBrief } from "../lib/derived/brief";
 import { deriveAwayBrief } from "../lib/derived/away-brief";
 import { getLastSeenAt, setLastSeenAt } from "../lib/last-seen";
@@ -85,8 +86,26 @@ export function AssistantShell(): JSX.Element {
     totalItems: 0
   });
 
+  const [endOfDayReview, setEndOfDayReview] = useState<EndOfDayReview>({
+    completedTasks: [],
+    completedReminders: [],
+    unfinishedTasks: [],
+    unfinishedReminders: [],
+    capturedNotes: [],
+    summary: "No activity today.",
+    totalCompleted: 0,
+    totalUnfinished: 0,
+    totalCaptured: 0
+  });
+  const [showEndOfDayReview, setShowEndOfDayReview] = useState(false);
+
   const setDailyCommandCenterFilter = (filter: DailyCommandCenterFilter) => {
     setDailyCommandCenter((prev) => ({ ...prev, filter }));
+  };
+
+  const handleReviewDay = () => {
+    setShowEndOfDayReview(true);
+    ui.setStatus("Opening your end-of-day review.");
   };
 
   function openUnifiedWorkItem(source: "local-note" | "local-task" | "local-reminder" | "team-task", id: string): void {
@@ -257,6 +276,14 @@ export function AssistantShell(): JSX.Element {
       now: new Date()
     });
     setPlanTodayQueue(planToday);
+
+    const endOfDay = deriveEndOfDayReview({
+      localTasks,
+      localReminders,
+      localNotes,
+      now: new Date()
+    });
+    setEndOfDayReview(endOfDay);
   }, [
     tasks.overdueOpen,
     tasks.dueTodayOpen,
@@ -785,22 +812,14 @@ export function AssistantShell(): JSX.Element {
                   setActivePersonalModule("tasks");
                   tasks.setFilter("open");
                 }}
-                onFilterReminders={() => {
-                  setActivePersonalModule("reminders");
-                  reminders.setFilter("pending");
-                }}
-                onFilterNotes={() => {
-                  setActivePersonalModule("memos");
-                  data.setQuery("");
-                }}
-                onFilterAutomations={() => {
-                  setDailyCommandCenterFilter("household");
-                  ui.setStatus("Showing household automations.");
-                }}
+                onFilterReminders={() => setActivePersonalModule("reminders")}
+                onFilterNotes={() => setActivePersonalModule("memos")}
+                onFilterAutomations={() => handleOpenHouseholdWindow()}
                 onFilterTeam={() => {
                   setDailyCommandCenterFilter("team");
                   ui.setStatus("Showing team tasks.");
                 }}
+                onReviewDay={handleReviewDay}
               />
 
               <PlanTodayPanel
@@ -846,6 +865,22 @@ export function AssistantShell(): JSX.Element {
                 onOpenWorkItem={openBriefItemInDrawer}
                 onOpenInbox={() => setActivePersonalModule("inbox")}
               />
+
+              {showEndOfDayReview && (
+                <EndOfDayReviewPanel
+                  review={endOfDayReview}
+                  onUpdateTaskDueAt={async (id: string, dueAt: string | null) => {
+                    const task = data.tasks.find(t => t.id === id);
+                    if (task) {
+                      await tasks.saveTask({ id, title: task.title, notes: task.notes, dueAt, priority: task.priority, recurrence: task.recurrence });
+                    }
+                  }}
+                  onSnoozeReminder={async (id: string, minutes: number) => await reminders.snoozeMinutes(id, minutes, `Snoozed ${minutes}m.`)}
+                  onOpenWorkItem={openBriefItemInDrawer}
+                  onShowSuccess={ui.showSuccess}
+                  onError={ui.reportError}
+                />
+              )}
             </>
           )}
 

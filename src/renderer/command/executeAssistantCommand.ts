@@ -14,6 +14,7 @@ export type AssistantCommandDeps = {
   setStatus: (value: string) => void;
   refreshHomeAssistantEntities: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
+  onReviewDay?: () => void;
 };
 
 export async function executeAssistantCommand(deps: AssistantCommandDeps): Promise<{ mutated: boolean }> {

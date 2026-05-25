@@ -31,6 +31,7 @@ export type BriefItem = {
   urgency: BriefItemUrgency;
   sourceId: string;
   dueAt?: string;
+  lastCompletedAt?: string;
 };
 
 export type AwayBriefItemKind = "task" | "reminder" | "note";

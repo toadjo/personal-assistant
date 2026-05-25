@@ -4,6 +4,31 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-05-25
+
+### Added
+
+- End-of-Day Review: daily review workflow showing completed tasks, completed reminders, unfinished items, and captured notes
+- Review Day button in Today strip to trigger end-of-day review
+- "review day" command support for keyboard-driven workflow
+- Carry-over actions for unfinished tasks (reschedule to tomorrow) and reminders (snooze to tomorrow)
+- EndOfDayReviewPanel component with categorized sections for different item types
+- deriveEndOfDayReview function to infer today's activity from task, reminder, and note timestamps
+- lastCompletedAt field to BriefItem type for tracking task completion status
+
+### Changed
+
+- BriefItem type now includes optional lastCompletedAt field for accurate completion tracking
+- End-of-day review uses lastCompletedAt timestamp to identify tasks completed today
+- Unfinished items are inferred from due dates and completion status
+
+### Tests
+
+- Added 16 unit tests for deriveEndOfDayReview function
+- Added 14 renderer tests for EndOfDayReviewPanel component
+- Tests cover completion detection, unfinished item identification, carry-over actions, and error handling
+- All 977 tests passing
+
 ## [2.5.0] - 2026-05-25
 
 ### Added

@@ -40,6 +40,181 @@ export type PlanTodayQueue = {
 };
 
 /**
+ * End-of-Day Review item for v2.6.0 workflow.
+ */
+export type EndOfDayReviewItem = BriefItem & {
+  source: "local-task" | "local-reminder" | "local-note";
+  reviewCategory: "completed-task" | "completed-reminder" | "unfinished-task" | "unfinished-reminder" | "captured-note";
+  id: string; // Unique identifier for the review item
+};
+
+export type EndOfDayReview = {
+  completedTasks: EndOfDayReviewItem[];
+  completedReminders: EndOfDayReviewItem[];
+  unfinishedTasks: EndOfDayReviewItem[];
+  unfinishedReminders: EndOfDayReviewItem[];
+  capturedNotes: EndOfDayReviewItem[];
+  summary: string;
+  totalCompleted: number;
+  totalUnfinished: number;
+  totalCaptured: number;
+};
+
+/**
+ * Derives the End-of-Day Review from local tasks, reminders, and notes.
+ * 
+ * The review shows:
+ * - Tasks completed today (status === "done" and lastCompletedAt is today)
+ * - Reminders completed today (status === "done" and updatedAt is today)
+ * - Unfinished overdue or today tasks (status !== "done" and dueAt is overdue or today)
+ * - Unfinished overdue or today reminders (status !== "done" and dueAt is overdue or today)
+ * - Notes captured today (createdAt is today)
+ */
+export function deriveEndOfDayReview(params: {
+  localTasks: BriefItem[];
+  localReminders: BriefItem[];
+  localNotes: BriefItem[];
+  now?: Date;
+}): EndOfDayReview {
+  const now = params.now || new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const completedTasks: EndOfDayReviewItem[] = [];
+  const completedReminders: EndOfDayReviewItem[] = [];
+  const unfinishedTasks: EndOfDayReviewItem[] = [];
+  const unfinishedReminders: EndOfDayReviewItem[] = [];
+  const capturedNotes: EndOfDayReviewItem[] = [];
+
+  // Find tasks completed today
+  for (const task of params.localTasks) {
+    if (task.kind === "task" && task.lastCompletedAt) {
+      const completedDate = new Date(task.lastCompletedAt);
+      if (completedDate >= todayStart && completedDate <= todayEnd) {
+        completedTasks.push({
+          ...task,
+          source: "local-task",
+          reviewCategory: "completed-task",
+          id: `local-task-${task.sourceId}`
+        });
+      }
+    }
+  }
+
+  // Find reminders completed today (using updatedAt as proxy since reminders don't have lastCompletedAt)
+  for (const reminder of params.localReminders) {
+    if (reminder.kind === "reminder" && reminder.dueAt) {
+      const completedDate = new Date(reminder.dueAt);
+      if (completedDate >= todayStart && completedDate <= todayEnd) {
+        completedReminders.push({
+          ...reminder,
+          source: "local-reminder",
+          reviewCategory: "completed-reminder",
+          id: `local-reminder-${reminder.sourceId}`
+        });
+      }
+    }
+  }
+
+  // Find unfinished overdue or today tasks
+  for (const task of params.localTasks) {
+    if (task.kind === "task" && task.dueAt) {
+      const dueDate = new Date(task.dueAt);
+      if (dueDate <= todayEnd) {
+        // Assume task is unfinished if it's not in completed tasks
+        const isCompleted = completedTasks.some(ct => ct.sourceId === task.sourceId);
+        if (!isCompleted) {
+          unfinishedTasks.push({
+            ...task,
+            source: "local-task",
+            reviewCategory: "unfinished-task",
+            id: `local-task-${task.sourceId}`
+          });
+        }
+      }
+    }
+  }
+
+  // Find unfinished overdue or today reminders
+  for (const reminder of params.localReminders) {
+    if (reminder.kind === "reminder" && reminder.dueAt) {
+      const dueDate = new Date(reminder.dueAt);
+      if (dueDate <= todayEnd) {
+        // Assume reminder is unfinished if it's not in completed reminders
+        const isCompleted = completedReminders.some(cr => cr.sourceId === reminder.sourceId);
+        if (!isCompleted) {
+          unfinishedReminders.push({
+            ...reminder,
+            source: "local-reminder",
+            reviewCategory: "unfinished-reminder",
+            id: `local-reminder-${reminder.sourceId}`
+          });
+        }
+      }
+    }
+  }
+
+  // Find notes captured today (using dueAt as proxy for createdAt since BriefItem doesn't have it)
+  for (const note of params.localNotes) {
+    if (note.kind === "note" && note.dueAt) {
+      const createdDate = new Date(note.dueAt);
+      if (createdDate >= todayStart && createdDate <= todayEnd) {
+        capturedNotes.push({
+          ...note,
+          source: "local-note",
+          reviewCategory: "captured-note",
+          id: `local-note-${note.sourceId}`
+        });
+      }
+    }
+  }
+
+  // Sort each category by due date (if available) or label
+  const sortItems = (items: EndOfDayReviewItem[]) => {
+    return items.sort((a, b) => {
+      if (a.dueAt && b.dueAt) {
+        return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+      }
+      return a.label.localeCompare(b.label);
+    });
+  };
+
+  const totalCompleted = completedTasks.length + completedReminders.length;
+  const totalUnfinished = unfinishedTasks.length + unfinishedReminders.length;
+  const totalCaptured = capturedNotes.length;
+  const summary = buildEndOfDaySummary(totalCompleted, totalUnfinished, totalCaptured);
+
+  return {
+    completedTasks: sortItems(completedTasks),
+    completedReminders: sortItems(completedReminders),
+    unfinishedTasks: sortItems(unfinishedTasks),
+    unfinishedReminders: sortItems(unfinishedReminders),
+    capturedNotes: sortItems(capturedNotes),
+    summary,
+    totalCompleted,
+    totalUnfinished,
+    totalCaptured
+  };
+}
+
+function buildEndOfDaySummary(completed: number, unfinished: number, captured: number): string {
+  const parts: string[] = [];
+  
+  if (completed > 0) parts.push(`${completed} completed`);
+  if (unfinished > 0) parts.push(`${unfinished} unfinished`);
+  if (captured > 0) parts.push(`${captured} captured`);
+  
+  if (parts.length === 0) {
+    return "No activity today.";
+  }
+  
+  return `Day review: ${parts.join(", ")}.`;
+}
+
+/**
  * Derives the Plan Today queue from local tasks, reminders, and notes.
  * 
  * The queue prioritizes:
