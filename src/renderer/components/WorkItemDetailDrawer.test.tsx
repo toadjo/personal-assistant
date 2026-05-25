@@ -3,6 +3,17 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { WorkItemDetailDrawer } from "./WorkItemDetailDrawer";
 import type { UnifiedWorkItem, UnifiedWorkPriority } from "../lib/derived/unified-work";
 
+// Helper function to convert ISO timestamp to local datetime-local format (matches component logic)
+function isoToLocalDateTime(isoString: string): string {
+  const date = new Date(isoString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 function makeUnifiedItem(overrides: Partial<UnifiedWorkItem> = {}): UnifiedWorkItem {
   return {
     id: "test-id",
@@ -401,7 +412,7 @@ describe("WorkItemDetailDrawer", () => {
 
       expect(screen.getByLabelText("Title")).toHaveValue("Deploy v2");
       expect(screen.getByLabelText("Notes")).toHaveValue("Release notes");
-      expect(screen.getByLabelText("Due Date")).toHaveValue("2024-08-01T09:00");
+      expect(screen.getByLabelText("Due Date")).toHaveValue(isoToLocalDateTime("2024-08-01T09:00:00.000Z"));
       expect(screen.getByLabelText("Priority")).toHaveValue("high");
       expect(screen.getByLabelText("Recurrence")).toHaveValue("weekly");
       expect(screen.getByLabelText("Assignee")).toHaveValue("Carol");
@@ -409,11 +420,12 @@ describe("WorkItemDetailDrawer", () => {
     });
 
     it("saves a team task preserving untouched metadata", async () => {
+      const originalDueAt = "2024-08-01T09:00:00.000Z";
       const item = makeUnifiedItem({
         source: "team-task",
         label: "Original Title",
         detail: "Original notes",
-        dueAt: "2024-08-01T09:00:00.000Z",
+        dueAt: originalDueAt,
         assigneeDisplayName: "Carol",
         teamPriority: "high",
         teamRecurrence: "weekly",
@@ -441,10 +453,11 @@ describe("WorkItemDetailDrawer", () => {
 
       await vi.waitFor(() => expect(onUpdateTeamTask).toHaveBeenCalled());
 
+      const expectedDueAt = new Date(isoToLocalDateTime(originalDueAt)).toISOString();
       expect(onUpdateTeamTask).toHaveBeenCalledWith("task-1", {
         title: "Updated Title",
         notes: "Original notes",
-        dueAt: "2024-08-01T09:00:00.000Z",
+        dueAt: expectedDueAt,
         priority: "high",
         recurrence: "weekly",
         assigneeDisplayName: "Carol",
@@ -560,7 +573,7 @@ describe("WorkItemDetailDrawer", () => {
 
       expect(screen.getByLabelText("Title")).toHaveValue("Fix bug");
       expect(screen.getByLabelText("Notes")).toHaveValue("Stack trace attached");
-      expect(screen.getByLabelText("Due Date")).toHaveValue("2024-09-15T14:00");
+      expect(screen.getByLabelText("Due Date")).toHaveValue(isoToLocalDateTime("2024-09-15T14:00:00.000Z"));
       expect(screen.getByLabelText("Priority")).toHaveValue("high");
       expect(screen.getByLabelText("Recurrence")).toHaveValue("daily");
     });
@@ -589,16 +602,18 @@ describe("WorkItemDetailDrawer", () => {
 
       fireEvent.change(screen.getByLabelText("Priority"), { target: { value: "high" } });
       fireEvent.change(screen.getByLabelText("Recurrence"), { target: { value: "weekly" } });
-      fireEvent.change(screen.getByLabelText("Due Date"), { target: { value: "2024-10-01T10:00" } });
+      const localDateTime = "2024-10-01T10:00";
+      fireEvent.change(screen.getByLabelText("Due Date"), { target: { value: localDateTime } });
 
       fireEvent.click(screen.getByText("Save"));
 
       await vi.waitFor(() => expect(onUpdateTask).toHaveBeenCalled());
 
+      const expectedDueAt = new Date(localDateTime).toISOString();
       expect(onUpdateTask).toHaveBeenCalledWith("task-1", {
         title: "Deploy",
         notes: "Notes here",
-        dueAt: "2024-10-01T10:00:00.000Z",
+        dueAt: expectedDueAt,
         priority: "high",
         recurrence: "weekly"
       });

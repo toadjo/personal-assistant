@@ -41,6 +41,17 @@ type TeamProjectTaskFields = {
   status: "open" | "done";
 };
 
+// Helper functions for local datetime-local conversion
+function isoToLocalDateTime(isoString: string): string {
+  const date = new Date(isoString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
   item,
   onClose,
@@ -76,7 +87,7 @@ export const WorkItemDetailDrawer = memo(function WorkItemDetailDrawer({
     setEditTitle(item.label);
     setEditContent(item.detail || "");
     if (item.dueAt) {
-      setEditDueAt(new Date(item.dueAt).toISOString().slice(0, 16));
+      setEditDueAt(isoToLocalDateTime(item.dueAt));
     } else {
       setEditDueAt("");
     }

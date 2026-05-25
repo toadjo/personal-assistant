@@ -4,6 +4,19 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-05-25
+
+Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+
+### Fixed
+
+- Drawer date editing now uses local datetime-local semantics consistently across timezones.
+- Due dates no longer shift when editing local tasks, team tasks, and reminders.
+
+### Tests
+
+- All unit tests passing with timezone-aware date handling.
+
 ## [2.1.9] - 2026-05-22
 
 Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
