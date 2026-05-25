@@ -4,6 +4,31 @@ All notable changes to Personal Assistant are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-05-25
+
+### Added
+
+- Backup preview with counts and validation before destructive import operations
+- SQLite data health diagnostics (integrity check, schema validation, data analysis, performance metrics)
+- Database optimization functionality (WAL checkpoint, VACUUM, index optimization)
+- Release hygiene check script for pre-release validation
+- AGENTS.md documentation for AI agent development
+- IPC channels for database health checks and optimization
+
+### Changed
+
+- Backup import now uses two-step process: preview first, then confirm with detailed counts
+- Import confirmation dialog shows backup version, export date, and item counts
+- Database health check provides comprehensive diagnostics with recommendations
+- Test databases now use WAL mode for consistency with production
+
+### Tests
+
+- Added 8 comprehensive tests for backup preview functionality
+- Added 8 tests for database health check service
+- Updated backup actions tests for preview integration
+- Updated IPC handler contract tests for new channels
+
 ## [2.8.0] - 2026-05-25
 
 ### Added
