@@ -9,6 +9,11 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    "version": "3.0.1",
+    "date": "2026-05-26",
+    "markdown": "### Fixed\n\n- Fixed `review day` command to switch to Today module before opening End-of-Day Review, ensuring the review panel is visible from any module\n- Added missing `latest.yml` update manifest to v3.0.0 GitHub release for proper update hygiene"
+  },
+  {
     "version": "3.0.0",
     "date": "2026-05-26",
     "markdown": "### Changed\n\n- Consolidated daily workflow UI copy to reflect Personal OS branding instead of version-specific references\n- Updated onboarding experience to introduce the app as a local-first personal operating layer\n- Standardized command examples to use consistent `capture`, `find`, and `plan today` commands\n- Enhanced Data Control panel with health check and database optimization buttons\n- Updated success/error messages across workflows for consistency\n- Improved backup action hooks to support health check and optimization operations\n- Updated documentation (README.md, MAINTAINER_GUIDE.md, ARCHITECTURE.md) to reflect Personal OS positioning\n\n### Added\n\n- Database health check UI integration in Data Control panel\n- Database optimization UI integration in Data Control panel\n- Comprehensive health check status reporting with integrity, schema, data, and performance metrics\n- Health check and optimization state management in backup actions hook\n\n### Fixed\n\n- Removed stale version-specific comments from component files\n- Updated command palette and onboarding commands to use consistent terminology\n- Ensured all workflow copy describes the core loop: capture, sort, plan, act, review, search, recover\n\n### Tests\n\n- Updated DataControlPanel tests to cover health check and optimization buttons\n- Added tests for health check and optimization state management\n- All existing tests continue to pass (1031 tests)\n\n### Documentation\n\n- Updated README.md to reflect Personal OS branding and core workflow\n- Updated MAINTAINER_GUIDE.md to reflect Personal OS positioning\n- Updated ARCHITECTURE.md to reflect Personal OS architecture\n- Added Personal OS Core workflow description to README"
