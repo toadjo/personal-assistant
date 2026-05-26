@@ -254,6 +254,61 @@ export type BackupPayload = {
     createdAt: string;
     updatedAt: string;
   }>;
+  hobbies?: Array<{
+    id: string;
+    name: string;
+    category: string;
+    description: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  hobby_sessions?: Array<{
+    id: string;
+    hobbyId: string;
+    date: string;
+    durationMinutes: number;
+    notes: string;
+    mood: string;
+    energy: number | null;
+    progressRating: number | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  hobby_projects?: Array<{
+    id: string;
+    hobbyId: string;
+    name: string;
+    description: string;
+    status: string;
+    targetDate: string | null;
+    completedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  hobby_milestones?: Array<{
+    id: string;
+    projectId: string;
+    name: string;
+    description: string;
+    targetDate: string | null;
+    completedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  hobby_supplies?: Array<{
+    id: string;
+    hobbyId: string;
+    projectId: string | null;
+    name: string;
+    type: string;
+    cost: number | null;
+    purchaseDate: string | null;
+    source: string;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   app_settings?: Array<{
     key: string;
     value: string;
@@ -293,6 +348,11 @@ export type BackupPreviewResult = {
   health_symptoms: number;
   health_measurements: number;
   health_obligations: number;
+  hobbies: number;
+  hobby_sessions: number;
+  hobby_projects: number;
+  hobby_milestones: number;
+  hobby_supplies: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -322,6 +382,11 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const health_symptoms = db.prepare("SELECT * FROM health_symptoms").all() as BackupPayload["health_symptoms"];
   const health_measurements = db.prepare("SELECT * FROM health_measurements").all() as BackupPayload["health_measurements"];
   const health_obligations = db.prepare("SELECT * FROM health_obligations").all() as BackupPayload["health_obligations"];
+  const hobbies = db.prepare("SELECT * FROM hobbies").all() as BackupPayload["hobbies"];
+  const hobby_sessions = db.prepare("SELECT * FROM hobby_sessions").all() as BackupPayload["hobby_sessions"];
+  const hobby_projects = db.prepare("SELECT * FROM hobby_projects").all() as BackupPayload["hobby_projects"];
+  const hobby_milestones = db.prepare("SELECT * FROM hobby_milestones").all() as BackupPayload["hobby_milestones"];
+  const hobby_supplies = db.prepare("SELECT * FROM hobby_supplies").all() as BackupPayload["hobby_supplies"];
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
@@ -352,6 +417,11 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     health_symptoms,
     health_measurements,
     health_obligations,
+    hobbies,
+    hobby_sessions,
+    hobby_projects,
+    hobby_milestones,
+    hobby_supplies,
     app_settings
   };
 
@@ -413,6 +483,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -447,6 +522,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: true,
@@ -480,6 +560,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -515,6 +600,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -547,6 +637,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -579,6 +674,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -611,6 +711,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -643,6 +748,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -675,6 +785,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -707,6 +822,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -739,6 +859,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -771,6 +896,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -803,6 +933,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -835,6 +970,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -867,6 +1007,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -899,6 +1044,196 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       health_symptoms: 0,
       health_measurements: 0,
       health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.hobbies && !Array.isArray(payload.hobbies)) {
+    return {
+      valid: false,
+      error: "Invalid backup: hobbies field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.hobby_sessions && !Array.isArray(payload.hobby_sessions)) {
+    return {
+      valid: false,
+      error: "Invalid backup: hobby_sessions field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.hobby_projects && !Array.isArray(payload.hobby_projects)) {
+    return {
+      valid: false,
+      error: "Invalid backup: hobby_projects field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.hobby_milestones && !Array.isArray(payload.hobby_milestones)) {
+    return {
+      valid: false,
+      error: "Invalid backup: hobby_milestones field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.hobby_supplies && !Array.isArray(payload.hobby_supplies)) {
+    return {
+      valid: false,
+      error: "Invalid backup: hobby_supplies field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      hobbies: 0,
+      hobby_sessions: 0,
+      hobby_projects: 0,
+      hobby_milestones: 0,
+      hobby_supplies: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -931,6 +1266,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     "health_symptoms",
     "health_measurements",
     "health_obligations",
+    "hobbies",
+    "hobby_sessions",
+    "hobby_projects",
+    "hobby_milestones",
+    "hobby_supplies",
     "app_settings",
     "_encrypted"
   ];
@@ -963,6 +1303,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
   const health_measurements = payload.health_measurements?.length ?? 0;
   const health_obligations = payload.health_obligations?.length ?? 0;
   const app_settings = payload.app_settings?.length ?? 0;
+  const hobbies = payload.hobbies?.length ?? 0;
+  const hobby_sessions = payload.hobby_sessions?.length ?? 0;
+  const hobby_projects = payload.hobby_projects?.length ?? 0;
+  const hobby_milestones = payload.hobby_milestones?.length ?? 0;
+  const hobby_supplies = payload.hobby_supplies?.length ?? 0;
 
   return {
     valid: true,
@@ -986,6 +1331,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     health_symptoms,
     health_measurements,
     health_obligations,
+    hobbies,
+    hobby_sessions,
+    hobby_projects,
+    hobby_milestones,
+    hobby_supplies,
     app_settings,
     unsupported_sections,
     has_encrypted_content: false,
@@ -1018,6 +1368,11 @@ export function importBackup(
   health_symptoms: number;
   health_measurements: number;
   health_obligations: number;
+  hobbies: number;
+  hobby_sessions: number;
+  hobby_projects: number;
+  hobby_milestones: number;
+  hobby_supplies: number;
   app_settings: number;
   rejected_secret_settings: number;
 } {
@@ -1058,6 +1413,11 @@ export function importBackup(
   if (!actualPayload.health_symptoms) actualPayload.health_symptoms = [];
   if (!actualPayload.health_measurements) actualPayload.health_measurements = [];
   if (!actualPayload.health_obligations) actualPayload.health_obligations = [];
+  if (!actualPayload.hobbies) actualPayload.hobbies = [];
+  if (!actualPayload.hobby_sessions) actualPayload.hobby_sessions = [];
+  if (!actualPayload.hobby_projects) actualPayload.hobby_projects = [];
+  if (!actualPayload.hobby_milestones) actualPayload.hobby_milestones = [];
+  if (!actualPayload.hobby_supplies) actualPayload.hobby_supplies = [];
   if (!actualPayload.app_settings) actualPayload.app_settings = [];
 
   const db = getDb();
@@ -1084,6 +1444,11 @@ export function importBackup(
     db.prepare("DELETE FROM health_symptoms").run();
     db.prepare("DELETE FROM health_measurements").run();
     db.prepare("DELETE FROM health_obligations").run();
+    db.prepare("DELETE FROM hobbies").run();
+    db.prepare("DELETE FROM hobby_sessions").run();
+    db.prepare("DELETE FROM hobby_projects").run();
+    db.prepare("DELETE FROM hobby_milestones").run();
+    db.prepare("DELETE FROM hobby_supplies").run();
     db.prepare("DELETE FROM app_settings").run();
 
     const noteStmt = db.prepare(
@@ -1226,6 +1591,41 @@ export function importBackup(
       healthObligationStmt.run(row);
     }
 
+    const hobbyStmt = db.prepare(
+      "INSERT INTO hobbies (id, name, category, description, status, createdAt, updatedAt) VALUES (@id, @name, @category, @description, @status, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.hobbies || []) {
+      hobbyStmt.run(row);
+    }
+
+    const hobbySessionStmt = db.prepare(
+      "INSERT INTO hobby_sessions (id, hobbyId, date, durationMinutes, notes, mood, energy, progressRating, createdAt, updatedAt) VALUES (@id, @hobbyId, @date, @durationMinutes, @notes, @mood, @energy, @progressRating, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.hobby_sessions || []) {
+      hobbySessionStmt.run(row);
+    }
+
+    const hobbyProjectStmt = db.prepare(
+      "INSERT INTO hobby_projects (id, hobbyId, name, description, status, targetDate, completedAt, createdAt, updatedAt) VALUES (@id, @hobbyId, @name, @description, @status, @targetDate, @completedAt, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.hobby_projects || []) {
+      hobbyProjectStmt.run(row);
+    }
+
+    const hobbyMilestoneStmt = db.prepare(
+      "INSERT INTO hobby_milestones (id, projectId, name, description, targetDate, completedAt, createdAt, updatedAt) VALUES (@id, @projectId, @name, @description, @targetDate, @completedAt, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.hobby_milestones || []) {
+      hobbyMilestoneStmt.run(row);
+    }
+
+    const hobbySupplyStmt = db.prepare(
+      "INSERT INTO hobby_supplies (id, hobbyId, projectId, name, type, cost, purchaseDate, source, notes, createdAt, updatedAt) VALUES (@id, @hobbyId, @projectId, @name, @type, @cost, @purchaseDate, @source, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.hobby_supplies || []) {
+      hobbySupplyStmt.run(row);
+    }
+
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
@@ -1260,6 +1660,11 @@ export function importBackup(
     health_symptoms: actualPayload.health_symptoms?.length ?? 0,
     health_measurements: actualPayload.health_measurements?.length ?? 0,
     health_obligations: actualPayload.health_obligations?.length ?? 0,
+    hobbies: actualPayload.hobbies?.length ?? 0,
+    hobby_sessions: actualPayload.hobby_sessions?.length ?? 0,
+    hobby_projects: actualPayload.hobby_projects?.length ?? 0,
+    hobby_milestones: actualPayload.hobby_milestones?.length ?? 0,
+    hobby_supplies: actualPayload.hobby_supplies?.length ?? 0,
     app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
@@ -1288,6 +1693,11 @@ export function resetAllData(): void {
     db.prepare("DELETE FROM health_symptoms").run();
     db.prepare("DELETE FROM health_measurements").run();
     db.prepare("DELETE FROM health_obligations").run();
+    db.prepare("DELETE FROM hobbies").run();
+    db.prepare("DELETE FROM hobby_sessions").run();
+    db.prepare("DELETE FROM hobby_projects").run();
+    db.prepare("DELETE FROM hobby_milestones").run();
+    db.prepare("DELETE FROM hobby_supplies").run();
     db.prepare("DELETE FROM app_settings").run();
     db.prepare("DELETE FROM execution_logs").run();
     db.prepare("DELETE FROM renderer_errors").run();

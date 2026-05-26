@@ -363,3 +363,75 @@ export type HealthSummary = {
   openObligations: number;
   overdueObligations: number;
 };
+
+// Hobbies types
+export type HobbyStatus = "active" | "paused" | "archived";
+export type HobbyProjectStatus = "active" | "paused" | "completed" | "abandoned";
+
+export type Hobby = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  status: HobbyStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HobbySession = {
+  id: string;
+  hobbyId: string;
+  date: string;
+  durationMinutes: number;
+  notes: string;
+  mood: string;
+  energy: number | null; // 1-5 scale
+  progressRating: number | null; // 1-5 scale
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HobbyProject = {
+  id: string;
+  hobbyId: string;
+  name: string;
+  description: string;
+  status: HobbyProjectStatus;
+  targetDate: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HobbyMilestone = {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string;
+  targetDate: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HobbySupply = {
+  id: string;
+  hobbyId: string;
+  projectId: string | null;
+  name: string;
+  type: string;
+  cost: number | null; // cents
+  purchaseDate: string | null;
+  source: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HobbySummary = {
+  activeHobbies: number;
+  sessionsThisMonth: number;
+  openProjects: number;
+  openMilestones: number;
+  recentSessions: number;
+};

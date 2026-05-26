@@ -143,7 +143,30 @@ export const IpcInvoke = {
   healthObligationsUpdate: "health:obligations:update",
   healthObligationsComplete: "health:obligations:complete",
   healthObligationsDelete: "health:obligations:delete",
-  healthSummaryGet: "health:summary:get"
+  healthSummaryGet: "health:summary:get",
+  hobbiesList: "hobbies:list",
+  hobbiesCreate: "hobbies:create",
+  hobbiesUpdate: "hobbies:update",
+  hobbiesDelete: "hobbies:delete",
+  hobbySessionsList: "hobby:sessions:list",
+  hobbySessionsCreate: "hobby:sessions:create",
+  hobbySessionsUpdate: "hobby:sessions:update",
+  hobbySessionsDelete: "hobby:sessions:delete",
+  hobbyProjectsList: "hobby:projects:list",
+  hobbyProjectsCreate: "hobby:projects:create",
+  hobbyProjectsUpdate: "hobby:projects:update",
+  hobbyProjectsComplete: "hobby:projects:complete",
+  hobbyProjectsDelete: "hobby:projects:delete",
+  hobbyMilestonesList: "hobby:milestones:list",
+  hobbyMilestonesCreate: "hobby:milestones:create",
+  hobbyMilestonesUpdate: "hobby:milestones:update",
+  hobbyMilestonesComplete: "hobby:milestones:complete",
+  hobbyMilestonesDelete: "hobby:milestones:delete",
+  hobbySuppliesList: "hobby:supplies:list",
+  hobbySuppliesCreate: "hobby:supplies:create",
+  hobbySuppliesUpdate: "hobby:supplies:update",
+  hobbySuppliesDelete: "hobby:supplies:delete",
+  hobbiesSummaryGet: "hobbies:summary:get"
 } as const;
 
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */

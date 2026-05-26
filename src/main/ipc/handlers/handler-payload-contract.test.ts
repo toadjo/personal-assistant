@@ -7,6 +7,12 @@ import {
   backupPayloadSchema,
   haConfigSchema,
   haEntityIdSchema,
+  hobbyCreateSchema,
+  hobbyUpdateSchema,
+  hobbySessionCreateSchema,
+  hobbyProjectCreateSchema,
+  hobbyMilestoneCreateSchema,
+  hobbySupplyCreateSchema,
   noteCreateSchema,
   noteUpdateSchema,
   optionalQuerySchema,
@@ -83,7 +89,14 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.healthSymptomsList,
   IpcInvoke.healthMeasurementsList,
   IpcInvoke.healthObligationsList,
-  IpcInvoke.healthSummaryGet
+  IpcInvoke.healthSummaryGet,
+  // Hobbies list channels (zero-arg: optional hobbyId/projectId filter)
+  IpcInvoke.hobbiesList,
+  IpcInvoke.hobbySessionsList,
+  IpcInvoke.hobbyProjectsList,
+  IpcInvoke.hobbyMilestonesList,
+  IpcInvoke.hobbySuppliesList,
+  IpcInvoke.hobbiesSummaryGet
 ];
 
 describe("IPC handler payload contracts", () => {
@@ -175,6 +188,24 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.healthObligationsUpdate ||
         ch === IpcInvoke.healthObligationsComplete ||
         ch === IpcInvoke.healthObligationsDelete ||
+        // Hobbies schema-backed channels
+        ch === IpcInvoke.hobbiesCreate ||
+        ch === IpcInvoke.hobbiesUpdate ||
+        ch === IpcInvoke.hobbiesDelete ||
+        ch === IpcInvoke.hobbySessionsCreate ||
+        ch === IpcInvoke.hobbySessionsUpdate ||
+        ch === IpcInvoke.hobbySessionsDelete ||
+        ch === IpcInvoke.hobbyProjectsCreate ||
+        ch === IpcInvoke.hobbyProjectsUpdate ||
+        ch === IpcInvoke.hobbyProjectsComplete ||
+        ch === IpcInvoke.hobbyProjectsDelete ||
+        ch === IpcInvoke.hobbyMilestonesCreate ||
+        ch === IpcInvoke.hobbyMilestonesUpdate ||
+        ch === IpcInvoke.hobbyMilestonesComplete ||
+        ch === IpcInvoke.hobbyMilestonesDelete ||
+        ch === IpcInvoke.hobbySuppliesCreate ||
+        ch === IpcInvoke.hobbySuppliesUpdate ||
+        ch === IpcInvoke.hobbySuppliesDelete ||
         // Team mode schema-backed channels
         ch === IpcInvoke.teamSetConfig ||
         ch === IpcInvoke.teamSetDisplayName ||
@@ -430,5 +461,54 @@ describe("IPC handler payload contracts", () => {
         exportedAt: "2024-01-01T00:00:00.000Z"
       })
     ).toThrow();
+  });
+
+  it("hobbyCreateSchema rejects empty name", () => {
+    expect(() => hobbyCreateSchema.parse({ name: "   ", category: "Music", status: "active", notes: "" })).toThrow();
+  });
+
+  it("hobbyCreateSchema accepts valid hobby", () => {
+    const parsed = hobbyCreateSchema.parse({ name: "Guitar", category: "Music", status: "active", description: "" });
+    expect(parsed.name).toBe("Guitar");
+  });
+
+  it("hobbyUpdateSchema rejects empty payload", () => {
+    expect(() => hobbyUpdateSchema.parse({ id: "123e4567-e89b-12d3-a456-426614174000" })).toThrow();
+  });
+
+  it("hobbySessionCreateSchema rejects missing hobbyId", () => {
+    expect(() => hobbySessionCreateSchema.parse({ date: "2024-06-15T00:00:00Z", duration: 30, energy: 3, notes: "" })).toThrow();
+  });
+
+  it("hobbySessionCreateSchema accepts valid session", () => {
+    const parsed = hobbySessionCreateSchema.parse({ hobbyId: "123e4567-e89b-12d3-a456-426614174000", date: "2024-06-15T00:00:00Z", durationMinutes: 30, notes: "", mood: "", energy: 3, progressRating: null });
+    expect(parsed.hobbyId).toBe("123e4567-e89b-12d3-a456-426614174000");
+  });
+
+  it("hobbyProjectCreateSchema rejects missing hobbyId", () => {
+    expect(() => hobbyProjectCreateSchema.parse({ name: "Learn a Song", status: "active", startDate: "2024-06-01T00:00:00Z", targetDate: null, notes: "" })).toThrow();
+  });
+
+  it("hobbyProjectCreateSchema accepts valid project", () => {
+    const parsed = hobbyProjectCreateSchema.parse({ hobbyId: "123e4567-e89b-12d3-a456-426614174000", name: "Learn a Song", status: "active", description: "", targetDate: null, completedAt: null });
+    expect(parsed.hobbyId).toBe("123e4567-e89b-12d3-a456-426614174000");
+  });
+
+  it("hobbyMilestoneCreateSchema rejects missing projectId", () => {
+    expect(() => hobbyMilestoneCreateSchema.parse({ name: "Master Chords", status: "pending", targetDate: "2024-06-15T00:00:00Z", notes: "" })).toThrow();
+  });
+
+  it("hobbyMilestoneCreateSchema accepts valid milestone", () => {
+    const parsed = hobbyMilestoneCreateSchema.parse({ projectId: "123e4567-e89b-12d3-a456-426614174000", name: "Master Chords", description: "", targetDate: "2024-06-15T00:00:00Z", completedAt: null });
+    expect(parsed.projectId).toBe("123e4567-e89b-12d3-a456-426614174000");
+  });
+
+  it("hobbySupplyCreateSchema rejects missing hobbyId", () => {
+    expect(() => hobbySupplyCreateSchema.parse({ projectId: null, name: "Guitar Strings", quantity: 1, cost: 500, purchaseDate: "2024-06-01T00:00:00Z", notes: "" })).toThrow();
+  });
+
+  it("hobbySupplyCreateSchema accepts valid supply", () => {
+    const parsed = hobbySupplyCreateSchema.parse({ hobbyId: "123e4567-e89b-12d3-a456-426614174000", projectId: null, name: "Guitar Strings", type: "equipment", cost: 500, purchaseDate: "2024-06-01T00:00:00Z", source: "", notes: "" });
+    expect(parsed.hobbyId).toBe("123e4567-e89b-12d3-a456-426614174000");
   });
 });

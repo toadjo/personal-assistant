@@ -23,6 +23,11 @@ export type BackupResult = {
   health_symptoms: number;
   health_measurements: number;
   health_obligations: number;
+  hobbies: number;
+  hobby_sessions: number;
+  hobby_projects: number;
+  hobby_milestones: number;
+  hobby_supplies: number;
   app_settings: number;
 };
 
@@ -49,6 +54,11 @@ export type BackupPreviewResult = {
   health_symptoms: number;
   health_measurements: number;
   health_obligations: number;
+  hobbies: number;
+  hobby_sessions: number;
+  hobby_projects: number;
+  hobby_milestones: number;
+  hobby_supplies: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -166,6 +176,11 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
         `- ${preview.health_symptoms} health symptoms\n` +
         `- ${preview.health_measurements} health measurements\n` +
         `- ${preview.health_obligations} health obligations\n` +
+        `- ${preview.hobbies} hobbies\n` +
+        `- ${preview.hobby_sessions} hobby sessions\n` +
+        `- ${preview.hobby_projects} hobby projects\n` +
+        `- ${preview.hobby_milestones} hobby milestones\n` +
+        `- ${preview.hobby_supplies} hobby supplies\n` +
         `- ${preview.app_settings} app settings\n\n` +
         `This will replace your current data. Continue?`
       );
@@ -177,7 +192,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
       
       const result = await api.importData(payload);
       setStatus(
-        `Import complete: ${result.notes} notes, ${result.reminders} reminders, ${result.tasks} tasks, ${result.automation_rules} rules, ${result.finance_bills} finance bills, ${result.finance_expenses} finance expenses, ${result.car_vehicles} car vehicles, ${result.car_fuel_entries} fuel entries, ${result.car_maintenance} maintenance records, ${result.car_recurring_bills} recurring bills, ${result.car_mileage} mileage records, ${result.car_service_reminders} service reminders, ${result.family_members} family members, ${result.family_occasions} family occasions, ${result.family_obligations} family obligations, ${result.health_appointments} health appointments, ${result.health_medications} health medications, ${result.health_symptoms} health symptoms, ${result.health_measurements} health measurements, ${result.health_obligations} health obligations, ${result.app_settings} settings.`
+        `Import complete: ${result.notes} notes, ${result.reminders} reminders, ${result.tasks} tasks, ${result.automation_rules} rules, ${result.finance_bills} finance bills, ${result.finance_expenses} finance expenses, ${result.car_vehicles} car vehicles, ${result.car_fuel_entries} fuel entries, ${result.car_maintenance} maintenance records, ${result.car_recurring_bills} recurring bills, ${result.car_mileage} mileage records, ${result.car_service_reminders} service reminders, ${result.family_members} family members, ${result.family_occasions} family occasions, ${result.family_obligations} family obligations, ${result.health_appointments} health appointments, ${result.health_medications} health medications, ${result.health_symptoms} health symptoms, ${result.health_measurements} health measurements, ${result.health_obligations} health obligations, ${result.hobbies} hobbies, ${result.hobby_sessions} hobby sessions, ${result.hobby_projects} hobby projects, ${result.hobby_milestones} hobby milestones, ${result.hobby_supplies} hobby supplies, ${result.app_settings} settings.`
       );
       await refreshAll();
       return result;

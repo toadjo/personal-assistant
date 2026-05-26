@@ -8,6 +8,7 @@ import { up006Finance } from "./006_finance";
 import { migration } from "./007_car";
 import { migration as familyMigration } from "./008_family";
 import { migration as healthMigration } from "./009_health";
+import { migration as hobbiesMigration } from "./010_hobbies";
 
 export type Migration = {
   version: number;
@@ -26,5 +27,6 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 6, name: "finance", up: up006Finance },
   { version: 7, name: "car", up: migration.up, down: migration.down },
   { version: 8, name: "family", up: familyMigration.up, down: familyMigration.down },
-  { version: 9, name: "health", up: healthMigration.up, down: healthMigration.down }
+  { version: 9, name: "health", up: healthMigration.up, down: healthMigration.down },
+  { version: 10, name: "hobbies", up: hobbiesMigration.up, down: hobbiesMigration.down }
 ] as const;

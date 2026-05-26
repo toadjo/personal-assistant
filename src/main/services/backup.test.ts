@@ -62,6 +62,16 @@ describe("backup service", () => {
     expect(result.family_members).toEqual([]);
     expect(result.family_occasions).toEqual([]);
     expect(result.family_obligations).toEqual([]);
+    expect(result.health_appointments).toEqual([]);
+    expect(result.health_medications).toEqual([]);
+    expect(result.health_symptoms).toEqual([]);
+    expect(result.health_measurements).toEqual([]);
+    expect(result.health_obligations).toEqual([]);
+    expect(result.hobbies).toEqual([]);
+    expect(result.hobby_sessions).toEqual([]);
+    expect(result.hobby_projects).toEqual([]);
+    expect(result.hobby_milestones).toEqual([]);
+    expect(result.hobby_supplies).toEqual([]);
     expect(result.app_settings).toEqual([]);
   });
 
@@ -152,6 +162,56 @@ describe("backup service", () => {
       )
       .run("fob1", "fm1", null, "call", "Call John", "2026-06-20T10:00:00Z", "open", "normal", null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
     testDb
+      .prepare(
+        "INSERT INTO health_appointments (id, type, title, provider, location, date, time, duration, status, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("ha1", "checkup", "Annual Checkup", "Dr. Smith", "Medical Center", "2026-06-15T00:00:00Z", "10:00", 30, "scheduled", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO health_medications (id, name, dosage, frequency, route, status, startDate, endDate, prescriber, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hm1", "Aspirin", "100mg", "daily", "oral", "active", "2026-01-01T00:00:00Z", null, "Dr. Smith", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO health_symptoms (id, name, severity, startDate, endDate, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hs1", "Headache", "mild", "2026-06-01T00:00:00Z", null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO health_measurements (id, type, value, unit, date, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hme1", "weight", "70", "kg", "2026-06-01T00:00:00Z", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO health_obligations (id, type, title, dueAt, status, priority, completedAt, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("ho1", "refill", "Refill Prescription", "2026-06-20T10:00:00Z", "open", "normal", null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO hobbies (id, name, category, description, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("h1", "Guitar", "Music", "", "active", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO hobby_sessions (id, hobbyId, date, durationMinutes, notes, mood, energy, progressRating, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hs1", "h1", "2026-06-15T00:00:00Z", 30, "", "", 3, null, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO hobby_projects (id, hobbyId, name, description, status, targetDate, completedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hp1", "h1", "Learn a Song", "", "active", null, null, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO hobby_milestones (id, projectId, name, description, targetDate, completedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hmi1", "hp1", "Master Chords", "", "2026-06-15T00:00:00Z", null, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO hobby_supplies (id, hobbyId, projectId, name, type, cost, purchaseDate, source, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("hsu1", "h1", null, "Guitar Strings", "equipment", 500, "2026-06-01T00:00:00Z", "", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
       .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
       .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -171,6 +231,16 @@ describe("backup service", () => {
     expect(exported.family_members).toHaveLength(1);
     expect(exported.family_occasions).toHaveLength(1);
     expect(exported.family_obligations).toHaveLength(1);
+    expect(exported.health_appointments).toHaveLength(1);
+    expect(exported.health_medications).toHaveLength(1);
+    expect(exported.health_symptoms).toHaveLength(1);
+    expect(exported.health_measurements).toHaveLength(1);
+    expect(exported.health_obligations).toHaveLength(1);
+    expect(exported.hobbies).toHaveLength(1);
+    expect(exported.hobby_sessions).toHaveLength(1);
+    expect(exported.hobby_projects).toHaveLength(1);
+    expect(exported.hobby_milestones).toHaveLength(1);
+    expect(exported.hobby_supplies).toHaveLength(1);
     expect(exported.app_settings).toHaveLength(1);
 
     // Clear everything
@@ -189,6 +259,16 @@ describe("backup service", () => {
     testDb.prepare("DELETE FROM family_members").run();
     testDb.prepare("DELETE FROM family_occasions").run();
     testDb.prepare("DELETE FROM family_obligations").run();
+    testDb.prepare("DELETE FROM health_appointments").run();
+    testDb.prepare("DELETE FROM health_medications").run();
+    testDb.prepare("DELETE FROM health_symptoms").run();
+    testDb.prepare("DELETE FROM health_measurements").run();
+    testDb.prepare("DELETE FROM health_obligations").run();
+    testDb.prepare("DELETE FROM hobbies").run();
+    testDb.prepare("DELETE FROM hobby_sessions").run();
+    testDb.prepare("DELETE FROM hobby_projects").run();
+    testDb.prepare("DELETE FROM hobby_milestones").run();
+    testDb.prepare("DELETE FROM hobby_supplies").run();
     testDb.prepare("DELETE FROM app_settings").run();
 
     const imported = importBackup(exported);
@@ -207,6 +287,16 @@ describe("backup service", () => {
     expect(imported.family_members).toBe(1);
     expect(imported.family_occasions).toBe(1);
     expect(imported.family_obligations).toBe(1);
+    expect(imported.health_appointments).toBe(1);
+    expect(imported.health_medications).toBe(1);
+    expect(imported.health_symptoms).toBe(1);
+    expect(imported.health_measurements).toBe(1);
+    expect(imported.health_obligations).toBe(1);
+    expect(imported.hobbies).toBe(1);
+    expect(imported.hobby_sessions).toBe(1);
+    expect(imported.hobby_projects).toBe(1);
+    expect(imported.hobby_milestones).toBe(1);
+    expect(imported.hobby_supplies).toBe(1);
     expect(imported.app_settings).toBe(1);
 
     const reExported = exportBackup();
@@ -272,6 +362,16 @@ describe("backup service", () => {
         "INSERT INTO family_members (id, name, relationship, phone, email, address, preferredContactMethod, notes, isImportant, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
       )
       .run("fm1", "John Doe", "Father", "+1234567890", "john@example.com", "123 Main St", "any", "", 0, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO health_appointments (id, type, title, provider, location, date, time, duration, status, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("ha1", "checkup", "Annual Checkup", "Dr. Smith", "Medical Center", "2026-06-15T00:00:00Z", "10:00", 30, "scheduled", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO hobbies (id, name, category, description, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("h1", "Guitar", "Music", "", "active", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
 
     resetAllData();
 
@@ -293,6 +393,10 @@ describe("backup service", () => {
     expect(fuelCount.c).toBe(0);
     const familyMemberCount = testDb.prepare("SELECT COUNT(*) as c FROM family_members").get() as { c: number };
     expect(familyMemberCount.c).toBe(0);
+    const healthAppointmentCount = testDb.prepare("SELECT COUNT(*) as c FROM health_appointments").get() as { c: number };
+    expect(healthAppointmentCount.c).toBe(0);
+    const hobbyCount = testDb.prepare("SELECT COUNT(*) as c FROM hobbies").get() as { c: number };
+    expect(hobbyCount.c).toBe(0);
   });
 
   describe("backup preview", () => {
@@ -375,6 +479,16 @@ describe("backup service", () => {
       expect(preview.family_members).toBe(1);
       expect(preview.family_occasions).toBe(0);
       expect(preview.family_obligations).toBe(0);
+      expect(preview.health_appointments).toBe(0);
+      expect(preview.health_medications).toBe(0);
+      expect(preview.health_symptoms).toBe(0);
+      expect(preview.health_measurements).toBe(0);
+      expect(preview.health_obligations).toBe(0);
+      expect(preview.hobbies).toBe(0);
+      expect(preview.hobby_sessions).toBe(0);
+      expect(preview.hobby_projects).toBe(0);
+      expect(preview.hobby_milestones).toBe(0);
+      expect(preview.hobby_supplies).toBe(0);
       expect(preview.app_settings).toBe(1);
       expect(preview.unsupported_sections).toEqual([]);
       expect(preview.has_encrypted_content).toBe(false);
@@ -403,6 +517,16 @@ describe("backup service", () => {
       expect(preview.family_members).toBe(0);
       expect(preview.family_occasions).toBe(0);
       expect(preview.family_obligations).toBe(0);
+      expect(preview.health_appointments).toBe(0);
+      expect(preview.health_medications).toBe(0);
+      expect(preview.health_symptoms).toBe(0);
+      expect(preview.health_measurements).toBe(0);
+      expect(preview.health_obligations).toBe(0);
+      expect(preview.hobbies).toBe(0);
+      expect(preview.hobby_sessions).toBe(0);
+      expect(preview.hobby_projects).toBe(0);
+      expect(preview.hobby_milestones).toBe(0);
+      expect(preview.hobby_supplies).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -467,6 +591,16 @@ describe("backup service", () => {
       expect(preview.family_members).toBe(0);
       expect(preview.family_occasions).toBe(0);
       expect(preview.family_obligations).toBe(0);
+      expect(preview.health_appointments).toBe(0);
+      expect(preview.health_medications).toBe(0);
+      expect(preview.health_symptoms).toBe(0);
+      expect(preview.health_measurements).toBe(0);
+      expect(preview.health_obligations).toBe(0);
+      expect(preview.hobbies).toBe(0);
+      expect(preview.hobby_sessions).toBe(0);
+      expect(preview.hobby_projects).toBe(0);
+      expect(preview.hobby_milestones).toBe(0);
+      expect(preview.hobby_supplies).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -733,6 +867,16 @@ describe("backup service", () => {
       expect(preview.family_members).toBe(1);
       expect(preview.family_occasions).toBe(0);
       expect(preview.family_obligations).toBe(0);
+      expect(preview.health_appointments).toBe(0);
+      expect(preview.health_medications).toBe(0);
+      expect(preview.health_symptoms).toBe(0);
+      expect(preview.health_measurements).toBe(0);
+      expect(preview.health_obligations).toBe(0);
+      expect(preview.hobbies).toBe(0);
+      expect(preview.hobby_sessions).toBe(0);
+      expect(preview.hobby_projects).toBe(0);
+      expect(preview.hobby_milestones).toBe(0);
+      expect(preview.hobby_supplies).toBe(0);
       expect(preview.app_settings).toBe(1);
       expect(preview.unsupported_sections).toEqual([]);
       expect(preview.has_encrypted_content).toBe(false);
@@ -761,6 +905,16 @@ describe("backup service", () => {
       expect(preview.family_members).toBe(0);
       expect(preview.family_occasions).toBe(0);
       expect(preview.family_obligations).toBe(0);
+      expect(preview.health_appointments).toBe(0);
+      expect(preview.health_medications).toBe(0);
+      expect(preview.health_symptoms).toBe(0);
+      expect(preview.health_measurements).toBe(0);
+      expect(preview.health_obligations).toBe(0);
+      expect(preview.hobbies).toBe(0);
+      expect(preview.hobby_sessions).toBe(0);
+      expect(preview.hobby_projects).toBe(0);
+      expect(preview.hobby_milestones).toBe(0);
+      expect(preview.hobby_supplies).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -825,6 +979,16 @@ describe("backup service", () => {
       expect(preview.family_members).toBe(0);
       expect(preview.family_occasions).toBe(0);
       expect(preview.family_obligations).toBe(0);
+      expect(preview.health_appointments).toBe(0);
+      expect(preview.health_medications).toBe(0);
+      expect(preview.health_symptoms).toBe(0);
+      expect(preview.health_measurements).toBe(0);
+      expect(preview.health_obligations).toBe(0);
+      expect(preview.hobbies).toBe(0);
+      expect(preview.hobby_sessions).toBe(0);
+      expect(preview.hobby_projects).toBe(0);
+      expect(preview.hobby_milestones).toBe(0);
+      expect(preview.hobby_supplies).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 

@@ -4,6 +4,29 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-05-26
+
+### Added
+
+- Hobbies module for tracking personal progress and hobby activities with comprehensive management capabilities
+- Hobby management with categories, descriptions, and status tracking (active/inactive)
+- Hobby session logging with duration, mood, energy levels, and progress ratings
+- Hobby project tracking with milestones, target dates, and completion status
+- Hobby milestone management with descriptions, target dates, and completion tracking
+- Hobby supply tracking with types, costs, purchase dates, and source information
+- Hobbies summary dashboard showing active hobbies, sessions this month, open projects, open milestones, and recent sessions
+- Hobbies data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for hobbies service, IPC handlers, renderer components, and backup operations
+- Updated Data Control UI to display Hobbies counts in backup preview and import confirmation dialogs
+
+### Changed
+
+- Added Hobbies tab to Personal module navigation in AssistantShell
+- Updated backup system to include all hobbies-related tables in export/import/preview/reset operations
+- Updated IPC handler payload contract tests to include hobbies channels
+- Updated backup UI types to include Hobbies counts for all five hobbies entities
+- Enhanced reset confirmation dialog to mention hobbies data deletion
+
 ## [3.4.0] - 2026-05-26
 
 ### Added

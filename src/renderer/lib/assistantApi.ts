@@ -6,7 +6,7 @@
  */
 
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
-import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary } from "../../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary, Hobby, HobbySession, HobbyProject, HobbyMilestone, HobbySupply, HobbySummary } from "../../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../../shared/ai/types";
 
@@ -102,6 +102,11 @@ export type AssistantApi = {
     health_symptoms?: unknown[];
     health_measurements?: unknown[];
     health_obligations?: unknown[];
+    hobbies?: unknown[];
+    hobby_sessions?: unknown[];
+    hobby_projects?: unknown[];
+    hobby_milestones?: unknown[];
+    hobby_supplies?: unknown[];
     app_settings: unknown[];
   }>;
   importData: (payload: {
@@ -127,6 +132,11 @@ export type AssistantApi = {
     health_symptoms?: unknown[];
     health_measurements?: unknown[];
     health_obligations?: unknown[];
+    hobbies?: unknown[];
+    hobby_sessions?: unknown[];
+    hobby_projects?: unknown[];
+    hobby_milestones?: unknown[];
+    hobby_supplies?: unknown[];
     app_settings: unknown[];
   }) => Promise<{
     notes: number;
@@ -149,6 +159,11 @@ export type AssistantApi = {
     health_symptoms: number;
     health_measurements: number;
     health_obligations: number;
+    hobbies: number;
+    hobby_sessions: number;
+    hobby_projects: number;
+    hobby_milestones: number;
+    hobby_supplies: number;
     app_settings: number;
   }>;
   previewImportData: (payload: {
@@ -174,6 +189,11 @@ export type AssistantApi = {
     health_symptoms?: unknown[];
     health_measurements?: unknown[];
     health_obligations?: unknown[];
+    hobbies?: unknown[];
+    hobby_sessions?: unknown[];
+    hobby_projects?: unknown[];
+    hobby_milestones?: unknown[];
+    hobby_supplies?: unknown[];
     app_settings: unknown[];
   }) => Promise<{
     valid: boolean;
@@ -198,6 +218,11 @@ export type AssistantApi = {
     health_symptoms: number;
     health_measurements: number;
     health_obligations: number;
+    hobbies: number;
+    hobby_sessions: number;
+    hobby_projects: number;
+    hobby_milestones: number;
+    hobby_supplies: number;
     app_settings: number;
     unsupported_sections: string[];
     has_encrypted_content: boolean;
@@ -642,6 +667,106 @@ export type AssistantApi = {
   completeHealthObligation: (id: string) => Promise<HealthObligation>;
   deleteHealthObligation: (id: string) => Promise<void>;
   getHealthSummary: () => Promise<HealthSummary>;
+
+  // Hobbies API
+  listHobbies: () => Promise<Hobby[]>;
+  createHobby: (payload: {
+    name: string;
+    category: string;
+    description: string;
+    status?: "active" | "paused" | "archived";
+  }) => Promise<Hobby>;
+  updateHobby: (payload: {
+    id: string;
+    name?: string;
+    category?: string;
+    description?: string;
+    status?: "active" | "paused" | "archived";
+  }) => Promise<Hobby>;
+  deleteHobby: (id: string) => Promise<void>;
+  listHobbySessions: (hobbyId?: string) => Promise<HobbySession[]>;
+  createHobbySession: (payload: {
+    hobbyId: string;
+    date: string;
+    durationMinutes: number;
+    notes?: string;
+    mood?: string;
+    energy?: number | null;
+    progressRating?: number | null;
+  }) => Promise<HobbySession>;
+  updateHobbySession: (payload: {
+    id: string;
+    hobbyId?: string;
+    date?: string;
+    durationMinutes?: number;
+    notes?: string;
+    mood?: string;
+    energy?: number | null;
+    progressRating?: number | null;
+  }) => Promise<HobbySession>;
+  deleteHobbySession: (id: string) => Promise<void>;
+  listHobbyProjects: (hobbyId?: string) => Promise<HobbyProject[]>;
+  createHobbyProject: (payload: {
+    hobbyId: string;
+    name: string;
+    description: string;
+    status?: "active" | "paused" | "completed" | "abandoned";
+    targetDate?: string | null;
+    completedAt?: string | null;
+  }) => Promise<HobbyProject>;
+  updateHobbyProject: (payload: {
+    id: string;
+    hobbyId?: string;
+    name?: string;
+    description?: string;
+    status?: "active" | "paused" | "completed" | "abandoned";
+    targetDate?: string | null;
+    completedAt?: string | null;
+  }) => Promise<HobbyProject>;
+  completeHobbyProject: (id: string) => Promise<HobbyProject>;
+  deleteHobbyProject: (id: string) => Promise<void>;
+  listHobbyMilestones: (projectId?: string) => Promise<HobbyMilestone[]>;
+  createHobbyMilestone: (payload: {
+    projectId: string;
+    name: string;
+    description: string;
+    targetDate?: string | null;
+    completedAt?: string | null;
+  }) => Promise<HobbyMilestone>;
+  updateHobbyMilestone: (payload: {
+    id: string;
+    projectId?: string;
+    name?: string;
+    description?: string;
+    targetDate?: string | null;
+    completedAt?: string | null;
+  }) => Promise<HobbyMilestone>;
+  completeHobbyMilestone: (id: string) => Promise<HobbyMilestone>;
+  deleteHobbyMilestone: (id: string) => Promise<void>;
+  listHobbySupplies: (hobbyId?: string) => Promise<HobbySupply[]>;
+  createHobbySupply: (payload: {
+    hobbyId: string;
+    projectId?: string | null;
+    name: string;
+    type: string;
+    cost?: number | null;
+    purchaseDate?: string | null;
+    source?: string;
+    notes?: string;
+  }) => Promise<HobbySupply>;
+  updateHobbySupply: (payload: {
+    id: string;
+    hobbyId?: string;
+    projectId?: string | null;
+    name?: string;
+    type?: string;
+    cost?: number | null;
+    purchaseDate?: string | null;
+    source?: string;
+    notes?: string;
+  }) => Promise<HobbySupply>;
+  deleteHobbySupply: (id: string) => Promise<void>;
+  getHobbiesSummary: () => Promise<HobbySummary>;
 };
 
 /**

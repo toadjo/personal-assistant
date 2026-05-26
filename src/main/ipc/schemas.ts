@@ -984,3 +984,164 @@ export const healthObligationUpdateSchema = z
       message: "At least one field must be provided for update."
     }
   );
+
+// Hobbies schemas
+export const hobbyCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  category: z.string().trim().min(1).max(200),
+  description: z.string().max(2000),
+  status: z.enum(["active", "paused", "archived"])
+});
+
+export const hobbyUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string().trim().min(1).max(200).optional(),
+    category: z.string().trim().min(1).max(200).optional(),
+    description: z.string().max(2000).optional(),
+    status: z.enum(["active", "paused", "archived"]).optional()
+  })
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.category !== undefined ||
+      v.description !== undefined ||
+      v.status !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const hobbySessionCreateSchema = z.object({
+  hobbyId: uuidSchema,
+  date: z.string().datetime({ offset: true }),
+  durationMinutes: z.number().int().positive(),
+  notes: z.string().max(2000),
+  mood: z.string().max(100),
+  energy: z.number().int().min(1).max(5).nullable(),
+  progressRating: z.number().int().min(1).max(5).nullable()
+});
+
+export const hobbySessionUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    hobbyId: uuidSchema.optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    durationMinutes: z.number().int().positive().optional(),
+    notes: z.string().max(2000).optional(),
+    mood: z.string().max(100).optional(),
+    energy: z.number().int().min(1).max(5).nullable().optional(),
+    progressRating: z.number().int().min(1).max(5).nullable().optional()
+  })
+  .refine(
+    (v) =>
+      v.hobbyId !== undefined ||
+      v.date !== undefined ||
+      v.durationMinutes !== undefined ||
+      v.notes !== undefined ||
+      v.mood !== undefined ||
+      v.energy !== undefined ||
+      v.progressRating !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const hobbyProjectCreateSchema = z.object({
+  hobbyId: uuidSchema,
+  name: z.string().trim().min(1).max(200),
+  description: z.string().max(2000),
+  status: z.enum(["active", "paused", "completed", "abandoned"]),
+  targetDate: z.string().datetime({ offset: true }).nullable(),
+  completedAt: z.string().datetime({ offset: true }).nullable()
+});
+
+export const hobbyProjectUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    hobbyId: uuidSchema.optional(),
+    name: z.string().trim().min(1).max(200).optional(),
+    description: z.string().max(2000).optional(),
+    status: z.enum(["active", "paused", "completed", "abandoned"]).optional(),
+    targetDate: z.string().datetime({ offset: true }).nullable().optional(),
+    completedAt: z.string().datetime({ offset: true }).nullable().optional()
+  })
+  .refine(
+    (v) =>
+      v.hobbyId !== undefined ||
+      v.name !== undefined ||
+      v.description !== undefined ||
+      v.status !== undefined ||
+      v.targetDate !== undefined ||
+      v.completedAt !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const hobbyMilestoneCreateSchema = z.object({
+  projectId: uuidSchema,
+  name: z.string().trim().min(1).max(200),
+  description: z.string().max(2000),
+  targetDate: z.string().datetime({ offset: true }).nullable(),
+  completedAt: z.string().datetime({ offset: true }).nullable()
+});
+
+export const hobbyMilestoneUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    projectId: uuidSchema.optional(),
+    name: z.string().trim().min(1).max(200).optional(),
+    description: z.string().max(2000).optional(),
+    targetDate: z.string().datetime({ offset: true }).nullable().optional(),
+    completedAt: z.string().datetime({ offset: true }).nullable().optional()
+  })
+  .refine(
+    (v) =>
+      v.projectId !== undefined ||
+      v.name !== undefined ||
+      v.description !== undefined ||
+      v.targetDate !== undefined ||
+      v.completedAt !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const hobbySupplyCreateSchema = z.object({
+  hobbyId: uuidSchema,
+  projectId: uuidSchema.nullable(),
+  name: z.string().trim().min(1).max(200),
+  type: z.string().trim().min(1).max(200),
+  cost: z.number().int().nullable(),
+  purchaseDate: z.string().datetime({ offset: true }).nullable(),
+  source: z.string().max(200),
+  notes: z.string().max(2000)
+});
+
+export const hobbySupplyUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    hobbyId: uuidSchema.optional(),
+    projectId: uuidSchema.nullable().optional(),
+    name: z.string().trim().min(1).max(200).optional(),
+    type: z.string().trim().min(1).max(200).optional(),
+    cost: z.number().int().nullable().optional(),
+    purchaseDate: z.string().datetime({ offset: true }).nullable().optional(),
+    source: z.string().max(200).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.hobbyId !== undefined ||
+      v.projectId !== undefined ||
+      v.name !== undefined ||
+      v.type !== undefined ||
+      v.cost !== undefined ||
+      v.purchaseDate !== undefined ||
+      v.source !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );

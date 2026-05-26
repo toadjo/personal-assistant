@@ -7,6 +7,7 @@ import { registerBackupHandlers } from "./handlers/backup.handlers";
 import { registerCarHandlers } from "./handlers/car.handlers";
 import { registerFamilyHandlers } from "./handlers/family.handlers";
 import { registerHealthHandlers } from "./handlers/health.handlers";
+import { registerHobbiesHandlers } from "./handlers/hobbies.handlers";
 import { registerFinanceHandlers } from "./handlers/finance.handlers";
 import { registerHomeAssistantHandlers } from "./handlers/homeAssistant.handlers";
 import { registerNotesHandlers } from "./handlers/notes.handlers";
@@ -41,4 +42,5 @@ export function registerIpcHandlers(getTrustedWindows: () => readonly (BrowserWi
   registerCarHandlers(assertSender);
   registerFamilyHandlers(assertSender);
   registerHealthHandlers(assertSender);
+  registerHobbiesHandlers(assertSender);
 }
