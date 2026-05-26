@@ -690,3 +690,121 @@ export const carServiceReminderUpdateSchema = z
       message: "At least one field must be provided for update."
     }
   );
+
+// Family schemas
+export const familyMemberCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  relationship: z.string().trim().min(1).max(100),
+  phone: z.string().trim().max(50).nullable(),
+  email: z.string().trim().email().max(200).nullable(),
+  address: z.string().trim().max(500).nullable(),
+  preferredContactMethod: z.string().trim().max(50).default("any"),
+  notes: z.string().max(2000),
+  isImportant: z.number().int().min(0).max(1).default(0)
+});
+
+export const familyMemberUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string().trim().min(1).max(200).optional(),
+    relationship: z.string().trim().min(1).max(100).optional(),
+    phone: z.string().trim().max(50).nullable().optional(),
+    email: z.string().trim().email().max(200).nullable().optional(),
+    address: z.string().trim().max(500).nullable().optional(),
+    preferredContactMethod: z.string().trim().max(50).optional(),
+    notes: z.string().max(2000).optional(),
+    isImportant: z.number().int().min(0).max(1).optional()
+  })
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.relationship !== undefined ||
+      v.phone !== undefined ||
+      v.email !== undefined ||
+      v.address !== undefined ||
+      v.preferredContactMethod !== undefined ||
+      v.notes !== undefined ||
+      v.isImportant !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const familyOccasionCreateSchema = z.object({
+  memberId: uuidSchema,
+  type: z.enum(["birthday", "name_day", "anniversary", "memorial", "custom"]),
+  title: z.string().trim().min(1).max(200),
+  date: z.string().datetime({ offset: true }),
+  recurrence: z.string().trim().min(1).max(50).default("yearly"),
+  remindDaysBefore: z.number().int().min(0).max(365).default(7),
+  lastAcknowledgedAt: z.string().datetime({ offset: true }).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const familyOccasionUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    memberId: uuidSchema.optional(),
+    type: z.enum(["birthday", "name_day", "anniversary", "memorial", "custom"]).optional(),
+    title: z.string().trim().min(1).max(200).optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    recurrence: z.string().trim().min(1).max(50).optional(),
+    remindDaysBefore: z.number().int().min(0).max(365).optional(),
+    lastAcknowledgedAt: z.string().datetime({ offset: true }).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.memberId !== undefined ||
+      v.type !== undefined ||
+      v.title !== undefined ||
+      v.date !== undefined ||
+      v.recurrence !== undefined ||
+      v.remindDaysBefore !== undefined ||
+      v.lastAcknowledgedAt !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const familyObligationCreateSchema = z.object({
+  memberId: uuidSchema,
+  occasionId: uuidSchema.nullable(),
+  type: z.enum(["call", "visit", "message", "gift", "paperwork", "custom"]),
+  title: z.string().trim().min(1).max(200),
+  dueAt: z.string().datetime({ offset: true }).nullable(),
+  status: z.enum(["open", "done"]).default("open"),
+  priority: z.enum(["low", "normal", "high"]).default("normal"),
+  completedAt: z.string().datetime({ offset: true }).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const familyObligationUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    memberId: uuidSchema.optional(),
+    occasionId: uuidSchema.nullable().optional(),
+    type: z.enum(["call", "visit", "message", "gift", "paperwork", "custom"]).optional(),
+    title: z.string().trim().min(1).max(200).optional(),
+    dueAt: z.string().datetime({ offset: true }).nullable().optional(),
+    status: z.enum(["open", "done"]).optional(),
+    priority: z.enum(["low", "normal", "high"]).optional(),
+    completedAt: z.string().datetime({ offset: true }).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.memberId !== undefined ||
+      v.occasionId !== undefined ||
+      v.type !== undefined ||
+      v.title !== undefined ||
+      v.dueAt !== undefined ||
+      v.status !== undefined ||
+      v.priority !== undefined ||
+      v.completedAt !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );

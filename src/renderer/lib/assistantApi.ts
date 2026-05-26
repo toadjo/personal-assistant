@@ -6,7 +6,7 @@
  */
 
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
-import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder } from "../../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary } from "../../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../../shared/ai/types";
 
@@ -379,6 +379,80 @@ export type AssistantApi = {
   }) => Promise<CarServiceReminder>;
   completeServiceReminder: (id: string) => Promise<CarServiceReminder>;
   deleteServiceReminder: (id: string) => Promise<void>;
+  // Family API
+  listFamilyMembers: () => Promise<FamilyMember[]>;
+  createFamilyMember: (payload: {
+    name: string;
+    relationship: string;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+    preferredContactMethod?: string;
+    notes?: string;
+    isImportant?: number;
+  }) => Promise<FamilyMember>;
+  updateFamilyMember: (payload: {
+    id: string;
+    name?: string;
+    relationship?: string;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+    preferredContactMethod?: string;
+    notes?: string;
+    isImportant?: number;
+  }) => Promise<FamilyMember>;
+  deleteFamilyMember: (id: string) => Promise<void>;
+  listFamilyOccasions: (memberId?: string) => Promise<FamilyOccasion[]>;
+  createFamilyOccasion: (payload: {
+    memberId: string;
+    type: "birthday" | "name_day" | "anniversary" | "memorial" | "custom";
+    title: string;
+    date: string;
+    recurrence?: string;
+    remindDaysBefore?: number;
+    lastAcknowledgedAt?: string | null;
+    notes?: string;
+  }) => Promise<FamilyOccasion>;
+  updateFamilyOccasion: (payload: {
+    id: string;
+    memberId?: string;
+    type?: "birthday" | "name_day" | "anniversary" | "memorial" | "custom";
+    title?: string;
+    date?: string;
+    recurrence?: string;
+    remindDaysBefore?: number;
+    lastAcknowledgedAt?: string | null;
+    notes?: string;
+  }) => Promise<FamilyOccasion>;
+  deleteFamilyOccasion: (id: string) => Promise<void>;
+  listFamilyObligations: (memberId?: string) => Promise<FamilyObligation[]>;
+  createFamilyObligation: (payload: {
+    memberId: string;
+    occasionId?: string | null;
+    type: "call" | "visit" | "message" | "gift" | "paperwork" | "custom";
+    title: string;
+    dueAt?: string | null;
+    status?: "open" | "done";
+    priority?: "low" | "normal" | "high";
+    completedAt?: string | null;
+    notes?: string;
+  }) => Promise<FamilyObligation>;
+  updateFamilyObligation: (payload: {
+    id: string;
+    memberId?: string;
+    occasionId?: string | null;
+    type?: "call" | "visit" | "message" | "gift" | "paperwork" | "custom";
+    title?: string;
+    dueAt?: string | null;
+    status?: "open" | "done";
+    priority?: "low" | "normal" | "high";
+    completedAt?: string | null;
+    notes?: string;
+  }) => Promise<FamilyObligation>;
+  completeFamilyObligation: (id: string) => Promise<FamilyObligation>;
+  deleteFamilyObligation: (id: string) => Promise<void>;
+  getFamilySummary: () => Promise<FamilySummary>;
 };
 
 /**

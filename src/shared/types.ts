@@ -222,3 +222,60 @@ export type CarServiceReminder = {
   createdAt: string;
   updatedAt: string;
 };
+
+// Family types
+export type FamilyOccasionType = "birthday" | "name_day" | "anniversary" | "memorial" | "custom";
+export type FamilyObligationType = "call" | "visit" | "message" | "gift" | "paperwork" | "custom";
+export type FamilyObligationStatus = "open" | "done";
+export type FamilyPriority = "low" | "normal" | "high";
+
+export type FamilyMember = {
+  id: string;
+  name: string;
+  relationship: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  preferredContactMethod: string;
+  notes: string;
+  isImportant: number; // stored as integer 0/1
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FamilyOccasion = {
+  id: string;
+  memberId: string;
+  type: FamilyOccasionType;
+  title: string;
+  date: string;
+  recurrence: string;
+  remindDaysBefore: number;
+  lastAcknowledgedAt: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FamilyObligation = {
+  id: string;
+  memberId: string;
+  occasionId: string | null;
+  type: FamilyObligationType;
+  title: string;
+  dueAt: string | null;
+  status: FamilyObligationStatus;
+  priority: FamilyPriority;
+  completedAt: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FamilySummary = {
+  totalMembers: number;
+  importantMembers: number;
+  upcomingOccasions: number;
+  openObligations: number;
+  overdueObligations: number;
+};

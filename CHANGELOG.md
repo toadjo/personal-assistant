@@ -49,6 +49,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Updated backup system to include all car-related tables in export/import/preview/reset operations
 - Updated IPC handler payload contract tests to include car channels
 
+## [3.3.0] - 2026-05-26
+
+### Added
+
+- Family module for family member management with obligations-first interface
+- Family member management with contact information, relationship tracking, and importance marking
+- Family occasion tracking (birthdays, name days, anniversaries, memorials, custom events) with yearly recurrence
+- Family obligation tracking (calls, visits, messages, gifts, paperwork, custom obligations) with due dates and priority levels
+- Family summary showing total members, important members, upcoming occasions (30 days), open obligations, and overdue obligations
+- Yearly occasion comparison using month/day logic to handle dates from previous years
+- Family data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for family service, IPC handlers, renderer components, and backup operations
+
+### Changed
+
+- Added Family tab to Personal module navigation in AssistantShell
+- Updated backup system to include all family-related tables in export/import/preview/reset operations
+- Updated IPC handler payload contract tests to include family channels
+
+## [3.3.0] - 2026-05-26
+
+### Added
+
+- Family module for family obligations and relationship management
+- Family member management with contact information and importance markers
+- Family occasions (birthdays, name days, anniversaries, memorials, custom) with yearly recurrence
+- Family obligations (calls, visits, messages, gifts, paperwork, custom) with due date and priority tracking
+- Family summary showing total members, important members, upcoming occasions, open obligations, and overdue obligations
+- Obligation completion tracking with status updates and completion timestamps
+- Yearly occasion calculation that compares by month/day for accurate upcoming event detection
+- Family data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for family service, IPC handlers, renderer components, and backup operations
+
+### Changed
+
+- Added Family tab to Personal module navigation in AssistantShell
+- Updated backup system to include all family-related tables in export/import/preview/reset operations
+- Updated IPC handler payload contract tests to include family channels
+
 ## [3.0.1] - 2026-05-26
 
 ### Fixed

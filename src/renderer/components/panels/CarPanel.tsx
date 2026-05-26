@@ -62,7 +62,7 @@ export const CarPanel = memo(function CarPanel({
       const vehiclesData = await api.listVehicles();
       setVehicles(vehiclesData);
       if (vehiclesData.length > 0 && !selectedVehicleId) {
-        setSelectedVehicleId(vehiclesData[0].id);
+        setSelectedVehicleId(vehiclesData[0]?.id ?? null);
       }
     } catch {
       onError("Failed to load car data");

@@ -71,7 +71,12 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.carMaintenanceList,
   IpcInvoke.carRecurringBillsList,
   IpcInvoke.carMileageList,
-  IpcInvoke.carServiceRemindersList
+  IpcInvoke.carServiceRemindersList,
+  // Family list channels (zero-arg: optional memberId filter)
+  IpcInvoke.familyMembersList,
+  IpcInvoke.familyOccasionsList,
+  IpcInvoke.familyObligationsList,
+  IpcInvoke.familySummaryGet
 ];
 
 describe("IPC handler payload contracts", () => {
@@ -135,6 +140,17 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.carServiceRemindersUpdate ||
         ch === IpcInvoke.carServiceRemindersComplete ||
         ch === IpcInvoke.carServiceRemindersDelete ||
+        // Family schema-backed channels
+        ch === IpcInvoke.familyMembersCreate ||
+        ch === IpcInvoke.familyMembersUpdate ||
+        ch === IpcInvoke.familyMembersDelete ||
+        ch === IpcInvoke.familyOccasionsCreate ||
+        ch === IpcInvoke.familyOccasionsUpdate ||
+        ch === IpcInvoke.familyOccasionsDelete ||
+        ch === IpcInvoke.familyObligationsCreate ||
+        ch === IpcInvoke.familyObligationsUpdate ||
+        ch === IpcInvoke.familyObligationsDelete ||
+        ch === IpcInvoke.familyObligationsComplete ||
         // Team mode schema-backed channels
         ch === IpcInvoke.teamSetConfig ||
         ch === IpcInvoke.teamSetDisplayName ||

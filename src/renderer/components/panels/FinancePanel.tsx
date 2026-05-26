@@ -167,7 +167,12 @@ export const FinancePanel = memo(function FinancePanel({
   }
 
   const unpaidBills = bills.filter((b) => b.status === "unpaid").sort((a, b) => a.dueAt.localeCompare(b.dueAt));
-  const paidBills = bills.filter((b) => b.status === "paid").sort((a, b) => b.lastPaidAt ? b.lastPaidAt.localeCompare(a.lastPaidAt) : 0);
+  const paidBills = bills.filter((b) => b.status === "paid").sort((a, b) => {
+    if (!b.lastPaidAt && !a.lastPaidAt) return 0;
+    if (!b.lastPaidAt) return 1;
+    if (!a.lastPaidAt) return -1;
+    return b.lastPaidAt.localeCompare(a.lastPaidAt);
+  });
 
   return (
     <section className="panel" aria-labelledby="finance-panel-heading">

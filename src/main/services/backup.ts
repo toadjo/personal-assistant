@@ -154,6 +154,46 @@ export type BackupPayload = {
     createdAt: string;
     updatedAt: string;
   }>;
+  family_members?: Array<{
+    id: string;
+    name: string;
+    relationship: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    preferredContactMethod: string;
+    notes: string;
+    isImportant: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  family_occasions?: Array<{
+    id: string;
+    memberId: string;
+    type: string;
+    title: string;
+    date: string;
+    recurrence: string;
+    remindDaysBefore: number;
+    lastAcknowledgedAt: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  family_obligations?: Array<{
+    id: string;
+    memberId: string;
+    occasionId: string | null;
+    type: string;
+    title: string;
+    dueAt: string | null;
+    status: string;
+    priority: string;
+    completedAt: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   app_settings?: Array<{
     key: string;
     value: string;
@@ -185,6 +225,9 @@ export type BackupPreviewResult = {
   car_recurring_bills: number;
   car_mileage: number;
   car_service_reminders: number;
+  family_members: number;
+  family_occasions: number;
+  family_obligations: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -206,6 +249,9 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const car_recurring_bills = db.prepare("SELECT * FROM car_recurring_bills").all() as BackupPayload["car_recurring_bills"];
   const car_mileage = db.prepare("SELECT * FROM car_mileage").all() as BackupPayload["car_mileage"];
   const car_service_reminders = db.prepare("SELECT * FROM car_service_reminders").all() as BackupPayload["car_service_reminders"];
+  const family_members = db.prepare("SELECT * FROM family_members").all() as BackupPayload["family_members"];
+  const family_occasions = db.prepare("SELECT * FROM family_occasions").all() as BackupPayload["family_occasions"];
+  const family_obligations = db.prepare("SELECT * FROM family_obligations").all() as BackupPayload["family_obligations"];
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
@@ -228,6 +274,9 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     car_recurring_bills,
     car_mileage,
     car_service_reminders,
+    family_members,
+    family_occasions,
+    family_obligations,
     app_settings
   };
 
@@ -281,6 +330,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -307,6 +359,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: true,
@@ -332,6 +387,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -359,6 +417,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -383,6 +444,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -407,6 +471,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -431,11 +498,14 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
-      version: payload.version,
-      exportedAt: payload.exportedAt
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
     };
   }
 
@@ -455,11 +525,14 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
-      version: payload.version,
-      exportedAt: payload.exportedAt
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
     };
   }
 
@@ -479,11 +552,95 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
-      version: payload.version,
-      exportedAt: payload.exportedAt
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.family_members && !Array.isArray(payload.family_members)) {
+    return {
+      valid: false,
+      error: "Invalid backup: family_members field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.family_occasions && !Array.isArray(payload.family_occasions)) {
+    return {
+      valid: false,
+      error: "Invalid backup: family_occasions field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.family_obligations && !Array.isArray(payload.family_obligations)) {
+    return {
+      valid: false,
+      error: "Invalid backup: family_obligations field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
     };
   }
 
@@ -503,11 +660,14 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       car_recurring_bills: 0,
       car_mileage: 0,
       car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
-      version: payload.version,
-      exportedAt: payload.exportedAt
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
     };
   }
 
@@ -527,6 +687,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     "car_recurring_bills",
     "car_mileage",
     "car_service_reminders",
+    "family_members",
+    "family_occasions",
+    "family_obligations",
     "app_settings",
     "_encrypted"
   ];
@@ -550,6 +713,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
   const car_recurring_bills = payload.car_recurring_bills?.length ?? 0;
   const car_mileage = payload.car_mileage?.length ?? 0;
   const car_service_reminders = payload.car_service_reminders?.length ?? 0;
+  const family_members = payload.family_members?.length ?? 0;
+  const family_occasions = payload.family_occasions?.length ?? 0;
+  const family_obligations = payload.family_obligations?.length ?? 0;
   const app_settings = payload.app_settings?.length ?? 0;
 
   return {
@@ -566,6 +732,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     car_recurring_bills,
     car_mileage,
     car_service_reminders,
+    family_members,
+    family_occasions,
+    family_obligations,
     app_settings,
     unsupported_sections,
     has_encrypted_content: false,
@@ -590,6 +759,9 @@ export function importBackup(
   car_recurring_bills: number;
   car_mileage: number;
   car_service_reminders: number;
+  family_members: number;
+  family_occasions: number;
+  family_obligations: number;
   app_settings: number;
   rejected_secret_settings: number;
 } {
@@ -616,6 +788,15 @@ export function importBackup(
   if (!actualPayload.automation_rules) actualPayload.automation_rules = [];
   if (!actualPayload.finance_bills) actualPayload.finance_bills = [];
   if (!actualPayload.finance_expenses) actualPayload.finance_expenses = [];
+  if (!actualPayload.car_vehicles) actualPayload.car_vehicles = [];
+  if (!actualPayload.car_fuel_entries) actualPayload.car_fuel_entries = [];
+  if (!actualPayload.car_maintenance) actualPayload.car_maintenance = [];
+  if (!actualPayload.car_recurring_bills) actualPayload.car_recurring_bills = [];
+  if (!actualPayload.car_mileage) actualPayload.car_mileage = [];
+  if (!actualPayload.car_service_reminders) actualPayload.car_service_reminders = [];
+  if (!actualPayload.family_members) actualPayload.family_members = [];
+  if (!actualPayload.family_occasions) actualPayload.family_occasions = [];
+  if (!actualPayload.family_obligations) actualPayload.family_obligations = [];
   if (!actualPayload.app_settings) actualPayload.app_settings = [];
 
   const db = getDb();
@@ -628,6 +809,15 @@ export function importBackup(
     db.prepare("DELETE FROM automation_rules").run();
     db.prepare("DELETE FROM finance_bills").run();
     db.prepare("DELETE FROM finance_expenses").run();
+    db.prepare("DELETE FROM car_vehicles").run();
+    db.prepare("DELETE FROM car_fuel_entries").run();
+    db.prepare("DELETE FROM car_maintenance").run();
+    db.prepare("DELETE FROM car_recurring_bills").run();
+    db.prepare("DELETE FROM car_mileage").run();
+    db.prepare("DELETE FROM car_service_reminders").run();
+    db.prepare("DELETE FROM family_members").run();
+    db.prepare("DELETE FROM family_occasions").run();
+    db.prepare("DELETE FROM family_obligations").run();
     db.prepare("DELETE FROM app_settings").run();
 
     const noteStmt = db.prepare(
@@ -714,6 +904,27 @@ export function importBackup(
       serviceReminderStmt.run(row);
     }
 
+    const familyMemberStmt = db.prepare(
+      "INSERT INTO family_members (id, name, relationship, phone, email, address, preferredContactMethod, notes, isImportant, createdAt, updatedAt) VALUES (@id, @name, @relationship, @phone, @email, @address, @preferredContactMethod, @notes, @isImportant, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.family_members || []) {
+      familyMemberStmt.run(row);
+    }
+
+    const familyOccasionStmt = db.prepare(
+      "INSERT INTO family_occasions (id, memberId, type, title, date, recurrence, remindDaysBefore, lastAcknowledgedAt, notes, createdAt, updatedAt) VALUES (@id, @memberId, @type, @title, @date, @recurrence, @remindDaysBefore, @lastAcknowledgedAt, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.family_occasions || []) {
+      familyOccasionStmt.run(row);
+    }
+
+    const familyObligationStmt = db.prepare(
+      "INSERT INTO family_obligations (id, memberId, occasionId, type, title, dueAt, status, priority, completedAt, notes, createdAt, updatedAt) VALUES (@id, @memberId, @occasionId, @type, @title, @dueAt, @status, @priority, @completedAt, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.family_obligations || []) {
+      familyObligationStmt.run(row);
+    }
+
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
@@ -740,6 +951,9 @@ export function importBackup(
     car_recurring_bills: actualPayload.car_recurring_bills?.length ?? 0,
     car_mileage: actualPayload.car_mileage?.length ?? 0,
     car_service_reminders: actualPayload.car_service_reminders?.length ?? 0,
+    family_members: actualPayload.family_members?.length ?? 0,
+    family_occasions: actualPayload.family_occasions?.length ?? 0,
+    family_obligations: actualPayload.family_obligations?.length ?? 0,
     app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
@@ -760,6 +974,9 @@ export function resetAllData(): void {
     db.prepare("DELETE FROM car_recurring_bills").run();
     db.prepare("DELETE FROM car_mileage").run();
     db.prepare("DELETE FROM car_service_reminders").run();
+    db.prepare("DELETE FROM family_members").run();
+    db.prepare("DELETE FROM family_occasions").run();
+    db.prepare("DELETE FROM family_obligations").run();
     db.prepare("DELETE FROM app_settings").run();
     db.prepare("DELETE FROM execution_logs").run();
     db.prepare("DELETE FROM renderer_errors").run();

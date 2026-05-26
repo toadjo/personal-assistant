@@ -192,6 +192,7 @@ describe("FinancePanel", () => {
 
     const buttons = screen.getAllByRole("button");
     const addButton = buttons[0]; // First button is add bill
+    if (!addButton) throw new Error("Add button not found");
     await userEvent.click(addButton);
 
     expect(screen.getByText("Add Bill")).toBeDefined();
@@ -215,6 +216,7 @@ describe("FinancePanel", () => {
 
     const buttons = screen.getAllByRole("button");
     const addButton = buttons[1]; // Second button is add expense
+    if (!addButton) throw new Error("Add button not found");
     await userEvent.click(addButton);
 
     expect(screen.getByText("Add Expense")).toBeDefined();

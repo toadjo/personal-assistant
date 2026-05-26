@@ -107,7 +107,21 @@ const invokeChannelMap = {
   carServiceRemindersCreate: "car:serviceReminders:create",
   carServiceRemindersUpdate: "car:serviceReminders:update",
   carServiceRemindersComplete: "car:serviceReminders:complete",
-  carServiceRemindersDelete: "car:serviceReminders:delete"
+  carServiceRemindersDelete: "car:serviceReminders:delete",
+  familyMembersList: "family:members:list",
+  familyMembersCreate: "family:members:create",
+  familyMembersUpdate: "family:members:update",
+  familyMembersDelete: "family:members:delete",
+  familyOccasionsList: "family:occasions:list",
+  familyOccasionsCreate: "family:occasions:create",
+  familyOccasionsUpdate: "family:occasions:update",
+  familyOccasionsDelete: "family:occasions:delete",
+  familyObligationsList: "family:obligations:list",
+  familyObligationsCreate: "family:obligations:create",
+  familyObligationsUpdate: "family:obligations:update",
+  familyObligationsComplete: "family:obligations:complete",
+  familyObligationsDelete: "family:obligations:delete",
+  familySummaryGet: "family:summary:get"
 } as const;
 
 const pushChannelMap = {
@@ -292,5 +306,79 @@ contextBridge.exposeInMainWorld("assistantApi", {
   aiChat: (payload: {
     message: string;
     context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number };
-  }) => ipcRenderer.invoke(invoke.aiChat, payload)
+  }) => ipcRenderer.invoke(invoke.aiChat, payload),
+  // Family operations
+  listFamilyMembers: () => ipcRenderer.invoke(invoke.familyMembersList),
+  createFamilyMember: (payload: {
+    name: string;
+    relationship: string;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+    preferredContactMethod?: string;
+    notes?: string;
+    isImportant?: number;
+  }) => ipcRenderer.invoke(invoke.familyMembersCreate, payload),
+  updateFamilyMember: (payload: {
+    id: string;
+    name?: string;
+    relationship?: string;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+    preferredContactMethod?: string;
+    notes?: string;
+    isImportant?: number;
+  }) => ipcRenderer.invoke(invoke.familyMembersUpdate, payload),
+  deleteFamilyMember: (id: string) => ipcRenderer.invoke(invoke.familyMembersDelete, id),
+  listFamilyOccasions: (memberId?: string) => ipcRenderer.invoke(invoke.familyOccasionsList, memberId),
+  createFamilyOccasion: (payload: {
+    memberId: string;
+    type: "birthday" | "name_day" | "anniversary" | "memorial" | "custom";
+    title: string;
+    date: string;
+    recurrence?: string;
+    remindDaysBefore?: number;
+    lastAcknowledgedAt?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.familyOccasionsCreate, payload),
+  updateFamilyOccasion: (payload: {
+    id: string;
+    memberId?: string;
+    type?: "birthday" | "name_day" | "anniversary" | "memorial" | "custom";
+    title?: string;
+    date?: string;
+    recurrence?: string;
+    remindDaysBefore?: number;
+    lastAcknowledgedAt?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.familyOccasionsUpdate, payload),
+  deleteFamilyOccasion: (id: string) => ipcRenderer.invoke(invoke.familyOccasionsDelete, id),
+  listFamilyObligations: (memberId?: string) => ipcRenderer.invoke(invoke.familyObligationsList, memberId),
+  createFamilyObligation: (payload: {
+    memberId: string;
+    occasionId?: string | null;
+    type: "call" | "visit" | "message" | "gift" | "paperwork" | "custom";
+    title: string;
+    dueAt?: string | null;
+    status?: "open" | "done";
+    priority?: "low" | "normal" | "high";
+    completedAt?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.familyObligationsCreate, payload),
+  updateFamilyObligation: (payload: {
+    id: string;
+    memberId?: string;
+    occasionId?: string | null;
+    type?: "call" | "visit" | "message" | "gift" | "paperwork" | "custom";
+    title?: string;
+    dueAt?: string | null;
+    status?: "open" | "done";
+    priority?: "low" | "normal" | "high";
+    completedAt?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.familyObligationsUpdate, payload),
+  completeFamilyObligation: (id: string) => ipcRenderer.invoke(invoke.familyObligationsComplete, id),
+  deleteFamilyObligation: (id: string) => ipcRenderer.invoke(invoke.familyObligationsDelete, id),
+  getFamilySummary: () => ipcRenderer.invoke(invoke.familySummaryGet)
 });

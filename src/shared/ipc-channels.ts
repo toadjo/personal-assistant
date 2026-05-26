@@ -107,7 +107,21 @@ export const IpcInvoke = {
   carServiceRemindersCreate: "car:serviceReminders:create",
   carServiceRemindersUpdate: "car:serviceReminders:update",
   carServiceRemindersComplete: "car:serviceReminders:complete",
-  carServiceRemindersDelete: "car:serviceReminders:delete"
+  carServiceRemindersDelete: "car:serviceReminders:delete",
+  familyMembersList: "family:members:list",
+  familyMembersCreate: "family:members:create",
+  familyMembersUpdate: "family:members:update",
+  familyMembersDelete: "family:members:delete",
+  familyOccasionsList: "family:occasions:list",
+  familyOccasionsCreate: "family:occasions:create",
+  familyOccasionsUpdate: "family:occasions:update",
+  familyOccasionsDelete: "family:occasions:delete",
+  familyObligationsList: "family:obligations:list",
+  familyObligationsCreate: "family:obligations:create",
+  familyObligationsUpdate: "family:obligations:update",
+  familyObligationsComplete: "family:obligations:complete",
+  familyObligationsDelete: "family:obligations:delete",
+  familySummaryGet: "family:summary:get"
 } as const;
 
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */
