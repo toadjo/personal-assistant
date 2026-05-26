@@ -24,6 +24,7 @@ import { DataControlPanel } from "./panels/DataControlPanel";
 import { ProjectsPanel } from "./panels/ProjectsPanel";
 import { AiSettingsPanel } from "./panels/AiSettingsPanel";
 import { FinancePanel } from "./panels/FinancePanel";
+import { CarPanel } from "./panels/CarPanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
@@ -61,7 +62,7 @@ import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
-type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations" | "lifeAreas" | "finance";
+type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations" | "lifeAreas" | "finance" | "car";
 
 export function AssistantShell(): JSX.Element {
   // Measure app startup performance
@@ -623,6 +624,13 @@ export function AssistantShell(): JSX.Element {
             >
               Finance
             </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "car" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("car")}
+            >
+              Car
+            </button>
           </div>
 
           {showPalette && (
@@ -1070,6 +1078,19 @@ export function AssistantShell(): JSX.Element {
             <div className="contentGrid">
               <div className="contentMain">
                 <FinancePanel
+                  isRefreshing={false}
+                  onRefresh={async () => {}}
+                  onError={ui.reportError}
+                  onShowSuccess={ui.showSuccess}
+                />
+              </div>
+            </div>
+          )}
+
+          {activePersonalModule === "car" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <CarPanel
                   isRefreshing={false}
                   onRefresh={async () => {}}
                   onError={ui.reportError}

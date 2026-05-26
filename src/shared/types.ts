@@ -135,3 +135,90 @@ export type FinanceMonthlySummary = {
   totalExpenses: number;
   totalCommittedAmount: number;
 };
+
+// Car types
+export type CarVehicle = {
+  id: string;
+  name: string;
+  make: string;
+  model: string;
+  year: number;
+  licensePlate: string | null;
+  vin: string | null;
+  color: string | null;
+  purchaseDate: string | null;
+  purchasePrice: number | null; // stored as integer cents
+  currentMileage: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CarFuelEntry = {
+  id: string;
+  vehicleId: string;
+  date: string;
+  odometer: number;
+  fuelAmount: number;
+  fuelUnit: string;
+  pricePerUnit: number; // stored as integer cents
+  totalPrice: number; // stored as integer cents
+  station: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CarMaintenance = {
+  id: string;
+  vehicleId: string;
+  date: string;
+  odometer: number | null;
+  type: string;
+  description: string;
+  cost: number; // stored as integer cents
+  shop: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CarRecurringBill = {
+  id: string;
+  vehicleId: string;
+  name: string;
+  type: string;
+  amount: number; // stored as integer cents
+  dueDate: string;
+  frequency: string;
+  status: "pending" | "paid";
+  lastPaidDate: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CarMileage = {
+  id: string;
+  vehicleId: string;
+  date: string;
+  odometer: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CarServiceReminder = {
+  id: string;
+  vehicleId: string;
+  type: string;
+  description: string;
+  dueOdometer: number | null;
+  dueDate: string | null;
+  status: "pending" | "completed";
+  completedAt: string | null;
+  completedOdometer: number | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};

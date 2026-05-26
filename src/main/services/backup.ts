@@ -74,6 +74,86 @@ export type BackupPayload = {
     createdAt: string;
     updatedAt: string;
   }>;
+  car_vehicles?: Array<{
+    id: string;
+    name: string;
+    make: string;
+    model: string;
+    year: number;
+    licensePlate: string | null;
+    vin: string | null;
+    color: string | null;
+    purchaseDate: string | null;
+    purchasePrice: number | null;
+    currentMileage: number;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  car_fuel_entries?: Array<{
+    id: string;
+    vehicleId: string;
+    date: string;
+    odometer: number;
+    fuelAmount: number;
+    fuelUnit: string;
+    pricePerUnit: number;
+    totalPrice: number;
+    station: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  car_maintenance?: Array<{
+    id: string;
+    vehicleId: string;
+    date: string;
+    odometer: number | null;
+    type: string;
+    description: string;
+    cost: number;
+    shop: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  car_recurring_bills?: Array<{
+    id: string;
+    vehicleId: string;
+    name: string;
+    type: string;
+    amount: number;
+    dueDate: string;
+    frequency: string;
+    status: string;
+    lastPaidDate: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  car_mileage?: Array<{
+    id: string;
+    vehicleId: string;
+    date: string;
+    odometer: number;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  car_service_reminders?: Array<{
+    id: string;
+    vehicleId: string;
+    type: string;
+    description: string;
+    dueOdometer: number | null;
+    dueDate: string | null;
+    status: string;
+    completedAt: string | null;
+    completedOdometer: number | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   app_settings?: Array<{
     key: string;
     value: string;
@@ -99,6 +179,12 @@ export type BackupPreviewResult = {
   automation_rules: number;
   finance_bills: number;
   finance_expenses: number;
+  car_vehicles: number;
+  car_fuel_entries: number;
+  car_maintenance: number;
+  car_recurring_bills: number;
+  car_mileage: number;
+  car_service_reminders: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -114,6 +200,12 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const automation_rules = db.prepare("SELECT * FROM automation_rules").all() as BackupPayload["automation_rules"];
   const finance_bills = db.prepare("SELECT * FROM finance_bills").all() as BackupPayload["finance_bills"];
   const finance_expenses = db.prepare("SELECT * FROM finance_expenses").all() as BackupPayload["finance_expenses"];
+  const car_vehicles = db.prepare("SELECT * FROM car_vehicles").all() as BackupPayload["car_vehicles"];
+  const car_fuel_entries = db.prepare("SELECT * FROM car_fuel_entries").all() as BackupPayload["car_fuel_entries"];
+  const car_maintenance = db.prepare("SELECT * FROM car_maintenance").all() as BackupPayload["car_maintenance"];
+  const car_recurring_bills = db.prepare("SELECT * FROM car_recurring_bills").all() as BackupPayload["car_recurring_bills"];
+  const car_mileage = db.prepare("SELECT * FROM car_mileage").all() as BackupPayload["car_mileage"];
+  const car_service_reminders = db.prepare("SELECT * FROM car_service_reminders").all() as BackupPayload["car_service_reminders"];
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
@@ -130,6 +222,12 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     automation_rules,
     finance_bills,
     finance_expenses,
+    car_vehicles,
+    car_fuel_entries,
+    car_maintenance,
+    car_recurring_bills,
+    car_mileage,
+    car_service_reminders,
     app_settings
   };
 
@@ -177,6 +275,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -197,6 +301,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: true,
@@ -216,6 +326,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -237,6 +353,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -255,6 +377,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -273,6 +401,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -291,6 +425,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -309,6 +449,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -327,6 +473,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -345,6 +497,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       automation_rules: 0,
       finance_bills: 0,
       finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -363,6 +521,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     "automation_rules",
     "finance_bills",
     "finance_expenses",
+    "car_vehicles",
+    "car_fuel_entries",
+    "car_maintenance",
+    "car_recurring_bills",
+    "car_mileage",
+    "car_service_reminders",
     "app_settings",
     "_encrypted"
   ];
@@ -380,6 +544,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
   const automation_rules = payload.automation_rules?.length ?? 0;
   const finance_bills = payload.finance_bills?.length ?? 0;
   const finance_expenses = payload.finance_expenses?.length ?? 0;
+  const car_vehicles = payload.car_vehicles?.length ?? 0;
+  const car_fuel_entries = payload.car_fuel_entries?.length ?? 0;
+  const car_maintenance = payload.car_maintenance?.length ?? 0;
+  const car_recurring_bills = payload.car_recurring_bills?.length ?? 0;
+  const car_mileage = payload.car_mileage?.length ?? 0;
+  const car_service_reminders = payload.car_service_reminders?.length ?? 0;
   const app_settings = payload.app_settings?.length ?? 0;
 
   return {
@@ -390,6 +560,12 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     automation_rules,
     finance_bills,
     finance_expenses,
+    car_vehicles,
+    car_fuel_entries,
+    car_maintenance,
+    car_recurring_bills,
+    car_mileage,
+    car_service_reminders,
     app_settings,
     unsupported_sections,
     has_encrypted_content: false,
@@ -408,6 +584,12 @@ export function importBackup(
   automation_rules: number;
   finance_bills: number;
   finance_expenses: number;
+  car_vehicles: number;
+  car_fuel_entries: number;
+  car_maintenance: number;
+  car_recurring_bills: number;
+  car_mileage: number;
+  car_service_reminders: number;
   app_settings: number;
   rejected_secret_settings: number;
 } {
@@ -490,6 +672,48 @@ export function importBackup(
       expenseStmt.run(row);
     }
 
+    const vehicleStmt = db.prepare(
+      "INSERT INTO car_vehicles (id, name, make, model, year, licensePlate, vin, color, purchaseDate, purchasePrice, currentMileage, notes, createdAt, updatedAt) VALUES (@id, @name, @make, @model, @year, @licensePlate, @vin, @color, @purchaseDate, @purchasePrice, @currentMileage, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.car_vehicles || []) {
+      vehicleStmt.run(row);
+    }
+
+    const fuelStmt = db.prepare(
+      "INSERT INTO car_fuel_entries (id, vehicleId, date, odometer, fuelAmount, fuelUnit, pricePerUnit, totalPrice, station, notes, createdAt, updatedAt) VALUES (@id, @vehicleId, @date, @odometer, @fuelAmount, @fuelUnit, @pricePerUnit, @totalPrice, @station, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.car_fuel_entries || []) {
+      fuelStmt.run(row);
+    }
+
+    const maintenanceStmt = db.prepare(
+      "INSERT INTO car_maintenance (id, vehicleId, date, odometer, type, description, cost, shop, notes, createdAt, updatedAt) VALUES (@id, @vehicleId, @date, @odometer, @type, @description, @cost, @shop, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.car_maintenance || []) {
+      maintenanceStmt.run(row);
+    }
+
+    const recurringBillStmt = db.prepare(
+      "INSERT INTO car_recurring_bills (id, vehicleId, name, type, amount, dueDate, frequency, status, lastPaidDate, notes, createdAt, updatedAt) VALUES (@id, @vehicleId, @name, @type, @amount, @dueDate, @frequency, @status, @lastPaidDate, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.car_recurring_bills || []) {
+      recurringBillStmt.run(row);
+    }
+
+    const mileageStmt = db.prepare(
+      "INSERT INTO car_mileage (id, vehicleId, date, odometer, notes, createdAt, updatedAt) VALUES (@id, @vehicleId, @date, @odometer, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.car_mileage || []) {
+      mileageStmt.run(row);
+    }
+
+    const serviceReminderStmt = db.prepare(
+      "INSERT INTO car_service_reminders (id, vehicleId, type, description, dueOdometer, dueDate, status, completedAt, completedOdometer, notes, createdAt, updatedAt) VALUES (@id, @vehicleId, @type, @description, @dueOdometer, @dueDate, @status, @completedAt, @completedOdometer, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.car_service_reminders || []) {
+      serviceReminderStmt.run(row);
+    }
+
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
@@ -510,6 +734,12 @@ export function importBackup(
     automation_rules: actualPayload.automation_rules?.length ?? 0,
     finance_bills: actualPayload.finance_bills?.length ?? 0,
     finance_expenses: actualPayload.finance_expenses?.length ?? 0,
+    car_vehicles: actualPayload.car_vehicles?.length ?? 0,
+    car_fuel_entries: actualPayload.car_fuel_entries?.length ?? 0,
+    car_maintenance: actualPayload.car_maintenance?.length ?? 0,
+    car_recurring_bills: actualPayload.car_recurring_bills?.length ?? 0,
+    car_mileage: actualPayload.car_mileage?.length ?? 0,
+    car_service_reminders: actualPayload.car_service_reminders?.length ?? 0,
     app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
@@ -524,6 +754,12 @@ export function resetAllData(): void {
     db.prepare("DELETE FROM automation_rules").run();
     db.prepare("DELETE FROM finance_bills").run();
     db.prepare("DELETE FROM finance_expenses").run();
+    db.prepare("DELETE FROM car_vehicles").run();
+    db.prepare("DELETE FROM car_fuel_entries").run();
+    db.prepare("DELETE FROM car_maintenance").run();
+    db.prepare("DELETE FROM car_recurring_bills").run();
+    db.prepare("DELETE FROM car_mileage").run();
+    db.prepare("DELETE FROM car_service_reminders").run();
     db.prepare("DELETE FROM app_settings").run();
     db.prepare("DELETE FROM execution_logs").run();
     db.prepare("DELETE FROM renderer_errors").run();

@@ -455,3 +455,238 @@ export const financeExpenseUpdateSchema = z
       message: "At least one of description, amount, date, category, or notes must be provided."
     }
   );
+
+// Car schemas
+export const carVehicleCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  make: z.string().trim().min(1).max(100),
+  model: z.string().trim().min(1).max(100),
+  year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
+  licensePlate: z.string().max(50).nullable(),
+  vin: z.string().max(50).nullable(),
+  color: z.string().max(50).nullable(),
+  purchaseDate: z.string().datetime({ offset: true }).nullable(),
+  purchasePrice: z.number().int().positive().nullable(),
+  currentMileage: z.number().int().min(0),
+  notes: z.string().max(2000)
+});
+
+export const carVehicleUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string().trim().min(1).max(200).optional(),
+    make: z.string().trim().min(1).max(100).optional(),
+    model: z.string().trim().min(1).max(100).optional(),
+    year: z.number().int().min(1900).max(new Date().getFullYear() + 1).optional(),
+    licensePlate: z.string().max(50).nullable().optional(),
+    vin: z.string().max(50).nullable().optional(),
+    color: z.string().max(50).nullable().optional(),
+    purchaseDate: z.string().datetime({ offset: true }).nullable().optional(),
+    purchasePrice: z.number().int().positive().nullable().optional(),
+    currentMileage: z.number().int().min(0).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.make !== undefined ||
+      v.model !== undefined ||
+      v.year !== undefined ||
+      v.licensePlate !== undefined ||
+      v.vin !== undefined ||
+      v.color !== undefined ||
+      v.purchaseDate !== undefined ||
+      v.purchasePrice !== undefined ||
+      v.currentMileage !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const carFuelEntryCreateSchema = z.object({
+  vehicleId: uuidSchema,
+  date: z.string().datetime({ offset: true }),
+  odometer: z.number().int().min(0),
+  fuelAmount: z.number().positive(),
+  fuelUnit: z.string().max(10).default("L"),
+  pricePerUnit: z.number().int().positive(),
+  totalPrice: z.number().int().positive(),
+  station: z.string().max(200).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const carFuelEntryUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    vehicleId: uuidSchema.optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    odometer: z.number().int().min(0).optional(),
+    fuelAmount: z.number().positive().optional(),
+    fuelUnit: z.string().max(10).optional(),
+    pricePerUnit: z.number().int().positive().optional(),
+    totalPrice: z.number().int().positive().optional(),
+    station: z.string().max(200).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.vehicleId !== undefined ||
+      v.date !== undefined ||
+      v.odometer !== undefined ||
+      v.fuelAmount !== undefined ||
+      v.fuelUnit !== undefined ||
+      v.pricePerUnit !== undefined ||
+      v.totalPrice !== undefined ||
+      v.station !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const carMaintenanceCreateSchema = z.object({
+  vehicleId: uuidSchema,
+  date: z.string().datetime({ offset: true }),
+  odometer: z.number().int().min(0).nullable(),
+  type: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(1).max(500),
+  cost: z.number().int().positive(),
+  shop: z.string().max(200).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const carMaintenanceUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    vehicleId: uuidSchema.optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    odometer: z.number().int().min(0).nullable().optional(),
+    type: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().min(1).max(500).optional(),
+    cost: z.number().int().positive().optional(),
+    shop: z.string().max(200).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.vehicleId !== undefined ||
+      v.date !== undefined ||
+      v.odometer !== undefined ||
+      v.type !== undefined ||
+      v.description !== undefined ||
+      v.cost !== undefined ||
+      v.shop !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const carRecurringBillCreateSchema = z.object({
+  vehicleId: uuidSchema,
+  name: z.string().trim().min(1).max(200),
+  type: z.string().trim().min(1).max(100),
+  amount: z.number().int().positive(),
+  dueDate: z.string().datetime({ offset: true }),
+  frequency: z.string().trim().min(1).max(50),
+  status: z.enum(["pending", "paid"]).default("pending"),
+  lastPaidDate: z.string().datetime({ offset: true }).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const carRecurringBillUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    vehicleId: uuidSchema.optional(),
+    name: z.string().trim().min(1).max(200).optional(),
+    type: z.string().trim().min(1).max(100).optional(),
+    amount: z.number().int().positive().optional(),
+    dueDate: z.string().datetime({ offset: true }).optional(),
+    frequency: z.string().trim().min(1).max(50).optional(),
+    status: z.enum(["pending", "paid"]).optional(),
+    lastPaidDate: z.string().datetime({ offset: true }).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.vehicleId !== undefined ||
+      v.name !== undefined ||
+      v.type !== undefined ||
+      v.amount !== undefined ||
+      v.dueDate !== undefined ||
+      v.frequency !== undefined ||
+      v.status !== undefined ||
+      v.lastPaidDate !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const carMileageCreateSchema = z.object({
+  vehicleId: uuidSchema,
+  date: z.string().datetime({ offset: true }),
+  odometer: z.number().int().min(0),
+  notes: z.string().max(2000)
+});
+
+export const carMileageUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    vehicleId: uuidSchema.optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    odometer: z.number().int().min(0).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.vehicleId !== undefined ||
+      v.date !== undefined ||
+      v.odometer !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const carServiceReminderCreateSchema = z.object({
+  vehicleId: uuidSchema,
+  type: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(1).max(500),
+  dueOdometer: z.number().int().min(0).nullable(),
+  dueDate: z.string().datetime({ offset: true }).nullable(),
+  status: z.enum(["pending", "completed"]).default("pending"),
+  completedAt: z.string().datetime({ offset: true }).nullable(),
+  completedOdometer: z.number().int().min(0).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const carServiceReminderUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    vehicleId: uuidSchema.optional(),
+    type: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().min(1).max(500).optional(),
+    dueOdometer: z.number().int().min(0).nullable().optional(),
+    dueDate: z.string().datetime({ offset: true }).nullable().optional(),
+    status: z.enum(["pending", "completed"]).optional(),
+    completedAt: z.string().datetime({ offset: true }).nullable().optional(),
+    completedOdometer: z.number().int().min(0).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.vehicleId !== undefined ||
+      v.type !== undefined ||
+      v.description !== undefined ||
+      v.dueOdometer !== undefined ||
+      v.dueDate !== undefined ||
+      v.status !== undefined ||
+      v.completedAt !== undefined ||
+      v.completedOdometer !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );

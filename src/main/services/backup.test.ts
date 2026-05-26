@@ -53,6 +53,12 @@ describe("backup service", () => {
     expect(result.automation_rules).toEqual([]);
     expect(result.finance_bills).toEqual([]);
     expect(result.finance_expenses).toEqual([]);
+    expect(result.car_vehicles).toEqual([]);
+    expect(result.car_fuel_entries).toEqual([]);
+    expect(result.car_maintenance).toEqual([]);
+    expect(result.car_recurring_bills).toEqual([]);
+    expect(result.car_mileage).toEqual([]);
+    expect(result.car_service_reminders).toEqual([]);
     expect(result.app_settings).toEqual([]);
   });
 
@@ -98,6 +104,36 @@ describe("backup service", () => {
       )
       .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
     testDb
+      .prepare(
+        "INSERT INTO car_vehicles (id, name, make, model, year, licensePlate, vin, color, purchaseDate, purchasePrice, currentMileage, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("v1", "My Car", "Toyota", "Camry", 2020, "ABC123", "VIN123", null, "2020-01-01T00:00:00Z", 2500000, 50000, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_fuel_entries (id, vehicleId, date, odometer, fuelAmount, fuelUnit, pricePerUnit, totalPrice, station, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("f1", "v1", "2026-01-01T00:00:00Z", 50000, 12.5, "L", 350, 4375, null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_maintenance (id, vehicleId, date, odometer, type, description, cost, shop, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("m1", "v1", "2026-01-01T00:00:00Z", 50000, "Oil Change", "Oil change", 5000, null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_recurring_bills (id, vehicleId, name, type, amount, dueDate, frequency, status, lastPaidDate, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("rb1", "v1", "Insurance", "Insurance", 100000, "2026-01-01T00:00:00Z", "monthly", "pending", null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_mileage (id, vehicleId, date, odometer, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("mi1", "v1", "2026-01-01T00:00:00Z", 50000, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_service_reminders (id, vehicleId, type, description, dueOdometer, dueDate, status, completedAt, completedOdometer, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("sr1", "v1", "Maintenance", "Brake inspection", 60000, "2026-06-01T00:00:00Z", "pending", null, null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
       .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
       .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -108,6 +144,12 @@ describe("backup service", () => {
     expect(exported.automation_rules).toHaveLength(1);
     expect(exported.finance_bills).toHaveLength(1);
     expect(exported.finance_expenses).toHaveLength(1);
+    expect(exported.car_vehicles).toHaveLength(1);
+    expect(exported.car_fuel_entries).toHaveLength(1);
+    expect(exported.car_maintenance).toHaveLength(1);
+    expect(exported.car_recurring_bills).toHaveLength(1);
+    expect(exported.car_mileage).toHaveLength(1);
+    expect(exported.car_service_reminders).toHaveLength(1);
     expect(exported.app_settings).toHaveLength(1);
 
     // Clear everything
@@ -117,6 +159,12 @@ describe("backup service", () => {
     testDb.prepare("DELETE FROM automation_rules").run();
     testDb.prepare("DELETE FROM finance_bills").run();
     testDb.prepare("DELETE FROM finance_expenses").run();
+    testDb.prepare("DELETE FROM car_vehicles").run();
+    testDb.prepare("DELETE FROM car_fuel_entries").run();
+    testDb.prepare("DELETE FROM car_maintenance").run();
+    testDb.prepare("DELETE FROM car_recurring_bills").run();
+    testDb.prepare("DELETE FROM car_mileage").run();
+    testDb.prepare("DELETE FROM car_service_reminders").run();
     testDb.prepare("DELETE FROM app_settings").run();
 
     const imported = importBackup(exported);
@@ -126,6 +174,12 @@ describe("backup service", () => {
     expect(imported.automation_rules).toBe(1);
     expect(imported.finance_bills).toBe(1);
     expect(imported.finance_expenses).toBe(1);
+    expect(imported.car_vehicles).toBe(1);
+    expect(imported.car_fuel_entries).toBe(1);
+    expect(imported.car_maintenance).toBe(1);
+    expect(imported.car_recurring_bills).toBe(1);
+    expect(imported.car_mileage).toBe(1);
+    expect(imported.car_service_reminders).toBe(1);
     expect(imported.app_settings).toBe(1);
 
     const reExported = exportBackup();
@@ -135,6 +189,12 @@ describe("backup service", () => {
     expect(reExported.automation_rules?.[0]?.id).toBe("a1");
     expect(reExported.finance_bills?.[0]?.id).toBe("b1");
     expect(reExported.finance_expenses?.[0]?.id).toBe("e1");
+    expect(reExported.car_vehicles?.[0]?.id).toBe("v1");
+    expect(reExported.car_fuel_entries?.[0]?.id).toBe("f1");
+    expect(reExported.car_maintenance?.[0]?.id).toBe("m1");
+    expect(reExported.car_recurring_bills?.[0]?.id).toBe("rb1");
+    expect(reExported.car_mileage?.[0]?.id).toBe("mi1");
+    expect(reExported.car_service_reminders?.[0]?.id).toBe("sr1");
     expect(reExported.app_settings?.[0]?.key).toBe("assistant.name");
   });
 
@@ -167,6 +227,16 @@ describe("backup service", () => {
         "INSERT INTO finance_expenses (id, description, amount, date, category, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
       )
       .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_vehicles (id, name, make, model, year, licensePlate, vin, color, purchaseDate, purchasePrice, currentMileage, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("v1", "My Car", "Toyota", "Camry", 2020, "ABC123", "VIN123", null, "2020-01-01T00:00:00Z", 2500000, 50000, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO car_fuel_entries (id, vehicleId, date, odometer, fuelAmount, fuelUnit, pricePerUnit, totalPrice, station, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("f1", "v1", "2026-01-01T00:00:00Z", 50000, 12.5, "L", 350, 4375, null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
 
     resetAllData();
 
@@ -182,6 +252,10 @@ describe("backup service", () => {
     expect(billCount.c).toBe(0);
     const expenseCount = testDb.prepare("SELECT COUNT(*) as c FROM finance_expenses").get() as { c: number };
     expect(expenseCount.c).toBe(0);
+    const vehicleCount = testDb.prepare("SELECT COUNT(*) as c FROM car_vehicles").get() as { c: number };
+    expect(vehicleCount.c).toBe(0);
+    const fuelCount = testDb.prepare("SELECT COUNT(*) as c FROM car_fuel_entries").get() as { c: number };
+    expect(fuelCount.c).toBe(0);
   });
 
   describe("backup preview", () => {
@@ -231,6 +305,16 @@ describe("backup service", () => {
         )
         .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
       testDb
+        .prepare(
+          "INSERT INTO car_vehicles (id, name, make, model, year, licensePlate, vin, color, purchaseDate, purchasePrice, currentMileage, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("v1", "My Car", "Toyota", "Camry", 2020, "ABC123", "VIN123", null, "2020-01-01T00:00:00Z", 2500000, 50000, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
+        .prepare(
+          "INSERT INTO car_fuel_entries (id, vehicleId, date, odometer, fuelAmount, fuelUnit, pricePerUnit, totalPrice, station, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("f1", "v1", "2026-01-01T00:00:00Z", 50000, 12.5, "L", 350, 4375, null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
         .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
         .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -244,6 +328,8 @@ describe("backup service", () => {
       expect(preview.automation_rules).toBe(1);
       expect(preview.finance_bills).toBe(1);
       expect(preview.finance_expenses).toBe(1);
+      expect(preview.car_vehicles).toBe(1);
+      expect(preview.car_fuel_entries).toBe(1);
       expect(preview.app_settings).toBe(1);
       expect(preview.unsupported_sections).toEqual([]);
       expect(preview.has_encrypted_content).toBe(false);
@@ -263,6 +349,12 @@ describe("backup service", () => {
       expect(preview.automation_rules).toBe(0);
       expect(preview.finance_bills).toBe(0);
       expect(preview.finance_expenses).toBe(0);
+      expect(preview.car_vehicles).toBe(0);
+      expect(preview.car_fuel_entries).toBe(0);
+      expect(preview.car_maintenance).toBe(0);
+      expect(preview.car_recurring_bills).toBe(0);
+      expect(preview.car_mileage).toBe(0);
+      expect(preview.car_service_reminders).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -318,6 +410,12 @@ describe("backup service", () => {
       expect(preview.automation_rules).toBe(0);
       expect(preview.finance_bills).toBe(0);
       expect(preview.finance_expenses).toBe(0);
+      expect(preview.car_vehicles).toBe(0);
+      expect(preview.car_fuel_entries).toBe(0);
+      expect(preview.car_maintenance).toBe(0);
+      expect(preview.car_recurring_bills).toBe(0);
+      expect(preview.car_mileage).toBe(0);
+      expect(preview.car_service_reminders).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -551,6 +649,16 @@ describe("backup service", () => {
         )
         .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
       testDb
+        .prepare(
+          "INSERT INTO car_vehicles (id, name, make, model, year, licensePlate, vin, color, purchaseDate, purchasePrice, currentMileage, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("v1", "My Car", "Toyota", "Camry", 2020, "ABC123", "VIN123", null, "2020-01-01T00:00:00Z", 2500000, 50000, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
+        .prepare(
+          "INSERT INTO car_fuel_entries (id, vehicleId, date, odometer, fuelAmount, fuelUnit, pricePerUnit, totalPrice, station, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("f1", "v1", "2026-01-01T00:00:00Z", 50000, 12.5, "L", 350, 4375, null, "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
         .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
         .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -564,6 +672,8 @@ describe("backup service", () => {
       expect(preview.automation_rules).toBe(1);
       expect(preview.finance_bills).toBe(1);
       expect(preview.finance_expenses).toBe(1);
+      expect(preview.car_vehicles).toBe(1);
+      expect(preview.car_fuel_entries).toBe(1);
       expect(preview.app_settings).toBe(1);
       expect(preview.unsupported_sections).toEqual([]);
       expect(preview.has_encrypted_content).toBe(false);
@@ -583,6 +693,12 @@ describe("backup service", () => {
       expect(preview.automation_rules).toBe(0);
       expect(preview.finance_bills).toBe(0);
       expect(preview.finance_expenses).toBe(0);
+      expect(preview.car_vehicles).toBe(0);
+      expect(preview.car_fuel_entries).toBe(0);
+      expect(preview.car_maintenance).toBe(0);
+      expect(preview.car_recurring_bills).toBe(0);
+      expect(preview.car_mileage).toBe(0);
+      expect(preview.car_service_reminders).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -638,6 +754,12 @@ describe("backup service", () => {
       expect(preview.automation_rules).toBe(0);
       expect(preview.finance_bills).toBe(0);
       expect(preview.finance_expenses).toBe(0);
+      expect(preview.car_vehicles).toBe(0);
+      expect(preview.car_fuel_entries).toBe(0);
+      expect(preview.car_maintenance).toBe(0);
+      expect(preview.car_recurring_bills).toBe(0);
+      expect(preview.car_mileage).toBe(0);
+      expect(preview.car_service_reminders).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 

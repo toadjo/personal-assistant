@@ -29,6 +29,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Improved accessibility of toolbar controls by adding proper ARIA labels to icon-only buttons
 
+## [3.2.0] - 2026-05-26
+
+### Added
+
+- Car module for vehicle management with comprehensive tracking capabilities
+- Vehicle management with create, update, and delete operations
+- Fuel entry tracking with odometer updates and automatic vehicle mileage updates
+- Maintenance/repair expense tracking with cost and shop information
+- Recurring car bills (insurance, registration, inspection, road tax) with payment tracking
+- Mileage logging for trip distance tracking
+- Service reminders with odometer and date-based due tracking
+- Car data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for car service, IPC handlers, renderer components, and backup operations
+
+### Changed
+
+- Added Car tab to Personal module navigation in AssistantShell
+- Updated backup system to include all car-related tables in export/import/preview/reset operations
+- Updated IPC handler payload contract tests to include car channels
+
 ## [3.0.1] - 2026-05-26
 
 ### Fixed

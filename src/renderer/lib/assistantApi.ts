@@ -6,7 +6,7 @@
  */
 
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
-import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary } from "../../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder } from "../../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../../shared/ai/types";
 
@@ -234,6 +234,151 @@ export type AssistantApi = {
   }) => Promise<FinanceExpense>;
   deleteExpense: (id: string) => Promise<void>;
   getMonthlySummary: () => Promise<FinanceMonthlySummary>;
+  // Car API
+  listVehicles: () => Promise<CarVehicle[]>;
+  createVehicle: (payload: {
+    name: string;
+    make: string;
+    model: string;
+    year: number;
+    licensePlate?: string | null;
+    vin?: string | null;
+    color?: string | null;
+    purchaseDate?: string | null;
+    purchasePrice?: number | null;
+    currentMileage: number;
+    notes?: string;
+  }) => Promise<CarVehicle>;
+  updateVehicle: (payload: {
+    id: string;
+    name?: string;
+    make?: string;
+    model?: string;
+    year?: number;
+    licensePlate?: string | null;
+    vin?: string | null;
+    color?: string | null;
+    purchaseDate?: string | null;
+    purchasePrice?: number | null;
+    currentMileage?: number;
+    notes?: string;
+  }) => Promise<CarVehicle>;
+  deleteVehicle: (id: string) => Promise<void>;
+  listFuelEntries: (vehicleId?: string) => Promise<CarFuelEntry[]>;
+  createFuelEntry: (payload: {
+    vehicleId: string;
+    date: string;
+    odometer: number;
+    fuelAmount: number;
+    fuelUnit?: string;
+    pricePerUnit: number;
+    totalPrice: number;
+    station?: string | null;
+    notes?: string;
+  }) => Promise<CarFuelEntry>;
+  updateFuelEntry: (payload: {
+    id: string;
+    vehicleId?: string;
+    date?: string;
+    odometer?: number;
+    fuelAmount?: number;
+    fuelUnit?: string;
+    pricePerUnit?: number;
+    totalPrice?: number;
+    station?: string | null;
+    notes?: string;
+  }) => Promise<CarFuelEntry>;
+  deleteFuelEntry: (id: string) => Promise<void>;
+  listMaintenance: (vehicleId?: string) => Promise<CarMaintenance[]>;
+  createMaintenance: (payload: {
+    vehicleId: string;
+    date: string;
+    odometer?: number | null;
+    type: string;
+    description: string;
+    cost: number;
+    shop?: string | null;
+    notes?: string;
+  }) => Promise<CarMaintenance>;
+  updateMaintenance: (payload: {
+    id: string;
+    vehicleId?: string;
+    date?: string;
+    odometer?: number | null;
+    type?: string;
+    description?: string;
+    cost?: number;
+    shop?: string | null;
+    notes?: string;
+  }) => Promise<CarMaintenance>;
+  deleteMaintenance: (id: string) => Promise<void>;
+  listRecurringBills: (vehicleId?: string) => Promise<CarRecurringBill[]>;
+  createRecurringBill: (payload: {
+    vehicleId: string;
+    name: string;
+    type: string;
+    amount: number;
+    dueDate: string;
+    frequency: string;
+    status?: "pending" | "paid";
+    lastPaidDate?: string | null;
+    notes?: string;
+  }) => Promise<CarRecurringBill>;
+  updateRecurringBill: (payload: {
+    id: string;
+    vehicleId?: string;
+    name?: string;
+    type?: string;
+    amount?: number;
+    dueDate?: string;
+    frequency?: string;
+    status?: "pending" | "paid";
+    lastPaidDate?: string | null;
+    notes?: string;
+  }) => Promise<CarRecurringBill>;
+  markRecurringBillPaid: (id: string) => Promise<CarRecurringBill>;
+  deleteRecurringBill: (id: string) => Promise<void>;
+  listMileage: (vehicleId?: string) => Promise<CarMileage[]>;
+  createMileage: (payload: {
+    vehicleId: string;
+    date: string;
+    odometer: number;
+    notes?: string;
+  }) => Promise<CarMileage>;
+  updateMileage: (payload: {
+    id: string;
+    vehicleId?: string;
+    date?: string;
+    odometer?: number;
+    notes?: string;
+  }) => Promise<CarMileage>;
+  deleteMileage: (id: string) => Promise<void>;
+  listServiceReminders: (vehicleId?: string) => Promise<CarServiceReminder[]>;
+  createServiceReminder: (payload: {
+    vehicleId: string;
+    type: string;
+    description: string;
+    dueOdometer?: number | null;
+    dueDate?: string | null;
+    status?: "pending" | "completed";
+    completedAt?: string | null;
+    completedOdometer?: number | null;
+    notes?: string;
+  }) => Promise<CarServiceReminder>;
+  updateServiceReminder: (payload: {
+    id: string;
+    vehicleId?: string;
+    type?: string;
+    description?: string;
+    dueOdometer?: number | null;
+    dueDate?: string | null;
+    status?: "pending" | "completed";
+    completedAt?: string | null;
+    completedOdometer?: number | null;
+    notes?: string;
+  }) => Promise<CarServiceReminder>;
+  completeServiceReminder: (id: string) => Promise<CarServiceReminder>;
+  deleteServiceReminder: (id: string) => Promise<void>;
 };
 
 /**

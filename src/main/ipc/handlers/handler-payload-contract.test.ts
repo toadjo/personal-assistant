@@ -62,7 +62,16 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.aiClearKey,
   IpcInvoke.aiTestKey,
   // Finance zero-arg channels
-  IpcInvoke.financeSummaryGet
+  IpcInvoke.financeBillsList,
+  IpcInvoke.financeExpensesList,
+  IpcInvoke.financeSummaryGet,
+  // Car list channels (zero-arg: optional vehicleId filter)
+  IpcInvoke.carVehiclesList,
+  IpcInvoke.carFuelList,
+  IpcInvoke.carMaintenanceList,
+  IpcInvoke.carRecurringBillsList,
+  IpcInvoke.carMileageList,
+  IpcInvoke.carServiceRemindersList
 ];
 
 describe("IPC handler payload contracts", () => {
@@ -70,7 +79,7 @@ describe("IPC handler payload contracts", () => {
     const all = new Set(Object.values(IpcInvoke));
     const documented = new Set(ZERO_ARG_INVOKE_CHANNELS);
     for (const ch of all) {
-      const covered =
+      const covered: boolean = !!(
         documented.has(ch) ||
         ch === IpcInvoke.notesList ||
         ch === IpcInvoke.notesCreate ||
@@ -97,6 +106,35 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.automationRulesTestRun ||
         ch === IpcInvoke.dataImport ||
         ch === IpcInvoke.rendererLogError ||
+        // Finance schema-backed channels
+        ch === IpcInvoke.financeBillsCreate ||
+        ch === IpcInvoke.financeBillsUpdate ||
+        ch === IpcInvoke.financeBillsDelete ||
+        ch === IpcInvoke.financeBillsMarkPaid ||
+        ch === IpcInvoke.financeExpensesCreate ||
+        ch === IpcInvoke.financeExpensesUpdate ||
+        ch === IpcInvoke.financeExpensesDelete ||
+        // Car schema-backed channels
+        ch === IpcInvoke.carVehiclesCreate ||
+        ch === IpcInvoke.carVehiclesUpdate ||
+        ch === IpcInvoke.carVehiclesDelete ||
+        ch === IpcInvoke.carFuelCreate ||
+        ch === IpcInvoke.carFuelUpdate ||
+        ch === IpcInvoke.carFuelDelete ||
+        ch === IpcInvoke.carMaintenanceCreate ||
+        ch === IpcInvoke.carMaintenanceUpdate ||
+        ch === IpcInvoke.carMaintenanceDelete ||
+        ch === IpcInvoke.carRecurringBillsCreate ||
+        ch === IpcInvoke.carRecurringBillsUpdate ||
+        ch === IpcInvoke.carRecurringBillsMarkPaid ||
+        ch === IpcInvoke.carRecurringBillsDelete ||
+        ch === IpcInvoke.carMileageCreate ||
+        ch === IpcInvoke.carMileageUpdate ||
+        ch === IpcInvoke.carMileageDelete ||
+        ch === IpcInvoke.carServiceRemindersCreate ||
+        ch === IpcInvoke.carServiceRemindersUpdate ||
+        ch === IpcInvoke.carServiceRemindersComplete ||
+        ch === IpcInvoke.carServiceRemindersDelete ||
         // Team mode schema-backed channels
         ch === IpcInvoke.teamSetConfig ||
         ch === IpcInvoke.teamSetDisplayName ||
@@ -107,18 +145,8 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.teamTasksCreate ||
         ch === IpcInvoke.teamTasksUpdate ||
         ch === IpcInvoke.aiSetKey ||
-        ch === IpcInvoke.aiChat ||
-        // Finance schema-backed channels
-        ch === IpcInvoke.financeBillsList ||
-        ch === IpcInvoke.financeBillsCreate ||
-        ch === IpcInvoke.financeBillsUpdate ||
-        ch === IpcInvoke.financeBillsDelete ||
-        ch === IpcInvoke.financeBillsMarkPaid ||
-        ch === IpcInvoke.financeExpensesList ||
-        ch === IpcInvoke.financeExpensesCreate ||
-        ch === IpcInvoke.financeExpensesUpdate ||
-        ch === IpcInvoke.financeExpensesDelete ||
-        ch === IpcInvoke.financeSummaryGet;
+        ch === IpcInvoke.aiChat
+      );
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }
   });
