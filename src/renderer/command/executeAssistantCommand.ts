@@ -18,6 +18,7 @@ export type AssistantCommandDeps = {
   refreshHomeAssistantEntities: () => Promise<void>;
   runDeviceToggle: (entityId: string, friendlyName: string) => Promise<void>;
   onReviewDay?: () => void;
+  setActivePersonalModule?: (module: "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations") => void;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
   onShowRecent?: () => void;
   onShowSavedSearches?: () => void;
@@ -172,6 +173,7 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
     return { mutated: false };
   }
   if (lower === "review day") {
+    deps.setActivePersonalModule?.("today");
     deps.onReviewDay?.();
     deps.setStatus("Opening your end-of-day review.");
     return { mutated: false };

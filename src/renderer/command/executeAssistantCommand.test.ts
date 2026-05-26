@@ -25,7 +25,7 @@ function baseDeps(overrides: Partial<Parameters<typeof executeAssistantCommand>[
 
 describe("executeAssistantCommand", () => {
   beforeEach(() => {
-    (window.assistantApi as any) = {
+    (window as any).assistantApi = {
       createNote: vi.fn().mockResolvedValue(undefined),
       createReminder: vi.fn().mockResolvedValue(undefined),
       createTask: vi.fn().mockResolvedValue(undefined),
@@ -72,7 +72,7 @@ describe("executeAssistantCommand", () => {
   it("opens household window", async () => {
     const deps = baseDeps({ rawInput: "open household" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).openHouseholdWindow).toHaveBeenCalled();
+    expect((window as any).assistantApi.openHouseholdWindow).toHaveBeenCalled();
     expect(deps.setStatus).toHaveBeenCalledWith("Opened the Household window for you.");
     expect(result.mutated).toBe(false);
   });
@@ -137,7 +137,7 @@ describe("executeAssistantCommand", () => {
   it("creates a note", async () => {
     const deps = baseDeps({ rawInput: "new note buy eggs" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy eggs", content: "buy eggs" })
     );
     expect(result.mutated).toBe(true);
@@ -244,6 +244,17 @@ describe("executeAssistantCommand", () => {
     expect(result.mutated).toBe(false);
   });
 
+  it("handles review day command with module switching", async () => {
+    const onReviewDay = vi.fn();
+    const setActivePersonalModule = vi.fn();
+    const deps = baseDeps({ rawInput: "review day", onReviewDay, setActivePersonalModule });
+    const result = await executeAssistantCommand(deps);
+    expect(setActivePersonalModule).toHaveBeenCalledWith("today");
+    expect(onReviewDay).toHaveBeenCalled();
+    expect(deps.setStatus).toHaveBeenCalledWith("Opening your end-of-day review.");
+    expect(result.mutated).toBe(false);
+  });
+
   it("handles capture command", async () => {
     const onQuickCapture = vi.fn();
     const deps = baseDeps({ rawInput: "capture", onQuickCapture });
@@ -342,14 +353,14 @@ describe("executeAssistantCommand", () => {
   it("reminder command mutates", async () => {
     const deps = baseDeps({ rawInput: "remind call mom in 15m" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createReminder).toHaveBeenCalled();
+    expect((window as any).assistantApi.createReminder).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
   });
 
   it("handles make a note alias", async () => {
     const deps = baseDeps({ rawInput: "make a note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -358,7 +369,7 @@ describe("executeAssistantCommand", () => {
   it("handles add note alias", async () => {
     const deps = baseDeps({ rawInput: "add note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -367,7 +378,7 @@ describe("executeAssistantCommand", () => {
   it("handles remember alias", async () => {
     const deps = baseDeps({ rawInput: "remember buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -376,14 +387,14 @@ describe("executeAssistantCommand", () => {
   it("handles remind me to alias", async () => {
     const deps = baseDeps({ rawInput: "remind me to call mom in 15m" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createReminder).toHaveBeenCalled();
+    expect((window as any).assistantApi.createReminder).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
   });
 
   it("handles remind me to with hours", async () => {
     const deps = baseDeps({ rawInput: "remind me to call mom in 2h" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createReminder).toHaveBeenCalled();
+    expect((window as any).assistantApi.createReminder).toHaveBeenCalled();
     expect(result.mutated).toBe(true);
   });
 
@@ -411,7 +422,7 @@ describe("executeAssistantCommand", () => {
   it("handles open home alias", async () => {
     const deps = baseDeps({ rawInput: "open home" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).openHouseholdWindow).toHaveBeenCalled();
+    expect((window as any).assistantApi.openHouseholdWindow).toHaveBeenCalled();
     expect(result.mutated).toBe(false);
   });
 
@@ -443,7 +454,7 @@ describe("executeAssistantCommand", () => {
   it("note alias still works", async () => {
     const deps = baseDeps({ rawInput: "note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -452,7 +463,7 @@ describe("executeAssistantCommand", () => {
   it("new note alias still works", async () => {
     const deps = baseDeps({ rawInput: "new note buy milk" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createNote).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createNote).toHaveBeenCalledWith(
       expect.objectContaining({ title: "buy milk", content: "buy milk" })
     );
     expect(result.mutated).toBe(true);
@@ -468,7 +479,7 @@ describe("executeAssistantCommand", () => {
   it("creates a task with add task alias", async () => {
     const deps = baseDeps({ rawInput: "add task plan groceries" });
     const result = await executeAssistantCommand(deps);
-    expect((window.assistantApi as any).createTask).toHaveBeenCalledWith(
+    expect((window as any).assistantApi.createTask).toHaveBeenCalledWith(
       expect.objectContaining({ title: "plan groceries", recurrence: "none" })
     );
     expect(result.mutated).toBe(true);

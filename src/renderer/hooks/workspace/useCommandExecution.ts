@@ -35,6 +35,7 @@ export function useCommandExecution(args: {
   remindersCount: number;
   aiConfigured: boolean;
   onReviewDay?: () => void;
+  setActivePersonalModule?: (module: "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations") => void;
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
   onShowRecent?: () => void;
   onShowSavedSearches?: () => void;
@@ -65,6 +66,7 @@ export function useCommandExecution(args: {
     remindersCount,
     aiConfigured,
     onReviewDay,
+    setActivePersonalModule,
     onQuickCapture,
     onShowRecent,
     onShowSavedSearches,
@@ -193,6 +195,7 @@ export function useCommandExecution(args: {
         },
         runDeviceToggle,
         onReviewDay,
+        setActivePersonalModule,
         onQuickCapture,
         onShowRecent,
         onShowSavedSearches,

@@ -113,6 +113,7 @@ export function AssistantShell(): JSX.Element {
   };
 
   const handleReviewDay = () => {
+    setActivePersonalModule("today");
     setShowEndOfDayReview(true);
     ui.setStatus("Opening your end-of-day review.");
   };

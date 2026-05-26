@@ -5,11 +5,9 @@ import { AssistantShell } from "./AssistantShell";
 
 describe("AssistantShell - Preload Bridge Missing", () => {
   beforeEach(() => {
-    // Store the original assistantApi and __APP_VERSION__
+    // Store the original assistantApi
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any)._originalAssistantApi = (window as any).assistantApi;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (global as any).__APP_VERSION__ = "2.1.4";
     // Remove assistantApi to simulate missing preload bridge
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).assistantApi;
@@ -25,8 +23,6 @@ describe("AssistantShell - Preload Bridge Missing", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (window as any)._originalAssistantApi;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (global as any).__APP_VERSION__;
   });
 
   it("should render without throwing when preload bridge is missing", () => {
