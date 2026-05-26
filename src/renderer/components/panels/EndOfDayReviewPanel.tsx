@@ -1,5 +1,5 @@
 /**
- * End-of-Day Review panel for v2.6.0 workflow.
+ * End-of-Day Review panel for Personal OS.
  *
  * This panel shows what was completed today, what remains unfinished, and what was captured.
  * It provides carry-over actions for unfinished items.

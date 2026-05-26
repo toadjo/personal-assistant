@@ -1,8 +1,46 @@
 # Changelog
 
-All notable changes to Personal Assistant are documented in this file.
+All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [3.0.0] - 2026-05-26
+
+### Changed
+
+- Consolidated daily workflow UI copy to reflect Personal OS branding instead of version-specific references
+- Updated onboarding experience to introduce the app as a local-first personal operating layer
+- Standardized command examples to use consistent `capture`, `find`, and `plan today` commands
+- Enhanced Data Control panel with health check and database optimization buttons
+- Updated success/error messages across workflows for consistency
+- Improved backup action hooks to support health check and optimization operations
+- Updated documentation (README.md, MAINTAINER_GUIDE.md, ARCHITECTURE.md) to reflect Personal OS positioning
+
+### Added
+
+- Database health check UI integration in Data Control panel
+- Database optimization UI integration in Data Control panel
+- Comprehensive health check status reporting with integrity, schema, data, and performance metrics
+- Health check and optimization state management in backup actions hook
+
+### Fixed
+
+- Removed stale version-specific comments from component files
+- Updated command palette and onboarding commands to use consistent terminology
+- Ensured all workflow copy describes the core loop: capture, sort, plan, act, review, search, recover
+
+### Tests
+
+- Updated DataControlPanel tests to cover health check and optimization buttons
+- Added tests for health check and optimization state management
+- All existing tests continue to pass (1031 tests)
+
+### Documentation
+
+- Updated README.md to reflect Personal OS branding and core workflow
+- Updated MAINTAINER_GUIDE.md to reflect Personal OS positioning
+- Updated ARCHITECTURE.md to reflect Personal OS architecture
+- Added Personal OS Core workflow description to README
 
 ## [2.9.0] - 2026-05-25
 

@@ -83,7 +83,41 @@ describe("OnboardingPanel", () => {
     );
 
     screen.getByText("Sample task").click();
-    expect(onRunPreset).toHaveBeenCalledWith("add task plan groceries");
+    expect(onRunPreset).toHaveBeenCalledWith("capture task plan groceries");
+  });
+
+  it("calls onRunPreset for sample note", () => {
+    const onRunPreset = vi.fn();
+    render(
+      <OnboardingPanel
+        visible
+        haReady={false}
+        commandHistoryLength={0}
+        onHideForNow={vi.fn()}
+        onFinishSetup={vi.fn()}
+        onRunPreset={onRunPreset}
+      />
+    );
+
+    screen.getByText("Sample note").click();
+    expect(onRunPreset).toHaveBeenCalledWith("capture note check water filter");
+  });
+
+  it("calls onRunPreset for sample reminder", () => {
+    const onRunPreset = vi.fn();
+    render(
+      <OnboardingPanel
+        visible
+        haReady={false}
+        commandHistoryLength={0}
+        onHideForNow={vi.fn()}
+        onFinishSetup={vi.fn()}
+        onRunPreset={onRunPreset}
+      />
+    );
+
+    screen.getByText("Sample reminder").click();
+    expect(onRunPreset).toHaveBeenCalledWith("capture reminder stretch in 10m");
   });
 
   it("enables Done button after a command is run", () => {

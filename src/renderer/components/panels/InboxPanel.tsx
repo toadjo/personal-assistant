@@ -1,5 +1,5 @@
 /**
- * Unified Inbox panel for Personal OS v3.
+ * Unified Inbox panel for Personal OS.
  *
  * This panel provides a single surface for uncategorized or incoming work:
  * - Quick note capture

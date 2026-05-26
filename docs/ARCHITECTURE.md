@@ -1,8 +1,8 @@
-# PersonalAssistant Architecture
+# Personal OS Architecture
 
 ## Overview
 
-Electron desktop app: **main** (Node/Electron) + **renderer** (React/Vite) + **SQLite** (local, `better-sqlite3`). Two windows: **Desk** (daily work) and **Household** (automation/HA). Optional **Team Projects** mode for shared task collaboration via Supabase.
+Personal OS is a local-first desktop personal operating layer built with Electron + React + TypeScript + SQLite. The app provides a consolidated daily workflow: capture, sort, plan, act, review, search, and recover. Two windows: **Desk** (daily work) and **Household** (automation/HA). Optional **Team Projects** mode for shared task collaboration via Supabase.
 
 ## Directory Map
 

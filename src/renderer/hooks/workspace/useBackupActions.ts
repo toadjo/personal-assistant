@@ -32,6 +32,8 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   const [isImporting, setIsImporting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isHealthChecking, setIsHealthChecking] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   async function exportData(): Promise<void> {
     setIsExporting(true);
@@ -138,5 +140,32 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     }
   }
 
-  return { exportData, importData, previewImportData, resetData, isExporting, isImporting, isPreviewing, isResetting };
+  async function healthCheck(): Promise<void> {
+    setIsHealthChecking(true);
+    try {
+      const api = requireAssistantApi();
+      const result = await api.checkDbHealth();
+      setStatus(`Database health check complete. Overall: ${result.overall_health.toUpperCase()}, Integrity: ${result.integrity_check.passed ? "OK" : "FAILED"}, Schema: ${result.schema_check.passed ? "OK" : "FAILED"}, Data: ${result.data_check.corrupted_records === 0 ? "OK" : "ISSUES"}, Performance: ${result.performance_check.wal_checkpoint_pending ? "NEEDS CHECKPOINT" : "OK"}`);
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    } finally {
+      setIsHealthChecking(false);
+    }
+  }
+
+  async function optimize(): Promise<void> {
+    setIsOptimizing(true);
+    try {
+      const api = requireAssistantApi();
+      const result = await api.optimizeDatabase();
+      setStatus(`Database optimization complete: ${result.message}`);
+      await refreshAll();
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    } finally {
+      setIsOptimizing(false);
+    }
+  }
+
+  return { exportData, importData, previewImportData, resetData, healthCheck, optimize, isExporting, isImporting, isPreviewing, isResetting, isHealthChecking, isOptimizing };
 }

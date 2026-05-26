@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import { DataControlPanel } from "./DataControlPanel";
 
 describe("DataControlPanel", () => {
@@ -7,16 +8,37 @@ describe("DataControlPanel", () => {
     onExport: vi.fn(),
     onImport: vi.fn(),
     onReset: vi.fn(),
+    onHealthCheck: vi.fn(),
+    onOptimize: vi.fn(),
     isExporting: false,
     isImporting: false,
-    isResetting: false
+    isResetting: false,
+    isHealthChecking: false,
+    isOptimizing: false
   };
 
-  it("renders export, import, and reset buttons", () => {
+  it("renders export, import, health check, optimize, and reset buttons when health check and optimize are provided", () => {
     render(<DataControlPanel {...defaultProps} />);
 
     expect(screen.getByText("Export backup")).toBeInTheDocument();
     expect(screen.getByText("Import backup")).toBeInTheDocument();
+    expect(screen.getByText("Health check")).toBeInTheDocument();
+    expect(screen.getByText("Optimize database")).toBeInTheDocument();
+    expect(screen.getByText("Delete all data")).toBeInTheDocument();
+  });
+
+  it("renders export, import, and reset buttons when health check and optimize are not provided", () => {
+    const propsWithoutHealth = {
+      ...defaultProps,
+      onHealthCheck: undefined,
+      onOptimize: undefined
+    };
+    render(<DataControlPanel {...propsWithoutHealth} />);
+
+    expect(screen.getByText("Export backup")).toBeInTheDocument();
+    expect(screen.getByText("Import backup")).toBeInTheDocument();
+    expect(screen.queryByText("Health check")).not.toBeInTheDocument();
+    expect(screen.queryByText("Optimize database")).not.toBeInTheDocument();
     expect(screen.getByText("Delete all data")).toBeInTheDocument();
   });
 
@@ -80,11 +102,29 @@ describe("DataControlPanel", () => {
     expect(onReset).toHaveBeenCalled();
   });
 
+  it("calls onHealthCheck when health check button is clicked", () => {
+    const onHealthCheck = vi.fn();
+    render(<DataControlPanel {...defaultProps} onHealthCheck={onHealthCheck} />);
+
+    fireEvent.click(screen.getByText("Health check"));
+    expect(onHealthCheck).toHaveBeenCalled();
+  });
+
+  it("calls onOptimize when optimize button is clicked", () => {
+    const onOptimize = vi.fn();
+    render(<DataControlPanel {...defaultProps} onOptimize={onOptimize} />);
+
+    fireEvent.click(screen.getByText("Optimize database"));
+    expect(onOptimize).toHaveBeenCalled();
+  });
+
   it("disables all buttons when exporting", () => {
     render(<DataControlPanel {...defaultProps} isExporting={true} />);
 
     expect(screen.getByText("Exporting...")).toBeInTheDocument();
     expect(screen.getByText("Import backup")).toBeDisabled();
+    expect(screen.getByText("Health check")).toBeDisabled();
+    expect(screen.getByText("Optimize database")).toBeDisabled();
     expect(screen.getByText("Delete all data")).toBeDisabled();
   });
 
@@ -93,6 +133,8 @@ describe("DataControlPanel", () => {
 
     expect(screen.getByText("Export backup")).toBeDisabled();
     expect(screen.getByText("Importing...")).toBeInTheDocument();
+    expect(screen.getByText("Health check")).toBeDisabled();
+    expect(screen.getByText("Optimize database")).toBeDisabled();
     expect(screen.getByText("Delete all data")).toBeDisabled();
   });
 
@@ -101,7 +143,29 @@ describe("DataControlPanel", () => {
 
     expect(screen.getByText("Export backup")).toBeDisabled();
     expect(screen.getByText("Import backup")).toBeDisabled();
+    expect(screen.getByText("Health check")).toBeDisabled();
+    expect(screen.getByText("Optimize database")).toBeDisabled();
     expect(screen.getByText("Resetting...")).toBeInTheDocument();
+  });
+
+  it("disables all buttons when health checking", () => {
+    render(<DataControlPanel {...defaultProps} isHealthChecking={true} />);
+
+    expect(screen.getByText("Export backup")).toBeDisabled();
+    expect(screen.getByText("Import backup")).toBeDisabled();
+    expect(screen.getByText("Checking...")).toBeInTheDocument();
+    expect(screen.getByText("Optimize database")).toBeDisabled();
+    expect(screen.getByText("Delete all data")).toBeDisabled();
+  });
+
+  it("disables all buttons when optimizing", () => {
+    render(<DataControlPanel {...defaultProps} isOptimizing={true} />);
+
+    expect(screen.getByText("Export backup")).toBeDisabled();
+    expect(screen.getByText("Import backup")).toBeDisabled();
+    expect(screen.getByText("Health check")).toBeDisabled();
+    expect(screen.getByText("Optimizing...")).toBeInTheDocument();
+    expect(screen.getByText("Delete all data")).toBeDisabled();
   });
 
   it("does not call onImport when no file is selected", () => {

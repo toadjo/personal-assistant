@@ -270,7 +270,7 @@ export function AssistantShell(): JSX.Element {
     const dcc = deriveDailyCommandCenter({ focusBrief, awayBrief, filter: dailyCommandCenter.filter });
     setDailyCommandCenter(dcc);
 
-    // Derive Plan Today queue for v2.5.0
+    // Derive Plan Today queue for Personal OS
     // Convert raw data to BriefItem format
     const localTasks: BriefItem[] = data.tasks.map((task) => ({
       id: `local-task-${task.id}`,
@@ -658,9 +658,13 @@ export function AssistantShell(): JSX.Element {
               onExport={backupActions.exportData}
               onImport={backupActions.importData}
               onReset={backupActions.resetData}
+              onHealthCheck={backupActions.healthCheck}
+              onOptimize={backupActions.optimize}
               isExporting={backupActions.isExporting}
               isImporting={backupActions.isImporting}
               isResetting={backupActions.isResetting}
+              isHealthChecking={backupActions.isHealthChecking}
+              isOptimizing={backupActions.isOptimizing}
             />
           )}
           {showAi && (

@@ -1,13 +1,13 @@
-# Personal Assistant
+# Personal OS
 
-Local-first desktop personal assistant built with Electron + React + TypeScript.
+Local-first desktop personal operating layer built with Electron + React + TypeScript.
 
 ## Install the app (Windows, no Git/Node)
 
 1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
    - Windows: `Setup` `.exe`
    - **Current releases are Windows-only** due to GitHub Actions budget constraints. macOS/Linux assets are omitted until budget is restored.
-2. Run the installer and start **PersonalAssistant** from the Start menu or desktop shortcut.
+2. Run the installer and start **Personal OS** from the Start menu or desktop shortcut.
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
 
@@ -16,6 +16,18 @@ Releases are built locally and uploaded manually while GitHub Actions budget is 
 ## Working on the app
 
 Maintainers should start with [MAINTAINER_GUIDE.md](./MAINTAINER_GUIDE.md) for the architecture map, change workflow, verification checklist, and release cautions.
+
+## Personal OS Core Workflow
+
+Personal OS provides a consolidated daily workflow for local-first productivity:
+
+- **Capture**: Quick capture notes, tasks, and reminders via global shortcut (Ctrl+Alt+N), tray menu, or commands
+- **Sort**: Use the Inbox to organize and convert captured items into tasks, reminders, or team work
+- **Plan**: Plan Today panel shows overdue tasks, due today reminders, and unsorted items for daily planning
+- **Act**: Complete tasks and reminders from the Today strip or individual panels
+- **Review**: End-of-Day Review shows completed work, unfinished items, and captured notes with carry-over actions
+- **Search**: Command palette with intelligent search, recent items, and saved searches
+- **Recover**: Data Control with backup preview, restore confirmation, health checks, and database optimization
 
 ### Prerequisites
 

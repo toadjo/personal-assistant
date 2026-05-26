@@ -24,7 +24,7 @@ export type DailyCommandCenter = {
 };
 
 /**
- * Plan Today queue item for v2.3.0 workflow improvement.
+ * Plan Today queue item for Personal OS workflow.
  */
 export type PlanTodayItem = BriefItem & {
   source: "local-task" | "local-reminder" | "local-note";
@@ -40,7 +40,7 @@ export type PlanTodayQueue = {
 };
 
 /**
- * End-of-Day Review item for v2.6.0 workflow.
+ * End-of-Day Review item for Personal OS workflow.
  */
 export type EndOfDayReviewItem = BriefItem & {
   source: "local-task" | "local-reminder" | "local-note";

@@ -34,7 +34,7 @@ export function OnboardingPanel({
         </div>
       </div>
       <p className="muted">
-        Welcome to PersonalAssistant. This app helps you capture notes, manage tasks, set reminders, and see your day at
+        Welcome to Personal OS. This app helps you capture notes, manage tasks, set reminders, and see your day at
         a glance - all from your desktop. Everything stays on your computer. Closing the window keeps the app running:
         in the system tray on Windows and macOS, or minimized to the taskbar on Linux when no tray is available. Home
         Assistant is optional and can be added later.
@@ -57,13 +57,13 @@ export function OnboardingPanel({
         </li>
       </ul>
       <div className="presetRow">
-        <button type="button" className="ghostButton" onClick={() => onRunPreset("new note check water filter")}>
+        <button type="button" className="ghostButton" onClick={() => onRunPreset("capture note check water filter")}>
           Sample note
         </button>
-        <button type="button" className="ghostButton" onClick={() => onRunPreset("add task plan groceries")}>
+        <button type="button" className="ghostButton" onClick={() => onRunPreset("capture task plan groceries")}>
           Sample task
         </button>
-        <button type="button" className="ghostButton" onClick={() => onRunPreset("remind stretch in 10m")}>
+        <button type="button" className="ghostButton" onClick={() => onRunPreset("capture reminder stretch in 10m")}>
           Sample reminder
         </button>
         <button type="button" className="ghostButton" onClick={() => onRunPreset("help")}>

@@ -1,5 +1,5 @@
 /**
- * Quick Capture Dialog for v2.7.0 Capture Everywhere.
+ * Quick Capture Dialog for Personal OS.
  *
  * A focused capture surface that can be opened from:
  * - Global shortcut (Cmd/Ctrl+Alt+N)

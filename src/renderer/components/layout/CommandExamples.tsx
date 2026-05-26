@@ -11,11 +11,11 @@ type Props = {
 };
 
 const BASE_EXAMPLES = [
-  { command: "new note project update", label: "New note" },
-  { command: "add task review budget", label: "Add task" },
-  { command: "remind follow-up in 1h", label: "Set reminder" },
-  { command: "show overdue tasks", label: "Overdue tasks" },
-  { command: "plan tomorrow", label: "Plan ahead" }
+  { command: "capture note project update", label: "Capture note" },
+  { command: "capture task review budget", label: "Capture task" },
+  { command: "capture reminder follow-up in 1h", label: "Capture reminder" },
+  { command: "find overdue", label: "Find overdue" },
+  { command: "plan today", label: "Plan today" }
 ];
 
 const HA_EXAMPLES = [

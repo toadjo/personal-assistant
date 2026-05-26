@@ -1,5 +1,5 @@
 /**
- * Lightweight performance instrumentation for v2.3.0 development.
+ * Lightweight performance instrumentation for Personal OS.
  *
  * This module provides simple timing utilities for measuring key performance metrics
  * during development. No user data is collected, only timing information.

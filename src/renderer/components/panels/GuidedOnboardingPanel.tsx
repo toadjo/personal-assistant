@@ -29,7 +29,7 @@ export function GuidedOnboardingPanel({
     note: {
       title: "Create your first note",
       description:
-        "Notes are for quick memos, ideas, or anything you want to remember. Everything stays on your computer.",
+        "Notes are for quick memos, ideas, or anything you want to remember. Everything stays on your computer as part of your personal operating layer.",
       action: "I've created a note",
       instruction: "Use the Notes panel on the right to create your first note, then click the button below."
     },
@@ -42,7 +42,7 @@ export function GuidedOnboardingPanel({
     homeAssistant: {
       title: "Connect Home Assistant (optional)",
       description:
-        "Connect to control your smart home devices. This step is optional - skipping it does not reduce the app's core usefulness.",
+        "Connect to control your smart home devices. This step is optional - skipping it does not reduce the app's core usefulness as your personal operating layer.",
       action: "Connect Home Assistant",
       instruction: "Open the Household window to connect your Home Assistant instance, or skip for now."
     }

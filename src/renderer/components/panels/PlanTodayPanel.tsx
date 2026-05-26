@@ -1,5 +1,5 @@
 /**
- * Plan Today panel for v2.5.0 smarter workflow.
+ * Plan Today panel for Personal OS.
  *
  * This panel provides a prioritized queue of items that need attention today:
  * - Overdue tasks
@@ -7,7 +7,7 @@
  * - Unsorted notes
  *
  * Users can complete, snooze, reschedule, open details, or send items to Inbox from this queue.
- * v2.5.0 adds batch selection, quick reschedule, and batch snooze capabilities.
+ * Includes batch selection, quick reschedule, and batch snooze capabilities.
  */
 
 import { memo, useState } from "react";

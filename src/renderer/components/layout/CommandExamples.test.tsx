@@ -8,11 +8,11 @@ describe("CommandExamples", () => {
     render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
 
     expect(screen.getByText("Try these commands:")).toBeDefined();
-    expect(screen.getByText("New note")).toBeDefined();
-    expect(screen.getByText("Add task")).toBeDefined();
-    expect(screen.getByText("Set reminder")).toBeDefined();
-    expect(screen.getByText("Overdue tasks")).toBeDefined();
-    expect(screen.getByText("Plan ahead")).toBeDefined();
+    expect(screen.getByText("Capture note")).toBeDefined();
+    expect(screen.getByText("Capture task")).toBeDefined();
+    expect(screen.getByText("Capture reminder")).toBeDefined();
+    expect(screen.getByText("Find overdue")).toBeDefined();
+    expect(screen.getByText("Plan today")).toBeDefined();
 
     // HA-specific examples should not be shown
     expect(screen.queryByText("Toggle device")).toBeNull();
@@ -24,11 +24,11 @@ describe("CommandExamples", () => {
     render(<CommandExamples haReady={true} onRunPreset={onRunPreset} />);
 
     expect(screen.getByText("Try these commands:")).toBeDefined();
-    expect(screen.getByText("New note")).toBeDefined();
-    expect(screen.getByText("Add task")).toBeDefined();
-    expect(screen.getByText("Set reminder")).toBeDefined();
-    expect(screen.getByText("Overdue tasks")).toBeDefined();
-    expect(screen.getByText("Plan ahead")).toBeDefined();
+    expect(screen.getByText("Capture note")).toBeDefined();
+    expect(screen.getByText("Capture task")).toBeDefined();
+    expect(screen.getByText("Capture reminder")).toBeDefined();
+    expect(screen.getByText("Find overdue")).toBeDefined();
+    expect(screen.getByText("Plan today")).toBeDefined();
 
     // HA-specific examples should be shown
     expect(screen.getByText("Toggle device")).toBeDefined();
@@ -39,29 +39,49 @@ describe("CommandExamples", () => {
     const onRunPreset = vi.fn();
     render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
 
-    const button = screen.getByText("New note");
+    const button = screen.getByText("Capture note");
     button.click();
 
-    expect(onRunPreset).toHaveBeenCalledWith("new note project update");
+    expect(onRunPreset).toHaveBeenCalledWith("capture note project update");
   });
 
   it("calls onRunPreset for task example", () => {
     const onRunPreset = vi.fn();
     render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
 
-    const button = screen.getByText("Add task");
+    const button = screen.getByText("Capture task");
     button.click();
 
-    expect(onRunPreset).toHaveBeenCalledWith("add task review budget");
+    expect(onRunPreset).toHaveBeenCalledWith("capture task review budget");
   });
 
   it("calls onRunPreset for Daily Command Center example", () => {
     const onRunPreset = vi.fn();
     render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
 
-    const button = screen.getByText("Overdue tasks");
+    const button = screen.getByText("Find overdue");
     button.click();
 
-    expect(onRunPreset).toHaveBeenCalledWith("show overdue tasks");
+    expect(onRunPreset).toHaveBeenCalledWith("find overdue");
+  });
+
+  it("calls onRunPreset for reminder example", () => {
+    const onRunPreset = vi.fn();
+    render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
+
+    const button = screen.getByText("Capture reminder");
+    button.click();
+
+    expect(onRunPreset).toHaveBeenCalledWith("capture reminder follow-up in 1h");
+  });
+
+  it("calls onRunPreset for plan today example", () => {
+    const onRunPreset = vi.fn();
+    render(<CommandExamples haReady={false} onRunPreset={onRunPreset} />);
+
+    const button = screen.getByText("Plan today");
+    button.click();
+
+    expect(onRunPreset).toHaveBeenCalledWith("plan today");
   });
 });

@@ -1,10 +1,10 @@
 # Maintainer Guide
 
-This guide is for human maintainers taking over Personal Assistant. It gives the shortest safe path to understanding the app, changing it, verifying it, and releasing it.
+This guide is for human maintainers taking over Personal OS. It gives the shortest safe path to understanding the app, changing it, verifying it, and releasing it.
 
 ## Project Identity
 
-Personal Assistant is a local-first desktop app built with Electron, React, TypeScript, and SQLite. It is currently Windows-first for releases, with macOS and Linux packaging paths present but not active while GitHub Actions budget is constrained.
+Personal OS is a local-first desktop personal operating layer built with Electron, React, TypeScript, and SQLite. It provides a consolidated daily workflow: capture, sort, plan, act, review, search, and recover. The app is currently Windows-first for releases, with macOS and Linux packaging paths present but not active while GitHub Actions budget is constrained.
 
 The core product surfaces are:
 
@@ -12,6 +12,7 @@ The core product surfaces are:
 - End-of-Day Review for closing the day and carrying work forward.
 - Inbox and Quick Capture for fast local capture.
 - Search and Recall for finding recent, saved, and matching work.
+- Data Control with backup preview, restore confirmation, health checks, and database optimization.
 - Team Projects for optional shared tasks.
 - Home Assistant for optional household automation.
 
