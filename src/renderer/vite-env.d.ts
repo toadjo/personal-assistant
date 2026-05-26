@@ -7,7 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN?: string;
 }
 
-import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, FinanceCategory, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary } from "../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, FinanceCategory, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary } from "../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../shared/ai/types";
 
@@ -87,6 +87,22 @@ declare global {
         reminders: unknown[];
         tasks: unknown[];
         automation_rules: unknown[];
+        finance_bills?: unknown[];
+        finance_expenses?: unknown[];
+        car_vehicles?: unknown[];
+        car_fuel_entries?: unknown[];
+        car_maintenance?: unknown[];
+        car_recurring_bills?: unknown[];
+        car_mileage?: unknown[];
+        car_service_reminders?: unknown[];
+        family_members?: unknown[];
+        family_occasions?: unknown[];
+        family_obligations?: unknown[];
+        health_appointments?: unknown[];
+        health_medications?: unknown[];
+        health_symptoms?: unknown[];
+        health_measurements?: unknown[];
+        health_obligations?: unknown[];
         app_settings: unknown[];
       }>;
       importData: (payload: {
@@ -96,12 +112,44 @@ declare global {
         reminders: unknown[];
         tasks: unknown[];
         automation_rules: unknown[];
+        finance_bills?: unknown[];
+        finance_expenses?: unknown[];
+        car_vehicles?: unknown[];
+        car_fuel_entries?: unknown[];
+        car_maintenance?: unknown[];
+        car_recurring_bills?: unknown[];
+        car_mileage?: unknown[];
+        car_service_reminders?: unknown[];
+        family_members?: unknown[];
+        family_occasions?: unknown[];
+        family_obligations?: unknown[];
+        health_appointments?: unknown[];
+        health_medications?: unknown[];
+        health_symptoms?: unknown[];
+        health_measurements?: unknown[];
+        health_obligations?: unknown[];
         app_settings: unknown[];
       }) => Promise<{
         notes: number;
         reminders: number;
         tasks: number;
         automation_rules: number;
+        finance_bills: number;
+        finance_expenses: number;
+        car_vehicles: number;
+        car_fuel_entries: number;
+        car_maintenance: number;
+        car_recurring_bills: number;
+        car_mileage: number;
+        car_service_reminders: number;
+        family_members: number;
+        family_occasions: number;
+        family_obligations: number;
+        health_appointments: number;
+        health_medications: number;
+        health_symptoms: number;
+        health_measurements: number;
+        health_obligations: number;
         app_settings: number;
       }>;
       previewImportData: (payload: {
@@ -111,6 +159,22 @@ declare global {
         reminders: unknown[];
         tasks: unknown[];
         automation_rules: unknown[];
+        finance_bills?: unknown[];
+        finance_expenses?: unknown[];
+        car_vehicles?: unknown[];
+        car_fuel_entries?: unknown[];
+        car_maintenance?: unknown[];
+        car_recurring_bills?: unknown[];
+        car_mileage?: unknown[];
+        car_service_reminders?: unknown[];
+        family_members?: unknown[];
+        family_occasions?: unknown[];
+        family_obligations?: unknown[];
+        health_appointments?: unknown[];
+        health_medications?: unknown[];
+        health_symptoms?: unknown[];
+        health_measurements?: unknown[];
+        health_obligations?: unknown[];
         app_settings: unknown[];
       }) => Promise<{
         valid: boolean;
@@ -119,6 +183,22 @@ declare global {
         reminders: number;
         tasks: number;
         automation_rules: number;
+        finance_bills: number;
+        finance_expenses: number;
+        car_vehicles: number;
+        car_fuel_entries: number;
+        car_maintenance: number;
+        car_recurring_bills: number;
+        car_mileage: number;
+        car_service_reminders: number;
+        family_members: number;
+        family_occasions: number;
+        family_obligations: number;
+        health_appointments: number;
+        health_medications: number;
+        health_symptoms: number;
+        health_measurements: number;
+        health_obligations: number;
         app_settings: number;
         unsupported_sections: string[];
         has_encrypted_content: boolean;
@@ -470,6 +550,114 @@ declare global {
       completeFamilyObligation: (id: string) => Promise<FamilyObligation>;
       deleteFamilyObligation: (id: string) => Promise<void>;
       getFamilySummary: () => Promise<FamilySummary>;
+      // Health API
+      listHealthAppointments: () => Promise<HealthAppointment[]>;
+      createHealthAppointment: (payload: {
+        type: "checkup" | "specialist" | "emergency" | "followup" | "procedure" | "custom";
+        title: string;
+        provider?: string | null;
+        location?: string | null;
+        date: string;
+        time: string;
+        duration: number;
+        status?: "scheduled" | "completed" | "cancelled" | "missed";
+        notes?: string;
+      }) => Promise<HealthAppointment>;
+      updateHealthAppointment: (payload: {
+        id: string;
+        type?: "checkup" | "specialist" | "emergency" | "followup" | "procedure" | "custom";
+        title?: string;
+        provider?: string | null;
+        location?: string | null;
+        date?: string;
+        time?: string;
+        duration?: number;
+        status?: "scheduled" | "completed" | "cancelled" | "missed";
+        notes?: string;
+      }) => Promise<HealthAppointment>;
+      deleteHealthAppointment: (id: string) => Promise<void>;
+      listHealthMedications: () => Promise<HealthMedication[]>;
+      createHealthMedication: (payload: {
+        name: string;
+        dosage: string;
+        frequency: string;
+        route: string;
+        status?: "active" | "discontinued" | "completed";
+        startDate: string;
+        endDate?: string | null;
+        prescriber?: string | null;
+        notes?: string;
+      }) => Promise<HealthMedication>;
+      updateHealthMedication: (payload: {
+        id: string;
+        name?: string;
+        dosage?: string;
+        frequency?: string;
+        route?: string;
+        status?: "active" | "discontinued" | "completed";
+        startDate?: string;
+        endDate?: string | null;
+        prescriber?: string | null;
+        notes?: string;
+      }) => Promise<HealthMedication>;
+      deleteHealthMedication: (id: string) => Promise<void>;
+      listHealthSymptoms: () => Promise<HealthSymptom[]>;
+      createHealthSymptom: (payload: {
+        name: string;
+        severity: "mild" | "moderate" | "severe";
+        startDate: string;
+        endDate?: string | null;
+        notes?: string;
+      }) => Promise<HealthSymptom>;
+      updateHealthSymptom: (payload: {
+        id: string;
+        name?: string;
+        severity?: "mild" | "moderate" | "severe";
+        startDate?: string;
+        endDate?: string | null;
+        notes?: string;
+      }) => Promise<HealthSymptom>;
+      deleteHealthSymptom: (id: string) => Promise<void>;
+      listHealthMeasurements: () => Promise<HealthMeasurement[]>;
+      createHealthMeasurement: (payload: {
+        type: "weight" | "blood_pressure" | "heart_rate" | "temperature" | "blood_sugar" | "custom";
+        value: string;
+        unit: string;
+        date: string;
+        notes?: string;
+      }) => Promise<HealthMeasurement>;
+      updateHealthMeasurement: (payload: {
+        id: string;
+        type?: "weight" | "blood_pressure" | "heart_rate" | "temperature" | "blood_sugar" | "custom";
+        value?: string;
+        unit?: string;
+        date?: string;
+        notes?: string;
+      }) => Promise<HealthMeasurement>;
+      deleteHealthMeasurement: (id: string) => Promise<void>;
+      listHealthObligations: () => Promise<HealthObligation[]>;
+      createHealthObligation: (payload: {
+        type: "refill" | "lab_test" | "vaccination" | "screening" | "exercise" | "custom";
+        title: string;
+        dueAt?: string | null;
+        status?: "open" | "done";
+        priority?: "low" | "normal" | "high";
+        completedAt?: string | null;
+        notes?: string;
+      }) => Promise<HealthObligation>;
+      updateHealthObligation: (payload: {
+        id: string;
+        type?: "refill" | "lab_test" | "vaccination" | "screening" | "exercise" | "custom";
+        title?: string;
+        dueAt?: string | null;
+        status?: "open" | "done";
+        priority?: "low" | "normal" | "high";
+        completedAt?: string | null;
+        notes?: string;
+      }) => Promise<HealthObligation>;
+      completeHealthObligation: (id: string) => Promise<HealthObligation>;
+      deleteHealthObligation: (id: string) => Promise<void>;
+      getHealthSummary: () => Promise<HealthSummary>;
     };
   }
 }

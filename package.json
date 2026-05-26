@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",

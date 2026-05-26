@@ -121,7 +121,29 @@ const invokeChannelMap = {
   familyObligationsUpdate: "family:obligations:update",
   familyObligationsComplete: "family:obligations:complete",
   familyObligationsDelete: "family:obligations:delete",
-  familySummaryGet: "family:summary:get"
+  familySummaryGet: "family:summary:get",
+  healthAppointmentsList: "health:appointments:list",
+  healthAppointmentsCreate: "health:appointments:create",
+  healthAppointmentsUpdate: "health:appointments:update",
+  healthAppointmentsDelete: "health:appointments:delete",
+  healthMedicationsList: "health:medications:list",
+  healthMedicationsCreate: "health:medications:create",
+  healthMedicationsUpdate: "health:medications:update",
+  healthMedicationsDelete: "health:medications:delete",
+  healthSymptomsList: "health:symptoms:list",
+  healthSymptomsCreate: "health:symptoms:create",
+  healthSymptomsUpdate: "health:symptoms:update",
+  healthSymptomsDelete: "health:symptoms:delete",
+  healthMeasurementsList: "health:measurements:list",
+  healthMeasurementsCreate: "health:measurements:create",
+  healthMeasurementsUpdate: "health:measurements:update",
+  healthMeasurementsDelete: "health:measurements:delete",
+  healthObligationsList: "health:obligations:list",
+  healthObligationsCreate: "health:obligations:create",
+  healthObligationsUpdate: "health:obligations:update",
+  healthObligationsComplete: "health:obligations:complete",
+  healthObligationsDelete: "health:obligations:delete",
+  healthSummaryGet: "health:summary:get"
 } as const;
 
 const pushChannelMap = {
@@ -380,5 +402,114 @@ contextBridge.exposeInMainWorld("assistantApi", {
   }) => ipcRenderer.invoke(invoke.familyObligationsUpdate, payload),
   completeFamilyObligation: (id: string) => ipcRenderer.invoke(invoke.familyObligationsComplete, id),
   deleteFamilyObligation: (id: string) => ipcRenderer.invoke(invoke.familyObligationsDelete, id),
-  getFamilySummary: () => ipcRenderer.invoke(invoke.familySummaryGet)
+  getFamilySummary: () => ipcRenderer.invoke(invoke.familySummaryGet),
+
+  // Health operations
+  listHealthAppointments: () => ipcRenderer.invoke(invoke.healthAppointmentsList),
+  createHealthAppointment: (payload: {
+    type: "checkup" | "specialist" | "emergency" | "followup" | "procedure" | "custom";
+    title: string;
+    provider?: string | null;
+    location?: string | null;
+    date: string;
+    time: string;
+    duration: number;
+    status?: "scheduled" | "completed" | "cancelled" | "missed";
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthAppointmentsCreate, payload),
+  updateHealthAppointment: (payload: {
+    id: string;
+    type?: "checkup" | "specialist" | "emergency" | "followup" | "procedure" | "custom";
+    title?: string;
+    provider?: string | null;
+    location?: string | null;
+    date?: string;
+    time?: string;
+    duration?: number;
+    status?: "scheduled" | "completed" | "cancelled" | "missed";
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthAppointmentsUpdate, payload),
+  deleteHealthAppointment: (id: string) => ipcRenderer.invoke(invoke.healthAppointmentsDelete, id),
+  listHealthMedications: () => ipcRenderer.invoke(invoke.healthMedicationsList),
+  createHealthMedication: (payload: {
+    name: string;
+    dosage: string;
+    frequency: string;
+    route: string;
+    status?: "active" | "discontinued" | "completed";
+    startDate: string;
+    endDate?: string | null;
+    prescriber?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthMedicationsCreate, payload),
+  updateHealthMedication: (payload: {
+    id: string;
+    name?: string;
+    dosage?: string;
+    frequency?: string;
+    route?: string;
+    status?: "active" | "discontinued" | "completed";
+    startDate?: string;
+    endDate?: string | null;
+    prescriber?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthMedicationsUpdate, payload),
+  deleteHealthMedication: (id: string) => ipcRenderer.invoke(invoke.healthMedicationsDelete, id),
+  listHealthSymptoms: () => ipcRenderer.invoke(invoke.healthSymptomsList),
+  createHealthSymptom: (payload: {
+    name: string;
+    severity: "mild" | "moderate" | "severe";
+    startDate: string;
+    endDate?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthSymptomsCreate, payload),
+  updateHealthSymptom: (payload: {
+    id: string;
+    name?: string;
+    severity?: "mild" | "moderate" | "severe";
+    startDate?: string;
+    endDate?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthSymptomsUpdate, payload),
+  deleteHealthSymptom: (id: string) => ipcRenderer.invoke(invoke.healthSymptomsDelete, id),
+  listHealthMeasurements: () => ipcRenderer.invoke(invoke.healthMeasurementsList),
+  createHealthMeasurement: (payload: {
+    type: "weight" | "blood_pressure" | "heart_rate" | "temperature" | "blood_sugar" | "custom";
+    value: string;
+    unit: string;
+    date: string;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthMeasurementsCreate, payload),
+  updateHealthMeasurement: (payload: {
+    id: string;
+    type?: "weight" | "blood_pressure" | "heart_rate" | "temperature" | "blood_sugar" | "custom";
+    value?: string;
+    unit?: string;
+    date?: string;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthMeasurementsUpdate, payload),
+  deleteHealthMeasurement: (id: string) => ipcRenderer.invoke(invoke.healthMeasurementsDelete, id),
+  listHealthObligations: () => ipcRenderer.invoke(invoke.healthObligationsList),
+  createHealthObligation: (payload: {
+    type: "refill" | "lab_test" | "vaccination" | "screening" | "exercise" | "custom";
+    title: string;
+    dueAt?: string | null;
+    status?: "open" | "done";
+    priority?: "low" | "normal" | "high";
+    completedAt?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthObligationsCreate, payload),
+  updateHealthObligation: (payload: {
+    id: string;
+    type?: "refill" | "lab_test" | "vaccination" | "screening" | "exercise" | "custom";
+    title?: string;
+    dueAt?: string | null;
+    status?: "open" | "done";
+    priority?: "low" | "normal" | "high";
+    completedAt?: string | null;
+    notes?: string;
+  }) => ipcRenderer.invoke(invoke.healthObligationsUpdate, payload),
+  completeHealthObligation: (id: string) => ipcRenderer.invoke(invoke.healthObligationsComplete, id),
+  deleteHealthObligation: (id: string) => ipcRenderer.invoke(invoke.healthObligationsDelete, id),
+  getHealthSummary: () => ipcRenderer.invoke(invoke.healthSummaryGet)
 });

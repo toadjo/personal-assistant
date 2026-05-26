@@ -4,7 +4,49 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.1.0] - 2026-05-26
+## [3.4.0] - 2026-05-26
+
+### Added
+
+- Health module for tracking personal health information with comprehensive management capabilities
+- Health appointments tracking with type, provider, location, date, time, duration, and status
+- Health medications management with dosage, frequency, route, status, and prescriber information
+- Health symptoms logging with severity tracking and date ranges
+- Health measurements recording for weight, blood pressure, heart rate, temperature, blood sugar, and custom metrics
+- Health obligations tracking for refills, lab tests, vaccinations, screenings, exercise, and custom obligations
+- Health summary dashboard showing upcoming appointments, active medications, active symptoms, recent measurements, and open/overdue obligations
+- Health data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for health service, IPC handlers, renderer components, and backup operations
+- Updated Data Control UI to display Health counts in backup preview and import confirmation dialogs
+
+### Changed
+
+- Added Health tab to Personal module navigation in AssistantShell
+- Updated backup system to include all health-related tables in export/import/preview/reset operations
+- Updated IPC handler payload contract tests to include health channels
+- Updated backup UI types to include Health counts for all five health entities
+- Enhanced reset confirmation dialog to mention health data deletion
+
+## [3.3.0] - 2026-05-26
+
+### Added
+
+- Family module for tracking family members, occasions, and obligations
+- Family member management with contact information and importance flags
+- Family occasions tracking for birthdays, name days, anniversaries, memorials, and custom events
+- Family obligations for calls, visits, messages, gifts, paperwork, and custom tasks
+- Family summary dashboard showing member count, upcoming occasions, and open obligations
+- Family data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for family service, IPC handlers, renderer components, and backup operations
+
+### Changed
+
+- Added Family tab to Personal module navigation in AssistantShell
+- Updated backup system to include all family-related tables in export/import/preview/reset operations
+- Updated IPC handler payload contract tests to include family channels
+- Updated backup UI types to include Family counts for all three family entities
+
+## [3.2.0] - 2026-05-26
 
 ### Added
 

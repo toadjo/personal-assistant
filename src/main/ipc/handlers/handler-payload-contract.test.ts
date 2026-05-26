@@ -76,7 +76,14 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.familyMembersList,
   IpcInvoke.familyOccasionsList,
   IpcInvoke.familyObligationsList,
-  IpcInvoke.familySummaryGet
+  IpcInvoke.familySummaryGet,
+  // Health list channels (zero-arg)
+  IpcInvoke.healthAppointmentsList,
+  IpcInvoke.healthMedicationsList,
+  IpcInvoke.healthSymptomsList,
+  IpcInvoke.healthMeasurementsList,
+  IpcInvoke.healthObligationsList,
+  IpcInvoke.healthSummaryGet
 ];
 
 describe("IPC handler payload contracts", () => {
@@ -151,6 +158,23 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.familyObligationsUpdate ||
         ch === IpcInvoke.familyObligationsDelete ||
         ch === IpcInvoke.familyObligationsComplete ||
+        // Health schema-backed channels
+        ch === IpcInvoke.healthAppointmentsCreate ||
+        ch === IpcInvoke.healthAppointmentsUpdate ||
+        ch === IpcInvoke.healthAppointmentsDelete ||
+        ch === IpcInvoke.healthMedicationsCreate ||
+        ch === IpcInvoke.healthMedicationsUpdate ||
+        ch === IpcInvoke.healthMedicationsDelete ||
+        ch === IpcInvoke.healthSymptomsCreate ||
+        ch === IpcInvoke.healthSymptomsUpdate ||
+        ch === IpcInvoke.healthSymptomsDelete ||
+        ch === IpcInvoke.healthMeasurementsCreate ||
+        ch === IpcInvoke.healthMeasurementsUpdate ||
+        ch === IpcInvoke.healthMeasurementsDelete ||
+        ch === IpcInvoke.healthObligationsCreate ||
+        ch === IpcInvoke.healthObligationsUpdate ||
+        ch === IpcInvoke.healthObligationsComplete ||
+        ch === IpcInvoke.healthObligationsDelete ||
         // Team mode schema-backed channels
         ch === IpcInvoke.teamSetConfig ||
         ch === IpcInvoke.teamSetDisplayName ||

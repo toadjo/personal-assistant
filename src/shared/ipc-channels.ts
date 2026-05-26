@@ -121,7 +121,29 @@ export const IpcInvoke = {
   familyObligationsUpdate: "family:obligations:update",
   familyObligationsComplete: "family:obligations:complete",
   familyObligationsDelete: "family:obligations:delete",
-  familySummaryGet: "family:summary:get"
+  familySummaryGet: "family:summary:get",
+  healthAppointmentsList: "health:appointments:list",
+  healthAppointmentsCreate: "health:appointments:create",
+  healthAppointmentsUpdate: "health:appointments:update",
+  healthAppointmentsDelete: "health:appointments:delete",
+  healthMedicationsList: "health:medications:list",
+  healthMedicationsCreate: "health:medications:create",
+  healthMedicationsUpdate: "health:medications:update",
+  healthMedicationsDelete: "health:medications:delete",
+  healthSymptomsList: "health:symptoms:list",
+  healthSymptomsCreate: "health:symptoms:create",
+  healthSymptomsUpdate: "health:symptoms:update",
+  healthSymptomsDelete: "health:symptoms:delete",
+  healthMeasurementsList: "health:measurements:list",
+  healthMeasurementsCreate: "health:measurements:create",
+  healthMeasurementsUpdate: "health:measurements:update",
+  healthMeasurementsDelete: "health:measurements:delete",
+  healthObligationsList: "health:obligations:list",
+  healthObligationsCreate: "health:obligations:create",
+  healthObligationsUpdate: "health:obligations:update",
+  healthObligationsComplete: "health:obligations:complete",
+  healthObligationsDelete: "health:obligations:delete",
+  healthSummaryGet: "health:summary:get"
 } as const;
 
 /** Channels the main process pushes to the renderer (`webContents.send` / `ipcRenderer.on`). */

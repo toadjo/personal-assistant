@@ -808,3 +808,179 @@ export const familyObligationUpdateSchema = z
       message: "At least one field must be provided for update."
     }
   );
+
+// Health schemas
+export const healthAppointmentCreateSchema = z.object({
+  type: z.enum(["checkup", "specialist", "emergency", "followup", "procedure", "custom"]),
+  title: z.string().trim().min(1).max(200),
+  provider: z.string().trim().max(200),
+  location: z.string().trim().max(500),
+  date: z.string().datetime({ offset: true }),
+  time: z.string().trim().max(10),
+  duration: z.number().int().min(5).max(480),
+  status: z.enum(["scheduled", "completed", "cancelled"]),
+  notes: z.string().max(2000)
+});
+
+export const healthAppointmentUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    type: z.enum(["checkup", "specialist", "emergency", "followup", "procedure", "custom"]).optional(),
+    title: z.string().trim().min(1).max(200).optional(),
+    provider: z.string().trim().max(200).optional(),
+    location: z.string().trim().max(500).optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    time: z.string().trim().max(10).optional(),
+    duration: z.number().int().min(5).max(480).optional(),
+    status: z.enum(["scheduled", "completed", "cancelled"]).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.type !== undefined ||
+      v.title !== undefined ||
+      v.provider !== undefined ||
+      v.location !== undefined ||
+      v.date !== undefined ||
+      v.time !== undefined ||
+      v.duration !== undefined ||
+      v.status !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const healthMedicationCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  dosage: z.string().trim().max(100),
+  frequency: z.string().trim().max(100),
+  route: z.string().trim().max(50),
+  status: z.enum(["active", "discontinued", "completed"]),
+  startDate: z.string().datetime({ offset: true }),
+  endDate: z.string().datetime({ offset: true }).nullable(),
+  prescriber: z.string().trim().max(200),
+  notes: z.string().max(2000)
+});
+
+export const healthMedicationUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string().trim().min(1).max(200).optional(),
+    dosage: z.string().trim().max(100).optional(),
+    frequency: z.string().trim().max(100).optional(),
+    route: z.string().trim().max(50).optional(),
+    status: z.enum(["active", "discontinued", "completed"]).optional(),
+    startDate: z.string().datetime({ offset: true }).optional(),
+    endDate: z.string().datetime({ offset: true }).nullable().optional(),
+    prescriber: z.string().trim().max(200).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.dosage !== undefined ||
+      v.frequency !== undefined ||
+      v.route !== undefined ||
+      v.status !== undefined ||
+      v.startDate !== undefined ||
+      v.endDate !== undefined ||
+      v.prescriber !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const healthSymptomCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  severity: z.enum(["mild", "moderate", "severe"]),
+  startDate: z.string().datetime({ offset: true }),
+  endDate: z.string().datetime({ offset: true }).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const healthSymptomUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string().trim().min(1).max(200).optional(),
+    severity: z.enum(["mild", "moderate", "severe"]).optional(),
+    startDate: z.string().datetime({ offset: true }).optional(),
+    endDate: z.string().datetime({ offset: true }).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.severity !== undefined ||
+      v.startDate !== undefined ||
+      v.endDate !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const healthMeasurementCreateSchema = z.object({
+  type: z.enum(["weight", "blood_pressure", "heart_rate", "temperature", "blood_sugar", "custom"]),
+  value: z.string().trim().min(1).max(100),
+  unit: z.string().trim().max(50),
+  date: z.string().datetime({ offset: true }),
+  notes: z.string().max(2000)
+});
+
+export const healthMeasurementUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    type: z.enum(["weight", "blood_pressure", "heart_rate", "temperature", "blood_sugar", "custom"]).optional(),
+    value: z.string().trim().min(1).max(100).optional(),
+    unit: z.string().trim().max(50).optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.type !== undefined ||
+      v.value !== undefined ||
+      v.unit !== undefined ||
+      v.date !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );
+
+export const healthObligationCreateSchema = z.object({
+  type: z.enum(["refill", "lab_test", "vaccination", "screening", "exercise", "custom"]),
+  title: z.string().trim().min(1).max(200),
+  dueAt: z.string().datetime({ offset: true }),
+  status: z.enum(["open", "done"]),
+  priority: z.enum(["low", "normal", "high"]),
+  completedAt: z.string().datetime({ offset: true }).nullable(),
+  notes: z.string().max(2000)
+});
+
+export const healthObligationUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    type: z.enum(["refill", "lab_test", "vaccination", "screening", "exercise", "custom"]).optional(),
+    title: z.string().trim().min(1).max(200).optional(),
+    dueAt: z.string().datetime({ offset: true }).optional(),
+    status: z.enum(["open", "done"]).optional(),
+    priority: z.enum(["low", "normal", "high"]).optional(),
+    completedAt: z.string().datetime({ offset: true }).nullable().optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.type !== undefined ||
+      v.title !== undefined ||
+      v.dueAt !== undefined ||
+      v.status !== undefined ||
+      v.priority !== undefined ||
+      v.completedAt !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one field must be provided for update."
+    }
+  );

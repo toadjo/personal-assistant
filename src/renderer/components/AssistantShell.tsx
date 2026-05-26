@@ -26,6 +26,7 @@ import { AiSettingsPanel } from "./panels/AiSettingsPanel";
 import { FinancePanel } from "./panels/FinancePanel";
 import { CarPanel } from "./panels/CarPanel";
 import { FamilyPanel } from "./panels/FamilyPanel";
+import { HealthPanel } from "./panels/HealthPanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
@@ -63,7 +64,7 @@ import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
-type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations" | "lifeAreas" | "finance" | "car" | "family";
+type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations" | "lifeAreas" | "finance" | "car" | "family" | "health";
 
 export function AssistantShell(): JSX.Element {
   // Measure app startup performance
@@ -639,6 +640,13 @@ export function AssistantShell(): JSX.Element {
             >
               Family
             </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "health" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("health")}
+            >
+              Health
+            </button>
           </div>
 
           {showPalette && (
@@ -1112,6 +1120,19 @@ export function AssistantShell(): JSX.Element {
             <div className="contentGrid">
               <div className="contentMain">
                 <FamilyPanel
+                  isRefreshing={false}
+                  onRefresh={async () => {}}
+                  onError={ui.reportError}
+                  onShowSuccess={ui.showSuccess}
+                />
+              </div>
+            </div>
+          )}
+
+          {activePersonalModule === "health" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <HealthPanel
                   isRefreshing={false}
                   onRefresh={async () => {}}
                   onError={ui.reportError}

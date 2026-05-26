@@ -7,6 +7,22 @@ export type BackupResult = {
   reminders: number;
   tasks: number;
   automation_rules: number;
+  finance_bills: number;
+  finance_expenses: number;
+  car_vehicles: number;
+  car_fuel_entries: number;
+  car_maintenance: number;
+  car_recurring_bills: number;
+  car_mileage: number;
+  car_service_reminders: number;
+  family_members: number;
+  family_occasions: number;
+  family_obligations: number;
+  health_appointments: number;
+  health_medications: number;
+  health_symptoms: number;
+  health_measurements: number;
+  health_obligations: number;
   app_settings: number;
 };
 
@@ -17,6 +33,22 @@ export type BackupPreviewResult = {
   reminders: number;
   tasks: number;
   automation_rules: number;
+  finance_bills: number;
+  finance_expenses: number;
+  car_vehicles: number;
+  car_fuel_entries: number;
+  car_maintenance: number;
+  car_recurring_bills: number;
+  car_mileage: number;
+  car_service_reminders: number;
+  family_members: number;
+  family_occasions: number;
+  family_obligations: number;
+  health_appointments: number;
+  health_medications: number;
+  health_symptoms: number;
+  health_measurements: number;
+  health_obligations: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -118,6 +150,22 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
         `- ${preview.reminders} reminders\n` +
         `- ${preview.tasks} tasks\n` +
         `- ${preview.automation_rules} automation rules\n` +
+        `- ${preview.finance_bills} finance bills\n` +
+        `- ${preview.finance_expenses} finance expenses\n` +
+        `- ${preview.car_vehicles} car vehicles\n` +
+        `- ${preview.car_fuel_entries} car fuel entries\n` +
+        `- ${preview.car_maintenance} car maintenance records\n` +
+        `- ${preview.car_recurring_bills} car recurring bills\n` +
+        `- ${preview.car_mileage} car mileage records\n` +
+        `- ${preview.car_service_reminders} car service reminders\n` +
+        `- ${preview.family_members} family members\n` +
+        `- ${preview.family_occasions} family occasions\n` +
+        `- ${preview.family_obligations} family obligations\n` +
+        `- ${preview.health_appointments} health appointments\n` +
+        `- ${preview.health_medications} health medications\n` +
+        `- ${preview.health_symptoms} health symptoms\n` +
+        `- ${preview.health_measurements} health measurements\n` +
+        `- ${preview.health_obligations} health obligations\n` +
         `- ${preview.app_settings} app settings\n\n` +
         `This will replace your current data. Continue?`
       );
@@ -129,7 +177,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
       
       const result = await api.importData(payload);
       setStatus(
-        `Import complete: ${result.notes} notes, ${result.reminders} reminders, ${result.tasks} tasks, ${result.automation_rules} rules, ${result.app_settings} settings.`
+        `Import complete: ${result.notes} notes, ${result.reminders} reminders, ${result.tasks} tasks, ${result.automation_rules} rules, ${result.finance_bills} finance bills, ${result.finance_expenses} finance expenses, ${result.car_vehicles} car vehicles, ${result.car_fuel_entries} fuel entries, ${result.car_maintenance} maintenance records, ${result.car_recurring_bills} recurring bills, ${result.car_mileage} mileage records, ${result.car_service_reminders} service reminders, ${result.family_members} family members, ${result.family_occasions} family occasions, ${result.family_obligations} family obligations, ${result.health_appointments} health appointments, ${result.health_medications} health medications, ${result.health_symptoms} health symptoms, ${result.health_measurements} health measurements, ${result.health_obligations} health obligations, ${result.app_settings} settings.`
       );
       await refreshAll();
       return result;
@@ -144,7 +192,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   async function resetData(): Promise<void> {
     if (
       !window.confirm(
-        "This will permanently delete all notes, reminders, tasks, automations, and settings. This cannot be undone. Continue?"
+        "This will permanently delete all notes, reminders, tasks, automations, finance data, car data, family data, health data, and settings. This cannot be undone. Continue?"
       )
     ) {
       return;

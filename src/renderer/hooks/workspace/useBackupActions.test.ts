@@ -27,7 +27,7 @@ describe("useBackupActions", () => {
   });
 
   it("exports data, downloads JSON, revokes object URL, and sets success status", async () => {
-    const mockPayload = { notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1 };
+    const mockPayload = { notes: 5, reminders: 3, tasks: 2, automation_rules: 1, finance_bills: 0, finance_expenses: 0, car_vehicles: 0, car_fuel_entries: 0, car_maintenance: 0, car_recurring_bills: 0, car_mileage: 0, car_service_reminders: 0, family_members: 0, family_occasions: 0, family_obligations: 0, health_appointments: 0, health_medications: 0, health_symptoms: 0, health_measurements: 0, health_obligations: 0, app_settings: 1 };
     (window as any).assistantApi = {
       exportData: vi.fn().mockResolvedValue(mockPayload)
     };
@@ -50,7 +50,7 @@ describe("useBackupActions", () => {
 
   it("imports cancel returns null and does not call the API", async () => {
     (window as any).assistantApi = {
-      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
+      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, finance_bills: 0, finance_expenses: 0, car_vehicles: 0, car_fuel_entries: 0, car_maintenance: 0, car_recurring_bills: 0, car_mileage: 0, car_service_reminders: 0, family_members: 0, family_occasions: 0, family_obligations: 0, health_appointments: 0, health_medications: 0, health_symptoms: 0, health_measurements: 0, health_obligations: 0, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
       importData: vi.fn()
     };
     window.confirm = vi.fn().mockReturnValue(false);
@@ -68,9 +68,9 @@ describe("useBackupActions", () => {
   });
 
   it("confirmed import parses JSON, calls API, refreshes app data, and reports imported counts", async () => {
-    const mockResult: BackupResult = { notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1 };
+    const mockResult: BackupResult = { notes: 5, reminders: 3, tasks: 2, automation_rules: 1, finance_bills: 0, finance_expenses: 0, car_vehicles: 0, car_fuel_entries: 0, car_maintenance: 0, car_recurring_bills: 0, car_mileage: 0, car_service_reminders: 0, family_members: 0, family_occasions: 0, family_obligations: 0, health_appointments: 0, health_medications: 0, health_symptoms: 0, health_measurements: 0, health_obligations: 0, app_settings: 1 };
     (window as any).assistantApi = {
-      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
+      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, finance_bills: 0, finance_expenses: 0, car_vehicles: 0, car_fuel_entries: 0, car_maintenance: 0, car_recurring_bills: 0, car_mileage: 0, car_service_reminders: 0, family_members: 0, family_occasions: 0, family_obligations: 0, health_appointments: 0, health_medications: 0, health_symptoms: 0, health_measurements: 0, health_obligations: 0, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
       importData: vi.fn().mockResolvedValue(mockResult)
     };
     window.confirm = vi.fn().mockReturnValue(true);
@@ -84,13 +84,13 @@ describe("useBackupActions", () => {
     expect(importResult).toEqual(mockResult);
     expect(window.assistantApi.importData).toHaveBeenCalled();
     expect(mockRefreshAll).toHaveBeenCalled();
-    expect(mockSetStatus).toHaveBeenCalledWith("Import complete: 5 notes, 3 reminders, 2 tasks, 1 rules, 1 settings.");
+    expect(mockSetStatus).toHaveBeenCalledWith("Import complete: 5 notes, 3 reminders, 2 tasks, 1 rules, 0 finance bills, 0 finance expenses, 0 car vehicles, 0 fuel entries, 0 maintenance records, 0 recurring bills, 0 mileage records, 0 service reminders, 0 family members, 0 family occasions, 0 family obligations, 0 health appointments, 0 health medications, 0 health symptoms, 0 health measurements, 0 health obligations, 1 settings.");
     expect(result.current.isImporting).toBe(false);
   });
 
   it("invalid import JSON reports an error and does not refresh", async () => {
     (window as any).assistantApi = {
-      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
+      previewImportData: vi.fn().mockResolvedValue({ valid: true, notes: 5, reminders: 3, tasks: 2, automation_rules: 1, finance_bills: 0, finance_expenses: 0, car_vehicles: 0, car_fuel_entries: 0, car_maintenance: 0, car_recurring_bills: 0, car_mileage: 0, car_service_reminders: 0, family_members: 0, family_occasions: 0, family_obligations: 0, health_appointments: 0, health_medications: 0, health_symptoms: 0, health_measurements: 0, health_obligations: 0, app_settings: 1, unsupported_sections: [], has_encrypted_content: false, version: "1.7.1", exportedAt: "2026-01-01T00:00:00Z" }),
       importData: vi.fn()
     };
     window.confirm = vi.fn().mockReturnValue(true);

@@ -279,3 +279,87 @@ export type FamilySummary = {
   openObligations: number;
   overdueObligations: number;
 };
+
+// Health types
+export type HealthAppointmentType = "checkup" | "specialist" | "emergency" | "followup" | "procedure" | "custom";
+export type HealthAppointmentStatus = "scheduled" | "completed" | "cancelled" | "missed";
+export type HealthMedicationStatus = "active" | "discontinued" | "completed";
+export type HealthSymptomSeverity = "mild" | "moderate" | "severe";
+export type HealthMeasurementType = "weight" | "blood_pressure" | "heart_rate" | "temperature" | "blood_sugar" | "custom";
+export type HealthObligationType = "refill" | "lab_test" | "vaccination" | "screening" | "exercise" | "custom";
+export type HealthObligationStatus = "open" | "done";
+export type HealthPriority = "low" | "normal" | "high";
+
+export type HealthAppointment = {
+  id: string;
+  type: HealthAppointmentType;
+  title: string;
+  provider: string | null;
+  location: string | null;
+  date: string;
+  time: string;
+  duration: number; // minutes
+  status: HealthAppointmentStatus;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HealthMedication = {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  route: string; // oral, injection, topical, etc.
+  status: HealthMedicationStatus;
+  startDate: string;
+  endDate: string | null;
+  prescriber: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HealthSymptom = {
+  id: string;
+  name: string;
+  severity: HealthSymptomSeverity;
+  startDate: string;
+  endDate: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HealthMeasurement = {
+  id: string;
+  type: HealthMeasurementType;
+  value: string;
+  unit: string;
+  date: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HealthObligation = {
+  id: string;
+  type: HealthObligationType;
+  title: string;
+  dueAt: string;
+  status: HealthObligationStatus;
+  priority: HealthPriority;
+  completedAt: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HealthSummary = {
+  upcomingAppointments: number;
+  activeMedications: number;
+  activeSymptoms: number;
+  recentMeasurements: number;
+  openObligations: number;
+  overdueObligations: number;
+};

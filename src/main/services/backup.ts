@@ -194,6 +194,66 @@ export type BackupPayload = {
     createdAt: string;
     updatedAt: string;
   }>;
+  health_appointments?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    provider: string | null;
+    location: string | null;
+    date: string;
+    time: string;
+    duration: number;
+    status: string;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  health_medications?: Array<{
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: string;
+    route: string;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+    prescriber: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  health_symptoms?: Array<{
+    id: string;
+    name: string;
+    severity: string;
+    startDate: string;
+    endDate: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  health_measurements?: Array<{
+    id: string;
+    type: string;
+    value: string;
+    unit: string;
+    date: string;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  health_obligations?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    dueAt: string | null;
+    status: string;
+    priority: string;
+    completedAt: string | null;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   app_settings?: Array<{
     key: string;
     value: string;
@@ -228,6 +288,11 @@ export type BackupPreviewResult = {
   family_members: number;
   family_occasions: number;
   family_obligations: number;
+  health_appointments: number;
+  health_medications: number;
+  health_symptoms: number;
+  health_measurements: number;
+  health_obligations: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -252,6 +317,11 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const family_members = db.prepare("SELECT * FROM family_members").all() as BackupPayload["family_members"];
   const family_occasions = db.prepare("SELECT * FROM family_occasions").all() as BackupPayload["family_occasions"];
   const family_obligations = db.prepare("SELECT * FROM family_obligations").all() as BackupPayload["family_obligations"];
+  const health_appointments = db.prepare("SELECT * FROM health_appointments").all() as BackupPayload["health_appointments"];
+  const health_medications = db.prepare("SELECT * FROM health_medications").all() as BackupPayload["health_medications"];
+  const health_symptoms = db.prepare("SELECT * FROM health_symptoms").all() as BackupPayload["health_symptoms"];
+  const health_measurements = db.prepare("SELECT * FROM health_measurements").all() as BackupPayload["health_measurements"];
+  const health_obligations = db.prepare("SELECT * FROM health_obligations").all() as BackupPayload["health_obligations"];
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
@@ -277,6 +347,11 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     family_members,
     family_occasions,
     family_obligations,
+    health_appointments,
+    health_medications,
+    health_symptoms,
+    health_measurements,
+    health_obligations,
     app_settings
   };
 
@@ -333,6 +408,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -362,6 +442,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: true,
@@ -390,6 +475,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -420,6 +510,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -447,6 +542,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -474,6 +574,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -501,6 +606,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -528,6 +638,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -555,6 +670,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -582,6 +702,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -609,6 +734,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -636,6 +766,107 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.health_appointments && !Array.isArray(payload.health_appointments)) {
+    return {
+      valid: false,
+      error: "Invalid backup: health_appointments field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.health_medications && !Array.isArray(payload.health_medications)) {
+    return {
+      valid: false,
+      error: "Invalid backup: health_medications field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version || "unknown",
+      exportedAt: payload.exportedAt || "unknown"
+    };
+  }
+
+  if (payload.health_symptoms && !Array.isArray(payload.health_symptoms)) {
+    return {
+      valid: false,
+      error: "Invalid backup: health_symptoms field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      car_vehicles: 0,
+      car_fuel_entries: 0,
+      car_maintenance: 0,
+      car_recurring_bills: 0,
+      car_mileage: 0,
+      car_service_reminders: 0,
+      family_members: 0,
+      family_occasions: 0,
+      family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -663,6 +894,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       family_members: 0,
       family_occasions: 0,
       family_obligations: 0,
+      health_appointments: 0,
+      health_medications: 0,
+      health_symptoms: 0,
+      health_measurements: 0,
+      health_obligations: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -690,6 +926,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     "family_members",
     "family_occasions",
     "family_obligations",
+    "health_appointments",
+    "health_medications",
+    "health_symptoms",
+    "health_measurements",
+    "health_obligations",
     "app_settings",
     "_encrypted"
   ];
@@ -716,6 +957,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
   const family_members = payload.family_members?.length ?? 0;
   const family_occasions = payload.family_occasions?.length ?? 0;
   const family_obligations = payload.family_obligations?.length ?? 0;
+  const health_appointments = payload.health_appointments?.length ?? 0;
+  const health_medications = payload.health_medications?.length ?? 0;
+  const health_symptoms = payload.health_symptoms?.length ?? 0;
+  const health_measurements = payload.health_measurements?.length ?? 0;
+  const health_obligations = payload.health_obligations?.length ?? 0;
   const app_settings = payload.app_settings?.length ?? 0;
 
   return {
@@ -735,6 +981,11 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     family_members,
     family_occasions,
     family_obligations,
+    health_appointments,
+    health_medications,
+    health_symptoms,
+    health_measurements,
+    health_obligations,
     app_settings,
     unsupported_sections,
     has_encrypted_content: false,
@@ -762,6 +1013,11 @@ export function importBackup(
   family_members: number;
   family_occasions: number;
   family_obligations: number;
+  health_appointments: number;
+  health_medications: number;
+  health_symptoms: number;
+  health_measurements: number;
+  health_obligations: number;
   app_settings: number;
   rejected_secret_settings: number;
 } {
@@ -797,6 +1053,11 @@ export function importBackup(
   if (!actualPayload.family_members) actualPayload.family_members = [];
   if (!actualPayload.family_occasions) actualPayload.family_occasions = [];
   if (!actualPayload.family_obligations) actualPayload.family_obligations = [];
+  if (!actualPayload.health_appointments) actualPayload.health_appointments = [];
+  if (!actualPayload.health_medications) actualPayload.health_medications = [];
+  if (!actualPayload.health_symptoms) actualPayload.health_symptoms = [];
+  if (!actualPayload.health_measurements) actualPayload.health_measurements = [];
+  if (!actualPayload.health_obligations) actualPayload.health_obligations = [];
   if (!actualPayload.app_settings) actualPayload.app_settings = [];
 
   const db = getDb();
@@ -818,6 +1079,11 @@ export function importBackup(
     db.prepare("DELETE FROM family_members").run();
     db.prepare("DELETE FROM family_occasions").run();
     db.prepare("DELETE FROM family_obligations").run();
+    db.prepare("DELETE FROM health_appointments").run();
+    db.prepare("DELETE FROM health_medications").run();
+    db.prepare("DELETE FROM health_symptoms").run();
+    db.prepare("DELETE FROM health_measurements").run();
+    db.prepare("DELETE FROM health_obligations").run();
     db.prepare("DELETE FROM app_settings").run();
 
     const noteStmt = db.prepare(
@@ -925,6 +1191,41 @@ export function importBackup(
       familyObligationStmt.run(row);
     }
 
+    const healthAppointmentStmt = db.prepare(
+      "INSERT INTO health_appointments (id, type, title, provider, location, date, time, duration, status, notes, createdAt, updatedAt) VALUES (@id, @type, @title, @provider, @location, @date, @time, @duration, @status, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.health_appointments || []) {
+      healthAppointmentStmt.run(row);
+    }
+
+    const healthMedicationStmt = db.prepare(
+      "INSERT INTO health_medications (id, name, dosage, frequency, route, status, startDate, endDate, prescriber, notes, createdAt, updatedAt) VALUES (@id, @name, @dosage, @frequency, @route, @status, @startDate, @endDate, @prescriber, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.health_medications || []) {
+      healthMedicationStmt.run(row);
+    }
+
+    const healthSymptomStmt = db.prepare(
+      "INSERT INTO health_symptoms (id, name, severity, startDate, endDate, notes, createdAt, updatedAt) VALUES (@id, @name, @severity, @startDate, @endDate, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.health_symptoms || []) {
+      healthSymptomStmt.run(row);
+    }
+
+    const healthMeasurementStmt = db.prepare(
+      "INSERT INTO health_measurements (id, type, value, unit, date, notes, createdAt, updatedAt) VALUES (@id, @type, @value, @unit, @date, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.health_measurements || []) {
+      healthMeasurementStmt.run(row);
+    }
+
+    const healthObligationStmt = db.prepare(
+      "INSERT INTO health_obligations (id, type, title, dueAt, status, priority, completedAt, notes, createdAt, updatedAt) VALUES (@id, @type, @title, @dueAt, @status, @priority, @completedAt, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.health_obligations || []) {
+      healthObligationStmt.run(row);
+    }
+
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
@@ -954,6 +1255,11 @@ export function importBackup(
     family_members: actualPayload.family_members?.length ?? 0,
     family_occasions: actualPayload.family_occasions?.length ?? 0,
     family_obligations: actualPayload.family_obligations?.length ?? 0,
+    health_appointments: actualPayload.health_appointments?.length ?? 0,
+    health_medications: actualPayload.health_medications?.length ?? 0,
+    health_symptoms: actualPayload.health_symptoms?.length ?? 0,
+    health_measurements: actualPayload.health_measurements?.length ?? 0,
+    health_obligations: actualPayload.health_obligations?.length ?? 0,
     app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
@@ -977,6 +1283,11 @@ export function resetAllData(): void {
     db.prepare("DELETE FROM family_members").run();
     db.prepare("DELETE FROM family_occasions").run();
     db.prepare("DELETE FROM family_obligations").run();
+    db.prepare("DELETE FROM health_appointments").run();
+    db.prepare("DELETE FROM health_medications").run();
+    db.prepare("DELETE FROM health_symptoms").run();
+    db.prepare("DELETE FROM health_measurements").run();
+    db.prepare("DELETE FROM health_obligations").run();
     db.prepare("DELETE FROM app_settings").run();
     db.prepare("DELETE FROM execution_logs").run();
     db.prepare("DELETE FROM renderer_errors").run();
