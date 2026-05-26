@@ -51,6 +51,8 @@ describe("backup service", () => {
     expect(result.reminders).toEqual([]);
     expect(result.tasks).toEqual([]);
     expect(result.automation_rules).toEqual([]);
+    expect(result.finance_bills).toEqual([]);
+    expect(result.finance_expenses).toEqual([]);
     expect(result.app_settings).toEqual([]);
   });
 
@@ -86,6 +88,16 @@ describe("backup service", () => {
       )
       .run("a1", "Rule", "time", '{"at":"08:00"}', "localReminder", '{"text":"hello"}', 1);
     testDb
+      .prepare(
+        "INSERT INTO finance_bills (id, name, amount, dueAt, recurrence, category, status, notes, createdAt, updatedAt, lastPaidAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("b1", "Rent", 100000, "2026-01-01T00:00:00Z", "monthly", "Housing", "pending", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", null);
+    testDb
+      .prepare(
+        "INSERT INTO finance_expenses (id, description, amount, date, category, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+    testDb
       .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
       .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -94,6 +106,8 @@ describe("backup service", () => {
     expect(exported.reminders).toHaveLength(1);
     expect(exported.tasks).toHaveLength(1);
     expect(exported.automation_rules).toHaveLength(1);
+    expect(exported.finance_bills).toHaveLength(1);
+    expect(exported.finance_expenses).toHaveLength(1);
     expect(exported.app_settings).toHaveLength(1);
 
     // Clear everything
@@ -101,6 +115,8 @@ describe("backup service", () => {
     testDb.prepare("DELETE FROM reminders").run();
     testDb.prepare("DELETE FROM tasks").run();
     testDb.prepare("DELETE FROM automation_rules").run();
+    testDb.prepare("DELETE FROM finance_bills").run();
+    testDb.prepare("DELETE FROM finance_expenses").run();
     testDb.prepare("DELETE FROM app_settings").run();
 
     const imported = importBackup(exported);
@@ -108,6 +124,8 @@ describe("backup service", () => {
     expect(imported.reminders).toBe(1);
     expect(imported.tasks).toBe(1);
     expect(imported.automation_rules).toBe(1);
+    expect(imported.finance_bills).toBe(1);
+    expect(imported.finance_expenses).toBe(1);
     expect(imported.app_settings).toBe(1);
 
     const reExported = exportBackup();
@@ -115,6 +133,8 @@ describe("backup service", () => {
     expect(reExported.reminders?.[0]?.id).toBe("r1");
     expect(reExported.tasks?.[0]?.id).toBe("t1");
     expect(reExported.automation_rules?.[0]?.id).toBe("a1");
+    expect(reExported.finance_bills?.[0]?.id).toBe("b1");
+    expect(reExported.finance_expenses?.[0]?.id).toBe("e1");
     expect(reExported.app_settings?.[0]?.key).toBe("assistant.name");
   });
 
@@ -137,6 +157,16 @@ describe("backup service", () => {
         "INSERT INTO devices_cache (id, entityId, friendlyName, domain, state, attributes, lastSeenAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
       )
       .run("d1", "light.test", "Test", "light", "on", "{}", "2026-01-01T00:00:00Z");
+    testDb
+      .prepare(
+        "INSERT INTO finance_bills (id, name, amount, dueAt, recurrence, category, status, notes, createdAt, updatedAt, lastPaidAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("b1", "Rent", 100000, "2026-01-01T00:00:00Z", "monthly", "Housing", "pending", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", null);
+    testDb
+      .prepare(
+        "INSERT INTO finance_expenses (id, description, amount, date, category, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
 
     resetAllData();
 
@@ -148,6 +178,10 @@ describe("backup service", () => {
     expect(errorCount.c).toBe(0);
     const deviceCount = testDb.prepare("SELECT COUNT(*) as c FROM devices_cache").get() as { c: number };
     expect(deviceCount.c).toBe(0);
+    const billCount = testDb.prepare("SELECT COUNT(*) as c FROM finance_bills").get() as { c: number };
+    expect(billCount.c).toBe(0);
+    const expenseCount = testDb.prepare("SELECT COUNT(*) as c FROM finance_expenses").get() as { c: number };
+    expect(expenseCount.c).toBe(0);
   });
 
   describe("backup preview", () => {
@@ -187,6 +221,16 @@ describe("backup service", () => {
         )
         .run("a1", "Rule", "time", '{"at":"08:00"}', "localReminder", '{"text":"hello"}', 1);
       testDb
+        .prepare(
+          "INSERT INTO finance_bills (id, name, amount, dueAt, recurrence, category, status, notes, createdAt, updatedAt, lastPaidAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("b1", "Rent", 100000, "2026-01-01T00:00:00Z", "monthly", "Housing", "pending", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", null);
+      testDb
+        .prepare(
+          "INSERT INTO finance_expenses (id, description, amount, date, category, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
         .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
         .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -198,6 +242,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(1);
       expect(preview.tasks).toBe(1);
       expect(preview.automation_rules).toBe(1);
+      expect(preview.finance_bills).toBe(1);
+      expect(preview.finance_expenses).toBe(1);
       expect(preview.app_settings).toBe(1);
       expect(preview.unsupported_sections).toEqual([]);
       expect(preview.has_encrypted_content).toBe(false);
@@ -215,6 +261,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(0);
       expect(preview.tasks).toBe(0);
       expect(preview.automation_rules).toBe(0);
+      expect(preview.finance_bills).toBe(0);
+      expect(preview.finance_expenses).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -268,6 +316,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(0);
       expect(preview.tasks).toBe(0);
       expect(preview.automation_rules).toBe(0);
+      expect(preview.finance_bills).toBe(0);
+      expect(preview.finance_expenses).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -279,6 +329,8 @@ describe("backup service", () => {
         reminders: [],
         tasks: [],
         automation_rules: [],
+        finance_bills: [],
+        finance_expenses: [],
         app_settings: []
       };
       const preview = previewBackup(emptyPayload);
@@ -288,6 +340,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(0);
       expect(preview.tasks).toBe(0);
       expect(preview.automation_rules).toBe(0);
+      expect(preview.finance_bills).toBe(0);
+      expect(preview.finance_expenses).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
   });
@@ -305,6 +359,8 @@ describe("backup service", () => {
         reminders: [],
         tasks: [],
         automation_rules: [],
+        finance_bills: [],
+        finance_expenses: [],
         app_settings: [
           { key: "assistant.name", value: "Test", updatedAt: "2026-01-01T00:00:00Z" },
           { key: "ha.token", value: "secret123", updatedAt: "2026-01-01T00:00:00Z" }
@@ -485,6 +541,16 @@ describe("backup service", () => {
         )
         .run("a1", "Rule", "time", '{"at":"08:00"}', "localReminder", '{"text":"hello"}', 1);
       testDb
+        .prepare(
+          "INSERT INTO finance_bills (id, name, amount, dueAt, recurrence, category, status, notes, createdAt, updatedAt, lastPaidAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("b1", "Rent", 100000, "2026-01-01T00:00:00Z", "monthly", "Housing", "pending", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", null);
+      testDb
+        .prepare(
+          "INSERT INTO finance_expenses (id, description, amount, date, category, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("e1", "Groceries", 5000, "2026-01-01T00:00:00Z", "Food", "", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z");
+      testDb
         .prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)")
         .run("assistant.name", "Test", "2026-01-01T00:00:00Z");
 
@@ -496,6 +562,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(1);
       expect(preview.tasks).toBe(1);
       expect(preview.automation_rules).toBe(1);
+      expect(preview.finance_bills).toBe(1);
+      expect(preview.finance_expenses).toBe(1);
       expect(preview.app_settings).toBe(1);
       expect(preview.unsupported_sections).toEqual([]);
       expect(preview.has_encrypted_content).toBe(false);
@@ -513,6 +581,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(0);
       expect(preview.tasks).toBe(0);
       expect(preview.automation_rules).toBe(0);
+      expect(preview.finance_bills).toBe(0);
+      expect(preview.finance_expenses).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -566,6 +636,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(0);
       expect(preview.tasks).toBe(0);
       expect(preview.automation_rules).toBe(0);
+      expect(preview.finance_bills).toBe(0);
+      expect(preview.finance_expenses).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
 
@@ -577,6 +649,8 @@ describe("backup service", () => {
         reminders: [],
         tasks: [],
         automation_rules: [],
+        finance_bills: [],
+        finance_expenses: [],
         app_settings: []
       };
       const preview = previewBackup(emptyPayload);
@@ -586,6 +660,8 @@ describe("backup service", () => {
       expect(preview.reminders).toBe(0);
       expect(preview.tasks).toBe(0);
       expect(preview.automation_rules).toBe(0);
+      expect(preview.finance_bills).toBe(0);
+      expect(preview.finance_expenses).toBe(0);
       expect(preview.app_settings).toBe(0);
     });
   });
@@ -603,6 +679,8 @@ describe("backup service", () => {
         reminders: [],
         tasks: [],
         automation_rules: [],
+        finance_bills: [],
+        finance_expenses: [],
         app_settings: [
           { key: "assistant.name", value: "Test", updatedAt: "2026-01-01T00:00:00Z" },
           { key: "ha.token", value: "secret123", updatedAt: "2026-01-01T00:00:00Z" }

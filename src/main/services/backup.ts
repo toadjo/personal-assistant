@@ -51,6 +51,29 @@ export type BackupPayload = {
     enabled: number;
     lastFiredAt: string | null;
   }>;
+  finance_bills?: Array<{
+    id: string;
+    name: string;
+    amount: number;
+    dueAt: string;
+    recurrence: string;
+    category: string;
+    status: string;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+    lastPaidAt: string | null;
+  }>;
+  finance_expenses?: Array<{
+    id: string;
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+    notes: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   app_settings?: Array<{
     key: string;
     value: string;
@@ -74,6 +97,8 @@ export type BackupPreviewResult = {
   reminders: number;
   tasks: number;
   automation_rules: number;
+  finance_bills: number;
+  finance_expenses: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -87,6 +112,8 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const reminders = db.prepare("SELECT * FROM reminders").all() as BackupPayload["reminders"];
   const tasks = db.prepare("SELECT * FROM tasks").all() as BackupPayload["tasks"];
   const automation_rules = db.prepare("SELECT * FROM automation_rules").all() as BackupPayload["automation_rules"];
+  const finance_bills = db.prepare("SELECT * FROM finance_bills").all() as BackupPayload["finance_bills"];
+  const finance_expenses = db.prepare("SELECT * FROM finance_expenses").all() as BackupPayload["finance_expenses"];
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
@@ -101,6 +128,8 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     reminders,
     tasks,
     automation_rules,
+    finance_bills,
+    finance_expenses,
     app_settings
   };
 
@@ -146,6 +175,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -164,6 +195,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: true,
@@ -181,6 +214,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -200,6 +235,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -216,6 +253,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -232,6 +271,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -248,6 +289,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -264,6 +307,44 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       reminders: 0,
       tasks: 0,
       automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  if (payload.finance_bills && !Array.isArray(payload.finance_bills)) {
+    return {
+      valid: false,
+      error: "Invalid backup: finance_bills field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
+      app_settings: 0,
+      unsupported_sections: [],
+      has_encrypted_content: false,
+      version: payload.version,
+      exportedAt: payload.exportedAt
+    };
+  }
+
+  if (payload.finance_expenses && !Array.isArray(payload.finance_expenses)) {
+    return {
+      valid: false,
+      error: "Invalid backup: finance_expenses field is not an array",
+      notes: 0,
+      reminders: 0,
+      tasks: 0,
+      automation_rules: 0,
+      finance_bills: 0,
+      finance_expenses: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -280,6 +361,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     "reminders",
     "tasks",
     "automation_rules",
+    "finance_bills",
+    "finance_expenses",
     "app_settings",
     "_encrypted"
   ];
@@ -295,6 +378,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
   const reminders = payload.reminders?.length ?? 0;
   const tasks = payload.tasks?.length ?? 0;
   const automation_rules = payload.automation_rules?.length ?? 0;
+  const finance_bills = payload.finance_bills?.length ?? 0;
+  const finance_expenses = payload.finance_expenses?.length ?? 0;
   const app_settings = payload.app_settings?.length ?? 0;
 
   return {
@@ -303,6 +388,8 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     reminders,
     tasks,
     automation_rules,
+    finance_bills,
+    finance_expenses,
     app_settings,
     unsupported_sections,
     has_encrypted_content: false,
@@ -319,6 +406,8 @@ export function importBackup(
   reminders: number;
   tasks: number;
   automation_rules: number;
+  finance_bills: number;
+  finance_expenses: number;
   app_settings: number;
   rejected_secret_settings: number;
 } {
@@ -343,6 +432,8 @@ export function importBackup(
   if (!actualPayload.reminders) actualPayload.reminders = [];
   if (!actualPayload.tasks) actualPayload.tasks = [];
   if (!actualPayload.automation_rules) actualPayload.automation_rules = [];
+  if (!actualPayload.finance_bills) actualPayload.finance_bills = [];
+  if (!actualPayload.finance_expenses) actualPayload.finance_expenses = [];
   if (!actualPayload.app_settings) actualPayload.app_settings = [];
 
   const db = getDb();
@@ -353,6 +444,8 @@ export function importBackup(
     db.prepare("DELETE FROM reminders").run();
     db.prepare("DELETE FROM tasks").run();
     db.prepare("DELETE FROM automation_rules").run();
+    db.prepare("DELETE FROM finance_bills").run();
+    db.prepare("DELETE FROM finance_expenses").run();
     db.prepare("DELETE FROM app_settings").run();
 
     const noteStmt = db.prepare(
@@ -383,6 +476,20 @@ export function importBackup(
       ruleStmt.run(row);
     }
 
+    const billStmt = db.prepare(
+      "INSERT INTO finance_bills (id, name, amount, dueAt, recurrence, category, status, notes, createdAt, updatedAt, lastPaidAt) VALUES (@id, @name, @amount, @dueAt, @recurrence, @category, @status, @notes, @createdAt, @updatedAt, @lastPaidAt)"
+    );
+    for (const row of actualPayload.finance_bills || []) {
+      billStmt.run(row);
+    }
+
+    const expenseStmt = db.prepare(
+      "INSERT INTO finance_expenses (id, description, amount, date, category, notes, createdAt, updatedAt) VALUES (@id, @description, @amount, @date, @category, @notes, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.finance_expenses || []) {
+      expenseStmt.run(row);
+    }
+
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
@@ -401,6 +508,8 @@ export function importBackup(
     reminders: actualPayload.reminders?.length ?? 0,
     tasks: actualPayload.tasks?.length ?? 0,
     automation_rules: actualPayload.automation_rules?.length ?? 0,
+    finance_bills: actualPayload.finance_bills?.length ?? 0,
+    finance_expenses: actualPayload.finance_expenses?.length ?? 0,
     app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
@@ -413,6 +522,8 @@ export function resetAllData(): void {
     db.prepare("DELETE FROM reminders").run();
     db.prepare("DELETE FROM tasks").run();
     db.prepare("DELETE FROM automation_rules").run();
+    db.prepare("DELETE FROM finance_bills").run();
+    db.prepare("DELETE FROM finance_expenses").run();
     db.prepare("DELETE FROM app_settings").run();
     db.prepare("DELETE FROM execution_logs").run();
     db.prepare("DELETE FROM renderer_errors").run();

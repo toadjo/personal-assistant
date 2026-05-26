@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [3.1.0] - 2026-05-26
 
+### Added
+
+- Finance module for tracking bills and expenses with a bills-first interface
+- Bill management with create, update, delete, and mark as paid operations
+- Expense tracking with create, update, and delete operations
+- Monthly financial summary showing upcoming bills, paid bills, unpaid/overdue bills, total expenses, and committed amounts
+- Bill filtering by status (all, unpaid, paid, overdue, upcoming, this_month)
+- Expense filtering by time period (all, this_month)
+- Finance data integration with backup system (export, import, preview, reset)
+- Comprehensive test coverage for finance service, IPC handlers, renderer components, and backup operations
+
 ### Changed
 
 - Polished End-of-Day Review panel to always show explicit "End-of-Day Review" heading, even in empty state

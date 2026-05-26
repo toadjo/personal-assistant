@@ -7,7 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN?: string;
 }
 
-import type { AssistantSettings, AutomationRule, Note, Reminder, Task } from "../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, FinanceCategory } from "../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../shared/ai/types";
 
@@ -211,6 +211,46 @@ declare global {
         message: string;
         context?: { notesCount?: number; tasksCount?: number; remindersCount?: number; devicesCount?: number };
       }) => Promise<{ reply: string; actionDraft?: AiActionDraft }>;
+      // Finance operations
+      listBills: (filter?: "this_month" | "upcoming" | "overdue" | "unpaid" | "paid") => Promise<FinanceBill[]>;
+      createBill: (payload: {
+        name: string;
+        amount: number;
+        dueAt: string;
+        recurrence: "none" | "weekly" | "monthly" | "yearly";
+        category: FinanceCategory;
+        notes?: string;
+      }) => Promise<FinanceBill>;
+      updateBill: (payload: {
+        id: string;
+        name?: string;
+        amount?: number;
+        dueAt?: string;
+        recurrence?: "none" | "weekly" | "monthly" | "yearly";
+        category?: FinanceCategory;
+        status?: "unpaid" | "paid";
+        notes?: string;
+      }) => Promise<FinanceBill>;
+      deleteBill: (id: string) => Promise<void>;
+      markBillPaid: (id: string) => Promise<FinanceBill>;
+      listExpenses: (filter?: "this_month") => Promise<FinanceExpense[]>;
+      createExpense: (payload: {
+        description: string;
+        amount: number;
+        date: string;
+        category: FinanceCategory;
+        notes?: string;
+      }) => Promise<FinanceExpense>;
+      updateExpense: (payload: {
+        id: string;
+        description?: string;
+        amount?: number;
+        date?: string;
+        category?: FinanceCategory;
+        notes?: string;
+      }) => Promise<FinanceExpense>;
+      deleteExpense: (id: string) => Promise<void>;
+      getMonthlySummary: () => Promise<FinanceMonthlySummary>;
     };
   }
 }

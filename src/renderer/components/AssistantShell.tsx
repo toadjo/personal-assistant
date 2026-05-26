@@ -23,6 +23,7 @@ import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
 import { ProjectsPanel } from "./panels/ProjectsPanel";
 import { AiSettingsPanel } from "./panels/AiSettingsPanel";
+import { FinancePanel } from "./panels/FinancePanel";
 import { TodayStrip } from "./layout/TodayStrip";
 import { CommandPalette } from "./panels/CommandPalette";
 import { ThemeSelect } from "./layout/ThemeSelect";
@@ -60,7 +61,7 @@ import type { BriefItem } from "../types";
 import type { UnifiedWorkItem } from "../lib/derived/unified-work";
 import type { AiConfigStatus, AiProvider } from "../../shared/ai/types";
 
-type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations";
+type PersonalModule = "home" | "today" | "inbox" | "memos" | "reminders" | "tasks" | "automations" | "lifeAreas" | "finance";
 
 export function AssistantShell(): JSX.Element {
   // Measure app startup performance
@@ -608,6 +609,20 @@ export function AssistantShell(): JSX.Element {
             >
               Automations
             </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "lifeAreas" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("lifeAreas")}
+            >
+              Life Areas
+            </button>
+            <button
+              type="button"
+              className={`moduleTab ${activePersonalModule === "finance" ? "moduleTabActive" : ""}`}
+              onClick={() => setActivePersonalModule("finance")}
+            >
+              Finance
+            </button>
           </div>
 
           {showPalette && (
@@ -1035,6 +1050,30 @@ export function AssistantShell(): JSX.Element {
                   onUpdatePriority={tasks.updatePriority}
                   onUndo={tasks.undo}
                   canUndo={tasks.canUndo}
+                />
+              </div>
+            </div>
+          )}
+
+          {activePersonalModule === "lifeAreas" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <div className="emptyState">
+                  <h2>Life Areas</h2>
+                  <p>Track your personal development across different life areas.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activePersonalModule === "finance" && (
+            <div className="contentGrid">
+              <div className="contentMain">
+                <FinancePanel
+                  isRefreshing={false}
+                  onRefresh={async () => {}}
+                  onError={ui.reportError}
+                  onShowSuccess={ui.showSuccess}
                 />
               </div>
             </div>

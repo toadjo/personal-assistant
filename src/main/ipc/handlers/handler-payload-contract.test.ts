@@ -60,7 +60,9 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   // AI configuration zero-arg channels
   IpcInvoke.aiGetConfig,
   IpcInvoke.aiClearKey,
-  IpcInvoke.aiTestKey
+  IpcInvoke.aiTestKey,
+  // Finance zero-arg channels
+  IpcInvoke.financeSummaryGet
 ];
 
 describe("IPC handler payload contracts", () => {
@@ -105,7 +107,18 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.teamTasksCreate ||
         ch === IpcInvoke.teamTasksUpdate ||
         ch === IpcInvoke.aiSetKey ||
-        ch === IpcInvoke.aiChat;
+        ch === IpcInvoke.aiChat ||
+        // Finance schema-backed channels
+        ch === IpcInvoke.financeBillsList ||
+        ch === IpcInvoke.financeBillsCreate ||
+        ch === IpcInvoke.financeBillsUpdate ||
+        ch === IpcInvoke.financeBillsDelete ||
+        ch === IpcInvoke.financeBillsMarkPaid ||
+        ch === IpcInvoke.financeExpensesList ||
+        ch === IpcInvoke.financeExpensesCreate ||
+        ch === IpcInvoke.financeExpensesUpdate ||
+        ch === IpcInvoke.financeExpensesDelete ||
+        ch === IpcInvoke.financeSummaryGet;
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }
   });

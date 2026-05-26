@@ -91,3 +91,47 @@ export type AssistantSettings = {
   userPreferredName: string;
   userPreferredNameIsSet: boolean;
 };
+
+export type FinanceCategory =
+  | "housing"
+  | "utilities"
+  | "food"
+  | "transport"
+  | "health"
+  | "subscriptions"
+  | "debt"
+  | "income"
+  | "other";
+
+export type FinanceBill = {
+  id: string;
+  name: string;
+  amount: number; // stored as integer cents
+  dueAt: string;
+  recurrence: "none" | "weekly" | "monthly" | "yearly";
+  category: FinanceCategory;
+  status: "unpaid" | "paid";
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  lastPaidAt: string | null;
+};
+
+export type FinanceExpense = {
+  id: string;
+  description: string;
+  amount: number; // stored as integer cents
+  date: string;
+  category: FinanceCategory;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FinanceMonthlySummary = {
+  upcomingBills: number;
+  paidBills: number;
+  unpaidBills: number;
+  totalExpenses: number;
+  totalCommittedAmount: number;
+};

@@ -71,7 +71,17 @@ const invokeChannelMap = {
   aiSetKey: "ai:setKey",
   aiClearKey: "ai:clearKey",
   aiTestKey: "ai:testKey",
-  aiChat: "ai:chat"
+  aiChat: "ai:chat",
+  financeBillsList: "finance:bills:list",
+  financeBillsCreate: "finance:bills:create",
+  financeBillsUpdate: "finance:bills:update",
+  financeBillsDelete: "finance:bills:delete",
+  financeBillsMarkPaid: "finance:bills:markPaid",
+  financeExpensesList: "finance:expenses:list",
+  financeExpensesCreate: "finance:expenses:create",
+  financeExpensesUpdate: "finance:expenses:update",
+  financeExpensesDelete: "finance:expenses:delete",
+  financeSummaryGet: "finance:summary:get"
 } as const;
 
 const pushChannelMap = {

@@ -376,3 +376,82 @@ export const teamTaskUpdateSchema = z
       });
     }
   });
+
+export const financeCategorySchema = z.enum([
+  "housing",
+  "utilities",
+  "food",
+  "transport",
+  "health",
+  "subscriptions",
+  "debt",
+  "income",
+  "other"
+]);
+
+export const financeBillFilterSchema = z.enum(["this_month", "upcoming", "overdue", "unpaid", "paid"]).optional();
+
+export const financeExpenseFilterSchema = z.enum(["this_month"]).optional();
+
+export const financeBillCreateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  amount: z.number().int().positive(),
+  dueAt: z.string().datetime({ offset: true }),
+  recurrence: z.enum(["none", "weekly", "monthly", "yearly"]),
+  category: financeCategorySchema,
+  notes: z.string().max(2000)
+});
+
+export const financeBillUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    name: z.string().trim().min(1).max(200).optional(),
+    amount: z.number().int().positive().optional(),
+    dueAt: z.string().datetime({ offset: true }).optional(),
+    recurrence: z.enum(["none", "weekly", "monthly", "yearly"]).optional(),
+    category: financeCategorySchema.optional(),
+    status: z.enum(["unpaid", "paid"]).optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.amount !== undefined ||
+      v.dueAt !== undefined ||
+      v.recurrence !== undefined ||
+      v.category !== undefined ||
+      v.status !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one of name, amount, dueAt, recurrence, category, status, or notes must be provided."
+    }
+  );
+
+export const financeExpenseCreateSchema = z.object({
+  description: z.string().trim().min(1).max(200),
+  amount: z.number().int().positive(),
+  date: z.string().datetime({ offset: true }),
+  category: financeCategorySchema,
+  notes: z.string().max(2000)
+});
+
+export const financeExpenseUpdateSchema = z
+  .object({
+    id: uuidSchema,
+    description: z.string().trim().min(1).max(200).optional(),
+    amount: z.number().int().positive().optional(),
+    date: z.string().datetime({ offset: true }).optional(),
+    category: financeCategorySchema.optional(),
+    notes: z.string().max(2000).optional()
+  })
+  .refine(
+    (v) =>
+      v.description !== undefined ||
+      v.amount !== undefined ||
+      v.date !== undefined ||
+      v.category !== undefined ||
+      v.notes !== undefined,
+    {
+      message: "At least one of description, amount, date, category, or notes must be provided."
+    }
+  );

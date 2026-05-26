@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { useBackupActions } from "./useBackupActions";
 import type { BackupResult } from "./useBackupActions";
 
@@ -205,7 +205,9 @@ describe("useBackupActions", () => {
 
     const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
 
-    await result.current.healthCheck();
+    await act(async () => {
+      await result.current.healthCheck();
+    });
 
     expect(result.current.lastHealthCheck).toEqual(healthCheckResult);
     expect(result.current.isHealthChecking).toBe(false);
@@ -237,7 +239,9 @@ describe("useBackupActions", () => {
 
     const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
 
-    await result.current.optimize();
+    await act(async () => {
+      await result.current.optimize();
+    });
 
     expect(result.current.lastOptimize).toEqual(optimizeResult);
     expect(result.current.isOptimizing).toBe(false);

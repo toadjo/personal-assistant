@@ -4,6 +4,7 @@ import { up002ExecutionLogObservability } from "./002_execution_log_observabilit
 import { up003AutomationLastFiredAt } from "./003_automation_last_fired_at";
 import { up004RendererErrors } from "./004_renderer_errors";
 import { up005Tasks } from "./005_tasks";
+import { up006Finance } from "./006_finance";
 
 export type Migration = {
   version: number;
@@ -18,5 +19,6 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 2, name: "execution_log_observability", up: up002ExecutionLogObservability },
   { version: 3, name: "automation_last_fired_at", up: up003AutomationLastFiredAt },
   { version: 4, name: "renderer_errors", up: up004RendererErrors },
-  { version: 5, name: "tasks", up: up005Tasks }
+  { version: 5, name: "tasks", up: up005Tasks },
+  { version: 6, name: "finance", up: up006Finance }
 ] as const;
