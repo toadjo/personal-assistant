@@ -186,21 +186,23 @@ export const EndOfDayReviewPanel = memo(function EndOfDayReviewPanel({
 
   const hasActivity = review.totalCompleted > 0 || review.totalUnfinished > 0 || review.totalCaptured > 0;
 
-  if (!hasActivity) {
-    return renderEmptyState();
-  }
-
   return (
     <div className="end-of-day-review">
       <PanelHeader title="End-of-Day Review" />
-      <div className="review-summary">
-        <p className="review-summary-text">{review.summary}</p>
-      </div>
-      {renderSection("Completed Tasks", review.completedTasks, "No tasks completed today")}
-      {renderSection("Completed Reminders", review.completedReminders, "No reminders completed today")}
-      {renderSection("Unfinished Tasks", review.unfinishedTasks, "No unfinished tasks")}
-      {renderSection("Unfinished Reminders", review.unfinishedReminders, "No unfinished reminders")}
-      {renderSection("Notes Captured", review.capturedNotes, "No notes captured today")}
+      {hasActivity ? (
+        <>
+          <div className="review-summary">
+            <p className="review-summary-text">{review.summary}</p>
+          </div>
+          {renderSection("Completed Tasks", review.completedTasks, "No tasks completed today")}
+          {renderSection("Completed Reminders", review.completedReminders, "No reminders completed today")}
+          {renderSection("Unfinished Tasks", review.unfinishedTasks, "No unfinished tasks")}
+          {renderSection("Unfinished Reminders", review.unfinishedReminders, "No unfinished reminders")}
+          {renderSection("Notes Captured", review.capturedNotes, "No notes captured today")}
+        </>
+      ) : (
+        renderEmptyState()
+      )}
     </div>
   );
 });

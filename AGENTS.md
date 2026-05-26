@@ -96,6 +96,7 @@ Personal Assistant is a cross-platform desktop application built with Electron, 
 7. Test installed application manually
 8. Tag release in Git
 9. Upload assets to GitHub release
+10. Post-release QA: Verify GitHub release assets include all required files (.exe, .blockmap, latest.yml) and installed About version matches release
 
 ## Current Release (v2.9.0 - Reliability and Recovery)
 

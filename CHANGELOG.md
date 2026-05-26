@@ -4,6 +4,20 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-05-26
+
+### Changed
+
+- Polished End-of-Day Review panel to always show explicit "End-of-Day Review" heading, even in empty state
+- Improved Data Control panel to display health check and optimization results directly in the panel UI
+- Added accessible labels to icon-only toolbar buttons for Appearance, Data, and AI settings
+- Enhanced release hygiene with validation that Windows releases include all required assets (.exe, .blockmap, latest.yml)
+- Added post-release QA checklist entry for verifying GitHub release assets and installed About version
+
+### Fixed
+
+- Improved accessibility of toolbar controls by adding proper ARIA labels to icon-only buttons
+
 ## [3.0.1] - 2026-05-26
 
 ### Fixed

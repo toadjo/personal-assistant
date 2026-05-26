@@ -39,3 +39,21 @@ describe("AssistantShell - Preload Bridge Missing", () => {
     expect(screen.queryByText(/The desk hit a snag/i)).not.toBeInTheDocument();
   });
 });
+
+describe("AssistantShell - Accessibility", () => {
+  it("toolbar icon-only buttons have accessible labels", () => {
+    render(<AssistantShell />);
+
+    // Check for aria-label on appearance button
+    const appearanceButton = screen.getByLabelText("Customize appearance");
+    expect(appearanceButton).toBeInTheDocument();
+
+    // Check for aria-label on data button
+    const dataButton = screen.getByLabelText("Data backup and reset");
+    expect(dataButton).toBeInTheDocument();
+
+    // Check for aria-label on AI button
+    const aiButton = screen.getByLabelText("AI configuration");
+    expect(aiButton).toBeInTheDocument();
+  });
+});

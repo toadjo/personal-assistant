@@ -34,18 +34,31 @@ export function selectReleaseAssets({ windowsFiles, linuxFiles, macosFiles }) {
   const all = [...windows, ...linux, ...macos];
   const selected = all.filter(isAllowedReleaseAsset);
   const exe = selected.filter((f) => f.endsWith(".exe"));
+  const blockmap = selected.filter((f) => f.endsWith(".blockmap"));
+  const latestYml = selected.filter((f) => f.endsWith("latest.yml"));
   const appImage = selected.filter((f) => f.endsWith(".AppImage"));
   const dmg = selected.filter((f) => f.endsWith(".dmg"));
   const zip = macos.filter((f) => f.endsWith(".zip"));
   return {
     selected,
-    required: { exe, appImage, dmg, zip }
+    required: { exe, blockmap, latestYml, appImage, dmg, zip }
   };
 }
 
 export function validateReleaseAssets(selection) {
   if (selection.required.exe.length === 0) {
     throw new Error("Release validation failed: expected at least one Windows .exe installer artifact.");
+  }
+  if (selection.required.blockmap.length === 0) {
+    throw new Error("Windows release is missing required assets: Blockmap file (.blockmap). Expected files in Windows release directory");
+  }
+  if (selection.required.latestYml.length === 0) {
+    throw new Error("Windows release is missing required assets: Update manifest (latest.yml). Expected files in Windows release directory");
+  }
+  // Skip Linux and macOS validation for Windows-only releases
+  if (selection.required.appImage.length === 0 && selection.required.dmg.length === 0 && selection.required.zip.length === 0) {
+    // This is a Windows-only release, which is acceptable
+    return;
   }
   if (selection.required.appImage.length === 0) {
     throw new Error("Release validation failed: expected at least one Linux .AppImage artifact.");

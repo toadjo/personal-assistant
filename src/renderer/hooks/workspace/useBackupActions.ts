@@ -24,6 +24,26 @@ export type BackupPreviewResult = {
   exportedAt: string;
 };
 
+export type HealthCheckResult = {
+  overall_health: "healthy" | "degraded" | "critical";
+  integrity_check: { passed: boolean; error?: string };
+  schema_check: { passed: boolean; missing_tables: string[]; extra_tables: string[] };
+  data_check: { total_rows: number; orphaned_records: number; corrupted_records: number };
+  performance_check: {
+    page_count: number;
+    page_size: number;
+    database_size_bytes: number;
+    wal_enabled: boolean;
+    wal_checkpoint_pending: boolean;
+  };
+  recommendations: string[];
+};
+
+export type OptimizeResult = {
+  success: boolean;
+  message: string;
+};
+
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
 
@@ -34,6 +54,8 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isHealthChecking, setIsHealthChecking] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [lastHealthCheck, setLastHealthCheck] = useState<HealthCheckResult | null>(null);
+  const [lastOptimize, setLastOptimize] = useState<OptimizeResult | null>(null);
 
   async function exportData(): Promise<void> {
     setIsExporting(true);
@@ -145,6 +167,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     try {
       const api = requireAssistantApi();
       const result = await api.checkDbHealth();
+      setLastHealthCheck(result);
       setStatus(`Database health check complete. Overall: ${result.overall_health.toUpperCase()}, Integrity: ${result.integrity_check.passed ? "OK" : "FAILED"}, Schema: ${result.schema_check.passed ? "OK" : "FAILED"}, Data: ${result.data_check.corrupted_records === 0 ? "OK" : "ISSUES"}, Performance: ${result.performance_check.wal_checkpoint_pending ? "NEEDS CHECKPOINT" : "OK"}`);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -158,6 +181,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     try {
       const api = requireAssistantApi();
       const result = await api.optimizeDatabase();
+      setLastOptimize(result);
       setStatus(`Database optimization complete: ${result.message}`);
       await refreshAll();
     } catch (err) {
@@ -167,5 +191,5 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     }
   }
 
-  return { exportData, importData, previewImportData, resetData, healthCheck, optimize, isExporting, isImporting, isPreviewing, isResetting, isHealthChecking, isOptimizing };
+  return { exportData, importData, previewImportData, resetData, healthCheck, optimize, isExporting, isImporting, isPreviewing, isResetting, isHealthChecking, isOptimizing, lastHealthCheck, lastOptimize };
 }

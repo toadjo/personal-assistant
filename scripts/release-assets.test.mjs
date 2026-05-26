@@ -6,6 +6,7 @@ describe("release asset selection", () => {
     const selection = selectReleaseAssets({
       windowsFiles: [
         "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe",
+        "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe.blockmap",
         "installer-history/v1.4.0/latest.yml"
       ],
       linuxFiles: ["release/personal-assistant-1.4.0.AppImage", "release/personal-assistant-1.4.0.AppImage.zsync"],
@@ -20,6 +21,7 @@ describe("release asset selection", () => {
 
     expect(selection.selected).toEqual([
       "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe",
+      "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe.blockmap",
       "installer-history/v1.4.0/latest.yml",
       "release/personal-assistant-1.4.0.AppImage",
       "release/personal-assistant-1.4.0.AppImage.zsync",
@@ -38,39 +40,87 @@ describe("release asset selection", () => {
     expect(() => validateReleaseAssets(selection)).toThrow(/at least one Windows \.exe/);
   });
 
-  it("fails validation when .AppImage is missing", () => {
+  it("fails validation when .blockmap is missing", () => {
     const selection = selectReleaseAssets({
       windowsFiles: ["installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe"],
       linuxFiles: [],
       macosFiles: []
     });
-    expect(() => validateReleaseAssets(selection)).toThrow(/at least one Linux \.AppImage/);
+    expect(() => validateReleaseAssets(selection)).toThrow(/Blockmap file \(.blockmap\)/);
   });
 
-  it("fails validation when .dmg is missing", () => {
+  it("fails validation when latest.yml is missing", () => {
     const selection = selectReleaseAssets({
-      windowsFiles: ["installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe"],
-      linuxFiles: ["release/personal-assistant-1.4.0.AppImage"],
+      windowsFiles: [
+        "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe",
+        "installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe.blockmap"
+      ],
+      linuxFiles: [],
       macosFiles: []
     });
-    expect(() => validateReleaseAssets(selection)).toThrow(/at least one macOS \.dmg/);
+    expect(() => validateReleaseAssets(selection)).toThrow(/Update manifest \(latest\.yml\)/);
   });
 
-  it("fails validation when .zip is missing", () => {
+  it("validates Windows release has required assets (.exe, .blockmap, latest.yml)", () => {
     const selection = selectReleaseAssets({
-      windowsFiles: ["installer-history/v1.4.0/PersonalAssistant Setup 1.4.0.exe"],
-      linuxFiles: ["release/personal-assistant-1.4.0.AppImage"],
-      macosFiles: ["release/personal-assistant-1.4.0.dmg"]
+      windowsFiles: [
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe",
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe.blockmap",
+        "installer-history/v3.1.0/latest.yml"
+      ],
+      linuxFiles: [],
+      macosFiles: []
     });
-    expect(() => validateReleaseAssets(selection)).toThrow(/at least one macOS \.zip/);
+    expect(() => validateReleaseAssets(selection)).not.toThrow();
   });
 
-  it("ignores a windows zip and still fails validation when macos zip is missing", () => {
+  it("validates Windows release has required assets (.exe, .blockmap, latest.yml)", () => {
     const selection = selectReleaseAssets({
-      windowsFiles: ["release/personal-assistant-1.4.0.exe", "release/builder-effective-config-win.zip"],
-      linuxFiles: ["release/personal-assistant-1.4.0.AppImage"],
-      macosFiles: ["release/personal-assistant-1.4.0.dmg"]
+      windowsFiles: [
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe",
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe.blockmap",
+        "installer-history/v3.1.0/latest.yml"
+      ],
+      linuxFiles: [],
+      macosFiles: []
     });
-    expect(() => validateReleaseAssets(selection)).toThrow(/at least one macOS \.zip/);
+    expect(() => validateReleaseAssets(selection)).not.toThrow();
+  });
+
+  it("fails validation when Windows release is missing .blockmap", () => {
+    const selection = selectReleaseAssets({
+      windowsFiles: [
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe",
+        "installer-history/v3.1.0/latest.yml"
+      ],
+      linuxFiles: [],
+      macosFiles: []
+    });
+    expect(() => validateReleaseAssets(selection)).toThrow(/Blockmap file \(.blockmap\)/);
+  });
+
+  it("fails validation when Windows release is missing latest.yml", () => {
+    const selection = selectReleaseAssets({
+      windowsFiles: [
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe",
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe.blockmap"
+      ],
+      linuxFiles: [],
+      macosFiles: []
+    });
+    expect(() => validateReleaseAssets(selection)).toThrow(/Update manifest \(latest\.yml\)/);
+  });
+
+  it("allows Windows-only releases", () => {
+    const selection = selectReleaseAssets({
+      windowsFiles: [
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe",
+        "installer-history/v3.1.0/PersonalAssistant Setup 3.1.0.exe.blockmap",
+        "installer-history/v3.1.0/latest.yml"
+      ],
+      linuxFiles: [],
+      macosFiles: []
+    });
+    expect(() => validateReleaseAssets(selection)).not.toThrow();
   });
 });

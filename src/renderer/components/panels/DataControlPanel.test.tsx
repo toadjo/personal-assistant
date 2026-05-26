@@ -14,7 +14,9 @@ describe("DataControlPanel", () => {
     isImporting: false,
     isResetting: false,
     isHealthChecking: false,
-    isOptimizing: false
+    isOptimizing: false,
+    lastHealthCheck: null,
+    lastOptimize: null
   };
 
   it("renders export, import, health check, optimize, and reset buttons when health check and optimize are provided", () => {
@@ -181,5 +183,82 @@ describe("DataControlPanel", () => {
 
     fireEvent.change(fileInput);
     expect(onImport).not.toHaveBeenCalled();
+  });
+
+  it("displays health check result when available", () => {
+    const healthCheckResult = {
+      overall_health: "healthy" as const,
+      integrity_check: { passed: true },
+      schema_check: { passed: true, missing_tables: [], extra_tables: [] },
+      data_check: { total_rows: 100, orphaned_records: 0, corrupted_records: 0 },
+      performance_check: {
+        page_count: 10,
+        page_size: 4096,
+        database_size_bytes: 40960,
+        wal_enabled: true,
+        wal_checkpoint_pending: false
+      },
+      recommendations: []
+    };
+
+    render(<DataControlPanel {...defaultProps} lastHealthCheck={healthCheckResult} />);
+
+    expect(screen.getByText("HEALTHY")).toBeInTheDocument();
+    expect(screen.getByText(/Integrity: OK/)).toBeInTheDocument();
+    expect(screen.getByText(/Schema: OK/)).toBeInTheDocument();
+    expect(screen.getByText(/Data: OK/)).toBeInTheDocument();
+  });
+
+  it("displays degraded health check result", () => {
+    const healthCheckResult = {
+      overall_health: "degraded" as const,
+      integrity_check: { passed: true },
+      schema_check: { passed: false, missing_tables: [], extra_tables: [] },
+      data_check: { total_rows: 100, orphaned_records: 0, corrupted_records: 0 },
+      performance_check: {
+        page_count: 10,
+        page_size: 4096,
+        database_size_bytes: 40960,
+        wal_enabled: true,
+        wal_checkpoint_pending: false
+      },
+      recommendations: []
+    };
+
+    render(<DataControlPanel {...defaultProps} lastHealthCheck={healthCheckResult} />);
+
+    expect(screen.getByText("DEGRADED")).toBeInTheDocument();
+    expect(screen.getByText(/Schema: FAILED/)).toBeInTheDocument();
+  });
+
+  it("displays optimization result when available", () => {
+    const optimizeResult = {
+      success: true,
+      message: "Database optimized successfully"
+    };
+
+    render(<DataControlPanel {...defaultProps} lastOptimize={optimizeResult} />);
+
+    expect(screen.getByText("Database optimized successfully")).toBeInTheDocument();
+  });
+
+  it("displays failed optimization result", () => {
+    const optimizeResult = {
+      success: false,
+      message: "Optimization failed"
+    };
+
+    render(<DataControlPanel {...defaultProps} lastOptimize={optimizeResult} />);
+
+    expect(screen.getByText("Optimization failed")).toBeInTheDocument();
+  });
+
+  it("does not display health check or optimize results when not available", () => {
+    render(<DataControlPanel {...defaultProps} />);
+
+    expect(screen.queryByText("HEALTHY")).not.toBeInTheDocument();
+    expect(screen.queryByText("DEGRADED")).not.toBeInTheDocument();
+    expect(screen.queryByText("CRITICAL")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Database optimized/)).not.toBeInTheDocument();
   });
 });

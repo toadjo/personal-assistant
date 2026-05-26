@@ -40,6 +40,14 @@ describe("EndOfDayReviewPanel", () => {
     expect(screen.getByText(/You haven't completed any tasks/)).toBeInTheDocument();
   });
 
+  it("renders empty state with accessible End-of-Day Review heading", () => {
+    const review = makeEndOfDayReview();
+    render(<EndOfDayReviewPanel review={review} onShowSuccess={vi.fn()} onError={vi.fn()} />);
+
+    expect(screen.getByText("End-of-Day Review")).toBeInTheDocument();
+    expect(screen.getByText("No activity today")).toBeInTheDocument();
+  });
+
   it("renders completed tasks section", () => {
     const review = makeEndOfDayReview({
       completedTasks: [

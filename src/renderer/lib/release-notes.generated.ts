@@ -9,6 +9,11 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    "version": "3.1.0",
+    "date": "2026-05-26",
+    "markdown": "### Changed\n\n- Polished End-of-Day Review panel to always show explicit \"End-of-Day Review\" heading, even in empty state\n- Improved Data Control panel to display health check and optimization results directly in the panel UI\n- Added accessible labels to icon-only toolbar buttons for Appearance, Data, and AI settings\n- Enhanced release hygiene with validation that Windows releases include all required assets (.exe, .blockmap, latest.yml)\n- Added post-release QA checklist entry for verifying GitHub release assets and installed About version\n\n### Fixed\n\n- Improved accessibility of toolbar controls by adding proper ARIA labels to icon-only buttons"
+  },
+  {
     "version": "3.0.1",
     "date": "2026-05-26",
     "markdown": "### Fixed\n\n- Fixed `review day` command to switch to Today module before opening End-of-Day Review, ensuring the review panel is visible from any module\n- Added missing `latest.yml` update manifest to v3.0.0 GitHub release for proper update hygiene"

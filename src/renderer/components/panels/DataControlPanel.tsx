@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import { Database, Download, Upload, Trash2, Activity, Zap } from "lucide-react";
+import { Database, Download, Upload, Trash2, Activity, Zap, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
-import type { BackupResult } from "../../hooks/workspace/useBackupActions";
+import type { BackupResult, HealthCheckResult, OptimizeResult } from "../../hooks/workspace/useBackupActions";
 
 type Props = {
   onExport: () => Promise<void>;
@@ -14,6 +14,8 @@ type Props = {
   isResetting: boolean;
   isHealthChecking?: boolean;
   isOptimizing?: boolean;
+  lastHealthCheck?: HealthCheckResult | null;
+  lastOptimize?: OptimizeResult | null;
 };
 
 export function DataControlPanel({
@@ -26,7 +28,9 @@ export function DataControlPanel({
   isImporting,
   isResetting,
   isHealthChecking = false,
-  isOptimizing = false
+  isOptimizing = false,
+  lastHealthCheck,
+  lastOptimize
 }: Props): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,6 +44,55 @@ export function DataControlPanel({
   }
 
   const isBusy = isExporting || isImporting || isResetting || isHealthChecking || isOptimizing;
+
+  const renderHealthStatus = () => {
+    if (!lastHealthCheck) return null;
+
+    const StatusIcon = lastHealthCheck.overall_health === "healthy" ? CheckCircle : lastHealthCheck.overall_health === "degraded" ? AlertCircle : XCircle;
+    const statusColor = lastHealthCheck.overall_health === "healthy" ? "var(--successColor)" : lastHealthCheck.overall_health === "degraded" ? "var(--warningColor)" : "var(--errorColor)";
+
+    return (
+      <div style={{ 
+        padding: "var(--space-2)", 
+        backgroundColor: "var(--backgroundColor)", 
+        borderRadius: "4px", 
+        fontSize: "12px",
+        marginTop: "var(--space-2)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
+          <StatusIcon size={14} style={{ color: statusColor }} />
+          <strong style={{ color: statusColor }}>{lastHealthCheck.overall_health.toUpperCase()}</strong>
+        </div>
+        <div style={{ color: "var(--mutedColor)" }}>
+          Integrity: {lastHealthCheck.integrity_check.passed ? "OK" : "FAILED"} | 
+          Schema: {lastHealthCheck.schema_check.passed ? "OK" : "FAILED"} | 
+          Data: {lastHealthCheck.data_check.corrupted_records === 0 ? "OK" : "ISSUES"}
+        </div>
+      </div>
+    );
+  };
+
+  const renderOptimizeStatus = () => {
+    if (!lastOptimize) return null;
+
+    const StatusIcon = lastOptimize.success ? CheckCircle : XCircle;
+    const statusColor = lastOptimize.success ? "var(--successColor)" : "var(--errorColor)";
+
+    return (
+      <div style={{ 
+        padding: "var(--space-2)", 
+        backgroundColor: "var(--backgroundColor)", 
+        borderRadius: "4px", 
+        fontSize: "12px",
+        marginTop: "var(--space-2)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <StatusIcon size={14} style={{ color: statusColor }} />
+          <span style={{ color: statusColor }}>{lastOptimize.message}</span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <section className="panel addOnPanel">
@@ -79,6 +132,9 @@ export function DataControlPanel({
           </button>
         )}
       </div>
+
+      {renderHealthStatus()}
+      {renderOptimizeStatus()}
 
       <div style={{ padding: "var(--space-2) 0", borderTop: "1px solid var(--borderColor)" }}>
         <button

@@ -132,6 +132,31 @@ function Assert-CleanGitTree {
     }
 }
 
+function Assert-WindowsReleaseAssets([string]$ReleaseOutputPath) {
+    $requiredFiles = @(
+        @("*.exe", "Windows installer (.exe)"),
+        @("*.blockmap", "Blockmap file (.blockmap)"),
+        @("latest.yml", "Update manifest (latest.yml)")
+    )
+
+    $missingFiles = @()
+
+    foreach ($requiredFile in $requiredFiles) {
+        $pattern = $requiredFile[0]
+        $description = $requiredFile[1]
+
+        $found = @(Get-ChildItem -Path $ReleaseOutputPath -Filter $pattern -File -ErrorAction SilentlyContinue)
+        if ($found.Count -eq 0) {
+            $missingFiles += $description
+        }
+    }
+
+    if ($missingFiles.Count -gt 0) {
+        $missingList = $missingFiles -join ", "
+        throw "Windows release is missing required assets: $missingList. Expected files in $ReleaseOutputPath"
+    }
+}
+
 function Remove-IfExists([string]$Path) {
     if (Test-Path -LiteralPath $Path) {
         Invoke-WithRetry -Description "removing $Path" -Action {
@@ -300,6 +325,8 @@ try {
     if (-not ($copiedArtifacts | Where-Object { $_ -match '\.exe$' })) {
         throw "Packaging produced no .exe installer in $versionedOutput"
     }
+    Write-Step "Validating Windows release assets"
+    Assert-WindowsReleaseAssets -ReleaseOutputPath $versionedOutput
 
     try {
         Remove-IfExists $stagingOutput

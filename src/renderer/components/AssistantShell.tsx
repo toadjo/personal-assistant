@@ -520,6 +520,7 @@ export function AssistantShell(): JSX.Element {
             type="button"
             className="ghostButton ghostButtonCompact"
             title="Customize appearance"
+            aria-label="Customize appearance"
             onClick={() => setShowAppearance((s) => !s)}
           >
             <Palette size={14} />
@@ -528,6 +529,7 @@ export function AssistantShell(): JSX.Element {
             type="button"
             className="ghostButton ghostButtonCompact"
             title="Data backup and reset"
+            aria-label="Data backup and reset"
             onClick={() => setShowData((s) => !s)}
           >
             <Database size={14} />
@@ -536,6 +538,7 @@ export function AssistantShell(): JSX.Element {
             type="button"
             className="ghostButton ghostButtonCompact"
             title="AI configuration"
+            aria-label="AI configuration"
             onClick={() => setShowAi((s) => !s)}
           >
             <Sparkles size={14} />
@@ -666,6 +669,8 @@ export function AssistantShell(): JSX.Element {
               isResetting={backupActions.isResetting}
               isHealthChecking={backupActions.isHealthChecking}
               isOptimizing={backupActions.isOptimizing}
+              lastHealthCheck={backupActions.lastHealthCheck}
+              lastOptimize={backupActions.lastOptimize}
             />
           )}
           {showAi && (

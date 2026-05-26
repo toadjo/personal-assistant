@@ -183,5 +183,78 @@ describe("useBackupActions", () => {
     expect(mockSetError).toHaveBeenCalled();
     expect(result.current.isResetting).toBe(false);
   });
+
+  it("health check sets lastHealthCheck state on success", async () => {
+    const healthCheckResult = {
+      overall_health: "healthy" as const,
+      integrity_check: { passed: true },
+      schema_check: { passed: true, missing_tables: [], extra_tables: [] },
+      data_check: { total_rows: 100, orphaned_records: 0, corrupted_records: 0 },
+      performance_check: {
+        page_count: 10,
+        page_size: 4096,
+        database_size_bytes: 40960,
+        wal_enabled: true,
+        wal_checkpoint_pending: false
+      },
+      recommendations: []
+    };
+    (window as any).assistantApi = {
+      checkDbHealth: vi.fn().mockResolvedValue(healthCheckResult)
+    };
+
+    const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
+
+    await result.current.healthCheck();
+
+    expect(result.current.lastHealthCheck).toEqual(healthCheckResult);
+    expect(result.current.isHealthChecking).toBe(false);
+  });
+
+  it("health check error does not set lastHealthCheck state", async () => {
+    (window as any).assistantApi = {
+      checkDbHealth: vi.fn().mockRejectedValue(new Error("Health check failed"))
+    };
+
+    const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
+
+    await result.current.healthCheck();
+
+    expect(result.current.lastHealthCheck).toBeNull();
+    expect(mockSetError).toHaveBeenCalled();
+    expect(result.current.isHealthChecking).toBe(false);
+  });
+
+  it("optimize sets lastOptimize state on success", async () => {
+    const optimizeResult = {
+      success: true,
+      message: "Database optimized successfully"
+    };
+    (window as any).assistantApi = {
+      optimizeDatabase: vi.fn().mockResolvedValue(optimizeResult)
+    };
+    mockRefreshAll.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
+
+    await result.current.optimize();
+
+    expect(result.current.lastOptimize).toEqual(optimizeResult);
+    expect(result.current.isOptimizing).toBe(false);
+  });
+
+  it("optimize error does not set lastOptimize state", async () => {
+    (window as any).assistantApi = {
+      optimizeDatabase: vi.fn().mockRejectedValue(new Error("Optimization failed"))
+    };
+
+    const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
+
+    await result.current.optimize();
+
+    expect(result.current.lastOptimize).toBeNull();
+    expect(mockSetError).toHaveBeenCalled();
+    expect(result.current.isOptimizing).toBe(false);
+  });
   /* eslint-enable @typescript-eslint/no-explicit-any */
 });
