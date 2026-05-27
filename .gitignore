@@ -2,6 +2,7 @@ node_modules/
 .vite/
 dist/
 release/
+releases/
 installer-history/
 release-current-*/
 release-clean-*/

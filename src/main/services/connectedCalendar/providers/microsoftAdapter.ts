@@ -1,5 +1,6 @@
 import type { ConnectedCalendarTokenSet } from "../../connectedCalendarSecrets";
-import { getMicrosoftOAuthClientId, MICROSOFT_CALENDAR_SCOPE } from "./config";
+import { assertMicrosoftCalendarClientIdConfigured, getMicrosoftCalendarClientId } from "../oauthClientConfig";
+import { MICROSOFT_CALENDAR_SCOPE } from "./config";
 import { generateOAuthState, generatePkcePair } from "./pkce";
 import { providerFetch } from "./providerHttp";
 import type { ConnectedCalendarProviderAdapter, NormalizedExternalEvent, ProviderFetch, SyncResult } from "./types";
@@ -84,10 +85,8 @@ export function createMicrosoftCalendarAdapter(fetchImpl: ProviderFetch = fetch)
   return {
     provider: "microsoft",
     async createAuthRequest(redirectUri: string) {
-      const clientId = getMicrosoftOAuthClientId();
-      if (!clientId) {
-        throw new Error("Microsoft Calendar client id is not configured.");
-      }
+      assertMicrosoftCalendarClientIdConfigured();
+      const clientId = getMicrosoftCalendarClientId();
       const { codeVerifier, codeChallenge } = generatePkcePair();
       const state = generateOAuthState();
       const params = new URLSearchParams({
@@ -153,10 +152,8 @@ async function exchangeMicrosoftTokens(
     | { grantType: "refresh_token"; refreshToken: string },
   fetchImpl: ProviderFetch
 ): Promise<ConnectedCalendarTokenSet> {
-  const clientId = getMicrosoftOAuthClientId();
-  if (!clientId) {
-    throw new Error("Microsoft Calendar client id is not configured.");
-  }
+  assertMicrosoftCalendarClientIdConfigured();
+  const clientId = getMicrosoftCalendarClientId();
   const body = new URLSearchParams({ client_id: clientId });
   if ("code" in input) {
     body.set("grant_type", "authorization_code");

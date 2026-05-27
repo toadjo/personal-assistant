@@ -6,6 +6,7 @@
  */
 
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
+import type { ConnectedCalendarOAuthSetupStatus } from "../../shared/connectedCalendarOAuth";
 import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary, Hobby, HobbySession, HobbyProject, HobbyMilestone, HobbySupply, HobbySummary, ConnectedCalendarAccount, ExternalCalendarEvent } from "../../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../../shared/ai/types";
@@ -61,6 +62,7 @@ export type AssistantApi = {
   setUserPreferredName: (name: string) => Promise<AssistantSettings>;
   listConnectedCalendarAccounts: () => Promise<ConnectedCalendarAccount[]>;
   getConnectedCalendarAccountsSummary: () => Promise<{ total: number; synced: number; error: number }>;
+  getConnectedCalendarOAuthSetup: () => Promise<ConnectedCalendarOAuthSetupStatus>;
   disconnectConnectedCalendarAccount: (accountId: string) => Promise<void>;
   listExternalCalendarEvents: (payload: {
     startAt: string;

@@ -62,6 +62,7 @@ declare global {
       setUserPreferredName: (name: string) => Promise<AssistantSettings>;
       listConnectedCalendarAccounts: () => Promise<ConnectedCalendarAccount[]>;
       getConnectedCalendarAccountsSummary: () => Promise<{ total: number; synced: number; error: number }>;
+      getConnectedCalendarOAuthSetup: () => Promise<import("../shared/connectedCalendarOAuth").ConnectedCalendarOAuthSetupStatus>;
       disconnectConnectedCalendarAccount: (accountId: string) => Promise<void>;
       listExternalCalendarEvents: (payload: {
         startAt: string;

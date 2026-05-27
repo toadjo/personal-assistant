@@ -1,0 +1,4 @@
+{
+  "googleClientId": "your-google-desktop-oauth-client-id.apps.googleusercontent.com",
+  "microsoftClientId": "your-microsoft-entra-application-client-id"
+}

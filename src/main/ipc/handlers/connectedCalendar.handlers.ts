@@ -6,6 +6,7 @@ import {
   listConnectedCalendarAccounts,
   listExternalCalendarEvents
 } from "../../services/connectedCalendar";
+import { getConnectedCalendarOAuthSetupStatus } from "../../services/connectedCalendar/oauthClientConfig";
 import {
   completeConnectedCalendarOAuth,
   startConnectedCalendarOAuth
@@ -27,6 +28,9 @@ export function registerConnectedCalendarHandlers(assertSender: AssertSender): v
   });
   registerInvoke(IpcInvoke.connectedCalendarAccountsSummary, assertSender, () => {
     return getConnectedCalendarAccountsSummary();
+  });
+  registerInvoke(IpcInvoke.connectedCalendarOAuthSetup, assertSender, () => {
+    return getConnectedCalendarOAuthSetupStatus();
   });
   registerInvoke(IpcInvoke.connectedCalendarAccountDisconnect, assertSender, (_event, accountId) => {
     disconnectConnectedCalendarAccount(uuidSchema.parse(accountId));

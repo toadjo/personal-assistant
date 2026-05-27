@@ -36,6 +36,7 @@ const invokeChannelMap = {
   connectedCalendarAccountsSummary: "connectedCalendar:accounts:summary",
   connectedCalendarAccountDisconnect: "connectedCalendar:accounts:disconnect",
   connectedCalendarEventsList: "connectedCalendar:events:list",
+  connectedCalendarOAuthSetup: "connectedCalendar:oauth:setup",
   connectedCalendarOAuthStart: "connectedCalendar:oauth:start",
   connectedCalendarOAuthComplete: "connectedCalendar:oauth:complete",
   connectedCalendarAccountSync: "connectedCalendar:accounts:sync",
@@ -231,6 +232,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
   setUserPreferredName: (name: string) => ipcRenderer.invoke(invoke.settingsSetUserPreferredName, name),
   listConnectedCalendarAccounts: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsList),
   getConnectedCalendarAccountsSummary: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsSummary),
+  getConnectedCalendarOAuthSetup: () => ipcRenderer.invoke(invoke.connectedCalendarOAuthSetup),
   disconnectConnectedCalendarAccount: (accountId: string) =>
     ipcRenderer.invoke(invoke.connectedCalendarAccountDisconnect, accountId),
   listExternalCalendarEvents: (payload: {

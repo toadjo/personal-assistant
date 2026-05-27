@@ -34,7 +34,7 @@ When GitHub Actions budget is unavailable, releases ship Windows-only via local 
    - `npm audit --audit-level=high` (must pass with zero high/critical findings)
    - `npm run build`
 
-2. Build Windows release assets:
+2. Build Windows release assets (set calendar OAuth client IDs on the build machine when shipping connected calendar; see `docs/CONNECTED_CALENDAR_OAUTH.md`):
    - `npm run release:build -- -Version X.Y.Z -SkipVersionBump -ReplaceExisting`
 
 3. Validate local outputs:

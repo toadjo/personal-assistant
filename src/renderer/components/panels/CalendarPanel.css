@@ -167,6 +167,16 @@
   font-size: 12px;
 }
 
+.connectedAccountsSetupWarning {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--warning-bg, #fff8e6);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .connectedAccountsOauthBox {
   padding: var(--space-2);
   margin-bottom: var(--space-2);

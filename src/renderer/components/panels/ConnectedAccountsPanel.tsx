@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Calendar, Link2, RefreshCw, Trash2, X } from "lucide-react";
+import type { ConnectedCalendarOAuthSetupStatus } from "../../../shared/connectedCalendarOAuth";
+import {
+  connectedCalendarOAuthProviderErrorMessage,
+  connectedCalendarOAuthSetupMessage,
+  isConnectedCalendarOAuthSetupError
+} from "../../../shared/connectedCalendarOAuth";
 import type { ConnectedCalendarAccount, ConnectedCalendarProvider } from "../../../shared/types";
 import { PanelHeader } from "../ui/PanelHeader";
 import { LoadingState } from "../life-areas/LoadingState";
@@ -37,29 +43,38 @@ function formatLastSync(lastSyncAt: string | null): string {
   return new Date(lastSyncAt).toLocaleString();
 }
 
-function isSetupError(message: string): boolean {
-  return /client id is not configured/i.test(message);
+function isProviderConfigured(
+  provider: ConnectedCalendarProvider,
+  oauthSetup: ConnectedCalendarOAuthSetupStatus | null
+): boolean {
+  if (!oauthSetup) return false;
+  return provider === "google" ? oauthSetup.googleConfigured : oauthSetup.microsoftConfigured;
 }
 
 export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccountsChanged }: Props): JSX.Element {
   const [accounts, setAccounts] = useState<ConnectedCalendarAccount[]>([]);
   const [summary, setSummary] = useState<{ total: number; synced: number; error: number } | null>(null);
+  const [oauthSetup, setOauthSetup] = useState<ConnectedCalendarOAuthSetupStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingProvider, setPendingProvider] = useState<ConnectedCalendarProvider | null>(null);
   const [oauthInstructions, setOauthInstructions] = useState(false);
   const [busyAccountId, setBusyAccountId] = useState<string | null>(null);
   const [isSyncingAll, setIsSyncingAll] = useState(false);
 
+  const oauthSetupMessage = oauthSetup ? connectedCalendarOAuthSetupMessage(oauthSetup) : "";
+
   const loadAccounts = useCallback(async () => {
     setIsLoading(true);
     try {
       const api = requireAssistantApi();
-      const [list, accountSummary] = await Promise.all([
+      const [list, accountSummary, setup] = await Promise.all([
         api.listConnectedCalendarAccounts(),
-        api.getConnectedCalendarAccountsSummary()
+        api.getConnectedCalendarAccountsSummary(),
+        api.getConnectedCalendarOAuthSetup()
       ]);
       setAccounts(list);
       setSummary(accountSummary);
+      setOauthSetup(setup);
     } catch (error) {
       onError(getAssistantInvokeErrorMessage(error));
     } finally {
@@ -72,6 +87,10 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
   }, [loadAccounts]);
 
   async function handleConnect(provider: ConnectedCalendarProvider): Promise<void> {
+    if (!isProviderConfigured(provider, oauthSetup)) {
+      onError(connectedCalendarOAuthProviderErrorMessage(oauthSetup));
+      return;
+    }
     setPendingProvider(provider);
     setOauthInstructions(true);
     try {
@@ -80,7 +99,9 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
       onSuccess("Browser opened. Sign in, then return here and click Complete sign-in.");
     } catch (error) {
       const message = getAssistantInvokeErrorMessage(error);
-      onError(isSetupError(message) ? "Calendar OAuth is not configured. Set GOOGLE_CALENDAR_CLIENT_ID or MICROSOFT_CALENDAR_CLIENT_ID for development." : message);
+      onError(
+        isConnectedCalendarOAuthSetupError(message) ? connectedCalendarOAuthProviderErrorMessage(oauthSetup) : message
+      );
       setOauthInstructions(false);
       setPendingProvider(null);
     }
@@ -98,7 +119,9 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
       await onAccountsChanged();
     } catch (error) {
       const message = getAssistantInvokeErrorMessage(error);
-      onError(isSetupError(message) ? "Calendar OAuth is not configured. Set GOOGLE_CALENDAR_CLIENT_ID or MICROSOFT_CALENDAR_CLIENT_ID for development." : message);
+      onError(
+        isConnectedCalendarOAuthSetupError(message) ? connectedCalendarOAuthProviderErrorMessage(oauthSetup) : message
+      );
     }
   }
 
@@ -166,6 +189,11 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
         Connect Google Calendar or Outlook / Microsoft 365 to show read-only events in your calendar, including Teams
         meetings from your Microsoft account.
       </p>
+      {oauthSetupMessage ? (
+        <p className="connectedAccountsSetupWarning" role="status">
+          {oauthSetupMessage}
+        </p>
+      ) : null}
       {summary ? (
         <p className="muted">
           {summary.total} connected · {summary.synced} synced · {summary.error} errors
@@ -196,15 +224,25 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
       ) : null}
 
       <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap", marginBottom: "var(--space-2)" }}>
-        <button type="button" className="ghostButton" onClick={() => void handleConnect("google")} disabled={Boolean(pendingProvider)}>
+        <button
+          type="button"
+          className="ghostButton"
+          onClick={() => void handleConnect("google")}
+          disabled={Boolean(pendingProvider) || !oauthSetup?.googleConfigured}
+          title={oauthSetup?.googleConfigured ? undefined : "Google Calendar OAuth is not configured for this build."}
+        >
           <Calendar size={14} /> Connect Google
         </button>
         <button
           type="button"
           className="ghostButton"
           onClick={() => void handleConnect("microsoft")}
-          disabled={Boolean(pendingProvider)}
-          title="Includes Outlook calendar and Teams meetings on your calendar."
+          disabled={Boolean(pendingProvider) || !oauthSetup?.microsoftConfigured}
+          title={
+            oauthSetup?.microsoftConfigured
+              ? "Includes Outlook calendar and Teams meetings on your calendar."
+              : "Microsoft calendar OAuth is not configured for this build."
+          }
         >
           <Calendar size={14} /> Connect Outlook / Microsoft 365
         </button>

@@ -6,6 +6,7 @@ import { ConnectedAccountsPanel } from "./ConnectedAccountsPanel";
 
 const listConnectedCalendarAccounts = vi.fn();
 const getConnectedCalendarAccountsSummary = vi.fn();
+const getConnectedCalendarOAuthSetup = vi.fn();
 const startConnectedCalendarOAuth = vi.fn();
 const completeConnectedCalendarOAuth = vi.fn();
 const syncConnectedCalendarAccount = vi.fn();
@@ -16,6 +17,7 @@ vi.mock("../../lib/assistantApi", () => ({
   requireAssistantApi: () => ({
     listConnectedCalendarAccounts,
     getConnectedCalendarAccountsSummary,
+    getConnectedCalendarOAuthSetup,
     startConnectedCalendarOAuth,
     completeConnectedCalendarOAuth,
     syncConnectedCalendarAccount,
@@ -34,6 +36,7 @@ describe("ConnectedAccountsPanel", () => {
     vi.clearAllMocks();
     listConnectedCalendarAccounts.mockResolvedValue([]);
     getConnectedCalendarAccountsSummary.mockResolvedValue({ total: 0, synced: 0, error: 0 });
+    getConnectedCalendarOAuthSetup.mockResolvedValue({ googleConfigured: true, microsoftConfigured: true });
     startConnectedCalendarOAuth.mockResolvedValue(undefined);
     completeConnectedCalendarOAuth.mockResolvedValue({
       id: "acc-1",
@@ -171,13 +174,25 @@ describe("ConnectedAccountsPanel", () => {
     expect(onAccountsChanged).toHaveBeenCalled();
   });
 
+  it("shows setup warning and disables connect when OAuth is not configured", async () => {
+    getConnectedCalendarOAuthSetup.mockResolvedValue({ googleConfigured: false, microsoftConfigured: false });
+    render(
+      <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(/Connected calendar sign-in is not available/i);
+    expect(screen.getByRole("button", { name: /Connect Google/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Connect Outlook \/ Microsoft 365/i })).toBeDisabled();
+  });
+
   it("reports API errors via onError", async () => {
-    startConnectedCalendarOAuth.mockRejectedValue(new Error("Google Calendar client id is not configured."));
+    startConnectedCalendarOAuth.mockRejectedValue(new Error("connected_calendar_oauth_not_configured:google"));
     const user = userEvent.setup();
     render(
       <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
     );
     await user.click(await screen.findByRole("button", { name: /Connect Google/i }));
-    expect(onError).toHaveBeenCalledWith(expect.stringContaining("GOOGLE_CALENDAR_CLIENT_ID"));
+    expect(onError).toHaveBeenCalledWith(
+      "Connected calendar sign-in is not configured for this provider in this build."
+    );
   });
 });

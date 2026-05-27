@@ -36,6 +36,7 @@ export const IpcInvoke = {
   connectedCalendarAccountsSummary: "connectedCalendar:accounts:summary",
   connectedCalendarAccountDisconnect: "connectedCalendar:accounts:disconnect",
   connectedCalendarEventsList: "connectedCalendar:events:list",
+  connectedCalendarOAuthSetup: "connectedCalendar:oauth:setup",
   connectedCalendarOAuthStart: "connectedCalendar:oauth:start",
   connectedCalendarOAuthComplete: "connectedCalendar:oauth:complete",
   connectedCalendarAccountSync: "connectedCalendar:accounts:sync",

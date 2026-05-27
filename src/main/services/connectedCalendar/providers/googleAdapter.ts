@@ -1,5 +1,6 @@
 import type { ConnectedCalendarTokenSet } from "../../connectedCalendarSecrets";
-import { getGoogleOAuthClientId, GOOGLE_CALENDAR_SCOPE } from "./config";
+import { assertGoogleCalendarClientIdConfigured, getGoogleCalendarClientId } from "../oauthClientConfig";
+import { GOOGLE_CALENDAR_SCOPE } from "./config";
 import { generateOAuthState, generatePkcePair } from "./pkce";
 import { providerFetch } from "./providerHttp";
 import type {
@@ -76,10 +77,8 @@ export function createGoogleCalendarAdapter(fetchImpl: ProviderFetch = fetch): C
   return {
     provider: "google",
     async createAuthRequest(redirectUri: string) {
-      const clientId = getGoogleOAuthClientId();
-      if (!clientId) {
-        throw new Error("Google Calendar client id is not configured.");
-      }
+      assertGoogleCalendarClientIdConfigured();
+      const clientId = getGoogleCalendarClientId();
       const { codeVerifier, codeChallenge } = generatePkcePair();
       const state = generateOAuthState();
       const params = new URLSearchParams({
@@ -141,10 +140,8 @@ async function exchangeGoogleTokens(
     | { grantType: "refresh_token"; refreshToken: string },
   fetchImpl: ProviderFetch
 ): Promise<ConnectedCalendarTokenSet> {
-  const clientId = getGoogleOAuthClientId();
-  if (!clientId) {
-    throw new Error("Google Calendar client id is not configured.");
-  }
+  assertGoogleCalendarClientIdConfigured();
+  const clientId = getGoogleCalendarClientId();
   const body = new URLSearchParams({ client_id: clientId });
   if ("code" in input) {
     body.set("grant_type", "authorization_code");
