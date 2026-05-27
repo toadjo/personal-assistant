@@ -57,7 +57,7 @@ function getSyncFailureMessage(account: ConnectedCalendarAccount, fallback: stri
 
 function connectedAccountsIntro(oauthSetup: ConnectedCalendarOAuthSetupStatus | null): string {
   if (oauthSetup?.googleConfigured && !oauthSetup.microsoftConfigured) {
-    return "Sign in with Google Calendar to show read-only Google events in your calendar. This feature is experimental, and Google accounts must be added as approved testers by the maintainer while the app is in testing mode.";
+    return "Sign in with Google Calendar to show read-only Google events in your calendar. Outlook / Microsoft 365 is not configured in this build.";
   }
   return "Sign in with Google Calendar or Outlook / Microsoft 365 to show read-only events in your calendar, including Teams meetings from your Microsoft account.";
 }

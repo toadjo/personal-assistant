@@ -27,11 +27,11 @@ Google is considered configured only when both `GOOGLE_CALENDAR_CLIENT_ID` and `
 
 ## Maintainer Local Development
 
-For maintainer-only local development, copy `.env.example` to `.env` in the project root, paste the app OAuth values, then start the app:
+For local development, copy `.env.example` to `.env` in the project root, paste your own app OAuth values, then start the app:
 
 ```powershell
 copy .env.example .env
-# Edit .env with your real app OAuth values
+# Edit .env with your own app OAuth values
 npm.cmd run dev
 ```
 

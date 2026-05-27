@@ -53,10 +53,10 @@ console.log("\nRecent commits (5):");
 const log = runGitCommand("git log --oneline -5");
 log.split("\n").forEach((line) => console.log("  ", line));
 
-console.log("\nHandoff file:");
-console.log("  ", join(repoRoot, "docs", "handoff", "HANDOFF.md"));
+console.log("\nMaintainer guide:");
+console.log("  ", join(repoRoot, "docs", "MAINTAINER_GUIDE.md"));
 
-console.log("\nActivity log:");
-console.log("  ", join(repoRoot, "docs", "handoff", "ACTIVITY.md"));
+console.log("\nRoadmap:");
+console.log("  ", join(repoRoot, "docs", "ROADMAP.md"));
 
 console.log("\n=== End Handoff Info ===");

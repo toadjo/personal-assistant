@@ -7,8 +7,8 @@ This document maps Personal Assistant's implemented controls to ISO/IEC 27001:20
 | Control                                                    | Status  | Notes                                                                |
 | ---------------------------------------------------------- | ------- | -------------------------------------------------------------------- |
 | A.5.1 Policies for information security                    | N/A     | Organizational - no formal policies in scope                         |
-| A.5.2 Roles, responsibilities and authorities              | N/A     | Organizational - single developer                                    |
-| A.5.3 Segregation of duties                                | N/A     | Organizational - single developer                                    |
+| A.5.2 Roles, responsibilities and authorities              | N/A     | Organizational - small-maintainer                                    |
+| A.5.3 Segregation of duties                                | N/A     | Organizational - small-maintainer                                    |
 | A.5.4 Management responsibilities                          | N/A     | Organizational - management review required                          |
 | A.5.5 Contact with authorities                             | N/A     | Organizational - not applicable                                      |
 | A.5.6 Contact with interest groups                         | N/A     | Organizational - not applicable                                      |

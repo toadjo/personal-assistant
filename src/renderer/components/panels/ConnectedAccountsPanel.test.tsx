@@ -77,13 +77,13 @@ describe("ConnectedAccountsPanel", () => {
     expect(screen.getByText(/Teams meetings from your Microsoft account/i)).toBeInTheDocument();
   });
 
-  it("renders experimental Google-only copy when Microsoft is unavailable", async () => {
+  it("renders Google-only copy when Microsoft is unavailable", async () => {
     getConnectedCalendarOAuthSetup.mockResolvedValue({ googleConfigured: true, microsoftConfigured: false });
     render(
       <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
     );
 
-    expect(await screen.findByText(/Google accounts must be added as approved testers/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Outlook \/ Microsoft 365 is not configured in this build/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Sign in with Google/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /Sign in with Outlook \/ Microsoft 365/i })).toBeDisabled();
   });

@@ -101,7 +101,7 @@ The application uses Electron's multi-process model:
 - Manual Windows-only release process
 - SHA256 checksums for installer verification
 - Git-based release evidence tracking
-- No automatic public mirroring (manual upload to separate repo)
+- GitHub release assets published through the release workflow or manual release process
 
 ### Organizational Controls (Not Implemented)
 

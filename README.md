@@ -2,16 +2,24 @@
 
 Local-first desktop personal operating layer built with Electron + React + TypeScript.
 
+Personal OS is an attempt to turn a desktop assistant into a calm daily operating layer for real life: capture tasks and notes quickly, plan the day, review unfinished work, keep local records for family, health, finance, car, hobbies, and calendar context, and stay useful even without cloud services.
+
+The long-term goal is a free community app that people can run, inspect, fork, and adapt for their own workflows. The project favors local-first data, transparent release notes, readable architecture, and practical safety controls over lock-in.
+
+## AI-Assisted Development
+
+This app has been coded with heavy assistance from GPT 5.5, GPT 5.4, Opus 4.7, and SWE 1.6. Human review, tests, and release checks still matter: AI help is part of the build process, not a replacement for verification.
+
 ## Install the app (Windows, no Git/Node)
 
 1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
    - Windows: `Setup` `.exe`
-   - **Current releases are Windows-only** due to GitHub Actions budget constraints. macOS/Linux assets are omitted until budget is restored.
+   - **Current releases are Windows-first**. macOS and Linux packaging paths exist but are not published for every release yet.
 2. Run the installer and start **Personal OS** from the Start menu or desktop shortcut.
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
 
-Releases are built locally and uploaded manually while GitHub Actions budget is unavailable. See [docs/RELEASING.md](./docs/RELEASING.md) for the full release process.
+See [docs/RELEASING.md](./docs/RELEASING.md) for the full release process.
 
 ## Working on the app
 
@@ -112,9 +120,9 @@ Pull requests and pushes to `main`/`master` run the full verification sequence i
 - `package-windows` builds NSIS artifacts and uploads versioned installer history artifacts.
 - `package-linux` builds Linux AppImage artifacts and uploads `release/` outputs.
 - `package-macos` builds macOS DMG/zip artifacts and uploads `release/` outputs.
-- `publish-releases` downloads all platform artifact sets, validates required `.exe`, `.AppImage`, and `.dmg` assets, publishes the private release, then mirrors release assets only to **[toadjo/Personal-Assistant-R Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** when public mirroring is configured.
+- `publish-releases` downloads all platform artifact sets, validates required `.exe`, `.AppImage`, `.dmg`, and `.zip` assets, then publishes the GitHub release.
 
-Public mirroring requires `PUBLIC_RELEASE_TOKEN`. If the secret is missing, public mirroring is skipped and the private release still publishes. Source code is not pushed or synced to the public repo; only release assets (`.exe`, `.blockmap`, `.yml`, `.AppImage`, `.dmg`, `.zip`, optional `.AppImage.zsync`) are uploaded. Workflow artifacts use short retention so temporary package handoff files do not fill GitHub Actions storage.
+Workflow artifacts use short retention so temporary package handoff files do not fill GitHub Actions storage.
 
 **Dependabot** is enabled for npm (`.github/dependabot.yml`).
 
@@ -294,7 +302,7 @@ This release focuses on security hardening and closing the npm audit risk for hi
 
 **Platform Notes:**
 
-- This is a Windows-only release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+- This is a Windows-first release. macOS/Linux assets may be omitted when they have not completed packaging validation.
 - Users on systems without OS encryption support (Windows without DPAPI, macOS without Keychain, Linux without libsecret) cannot use AI, Home Assistant, or team features.
 
 **Verification:**

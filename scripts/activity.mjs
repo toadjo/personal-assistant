@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -72,29 +71,12 @@ function printActivity() {
     formatted.split("\n").forEach((line) => console.log("  ", line));
   }
 
-  console.log("\nLatest activity entries:");
-  try {
-    const activityPath = join(repoRoot, "docs", "handoff", "ACTIVITY.md");
-    const content = readFileSync(activityPath, "utf-8");
-    const entries = selectLatestActivityEntries(content, 3);
-    if (entries.length === 0) {
-      console.log("  (no entries found)");
-    } else {
-      entries.forEach((entry) => {
-        entry.split("\n").forEach((line) => console.log("  ", line));
-        console.log();
-      });
-    }
-  } catch (error) {
-    console.log("  <error:", error.message, ">");
-  }
-
   console.log("Recent commits (5):");
   const log = runGitCommand("git log --oneline -5");
   log.split("\n").forEach((line) => console.log("  ", line));
 
-  console.log("\nActivity log:");
-  console.log("  ", join(repoRoot, "docs", "handoff", "ACTIVITY.md"));
+  console.log("\nMaintainer guide:");
+  console.log("  ", join(repoRoot, "docs", "MAINTAINER_GUIDE.md"));
 
   console.log("\n=== End Activity ===");
 }

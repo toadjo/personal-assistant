@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Google calendar source filtering in the Calendar panel.
 - Connected Accounts panel for signing in with Google and syncing connected calendar data.
 - Local OAuth loopback flow with secure token storage.
-- Calendar OAuth configuration support for maintainer-built installers.
+- Calendar OAuth configuration support for release builds.
 - Detailed Google OAuth and sync error messages for easier setup and QA.
 
 ### Changed
@@ -25,8 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Experimental Access Note
 
 - Google Calendar is the only connected calendar provider enabled for this release.
-- This feature is still experimental and the Google OAuth app is in testing mode.
-- To use Google Calendar sync, users must email the maintainer so their Google account can be added as an approved tester on the Google side.
+- This feature is still experimental and requires a build configured with calendar OAuth credentials.
+- Public builds that are not configured for calendar OAuth disable the affected sign-in buttons.
 - Outlook and Microsoft Teams calendar display remain planned, but are not enabled for this release.
 
 ## [3.6.0] - 2026-05-26
@@ -429,7 +429,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [2.2.0] - 2026-05-25
 
-Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Windows-only manual release. macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Fixed
 
@@ -442,7 +442,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ## [2.1.9] - 2026-05-22
 
-Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Windows-only manual release. macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Added
 
@@ -473,7 +473,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ## [2.1.8] - 2026-05-21
 
-Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Windows-only manual release. macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Fixed
 
@@ -485,7 +485,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ## [2.1.7] - 2026-05-21
 
-Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Windows-only manual release. macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Added
 
@@ -523,7 +523,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ## [2.1.6] - 2026-05-20
 
-Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Windows-only manual release. macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Fixed
 
@@ -540,7 +540,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ## [2.1.5] - 2026-05-20
 
-Windows-only manual release. macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Windows-only manual release. macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Changed
 
@@ -561,7 +561,7 @@ Windows-only manual release. macOS/Linux assets are omitted due to GitHub Action
 
 ## [2.1.4] - 2026-05-19
 
-Security hardening and Electron upgrade. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Security hardening and Electron upgrade. This is a Windows-only manual release; macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Added
 
@@ -587,7 +587,7 @@ Security hardening and Electron upgrade. This is a Windows-only manual release; 
 
 ## [2.1.3] - 2026-05-18
 
-Team Projects setup hotfix. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Team Projects setup hotfix. This is a Windows-only manual release; macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Changed
 
@@ -597,7 +597,7 @@ Team Projects setup hotfix. This is a Windows-only manual release; macOS/Linux a
 
 ## [2.1.2] - 2026-05-18
 
-Personal OS app workflow hardening. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Personal OS app workflow hardening. This is a Windows-only manual release; macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Added
 
@@ -622,7 +622,7 @@ Personal OS app workflow hardening. This is a Windows-only manual release; macOS
 
 ## [2.1.1] - 2026-05-15
 
-Personal OS v3 integration hardening and manual release reliability. This is a Windows-only manual release; macOS/Linux assets are omitted due to GitHub Actions budget constraints.
+Personal OS v3 integration hardening and manual release reliability. This is a Windows-only manual release; macOS/Linux assets are omitted when packaging validation is not complete.
 
 ### Added
 
@@ -704,7 +704,7 @@ First "stable" milestone after the rapid 1.4.x → 1.7.x iteration phase. No bre
 
 - Release pipeline publishes directly without using GitHub Actions artifacts (saves storage quota).
 - UI text normalization (mojibake removal, copy consistency).
-- Updated release docs covering macOS and `PUBLIC_RELEASE_TOKEN` behavior.
+- Updated release docs covering macOS release behavior.
 
 ### Fixed
 

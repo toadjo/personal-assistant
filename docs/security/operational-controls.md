@@ -148,7 +148,7 @@ This document outlines operational security controls for Personal Assistant. The
 - [ ] Update documentation
 - [ ] Review and improve processes
 
-**Note:** No formal incident response team or SLA exists (single developer).
+**Note:** Formal incident response roles and SLAs are outside the current application scope.
 
 ## Access Review
 
@@ -242,27 +242,27 @@ This document outlines operational security controls for Personal Assistant. The
 
 ## Operational Control Status
 
-| Control Area           | Status      | Notes                                                           |
-| ---------------------- | ----------- | --------------------------------------------------------------- |
-| Secure Release Process | Implemented | Manual Windows-only release with verification checklist         |
-| Dependency Review      | Partial     | npm audit gate, Dependabot enabled, no formal review schedule   |
-| Backup Handling        | Implemented | Secrets excluded from export/import                             |
-| Incident Response      | Partial     | No formal team, no SLA, documented process for single developer |
-| Access Review          | Partial     | No app-level access, repository access limited to owner         |
-| Vendor Review          | Partial     | No formal assessments, user choice for cloud providers          |
-| Evidence Retention     | Implemented | Git history, release artifacts, security documentation          |
+| Control Area           | Status      | Notes                                                         |
+| ---------------------- | ----------- | ------------------------------------------------------------- |
+| Secure Release Process | Implemented | Manual Windows-only release with verification checklist       |
+| Dependency Review      | Partial     | npm audit gate, Dependabot enabled, no formal review schedule |
+| Backup Handling        | Implemented | Secrets excluded from export/import                           |
+| Incident Response      | Partial     | Documented process, no formal SLA                             |
+| Access Review          | Partial     | No app-level access, repository access limited to owner       |
+| Vendor Review          | Partial     | No formal assessments, user choice for cloud providers        |
+| Evidence Retention     | Implemented | Git history, release artifacts, security documentation        |
 
 ## Gap Analysis
 
 **Missing Controls:**
 
 1. **Formal dependency review schedule:** No monthly/quarterly review process (ad-hoc only)
-2. **Incident response team:** No formal team or SLA (single developer)
+2. **Incident response roles:** No formal SLA
 3. **Formal vendor assessments:** No documented vendor risk assessments
 4. **Automated backup:** No automatic backup or retention (user-managed only)
 5. **Access logging:** No audit logging for access events
 6. **Security monitoring:** No continuous security monitoring beyond npm audit
-7. **Formal training:** No security awareness training (single developer)
+7. **Formal training:** No security awareness training program
 
 **Justification for Gaps:**
 
@@ -270,7 +270,7 @@ This document outlines operational security controls for Personal Assistant. The
 - Local-first design minimizes cloud provider dependencies
 - No organizational ISMS scope (personal project, not organizational)
 - User responsibility for device security and backup management
-- Resource constraints (single developer, no budget for formal assessments)
+- Formal third-party assessments are outside the current application scope
 
 **Recommendations for Improvement:**
 

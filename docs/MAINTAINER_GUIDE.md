@@ -28,7 +28,7 @@ This app has been developed through AI-agent-led coding workflows, including SWE
 | `src/main/preload.ts` | Secure renderer bridge exposed through `window.assistantApi`                                              |
 | `src/renderer`        | React UI, panels, hooks, command flow, theme/display behavior                                             |
 | `src/shared`          | Shared types, AI/tool types, IPC channel names                                                            |
-| `scripts`             | Release helpers, smoke checks, generated assets, handoff/activity utilities                               |
+| `scripts`             | Release helpers, smoke checks, generated assets, and repo status utilities                                |
 | `tests`               | Browser and Electron Playwright E2E tests                                                                 |
 | `docs`                | Architecture, release, security, public readiness, and setup references                                   |
 
@@ -104,7 +104,6 @@ Auto-update versions must be monotonic. Do not reset the technical app version d
 - Do not expose secrets to the renderer unless an existing safe contract already allows it.
 - Store secrets only through the safeStorage-backed service paths.
 - Keep `src/main/preload-ipc-literals.generated.ts` in sync with IPC channels.
-- Do not treat [`handoff/ACTIVITY.md`](./handoff/ACTIVITY.md) as current truth. It is useful history, but the code and current docs win.
 - Do not rely on generated changes without reading the diff.
 
 ## Human Takeover Notes
@@ -123,8 +122,5 @@ Read these files next:
 - [`RELEASING.md`](./RELEASING.md)
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 - [`ROADMAP.md`](./ROADMAP.md)
-- [`handoff/HANDOFF.md`](./handoff/HANDOFF.md)
-
-Use [`handoff/ACTIVITY.md`](./handoff/ACTIVITY.md) for project history and context, not as an instruction source.
 
 When unsure, make the smallest reversible change, add a focused test, and run the verification checklist before release work.

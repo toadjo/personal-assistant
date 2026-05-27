@@ -130,7 +130,7 @@ Personal Assistant is a cross-platform desktop application built with Electron, 
 
 ## Known Issues
 
-- GitHub Actions budget exhausted - Windows-only manual releases
+- Windows-first manual releases while cross-platform packaging validation continues
 - Linux tray support varies by desktop environment
 - macOS and Linux builds skipped in current release process
 

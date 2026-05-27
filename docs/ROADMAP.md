@@ -125,7 +125,7 @@ Goal: enforce the quality posture, do not let it regress.
 
 These three small items were executed in the same change as the introduction of this roadmap; recorded here so the rationale is preserved.
 
-1. Repo root collapsed to three conventional files. `WORKER_HANDOFF.md`, `WORKER_ACTIVITY.md`, `APP_AUDIT_2026-05-15.md`, `MAINTAINER_GUIDE.md`, `RELEASING.md` moved under `docs/`; `scripts/handoff.mjs` and `scripts/activity.mjs` updated to the new paths.
+1. Repo root collapsed to conventional public files. `APP_AUDIT_2026-05-15.md`, `MAINTAINER_GUIDE.md`, and `RELEASING.md` moved under `docs/`; internal handoff logs removed from the public source tree.
 2. [`AGENTS.md`](../AGENTS.md) "Current Release" block refreshed from v2.9.0 to v3.7.0 with up-to-date features and key files.
 3. Verified [`.gitignore`](../.gitignore) `releases/` rule is in effect — earlier "untracked releases tree" report was stale snapshot noise, not a real ignore failure.
 

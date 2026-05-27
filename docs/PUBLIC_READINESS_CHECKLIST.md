@@ -63,7 +63,7 @@ This checklist ensures the application is ready for public release, including se
 
 ## Known Limitations
 
-- Windows-only release (macOS/Linux omitted due to CI budget constraints)
+- Windows-first release cadence while macOS/Linux packaging validation continues
 - Unsigned Windows builds (by design for open-source transparency)
 - Corporate mode requires Windows ProgramData policy file
 - Team Projects requires external Supabase backend

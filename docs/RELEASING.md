@@ -17,9 +17,9 @@ Pre-release tags (`-alpha.N`, `-beta.N`, `-rc.N`) are allowed but the release-pa
 - Avoid bumping more than one MINOR per day. If you previously shipped two minors back-to-back, a follow-up should be a PATCH.
 - Avoid releasing without a CHANGELOG entry. Each shipped tag must have a corresponding section in `CHANGELOG.md`.
 
-## Release flow (Windows-only manual)
+## Release flow (Windows-first manual)
 
-When GitHub Actions budget is unavailable, releases ship Windows-only via local build and manual upload. macOS/Linux assets are omitted until budget is restored.
+Windows releases can be built locally and uploaded manually. macOS and Linux assets should be published only after their packaging validation has completed.
 
 **Security Gate:** `npm audit --audit-level=high` must pass with zero high/critical vulnerabilities before any release. This is a hard gate enforced in CI and must be verified locally.
 
@@ -50,7 +50,7 @@ When GitHub Actions budget is unavailable, releases ship Windows-only via local 
    - Push `main` and the tag.
    - Create or edit the GitHub Release manually.
    - Upload only the Windows installer/update assets (`.exe`, `.blockmap`, `latest.yml`).
-   - Release notes must state this is a Windows-only release and that macOS/Linux assets are omitted due to Actions budget constraints.
+   - Release notes must state which platforms are included in the release.
    - Include SHA256 checksum and verification commands in release notes.
 
 ## GitHub Actions release flow (future, when budget restored)
@@ -64,11 +64,10 @@ When GitHub Actions budget is restored, the automated multi-platform release flo
 5. Merge to `main`.
 6. Trigger the `Release package` workflow (`gh workflow run "Release package" --ref main -f version=X.Y.Z`).
 7. The workflow creates a draft release, builds Windows / macOS / Linux artifacts on platform runners, attaches them to the draft, validates assets, then publishes the release.
-8. Optional: public mirror push to `toadjo/Personal-Assistant-R` happens automatically when `PUBLIC_RELEASE_TOKEN` is set.
 
 ## Asset rules
 
-- Windows manual releases upload only the `.exe`, `.blockmap`, and `latest.yml` files to GitHub Release assets. macOS/Linux assets are omitted.
+- Windows manual releases upload only the `.exe`, `.blockmap`, and `latest.yml` files to GitHub Release assets.
 - When GitHub Actions budget is restored, the automated workflow uploads installers and update manifests directly to GitHub Release assets, **not** via `actions/upload-artifact`. This keeps the Actions storage quota free.
 - For Windows manual releases, only `latest.yml` and `.blockmap` are required for electron-updater clients on existing Windows installs.
 
