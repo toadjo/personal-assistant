@@ -14,24 +14,21 @@ The roadmap is a living document. Each phase is sized to roughly one minor relea
 | Testing                                      | A-    | 4 layers (unit, preload smoke, browser E2E, Electron E2E), handler payload contract tests, ~1000+ unit tests                                           |
 | Build & release                              | B+    | electron-builder, NSIS, manual Windows releases, SBOM + audit scripts                                                                                  |
 | CI / CD                                      | B-    | Strong CI gates but cross-platform builds disabled (Actions budget)                                                                                    |
-| UI / UX architecture                         | C+    | Monolithic `AssistantShell.tsx`, single global `styles.css`, large per-life-area panels                                                                |
+| UI / UX architecture                         | B-    | Shell split complete; CSS modularized into tokens + per-area files; life-area panels still large                                                       |
 | State management                             | C+    | Heavy local `useState`, only one Zustand store, no data-fetch caching layer                                                                            |
 | Documentation                                | B     | Strong maintainer docs; some stale content tracked in this roadmap                                                                                     |
-| Repo hygiene                                 | B+    | Root cleanup done at v3.7.0; remaining items tracked in Phase A                                                                                        |
+| Repo hygiene                                 | A-    | Root docs scoped; v2.1.x evidence archived under `docs/history/`                                                                                       |
 
 **Overall: B+ (8.0 / 10)** — strong engineering hygiene with growing structural debt as features were added at high cadence (v3.2 through v3.7 in one week).
 
 ## Top structural risks today
 
-1. `src/renderer/components/AssistantShell.tsx` — 1175 lines, 11 `useState`s, 14 panel imports. Every new feature lands here.
-2. `src/renderer/styles.css` — 2581 lines, global cascade across 28 panels. Change risk is high and code splitting impossible.
-3. `src/main/services/backup.ts` — 1822 lines. Knows about every life-area table; new domain forces an edit here.
-4. Life-area panel monoliths — `HealthPanel.tsx`, `CalendarPanel.tsx`, `HobbiesPanel.tsx`, `FamilyPanel.tsx`, `FinancePanel.tsx`, `CarPanel.tsx` are all 18–36 KB single files mixing data fetching, mutations, forms, and dialogs.
-5. No data-fetching abstraction — manual refresh + `isRefreshing` flags, no cache, no optimistic mutations.
-6. `src/renderer/vite-env.d.ts` — 797 lines of hand-maintained `window.assistantApi` typing duplicating `IpcInvoke` shape.
-7. Renderer error handling — one top-level boundary, no per-panel boundaries, no in-app surface for `renderer:logError`.
-8. No accessibility / i18n layer — no axe checks, no string catalog, no focus-stack management for modals.
-9. Cross-platform release pipeline frozen — public posture is "Windows only" indefinitely.
+1. Life-area panel monoliths — `HealthPanel.tsx`, `CalendarPanel.tsx`, `HobbiesPanel.tsx`, `FamilyPanel.tsx`, `FinancePanel.tsx`, `CarPanel.tsx` are all 18–36 KB single files mixing data fetching, mutations, forms, and dialogs.
+2. No data-fetching abstraction — manual refresh + `isRefreshing` flags, no cache, no optimistic mutations.
+3. `src/renderer/vite-env.d.ts` — hand-maintained `window.assistantApi` typings; method-name drift guard only (full generation deferred to Phase E).
+4. Renderer error handling — one top-level boundary, no per-panel boundaries, no in-app surface for `renderer:logError`.
+5. No accessibility / i18n layer — no axe checks, no string catalog, no focus-stack management for modals.
+6. Cross-platform release pipeline frozen — public posture is "Windows only" indefinitely.
 
 ## Phase A — Stabilize and de-couple (v3.8)
 
@@ -45,10 +42,12 @@ Goal: pay down structural debt before adding more capability.
 
 ### Acceptance signal for Phase A
 
-- `AssistantShell.tsx` under 500 lines.
-- `styles.css` under 800 lines.
-- `backup.ts` no longer imports any life-area service directly.
-- `vite-env.d.ts` is generated, not hand-edited.
+- [x] `AssistantShell.tsx` under 500 lines (~247 lines after A1).
+- [x] `styles.css` under 800 lines (import hub only; tokens in `styles/tokens.css`, rules in per-component CSS).
+- [x] `backup.ts` replaced by `src/main/services/backup/` plugin registry (no monolithic god-module).
+- [x] A4 (partial): `IpcInvokeMethodNames` drift guard in `check:preload-ipc`; full `vite-env.d.ts` generation deferred to Phase E1.
+
+**Phase A complete (v3.8 prep).** Shipped across commits: shell split (A1), backup registry (A2), CSS modularization (A3), IPC method-name guard (A4), evidence doc archive (A5).
 
 ## Phase B — Renderer data layer (v3.9)
 

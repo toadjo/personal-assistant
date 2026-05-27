@@ -1,0 +1,42 @@
+/* Error boundary fallback */
+.error-boundary-fallback {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  max-width: 36rem;
+  margin: 0 auto;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.error-boundary-fallback__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.error-boundary-fallback__body {
+  margin: 0;
+  color: var(--subtitle);
+  line-height: 1.5;
+}
+
+.error-boundary-fallback__retry {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.error-boundary-fallback__retry:hover {
+  background: var(--primary-hover);
+}

@@ -1,0 +1,122 @@
+/* Home layout - two-column dashboard */
+.homeDashboard {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.homeDashboardHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border-strong);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-soft) 28%, var(--panel-bg) 72%),
+    color-mix(in srgb, var(--success-bg) 16%, var(--panel-bg) 84%)
+  );
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+}
+
+.homeDashboardHeroCopy {
+  min-width: 0;
+}
+
+.homeDashboardKicker {
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.homeDashboardHero h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.18;
+  font-weight: 720;
+  letter-spacing: 0;
+  color: var(--title);
+}
+
+.homeDashboardHero p {
+  margin: 7px 0 0;
+  max-width: 68ch;
+  color: var(--subtitle);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.homeDashboardHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.homeDashboardPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+}
+
+.homeActionMain:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--bg) 72%, transparent),
+    0 0 0 4px var(--focus-ring);
+}
+
+.homeDashboardSection {
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 3px 14px rgba(15, 23, 42, 0.045);
+}
+
+.homeSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.homeSectionHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 680;
+  line-height: 1.25;
+  color: var(--title);
+}
+
+.homeUrgencyDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--muted);
+}
+
+.homeUrgencyDotoverdue {
+  background: var(--error-text);
+}
+
+.homeUrgencyDottoday {
+  background: var(--primary);
+}
+
+.homeUrgencyDotupcoming {
+  background: var(--success-text);
+}
+
+.homeUrgencyDotcontext {
+  background: var(--muted);
+}

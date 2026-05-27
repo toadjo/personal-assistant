@@ -1,0 +1,23 @@
+/* Content grid - two-column desktop layout */
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 1024px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contentMain {
+  min-width: 0;
+}
+
+.todayStrip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
