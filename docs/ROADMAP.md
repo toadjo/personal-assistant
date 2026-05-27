@@ -1,137 +1,106 @@
-# Personal OS — Roadmap
+# Personal OS Roadmap
 
-Forward-looking improvement plan for Personal OS. This document captures the structural debt, polish, and capability work surfaced by the full-app scan performed at v3.7.0, and groups it into actionable phases.
+This roadmap is forward-looking only. Completed work belongs in [CHANGELOG.md](../CHANGELOG.md), release notes, and git history.
 
-The roadmap is a living document. Each phase is sized to roughly one minor release. Items should be lifted into individual issues / PRs as work begins, and ticked off here when shipped.
+Personal OS is aiming to become a local-first daily operating layer: one place to capture, plan, review, remember, and recover across work and real life without handing all of that context to a cloud account by default.
 
-## Health snapshot at v3.7.0
+## North Star
 
-| Area                                         | Grade | Notes                                                                                                                                                  |
-| -------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Architecture (main / renderer / shared, IPC) | A-    | Auto-generated preload literals, Zod-validated channels, parity test                                                                                   |
-| Security posture                             | A     | `contextIsolation`, sandbox, CSP, `safeStorage`, fail-closed secret storage, outbound guard, corporate policy with ACL check, Sentry opt-in via policy |
-| Database / data layer                        | A-    | WAL, integrity + health checks, backup preview, optimize / VACUUM, structured migrations registry                                                      |
-| Testing                                      | A-    | 4 layers (unit, preload smoke, browser E2E, Electron E2E), handler payload contract tests, ~1000+ unit tests                                           |
-| Build & release                              | B+    | electron-builder, NSIS, manual Windows releases, SBOM + audit scripts                                                                                  |
-| CI / CD                                      | B-    | Strong CI gates but cross-platform builds disabled (Actions budget)                                                                                    |
-| UI / UX architecture                         | B-    | Shell split complete; CSS modularized into tokens + per-area files; life-area panels still large                                                       |
-| State management                             | C+    | Heavy local `useState`, only one Zustand store, no data-fetch caching layer                                                                            |
-| Documentation                                | B     | Strong maintainer docs; some stale content tracked in this roadmap                                                                                     |
-| Repo hygiene                                 | A-    | Root docs scoped; v2.1.x evidence archived under `docs/history/`                                                                                       |
+Build a free community desktop app that people can run locally, inspect, fork, and adapt. It should feel useful on day one, trustworthy enough for personal data, and flexible enough that new life areas can be added without turning the app into a pile of one-off panels.
 
-**Overall: B+ (8.0 / 10)** — strong engineering hygiene with growing structural debt as features were added at high cadence (v3.2 through v3.7 in one week).
+Final boss goal: friendly AI takeover of your tasks, calendar, chores, reminders, notes, and general life chaos through this app. World domination remains a stretch goal. Mostly joking.
 
-## Top structural risks today
+## Phase B: Renderer Data Layer
 
-1. Life-area panel monoliths — `HealthPanel.tsx`, `CalendarPanel.tsx`, `HobbiesPanel.tsx`, `FamilyPanel.tsx`, `FinancePanel.tsx`, `CarPanel.tsx` are all 18–36 KB single files mixing data fetching, mutations, forms, and dialogs.
-2. No data-fetching abstraction — manual refresh + `isRefreshing` flags, no cache, no optimistic mutations.
-3. `src/renderer/vite-env.d.ts` — hand-maintained `window.assistantApi` typings; method-name drift guard only (full generation deferred to Phase E).
-4. Renderer error handling — one top-level boundary, no per-panel boundaries, no in-app surface for `renderer:logError`.
-5. No accessibility / i18n layer — no axe checks, no string catalog, no focus-stack management for modals.
-6. Cross-platform release pipeline frozen — public posture is "Windows only" indefinitely.
+Goal: replace ad-hoc fetch and refresh code with a cached, resilient data layer.
 
-## Phase A — Stabilize and de-couple (v3.8)
+- Adopt TanStack Query or a small in-house equivalent for renderer calls to `assistantApi`.
+- Remove manual `isRefreshing` state and isolated `useEffect(loadFoo, [])` patterns from panels and shared hooks.
+- Add optimistic mutations with rollback for tasks, reminders, notes, and high-touch life-area items.
+- Add per-panel error boundaries with retry controls so one crashed panel never tears down the shell.
+- Surface uncaught renderer errors as visible in-app notifications, not only persisted logs.
+- Add panel-render timing in `src/renderer/lib/performance.ts` and expose diagnostics in About.
 
-Goal: pay down structural debt before adding more capability.
+Acceptance signal:
 
-- **A1. Split `AssistantShell.tsx`** into `ShellRouter` (module switching, palette, drawer), `ShellChrome` (sidebar, theme select, status banner), and `useShellState` (reducer or 2–3 zustand slices bundling the 11 `useState`s).
-- **A2. Backup plugin registry.** Introduce a `BackupModule` interface; each life-area service registers `{ export, import, preview, reset }`. New domains stop forcing edits in [`src/main/services/backup.ts`](../src/main/services/backup.ts).
-- **A3. CSS modularization.** Extract theme tokens to `src/renderer/styles/tokens.css`. Migrate panel CSS next to each panel (already started for `CalendarPanel.css`, `InboxPanel.css`, `DailyCommandCenterPanel.css`); finish the migration so `styles.css` only holds shell-level rules.
-- **A4. Auto-generate [`src/renderer/vite-env.d.ts`](../src/renderer/vite-env.d.ts)** from `IpcInvoke` + handler schemas, mirroring the existing [`src/main/preload-ipc-literals.generated.ts`](../src/main/preload-ipc-literals.generated.ts) pattern. Eliminates drift between channels and renderer typings.
-- **A5. Repo hygiene follow-up.** Root cleanup completed (root now contains only `README.md`, `CHANGELOG.md`, `AGENTS.md`). Remaining: confirm `releases/` ignore continues to hold across machines, archive stale `docs/v2.1.*-evidence.md` files under `docs/history/` once v3.x evidence supersedes them.
+- No `isRefreshing` boolean state remains in renderer code.
+- Completing a task updates immediately and rolls back visibly on IPC failure.
+- A panel crash is contained to that panel.
 
-### Acceptance signal for Phase A
+## Phase C: UX And Accessibility
 
-- [x] `AssistantShell.tsx` under 500 lines (~247 lines after A1).
-- [x] `styles.css` under 800 lines (import hub only; tokens in `styles/tokens.css`, rules in per-component CSS).
-- [x] `backup.ts` replaced by `src/main/services/backup/` plugin registry (no monolithic god-module).
-- [x] A4 (partial): `IpcInvokeMethodNames` drift guard in `check:preload-ipc`; full `vite-env.d.ts` generation deferred to Phase E1.
+Goal: make the app feel polished, keyboard-safe, and reliable for repeated daily use.
 
-**Phase A complete (v3.8 prep).** Shipped across commits: shell split (A1), backup registry (A2), CSS modularization (A3), IPC method-name guard (A4), evidence doc archive (A5).
+- Add axe checks to browser E2E coverage.
+- Add keyboard-only smoke tests for the main workflow.
+- Implement a focus-stack manager for Quick Capture, Command Palette, modals, and drawers.
+- Upgrade Command Palette with better fuzzy ranking, recently-used boost, scoped filters, and action history.
+- Move themes toward a JSON-backed system with user-authored themes and `prefers-color-scheme` defaults.
+- Refactor onboarding into one persisted flow with clear skip points and restart support.
 
-## Phase B — Renderer data layer (v3.9)
+Acceptance signal:
 
-Goal: replace ad-hoc fetch / refresh code with a cached, resilient data layer.
+- axe reports zero serious or critical issues on covered panels.
+- Modal and drawer focus always returns to the trigger.
+- Theme switching works without reload.
 
-- **B1. Adopt TanStack Query** (or a minimal in-house equivalent) for all `assistantApi` calls. Remove manual `isRefreshing` flags and isolated `useEffect(loadFoo, [])` patterns from [`src/renderer/hooks/data/useAssistantData.ts`](../src/renderer/hooks/data/useAssistantData.ts) and panel components.
-- **B2. Optimistic mutations with rollback** for the highest-touch entities (tasks, reminders, notes, life-area items).
-- **B3. Per-panel `ErrorBoundary`** with retry; route uncaught renderer errors to a visible toast in addition to `renderer:logError`.
-- **B4. Panel-render timing.** Extend [`src/renderer/lib/performance.ts`](../src/renderer/lib/performance.ts) to log per-panel first-paint metrics; surface a tiny diagnostics view in the About panel.
+## Phase D: Reliability And Local Trust
 
-### Acceptance signal for Phase B
+Goal: make Personal OS safe enough to trust as a daily-driver tool.
 
-- No `isRefreshing` boolean state in renderer.
-- Tasks complete optimistically and revert visibly on IPC failure.
-- A killed handler crashes only its panel, never the shell.
+- Add renderer breadcrumbs to Sentry, gated by `allowCrashReporting`.
+- Add automatic local backups with rolling daily and weekly retention.
+- Add disk-space checks before backup writes.
+- Ship encrypted backup format for users who want portable encrypted archives.
+- Expose database health metrics in diagnostics.
+- Suggest `VACUUM` or optimize after meaningful write thresholds.
+- Restore validated macOS and Linux release assets once packaging is reliable.
 
-## Phase C — UX and accessibility (v3.10)
+Acceptance signal:
 
-Goal: lift the experience to first-class polish.
+- Encrypted backup round-trips into a fresh install.
+- Database health issues are visible to the user before data loss.
+- At least one non-Windows release asset is published after validation.
 
-- **C1. Accessibility audit.** Add axe to the browser E2E suite, ship keyboard-only smoke coverage, implement a focus-stack manager for Quick Capture, Command Palette, and the work-item drawer.
-- **C2. Command palette upgrades.** Fuzzy ranking, recently-used boost, module-scoped filters, action history.
-- **C3. Theme system v2.** Extract themes to JSON, support user-authored themes, respect `prefers-color-scheme` by default.
-- **C4. Onboarding refactor.** Unify `OnboardingCoach` and `OnboardingPanel` into one flow with persisted progress and skip points.
+## Phase E: New Capabilities
 
-### Acceptance signal for Phase C
+Goal: move from a personal assistant app toward a real Personal OS.
 
-- axe reports zero serious / critical issues on every panel in browser E2E.
-- All modal stacks restore focus to their trigger.
-- Theme switching does not require a reload.
+- Build a plugin/module SDK for life areas: schema migration, IPC registration, panel registration, and backup registration from one manifest.
+- Add Outlook / Microsoft 365 calendar provider parity.
+- Upgrade AI commands from prompt-template parsing to structured tool-calling against existing IPC handlers.
+- Keep the preview-then-confirm pattern for AI-created changes.
+- Explore encrypted optional sync using the existing Supabase infrastructure.
+- Add a read-only mobile companion path for capture-on-phone and sort-on-desktop workflows.
+- Add a local LLM option through Ollama or llama.cpp when outbound AI is disabled.
 
-## Phase D — Reliability and ops (v4.0)
+Acceptance signal:
 
-Goal: production-grade trust signals for a daily-driver tool.
+- A new life area can be added in one PR with a manifest plus its own files.
+- Outlook events appear beside Google events in the unified Calendar.
+- An Ask command can create a reminder through tool-calling without regex parsing.
 
-- **D1. Renderer breadcrumbs to Sentry** (currently main-process only), gated by `allowCrashReporting` policy.
-- **D2. Automatic local backups.** Rolling daily x 7 + weekly x 4, behind a disk-space check, using the existing `previewBackup` for restore validation.
-- **D3. Encrypted backup format.** Corporate mode policy already requires it (`requireSecureSecretStorage`); ship the encryptor + KDF flow.
-- **D4. DB observability.** Expose [`src/main/services/dbHealth.ts`](../src/main/services/dbHealth.ts) metrics in a hidden diagnostics panel; auto-suggest VACUUM after N writes.
-- **D5. Restore cross-platform builds.** Decide between self-hosted runners, scheduled-only release jobs, or `on: tag` matrix to restore macOS / Linux without burning Actions budget.
+## Phase F: Community And Quality Bar
 
-### Acceptance signal for Phase D
+Goal: keep the project welcoming and hard to accidentally break as more people touch it.
 
-- A corrupt SQLite WAL is recovered automatically and surfaced to the user.
-- Encrypted backup imports cleanly into a fresh install.
-- v4.0 ships with at least one non-Windows asset.
+- Add performance budgets in CI for renderer bundle size and panel mount time.
+- Pilot mutation testing on `src/main/services/*`.
+- Add visual regression snapshots for Daily Command Center and Calendar.
+- Group Dependabot PRs and fast-track security updates.
+- Document good first issues and contributor-friendly module examples.
+- Add issue templates for bugs, feature ideas, accessibility reports, and security disclosures.
+- Keep README focused on purpose, install, workflow, and contribution entry points.
 
-## Phase E — New capabilities (v4.1+)
+Acceptance signal:
 
-Goal: the leap from "personal assistant app" to "Personal OS".
+- New contributors can find a small issue, run the app, and make a safe first change.
+- Visual and performance regressions fail before release.
+- Security updates have a documented fast path.
 
-- **E1. Plugin / module SDK.** Generalize the life-area pattern documented in [`docs/LIFE_AREAS.md`](./LIFE_AREAS.md) into a real plugin API: schema migration, IPC registration, panel registration, backup registration — all from one manifest. The clean path to keep adding domains (travel, study, garden, projects) without bloating the shell.
-- **E2. Calendar provider parity.** Outlook / Microsoft 365 calendar adapter (schema already supports it; only provider implementation is missing). Re-check `isMicrosoftCalendarAllowed` policy paths.
-- **E3. AI command router upgrade.** Move from prompt-template parsing to structured tool-calling that targets existing IPC handlers; keep the preview-then-confirm pattern from [`src/renderer/components/AiActionPreview.tsx`](../src/renderer/components/AiActionPreview.tsx).
-- **E4. Encrypted optional sync.** End-to-end-encrypted sync of SQLite over the existing Supabase backend, behind explicit policy opt-in. Reuses the Team Projects infrastructure under `src/main/team/`.
-- **E5. Mobile companion (read-only first).** Same Supabase project, RLS-scoped queries; capture-on-phone, sort-on-desktop.
-- **E6. Local LLM option.** Route AI through Ollama / llama.cpp when policy disables outbound. Keeps the "Personal OS" promise even with AI on.
+## How To Use This Roadmap
 
-### Acceptance signal for Phase E
-
-- A new life area can be added in a single PR that touches only its own files plus one manifest registration.
-- Outlook events appear alongside Google in the unified Calendar.
-- An "Ask" command can create a reminder via tool-calling without prompt regex parsing.
-
-## Phase F — Quality bar (continuous)
-
-Goal: enforce the quality posture, do not let it regress.
-
-- **F1. Performance budgets** enforced in CI: renderer gzip bundle ceiling, panel-mount budget in Electron E2E.
-- **F2. Mutation-testing pilot** (`stryker-mutator`) on `src/main/services/*` to confirm the existing test suite catches behavior regressions, not just coverage.
-- **F3. Visual regression** (Playwright snapshots) for the two highest-density screens: Daily Command Center and Calendar.
-- **F4. Dependency policy.** Group Dependabot PRs, fast-track security updates, lock Electron to LTS cadence with explicit major-version gates.
-
-## "Do this Monday" wins (already shipped at v3.7.0 cleanup)
-
-These three small items were executed in the same change as the introduction of this roadmap; recorded here so the rationale is preserved.
-
-1. Repo root collapsed to conventional public files. `APP_AUDIT_2026-05-15.md`, `MAINTAINER_GUIDE.md`, and `RELEASING.md` moved under `docs/`; internal handoff logs removed from the public source tree.
-2. [`AGENTS.md`](../AGENTS.md) "Current Release" block refreshed from v2.9.0 to v3.7.0 with up-to-date features and key files.
-3. Verified [`.gitignore`](../.gitignore) `releases/` rule is in effect — earlier "untracked releases tree" report was stale snapshot noise, not a real ignore failure.
-
-## How to use this roadmap
-
-- Each phase letter (A through F) is one minor release worth of work; F is continuous.
-- Promote items to GitHub issues / PRs as they enter active development.
-- When a phase completes, summarize the outcome in [`CHANGELOG.md`](../CHANGELOG.md) and tick the acceptance signals here.
-- Re-run the full-app scan after each phase and update the health snapshot table at the top.
+- Treat each phase as a future release theme, not a promise of exact version timing.
+- Move items into GitHub issues when they become active work.
+- Keep completed work out of this file and record it in the changelog instead.
+- Revisit this roadmap after each release so it stays honest and useful.
