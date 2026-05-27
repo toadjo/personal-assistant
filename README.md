@@ -4,26 +4,11 @@ Local-first desktop personal operating layer built with Electron + React + TypeS
 
 Personal OS is an attempt to turn a desktop assistant into a calm daily operating layer for real life: capture tasks and notes quickly, plan the day, review unfinished work, keep local records for family, health, finance, car, hobbies, and calendar context, and stay useful even without cloud services.
 
-The long-term goal is a free community app that people can run, inspect, fork, and adapt for their own workflows. The project favors local-first data, transparent release notes, readable architecture, and practical safety controls over lock-in.
+The long-term goal is a free community app that people can run, inspect, fork, and adapt for their own workflows. The project favors local-first data, readable history, clear architecture, and practical safety controls over lock-in.
 
 ## AI-Assisted Development
 
 This app has been coded with heavy assistance from GPT 5.5, GPT 5.4, Opus 4.7, and SWE 1.6. Human review, tests, and release checks still matter: AI help is part of the build process, not a replacement for verification.
-
-## Install the app (Windows, no Git/Node)
-
-1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
-   - Windows: `Setup` `.exe`
-   - **Current releases are Windows-first**. macOS and Linux packaging paths exist but are not published for every release yet.
-2. Run the installer and start **Personal OS** from the Start menu or desktop shortcut.
-
-To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
-
-See [docs/RELEASING.md](./docs/RELEASING.md) for the full release process.
-
-## Working on the app
-
-Maintainers should start with [docs/MAINTAINER_GUIDE.md](./docs/MAINTAINER_GUIDE.md) for the architecture map, change workflow, verification checklist, and release cautions. The forward-looking improvement plan is in [docs/ROADMAP.md](./docs/ROADMAP.md).
 
 ## Personal OS Core Workflow
 
@@ -36,6 +21,28 @@ Personal OS provides a consolidated daily workflow for local-first productivity:
 - **Review**: End-of-Day Review shows completed work, unfinished items, and captured notes with carry-over actions
 - **Search**: Command palette with intelligent search, recent items, and saved searches
 - **Recover**: Data Control with backup preview, restore confirmation, health checks, and database optimization
+
+## What It Does Today
+
+- Daily Command Center with a top "Now" queue, attention items, context, and since-you-were-away changes
+- Local notes, tasks, reminders, and personal automation rules stored in SQLite
+- Life-area modules for finance, family, health, hobbies, car records, and connected calendar context
+- Desktop notifications for due reminders and tasks
+- Optional Home Assistant settings, connectivity test, entity sync, and toggle actions
+- Backup preview, restore confirmation, database health checks, and local data reset controls
+
+## Install the app (Windows, no Git/Node)
+
+1. Open **[Public Releases](https://github.com/toadjo/Personal-Assistant-R/releases)** and download the latest release asset:
+   - Windows: `Setup` `.exe`
+   - **Current releases are Windows-first**. macOS and Linux packaging paths exist but are not published for every release yet.
+2. Run the installer and start **Personal OS** from the Start menu or desktop shortcut.
+
+To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
+
+## Working on the app
+
+Maintainers and contributors should start with [docs/MAINTAINER_GUIDE.md](./docs/MAINTAINER_GUIDE.md) for the architecture map, change workflow, verification checklist, and release cautions. The forward-looking improvement plan is in [docs/ROADMAP.md](./docs/ROADMAP.md).
 
 ### Prerequisites
 
@@ -115,15 +122,6 @@ When debugging failures, follow this sequence to narrow the layer:
 
 Pull requests and pushes to `main`/`master` run the full verification sequence in GitHub Actions (see `.github/workflows/ci.yml`): lint, typecheck, unit tests with coverage, build, preload smoke, Playwright browser installation, browser E2E, and Electron E2E. The workflow also runs **`npm audit`** at high severity (report-only; does not fail the job yet).
 
-**Release automation:** pushing a tag **`vX.Y.Z`** that matches **`package.json`** runs `.github/workflows/release.yml` with four jobs:
-
-- `package-windows` builds NSIS artifacts and uploads versioned installer history artifacts.
-- `package-linux` builds Linux AppImage artifacts and uploads `release/` outputs.
-- `package-macos` builds macOS DMG/zip artifacts and uploads `release/` outputs.
-- `publish-releases` downloads all platform artifact sets, validates required `.exe`, `.AppImage`, `.dmg`, and `.zip` assets, then publishes the GitHub release.
-
-Workflow artifacts use short retention so temporary package handoff files do not fill GitHub Actions storage.
-
 **Dependabot** is enabled for npm (`.github/dependabot.yml`).
 
 **Pre-commit:** after `npm install`, [Husky](https://typicode.github.io/husky/) runs **`npm run typecheck`** and **lint-staged** (ESLint on staged `.ts/.tsx`, Prettier check on staged `.json/.css/.html/.md/.yml`) on each commit.
@@ -156,193 +154,9 @@ Outputs renderer assets to `dist/renderer/` and compiles main/preload to `dist/m
 
 ---
 
-## Features
+## Project Docs
 
-- Daily Command Center with a top "Now" queue, attention items, context, and since-you-were-away changes
-- Local notes, tasks, reminders, and personal automation rules stored in SQLite
-- Desktop notifications for due reminders and tasks
-- Local automations that can create reminders or tasks without Home Assistant
-- Optional Home Assistant settings, connectivity test, entity sync, and toggle actions
-- Time-based automation rules with readable execution logs and retry metadata
-
-## Run
-
-```bash
-npm install
-npm run dev
-```
-
-## Release Packaging (Windows + Linux AppImage)
-
-Versioned packaging outputs now live under:
-
-- `release/v<version>/` (full electron-builder output for that version, including Linux AppImage artifacts when built)
-- `installer-history/v<version>/` (copied Windows installer artifacts: `.exe`, `.blockmap`, `.yml`)
-
-These folders are ignored by git so local/repeatable installer builds stay out of normal source-control flow.
-
-### Build a versioned installer
-
-```powershell
-npm run release:build -- -Version 1.0.0
-```
-
-Notes:
-
-- Accepts `1.0.0` or `v1.0.0`.
-- Defaults to `package.json` version if `-Version` is omitted.
-- Updates `package.json` version to match (unless you pass `-SkipVersionBump`).
-- Runs smoke checks by default (skip with `-SkipSmoke`).
-- Refuses to overwrite an existing `release/v<version>` by default (opt in with `-ReplaceExisting`).
-- Validates clean git state by default (opt out with `-AllowDirtyGit` for local-only iterations).
-- Validates required commands (`npm`, `npx`) and stops immediately if any release command fails.
-- Uses a staging output directory first, then moves artifacts into `release/v<version>` only after a successful build.
-- Validates that installer artifacts exist and fails if no `.exe` was produced.
-- Prepares `assets/app-icon.ico` before packaging (from `assets/app-icon.png`; JPEG bytes mislabeled as `.png` are converted via **sharp** so NSIS accepts the installer icon).
-
-Usage:
-
-```powershell
-npm run release:build -- [-Version <x.y.z|vx.y.z>] [-SkipVersionBump] [-SkipSmoke] [-ReplaceExisting] [-AllowDirtyGit]
-```
-
-Examples:
-
-```powershell
-# Use package.json version automatically
-npm run release:build
-
-# Keep current package.json version, just package
-npm run release:build -- -Version 1.1.0 -SkipVersionBump
-
-# Package without smoke validation
-npm run release:build -- -Version 1.1.1 -SkipSmoke
-
-# Rebuild the same version in place (replaces existing versioned output/history)
-npm run release:build -- -Version 1.1.1 -ReplaceExisting
-```
-
-### Cleanup old artifacts
-
-```powershell
-# Keep the newest 3 release/history versions (default behavior)
-npm run release:clean
-
-# Keep newest 5 versions
-npm run release:clean -- -Keep 5
-
-# Remove everything under release/ and installer-history/
-npm run release:clean:all
-
-# Full cleanup with explicit confirmation flag
-npm run release:clean -- -All -ConfirmAll
-
-# Also remove dist/ during cleanup
-npm run release:clean -- -IncludeDist
-```
-
-Usage:
-
-```powershell
-npm run release:clean -- [-Keep <n>] [-IncludeDist] [-All -ConfirmAll] [-DryRun]
-```
-
-Notes:
-
-- `-All` removes all content under `release/` and `installer-history/`, but now requires `-ConfirmAll`.
-- `-Keep` must be `0` or greater.
-- `-IncludeDist` can be combined with `-All` or prune mode.
-- Prune mode only deletes versioned folders that match `v<semver>` naming.
-- Use `-DryRun` to preview what cleanup would remove.
-
-### Legacy one-off build
-
-```bash
-npm run dist
-```
-
-`npm run dist` runs **`npm run clean:release`** before **electron-builder**, which deletes **`release/`** so a previous **`win-unpacked`** tree cannot lock **`app.asar`**. If deletion fails, quit **PersonalAssistant** / **Electron** (and close Explorer inside **`release/`**), then retry.
-
-## Icon Packaging Notes (Windows)
-
-- Project-local icon sources live in `assets/`.
-- Installer/exe icon paths are explicitly set to project-local `assets/app-icon.png` so builds do not depend on global machine assets.
-- `npm run dist` runs `npm run icons:prepare` (ICO from `assets/app-icon.png`) and `npm run clean:release` before packaging. `npm run release:build` runs `icons:prepare` as part of its script.
-- Remaining gap: auto-generated `.ico` uses one source PNG, so quality can be weaker at very small sizes (16x16/24x24). Practical workaround: replace `assets/app-icon.ico` with a designer-exported multi-size `.ico` (16/24/32/48/64/128/256) and keep the same filename.
-
-## Release Notes
-
-### v2.1.4
-
-**Security Hardening and Electron Upgrade**
-
-This release focuses on security hardening and closing the npm audit risk for high/critical vulnerabilities.
-
-**Security Improvements:**
-
-- Fail-closed secret storage: AI API keys, Home Assistant tokens, and Supabase session tokens now require OS encryption. If encryption is unavailable, the app refuses to store secrets and prompts the user to ensure their system supports secure storage.
-- Backup safety: Secret settings are now excluded from backup export. Backup import rejects any secret settings present in the backup file.
-- Log redaction: Renderer error logs now redact secrets before persistence to prevent secret leakage in error reports.
-- Runtime hardening: Electron sandbox enabled with hardened Content Security Policy in packaged builds.
-
-**Dependency Upgrades:**
-
-- Electron: 35.0.0 to 41.0.0
-- electron-builder: 25.1.8 to 26.8.1
-- better-sqlite3: 11.8.1 to 12.10.0
-- Dependency overrides removed (no longer needed after upgrades)
-
-**CI Improvements:**
-
-- `npm audit --audit-level=high` is now a hard gate in CI. Releases cannot proceed if high/critical vulnerabilities are present.
-
-**Bug Fix:**
-
-- Fixed AI error visibility: AI provider errors now display correctly instead of generic command errors.
-
-**Platform Notes:**
-
-- This is a Windows-first release. macOS/Linux assets may be omitted when they have not completed packaging validation.
-- Users on systems without OS encryption support (Windows without DPAPI, macOS without Keychain, Linux without libsecret) cannot use AI, Home Assistant, or team features.
-
-**Verification:**
-
-- npm audit --audit-level=high: 0 vulnerabilities
-- All tests passing (832 passed, 2 skipped)
-- Windows installer built and tested
-- Windows installer SHA256: `A98E693708F10677BCE1CEFD2B6E8A875B37F1BACDCA43877BC9A0BBEED740EC`
-
-### v1.5.0
-
-**Local-first operating layer** - The desk now centers on Daily Command Center instead of a Home Assistant-led workflow:
-
-- Added Daily Command Center with Summary, Now, Since You Were Away, Attention, and Context sections
-- Added quick actions for completing tasks, completing reminders, snoozing reminders, marking away changes seen, and opening relevant local panels
-- Added local task automations with full task fields, alongside local reminder automations
-- Improved automation reliability with preserved retry metadata and clearer rule-run logs
-- Refreshed onboarding, command examples, and help/status copy so notes, tasks, reminders, and local automations work as the core experience
-- Kept Home Assistant optional and visually secondary
-- Hardened release packaging with short artifact retention, macOS artifact validation, and package-version-driven About display
-
-### v1.3.0
-
-**macOS utility redesign** - Complete visual overhaul to feel like a compact, native macOS utility:
-
-- Tightened command composer with compact square send button
-- Stable toolbar heights with consistent 32px controls
-- Two-column desktop layout with reduced calendar dominance (0.9:1.1 ratio)
-- Tighter memo/reminder cards (220px min-width, softer shadows)
-- Compact empty states with subtle Apple-like design
-- Cleaner CSS with stale rules removed
-
-**Compact responsive layout** - Optimized for 4K, 2K, 1080p, laptop, and narrow (430px) widths with capped panel widths and stable alignment.
-
-**Electron E2E stabilization** - Updated command examples test selectors to use accessible button role checks instead of stale CSS classes.
-
-**Dependency fixes** - Added lucide-react dependency and synchronized lockfile.
-
-## Smoke Validation
-
-```bash
-npm run test:smoke
-```
+- [Architecture](./docs/ARCHITECTURE.md)
+- [Roadmap](./docs/ROADMAP.md)
+- [Release process](./docs/RELEASING.md)
+- [Changelog](./CHANGELOG.md)
