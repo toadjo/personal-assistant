@@ -2,27 +2,19 @@ import { useState, useEffect, useCallback, memo } from "react";
 import { Palette, Plus, Trash2, CheckCircle } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
+import { LoadingState } from "../life-areas/LoadingState";
+import { SummaryCard } from "../life-areas/SummaryCard";
+import { LifeAreaPanelProps } from "../life-areas/types";
+import { formatDate } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
 import type { Hobby, HobbySession, HobbyProject, HobbyMilestone, HobbySupply, HobbySummary, HobbyStatus, HobbyProjectStatus } from "../../../shared/types";
-
-type Props = {
-  isRefreshing: boolean;
-  onRefresh: () => Promise<void>;
-  onError: (message: string) => void;
-  onShowSuccess?: (message: string) => void;
-};
-
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
 
 export const HobbiesPanel = memo(function HobbiesPanel({
   isRefreshing: _isRefreshing,
   onRefresh: _onRefresh,
   onError,
   onShowSuccess
-}: Props): JSX.Element {
+}: LifeAreaPanelProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [sessions, setSessions] = useState<HobbySession[]>([]);
@@ -289,7 +281,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
       <section className="panel" aria-labelledby="hobbies-panel-heading">
         <PanelHeader icon={Palette} title="Hobbies" />
         <div className="panelContent">
-          <div className="loadingState">Loading hobbies data...</div>
+          <LoadingState message="Loading hobbies data..." />
         </div>
       </section>
     );
@@ -319,26 +311,11 @@ export const HobbiesPanel = memo(function HobbiesPanel({
       <div className="panelContent">
         {summary && (
           <div className="summaryGrid">
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.activeHobbies}</div>
-              <div className="summaryLabel">Active Hobbies</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.sessionsThisMonth}</div>
-              <div className="summaryLabel">Sessions This Month</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.openProjects}</div>
-              <div className="summaryLabel">Open Projects</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.openMilestones}</div>
-              <div className="summaryLabel">Open Milestones</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.recentSessions}</div>
-              <div className="summaryLabel">Recent Sessions</div>
-            </div>
+            <SummaryCard label="Active Hobbies" value={summary.activeHobbies} />
+            <SummaryCard label="Sessions This Month" value={summary.sessionsThisMonth} />
+            <SummaryCard label="Open Projects" value={summary.openProjects} />
+            <SummaryCard label="Open Milestones" value={summary.openMilestones} />
+            <SummaryCard label="Recent Sessions" value={summary.recentSessions} />
           </div>
         )}
 

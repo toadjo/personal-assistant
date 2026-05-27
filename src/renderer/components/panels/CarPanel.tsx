@@ -2,35 +2,18 @@ import { useState, useEffect, memo } from "react";
 import { Car, Plus, Trash2, Calendar, Fuel, Wrench, Gauge, AlertCircle } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
+import { LoadingState } from "../life-areas/LoadingState";
+import { LifeAreaPanelProps } from "../life-areas/types";
+import { formatDate, formatEur, formatMileage } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
 import type { CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder } from "../../../shared/types";
-
-type Props = {
-  isRefreshing: boolean;
-  onRefresh: () => Promise<void>;
-  onError: (message: string) => void;
-  onShowSuccess?: (message: string) => void;
-};
-
-function formatEur(cents: number): string {
-  return `€${(cents / 100).toFixed(2)}`;
-}
-
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function formatMileage(km: number): string {
-  return `${km.toLocaleString()} km`;
-}
 
 export const CarPanel = memo(function CarPanel({
   isRefreshing: _isRefreshing,
   onRefresh: _onRefresh,
   onError,
   onShowSuccess
-}: Props): JSX.Element {
+}: LifeAreaPanelProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [vehicles, setVehicles] = useState<CarVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
@@ -170,7 +153,7 @@ export const CarPanel = memo(function CarPanel({
 
       <div className="panelContent">
         {isLoading ? (
-          <div className="loadingState">Loading car data...</div>
+          <LoadingState message="Loading car data..." />
         ) : (
           <>
             {/* Vehicle Form */}

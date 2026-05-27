@@ -2,33 +2,19 @@ import { useState, useEffect, memo } from "react";
 import { Users, Plus, Trash2, Calendar, CheckCircle, AlertCircle, Phone, Mail, Star } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
+import { LoadingState } from "../life-areas/LoadingState";
+import { SummaryCard } from "../life-areas/SummaryCard";
+import { LifeAreaPanelProps } from "../life-areas/types";
+import { formatDate, formatDateTime } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
 import type { FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, FamilyOccasionType, FamilyObligationType, FamilyPriority } from "../../../shared/types";
-
-type Props = {
-  isRefreshing: boolean;
-  onRefresh: () => Promise<void>;
-  onError: (message: string) => void;
-  onShowSuccess?: (message: string) => void;
-};
-
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function formatDateTime(isoString: string | null): string {
-  if (!isoString) return "No date";
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
 
 export const FamilyPanel = memo(function FamilyPanel({
   isRefreshing: _isRefreshing,
   onRefresh: _onRefresh,
   onError,
   onShowSuccess
-}: Props): JSX.Element {
+}: LifeAreaPanelProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [occasions, setOccasions] = useState<FamilyOccasion[]>([]);
@@ -258,11 +244,7 @@ export const FamilyPanel = memo(function FamilyPanel({
   }
 
   if (isLoading && members.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">Loading family data...</div>
-      </div>
-    );
+    return <LoadingState message="Loading family data..." />;
   }
 
   return (
@@ -283,23 +265,11 @@ export const FamilyPanel = memo(function FamilyPanel({
 
       {/* Summary Strip */}
       {summary && (
-        <div className="px-4 py-3 bg-gray-50 border-b grid grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{summary.totalMembers}</div>
-            <div className="text-xs text-gray-500">Members</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{summary.upcomingOccasions}</div>
-            <div className="text-xs text-gray-500">Upcoming</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{summary.openObligations}</div>
-            <div className="text-xs text-gray-500">Open Tasks</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">{summary.overdueObligations}</div>
-            <div className="text-xs text-gray-500">Overdue</div>
-          </div>
+        <div className="summaryGrid">
+          <SummaryCard label="Members" value={summary.totalMembers} />
+          <SummaryCard label="Upcoming" value={summary.upcomingOccasions} />
+          <SummaryCard label="Open Tasks" value={summary.openObligations} />
+          <SummaryCard label="Overdue" value={summary.overdueObligations} />
         </div>
       )}
 

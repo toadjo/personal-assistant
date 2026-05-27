@@ -4,6 +4,25 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2026-05-26
+
+### Changed
+
+- Created shared UI components for Life Areas: LoadingState, SummaryCard, and LifeAreaPanelProps type
+- Extracted shared date formatting utilities (formatDate, formatDateTime, formatEur, formatMileage) to lib/dateFormat.ts
+- Normalized panel implementations to use shared LoadingState and SummaryCard components
+- Unified panel props interface across all Life Area panels (Finance, Car, Family, Health, Hobbies)
+- Added comprehensive docs/LIFE_AREAS.md guide for creating new Life Area modules
+- Removed unused custom hooks (useLifeAreaData, useLifeAreaCRUD) that were over-engineered
+- Verified backup count labels are consistent across all life slices (Finance, Car, Family, Health, Hobbies)
+- All 1065 tests pass with no behavior changes
+
+### Added
+
+- docs/LIFE_AREAS.md documentation with step-by-step guide for adding new Life Area modules
+- Shared component library in src/renderer/components/life-areas/ for reusable UI patterns
+- Shared utility library in src/renderer/lib/dateFormat.ts for date and number formatting
+
 ## [3.5.0] - 2026-05-26
 
 ### Added

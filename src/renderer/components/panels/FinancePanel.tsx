@@ -2,15 +2,12 @@ import { useState, useEffect, memo } from "react";
 import { DollarSign, Plus, Trash2, Check, Calendar, Clock } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
+import { LoadingState } from "../life-areas/LoadingState";
+import { SummaryCard } from "../life-areas/SummaryCard";
+import { LifeAreaPanelProps } from "../life-areas/types";
+import { formatDate, formatEur } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
 import type { FinanceBill, FinanceExpense, FinanceMonthlySummary, FinanceCategory } from "../../../shared/types";
-
-type Props = {
-  isRefreshing: boolean;
-  onRefresh: () => Promise<void>;
-  onError: (message: string) => void;
-  onShowSuccess?: (message: string) => void;
-};
 
 const FINANCE_CATEGORIES: FinanceCategory[] = [
   "housing",
@@ -31,21 +28,12 @@ const RECURRENCE_OPTIONS = [
   { value: "yearly", label: "Yearly" }
 ] as const;
 
-function formatEur(cents: number): string {
-  return `€${(cents / 100).toFixed(2)}`;
-}
-
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export const FinancePanel = memo(function FinancePanel({
   isRefreshing: _isRefreshing,
   onRefresh: _onRefresh,
   onError,
   onShowSuccess
-}: Props): JSX.Element {
+}: LifeAreaPanelProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [bills, setBills] = useState<FinanceBill[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
@@ -203,32 +191,17 @@ export const FinancePanel = memo(function FinancePanel({
 
       <div className="panelContent">
         {isLoading ? (
-          <div className="loadingState">Loading finance data...</div>
+          <LoadingState message="Loading finance data..." />
         ) : (
           <>
             {/* Summary Row */}
             {summary && (
               <div className="financeSummary">
-                <div className="summaryCard">
-                  <div className="summaryLabel">Upcoming</div>
-                  <div className="summaryValue">{summary.upcomingBills}</div>
-                </div>
-                <div className="summaryCard">
-                  <div className="summaryLabel">Paid</div>
-                  <div className="summaryValue">{summary.paidBills}</div>
-                </div>
-                <div className="summaryCard">
-                  <div className="summaryLabel">Unpaid/Overdue</div>
-                  <div className="summaryValue">{summary.unpaidBills}</div>
-                </div>
-                <div className="summaryCard">
-                  <div className="summaryLabel">Expenses</div>
-                  <div className="summaryValue">{formatEur(summary.totalExpenses)}</div>
-                </div>
-                <div className="summaryCard">
-                  <div className="summaryLabel">Committed</div>
-                  <div className="summaryValue">{formatEur(summary.totalCommittedAmount)}</div>
-                </div>
+                <SummaryCard label="Upcoming" value={summary.upcomingBills} />
+                <SummaryCard label="Paid" value={summary.paidBills} />
+                <SummaryCard label="Unpaid/Overdue" value={summary.unpaidBills} />
+                <SummaryCard label="Expenses" value={formatEur(summary.totalExpenses)} />
+                <SummaryCard label="Committed" value={formatEur(summary.totalCommittedAmount)} />
               </div>
             )}
 

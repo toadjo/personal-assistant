@@ -2,27 +2,19 @@ import { useState, useEffect, useCallback, memo } from "react";
 import { Heart, Plus, Trash2, Calendar, CheckCircle, AlertCircle, Pill, Activity, Scale } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
+import { LoadingState } from "../life-areas/LoadingState";
+import { SummaryCard } from "../life-areas/SummaryCard";
+import { LifeAreaPanelProps } from "../life-areas/types";
+import { formatDate } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
 import type { HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary, HealthAppointmentType, HealthMedicationStatus, HealthSymptomSeverity, HealthMeasurementType, HealthObligationType, HealthPriority } from "../../../shared/types";
-
-type Props = {
-  isRefreshing: boolean;
-  onRefresh: () => Promise<void>;
-  onError: (message: string) => void;
-  onShowSuccess?: (message: string) => void;
-};
-
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
 
 export const HealthPanel = memo(function HealthPanel({
   isRefreshing: _isRefreshing,
   onRefresh: _onRefresh,
   onError,
   onShowSuccess
-}: Props): JSX.Element {
+}: LifeAreaPanelProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [appointments, setAppointments] = useState<HealthAppointment[]>([]);
   const [medications, setMedications] = useState<HealthMedication[]>([]);
@@ -296,7 +288,7 @@ export const HealthPanel = memo(function HealthPanel({
       <section className="panel" aria-labelledby="health-panel-heading">
         <PanelHeader icon={Heart} title="Health" />
         <div className="panelContent">
-          <div className="loadingState">Loading health data...</div>
+          <LoadingState message="Loading health data..." />
         </div>
       </section>
     );
@@ -308,30 +300,12 @@ export const HealthPanel = memo(function HealthPanel({
       <div className="panelContent">
         {summary && (
           <div className="summaryGrid">
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.upcomingAppointments}</div>
-              <div className="summaryLabel">Upcoming Appointments</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.activeMedications}</div>
-              <div className="summaryLabel">Active Medications</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.activeSymptoms}</div>
-              <div className="summaryLabel">Active Symptoms</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.recentMeasurements}</div>
-              <div className="summaryLabel">Recent Measurements</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.openObligations}</div>
-              <div className="summaryLabel">Open Obligations</div>
-            </div>
-            <div className="summaryCard">
-              <div className="summaryValue">{summary.overdueObligations}</div>
-              <div className="summaryLabel">Overdue</div>
-            </div>
+            <SummaryCard label="Upcoming Appointments" value={summary.upcomingAppointments} />
+            <SummaryCard label="Active Medications" value={summary.activeMedications} />
+            <SummaryCard label="Active Symptoms" value={summary.activeSymptoms} />
+            <SummaryCard label="Recent Measurements" value={summary.recentMeasurements} />
+            <SummaryCard label="Open Obligations" value={summary.openObligations} />
+            <SummaryCard label="Overdue" value={summary.overdueObligations} />
           </div>
         )}
 
