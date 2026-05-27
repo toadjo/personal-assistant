@@ -72,9 +72,20 @@ describe("ConnectedAccountsPanel", () => {
       <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
     );
     expect(await screen.findByText(/No connected calendars yet/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Connect Google/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Connect Outlook \/ Microsoft 365/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Sign in with Google/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Sign in with Outlook \/ Microsoft 365/i })).toBeInTheDocument();
     expect(screen.getByText(/Teams meetings from your Microsoft account/i)).toBeInTheDocument();
+  });
+
+  it("renders experimental Google-only copy when Microsoft is unavailable", async () => {
+    getConnectedCalendarOAuthSetup.mockResolvedValue({ googleConfigured: true, microsoftConfigured: false });
+    render(
+      <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
+    );
+
+    expect(await screen.findByText(/Google accounts must be added as approved testers/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Sign in with Google/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Sign in with Outlook \/ Microsoft 365/i })).toBeDisabled();
   });
 
   it("renders existing accounts with provider and sync state", async () => {
@@ -103,18 +114,18 @@ describe("ConnectedAccountsPanel", () => {
     expect(screen.getByText("Synced")).toBeInTheDocument();
   });
 
-  it("starts and completes OAuth flow", async () => {
+  it("starts OAuth and completes automatically after browser authorization", async () => {
     const user = userEvent.setup();
     render(
       <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
     );
 
-    await user.click(await screen.findByRole("button", { name: /Connect Google/i }));
+    await user.click(await screen.findByRole("button", { name: /Sign in with Google/i }));
     expect(startConnectedCalendarOAuth).toHaveBeenCalledWith({ provider: "google" });
-    await user.click(screen.getByRole("button", { name: /Complete sign-in/i }));
     await waitFor(() => {
       expect(completeConnectedCalendarOAuth).toHaveBeenCalledWith({ provider: "google" });
     });
+    expect(screen.queryByRole("button", { name: /Complete sign-in/i })).not.toBeInTheDocument();
     expect(onAccountsChanged).toHaveBeenCalled();
   });
 
@@ -145,6 +156,44 @@ describe("ConnectedAccountsPanel", () => {
 
     await user.click(screen.getByRole("button", { name: /Sync all/i }));
     expect(syncAllConnectedCalendarAccounts).toHaveBeenCalled();
+  });
+
+  it("reports sync errors returned by the account sync operation", async () => {
+    const user = userEvent.setup();
+    listConnectedCalendarAccounts.mockResolvedValue([
+      {
+        id: "acc-1",
+        provider: "google",
+        accountLabel: "Test",
+        email: "test@gmail.com",
+        enabledFeatures: '["calendar"]',
+        syncState: "error",
+        lastSyncAt: null,
+        syncError: "Google calendar sync failed (403): Enable the Google Calendar API.",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z"
+      }
+    ]);
+    syncConnectedCalendarAccount.mockResolvedValue({
+      id: "acc-1",
+      provider: "google",
+      accountLabel: "Test",
+      email: "test@gmail.com",
+      enabledFeatures: '["calendar"]',
+      syncState: "error",
+      lastSyncAt: null,
+      syncError: "Google calendar sync failed (403): Enable the Google Calendar API.",
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z"
+    });
+
+    render(
+      <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
+    );
+
+    await user.click(await screen.findByRole("button", { name: /^Sync$/i }));
+    expect(onError).toHaveBeenCalledWith("Google calendar sync failed (403): Enable the Google Calendar API.");
+    expect(onSuccess).not.toHaveBeenCalledWith("Calendar sync finished.");
   });
 
   it("disconnect confirms and refreshes list", async () => {
@@ -179,9 +228,9 @@ describe("ConnectedAccountsPanel", () => {
     render(
       <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
     );
-    expect(await screen.findByRole("status")).toHaveTextContent(/Connected calendar sign-in is not available/i);
-    expect(screen.getByRole("button", { name: /Connect Google/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Connect Outlook \/ Microsoft 365/i })).toBeDisabled();
+    expect(await screen.findByRole("status")).toHaveTextContent(/Calendar sign-in is not available/i);
+    expect(screen.getByRole("button", { name: /Sign in with Google/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Sign in with Outlook \/ Microsoft 365/i })).toBeDisabled();
   });
 
   it("reports API errors via onError", async () => {
@@ -190,9 +239,7 @@ describe("ConnectedAccountsPanel", () => {
     render(
       <ConnectedAccountsPanel onClose={onClose} onError={onError} onSuccess={onSuccess} onAccountsChanged={onAccountsChanged} />
     );
-    await user.click(await screen.findByRole("button", { name: /Connect Google/i }));
-    expect(onError).toHaveBeenCalledWith(
-      "Connected calendar sign-in is not configured for this provider in this build."
-    );
+    await user.click(await screen.findByRole("button", { name: /Sign in with Google/i }));
+    expect(onError).toHaveBeenCalledWith("Calendar sign-in is not available for this provider in this build.");
   });
 });

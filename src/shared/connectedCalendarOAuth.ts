@@ -16,11 +16,7 @@ export function connectedCalendarOAuthSetupMessage(status: ConnectedCalendarOAut
   if (status.googleConfigured || status.microsoftConfigured) {
     return "";
   }
-  return (
-    "Connected calendar sign-in is not available in this build. " +
-    "For development, set GOOGLE_CALENDAR_CLIENT_ID and/or MICROSOFT_CALENDAR_CLIENT_ID before starting the app. " +
-    "For release builds, bundle public OAuth client IDs at build time (see docs/CONNECTED_CALENDAR_OAUTH.md)."
-  );
+  return "Calendar sign-in is not available in this build. Install the calendar-enabled build or contact the app maintainer.";
 }
 
 export function connectedCalendarOAuthProviderErrorMessage(
@@ -28,5 +24,5 @@ export function connectedCalendarOAuthProviderErrorMessage(
 ): string {
   const banner = status ? connectedCalendarOAuthSetupMessage(status) : "";
   if (banner) return banner;
-  return "Connected calendar sign-in is not configured for this provider in this build.";
+  return "Calendar sign-in is not available for this provider in this build.";
 }

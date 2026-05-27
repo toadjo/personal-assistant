@@ -1,6 +1,6 @@
 {
   "name": "personal-assistant",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
   "main": "dist/main/main/main.js",
   "author": "toadjo",
@@ -11,7 +11,7 @@
   "scripts": {
     "prepare": "husky",
     "postinstall": "electron-builder install-app-deps",
-    "dev": "npm run rebuild:electron && node scripts/generate-preload-ipc.mjs && concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 file:dist/main/main/main.js file:dist/main/main/preload.js && electron .\"",
+    "dev": "npm run rebuild:electron && node scripts/load-env-file.mjs && node scripts/generate-calendar-oauth-clients.mjs && node scripts/generate-preload-ipc.mjs && concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 file:dist/main/main/main.js file:dist/main/main/preload.js && electron .\"",
     "build": "npm run build:renderer && npm run build:main",
     "build:report": "vite build --mode report",
     "build:renderer": "node scripts/generate-release-notes.mjs && vite build",

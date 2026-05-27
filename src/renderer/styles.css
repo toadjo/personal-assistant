@@ -2461,6 +2461,151 @@ button:disabled {
   gap: var(--space-3);
 }
 
+/* Shared Life Area layout */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.summaryCard {
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--stat-bg) 78%, var(--panel-bg) 22%);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.035);
+}
+
+.summaryValue {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 720;
+  letter-spacing: 0;
+  color: var(--title);
+}
+
+.summaryLabel {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.healthSection,
+.hobbySection,
+.financeSection,
+.familySection,
+.carSection {
+  padding: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel-bg) 74%, transparent);
+}
+
+.sectionHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.sectionHeader h3 {
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 680;
+  color: var(--title);
+}
+
+.sectionIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.healthList,
+.hobbyList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.healthItem,
+.hobbyItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--input-bg) 86%, transparent);
+}
+
+.healthInfo,
+.hobbyInfo {
+  min-width: 0;
+}
+
+.healthName,
+.hobbyName {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--title);
+}
+
+.healthMeta,
+.hobbyMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.healthActions,
+.hobbyActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.healthSection .emptyState,
+.hobbySection .emptyState,
+.financeSection .emptyState,
+.familySection .emptyState,
+.carSection .emptyState {
+  padding: var(--space-3) var(--space-2);
+}
+
+.healthSection .emptyStateIcon,
+.hobbySection .emptyStateIcon,
+.financeSection .emptyStateIcon,
+.familySection .emptyStateIcon,
+.carSection .emptyStateIcon {
+  width: 28px;
+  height: 28px;
+}
+
+@media (min-width: 900px) {
+  .panelContent:has(.healthSection),
+  .panelContent:has(.hobbySection) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .panelContent:has(.healthSection) .summaryGrid,
+  .panelContent:has(.hobbySection) .summaryGrid {
+    grid-column: 1 / -1;
+  }
+}
+
 .workspaceContext {
   display: flex;
   align-items: center;

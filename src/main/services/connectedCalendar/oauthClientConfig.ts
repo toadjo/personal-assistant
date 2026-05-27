@@ -7,17 +7,22 @@ import {
 
 type BundledCalendarOAuthClients = {
   googleClientId?: string;
+  googleClientSecret?: string;
   microsoftClientId?: string;
 };
 
 let cachedBundledClients: BundledCalendarOAuthClients | null | undefined;
 
 function bundledConfigCandidates(): string[] {
-  const fileName = "calendar-oauth-clients.json";
+  const generatedName = "calendar-oauth-clients.json";
+  const localName = "calendar-oauth-clients.local.json";
   return [
-    resolve(process.cwd(), "assets", "generated", fileName),
-    resolve(__dirname, "../../../../..", "assets", "generated", fileName),
-    resolve(__dirname, "../../../..", "assets", "generated", fileName)
+    resolve(process.cwd(), "assets", localName),
+    resolve(process.cwd(), "assets", "generated", generatedName),
+    resolve(__dirname, "../../../../..", "assets", localName),
+    resolve(__dirname, "../../../../..", "assets", "generated", generatedName),
+    resolve(__dirname, "../../../..", "assets", localName),
+    resolve(__dirname, "../../../..", "assets", "generated", generatedName)
   ];
 }
 
@@ -35,13 +40,16 @@ function readBundledCalendarOAuthClients(): BundledCalendarOAuthClients | null {
   try {
     const parsed = JSON.parse(readFileSync(configPath, "utf8")) as Partial<BundledCalendarOAuthClients>;
     const googleClientId = typeof parsed.googleClientId === "string" ? parsed.googleClientId.trim() : "";
+    const googleClientSecret =
+      typeof parsed.googleClientSecret === "string" ? parsed.googleClientSecret.trim() : "";
     const microsoftClientId = typeof parsed.microsoftClientId === "string" ? parsed.microsoftClientId.trim() : "";
-    if (!googleClientId && !microsoftClientId) {
+    if (!googleClientId && !googleClientSecret && !microsoftClientId) {
       cachedBundledClients = null;
       return null;
     }
     cachedBundledClients = {
       ...(googleClientId ? { googleClientId } : {}),
+      ...(googleClientSecret ? { googleClientSecret } : {}),
       ...(microsoftClientId ? { microsoftClientId } : {})
     };
     return cachedBundledClients;
@@ -59,9 +67,22 @@ function resolveClientId(envKey: "GOOGLE_CALENDAR_CLIENT_ID" | "MICROSOFT_CALEND
   return fromBundle ?? "";
 }
 
+function resolveClientSecret(envKey: "GOOGLE_CALENDAR_CLIENT_SECRET", bundledKey: keyof BundledCalendarOAuthClients): string {
+  const fromEnv = process.env[envKey]?.trim();
+  if (fromEnv) return fromEnv;
+  const bundled = readBundledCalendarOAuthClients();
+  const fromBundle = bundled?.[bundledKey]?.trim();
+  return fromBundle ?? "";
+}
+
 /** Public OAuth client ID for Google Calendar (PKCE desktop flow). Never a secret. */
 export function getGoogleCalendarClientId(): string {
   return resolveClientId("GOOGLE_CALENDAR_CLIENT_ID", "googleClientId");
+}
+
+/** OAuth desktop client secret for Google Calendar. This is an app credential, not a user password. */
+export function getGoogleCalendarClientSecret(): string {
+  return resolveClientSecret("GOOGLE_CALENDAR_CLIENT_SECRET", "googleClientSecret");
 }
 
 /** Public OAuth client ID for Microsoft Graph calendar (PKCE public client). Never a secret. */
@@ -81,13 +102,13 @@ export function getMicrosoftOAuthClientId(): string {
 
 export function getConnectedCalendarOAuthSetupStatus(): ConnectedCalendarOAuthSetupStatus {
   return {
-    googleConfigured: Boolean(getGoogleCalendarClientId()),
+    googleConfigured: Boolean(getGoogleCalendarClientId() && getGoogleCalendarClientSecret()),
     microsoftConfigured: Boolean(getMicrosoftCalendarClientId())
   };
 }
 
 export function assertGoogleCalendarClientIdConfigured(): void {
-  if (!getGoogleCalendarClientId()) {
+  if (!getGoogleCalendarClientId() || !getGoogleCalendarClientSecret()) {
     throw new Error(`${CONNECTED_CALENDAR_OAUTH_NOT_CONFIGURED_CODE}:google`);
   }
 }

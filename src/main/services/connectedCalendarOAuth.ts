@@ -22,9 +22,14 @@ type PendingOAuthSession = {
   redirectUri: string;
   loopback: Awaited<ReturnType<typeof startOAuthLoopbackServer>>;
   createdAt: number;
+  completion?: Promise<ConnectedCalendarAccount>;
 };
 
 const pendingOAuthSessions = new Map<ConnectedCalendarProvider, PendingOAuthSession>();
+const completedOAuthAccounts = new Map<
+  ConnectedCalendarProvider,
+  { account: ConnectedCalendarAccount; completedAt: number }
+>();
 
 export function validateOAuthCallbackState(expected: string, received: string): void {
   if (expected !== received) {
@@ -32,6 +37,7 @@ export function validateOAuthCallbackState(expected: string, received: string): 
   }
 }
 const OAUTH_SESSION_TTL_MS = 15 * 60 * 1000;
+const COMPLETED_OAUTH_RESULT_TTL_MS = 5 * 60 * 1000;
 
 function clearPendingSession(provider: ConnectedCalendarProvider): void {
   const pending = pendingOAuthSessions.get(provider);
@@ -51,18 +57,24 @@ export async function startConnectedCalendarOAuth(provider: ConnectedCalendarPro
   checkConnectedCalendarAllowed();
   assertExternalUrlAllowed();
   clearPendingSession(provider);
+  completedOAuthAccounts.delete(provider);
 
   const adapter = getConnectedCalendarProviderAdapter(provider);
   const loopback = await startOAuthLoopbackServer();
   const auth = await adapter.createAuthRequest(loopback.redirectUri);
 
-  pendingOAuthSessions.set(provider, {
+  const pending: PendingOAuthSession = {
     provider,
     state: auth.state,
     codeVerifier: auth.codeVerifier,
     redirectUri: loopback.redirectUri,
     loopback,
     createdAt: Date.now()
+  };
+  pendingOAuthSessions.set(provider, pending);
+  pending.completion = finishConnectedCalendarOAuth(pending);
+  pending.completion.catch(() => {
+    // The renderer reports the error when it awaits the same pending authorization.
   });
 
   await shell.openExternal(auth.authUrl);
@@ -74,6 +86,10 @@ export async function completeConnectedCalendarOAuth(
   checkConnectedCalendarAllowed();
   const pending = pendingOAuthSessions.get(provider);
   if (!pending) {
+    const completed = completedOAuthAccounts.get(provider);
+    if (completed && Date.now() - completed.completedAt <= COMPLETED_OAUTH_RESULT_TTL_MS) {
+      return completed.account;
+    }
     throw new Error("No pending connected calendar authorization. Start OAuth first.");
   }
   if (Date.now() - pending.createdAt > OAUTH_SESSION_TTL_MS) {
@@ -81,6 +97,15 @@ export async function completeConnectedCalendarOAuth(
     throw new Error("Connected calendar authorization expired. Please try again.");
   }
 
+  return pending.completion ?? finishConnectedCalendarOAuth(pending);
+}
+
+export function cancelConnectedCalendarOAuth(provider: ConnectedCalendarProvider): void {
+  clearPendingSession(provider);
+}
+
+async function finishConnectedCalendarOAuth(pending: PendingOAuthSession): Promise<ConnectedCalendarAccount> {
+  const { provider } = pending;
   try {
     const callback = await pending.loopback.waitForCallback();
     validateOAuthCallbackState(pending.state, callback.state);
@@ -120,7 +145,9 @@ export async function completeConnectedCalendarOAuth(
       throw new Error("Failed to store connected calendar tokens.");
     }
 
-    return syncConnectedCalendarAccount(account.id);
+    const synced = await syncConnectedCalendarAccount(account.id);
+    completedOAuthAccounts.set(provider, { account: synced, completedAt: Date.now() });
+    return synced;
   } catch (error) {
     mainLog.warn(
       `Connected calendar OAuth failed for provider=${provider}: ${error instanceof Error ? error.message : String(error)}`
@@ -129,8 +156,4 @@ export async function completeConnectedCalendarOAuth(
   } finally {
     clearPendingSession(provider);
   }
-}
-
-export function cancelConnectedCalendarOAuth(provider: ConnectedCalendarProvider): void {
-  clearPendingSession(provider);
 }

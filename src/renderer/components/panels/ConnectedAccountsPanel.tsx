@@ -51,6 +51,17 @@ function isProviderConfigured(
   return provider === "google" ? oauthSetup.googleConfigured : oauthSetup.microsoftConfigured;
 }
 
+function getSyncFailureMessage(account: ConnectedCalendarAccount, fallback: string): string {
+  return account.syncError?.trim() || fallback;
+}
+
+function connectedAccountsIntro(oauthSetup: ConnectedCalendarOAuthSetupStatus | null): string {
+  if (oauthSetup?.googleConfigured && !oauthSetup.microsoftConfigured) {
+    return "Sign in with Google Calendar to show read-only Google events in your calendar. This feature is experimental, and Google accounts must be added as approved testers by the maintainer while the app is in testing mode.";
+  }
+  return "Sign in with Google Calendar or Outlook / Microsoft 365 to show read-only events in your calendar, including Teams meetings from your Microsoft account.";
+}
+
 export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccountsChanged }: Props): JSX.Element {
   const [accounts, setAccounts] = useState<ConnectedCalendarAccount[]>([]);
   const [summary, setSummary] = useState<{ total: number; synced: number; error: number } | null>(null);
@@ -86,6 +97,28 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
     void loadAccounts();
   }, [loadAccounts]);
 
+  const finishOAuth = useCallback(
+    async (provider: ConnectedCalendarProvider): Promise<void> => {
+      try {
+        const api = requireAssistantApi();
+        await api.completeConnectedCalendarOAuth({ provider });
+        onSuccess(`${providerLabel(provider)} connected.`);
+        setOauthInstructions(false);
+        setPendingProvider(null);
+        await loadAccounts();
+        await onAccountsChanged();
+      } catch (error) {
+        const message = getAssistantInvokeErrorMessage(error);
+        onError(
+          isConnectedCalendarOAuthSetupError(message) ? connectedCalendarOAuthProviderErrorMessage(oauthSetup) : message
+        );
+        setOauthInstructions(false);
+        setPendingProvider(null);
+      }
+    },
+    [loadAccounts, oauthSetup, onAccountsChanged, onError, onSuccess]
+  );
+
   async function handleConnect(provider: ConnectedCalendarProvider): Promise<void> {
     if (!isProviderConfigured(provider, oauthSetup)) {
       onError(connectedCalendarOAuthProviderErrorMessage(oauthSetup));
@@ -96,7 +129,8 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
     try {
       const api = requireAssistantApi();
       await api.startConnectedCalendarOAuth({ provider });
-      onSuccess("Browser opened. Sign in, then return here and click Complete sign-in.");
+      onSuccess("Browser opened. Finish sign-in there and this panel will update automatically.");
+      void finishOAuth(provider);
     } catch (error) {
       const message = getAssistantInvokeErrorMessage(error);
       onError(
@@ -104,24 +138,6 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
       );
       setOauthInstructions(false);
       setPendingProvider(null);
-    }
-  }
-
-  async function handleCompleteOAuth(): Promise<void> {
-    if (!pendingProvider) return;
-    try {
-      const api = requireAssistantApi();
-      await api.completeConnectedCalendarOAuth({ provider: pendingProvider });
-      onSuccess(`${providerLabel(pendingProvider)} connected.`);
-      setOauthInstructions(false);
-      setPendingProvider(null);
-      await loadAccounts();
-      await onAccountsChanged();
-    } catch (error) {
-      const message = getAssistantInvokeErrorMessage(error);
-      onError(
-        isConnectedCalendarOAuthSetupError(message) ? connectedCalendarOAuthProviderErrorMessage(oauthSetup) : message
-      );
     }
   }
 
@@ -129,8 +145,12 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
     setBusyAccountId(accountId);
     try {
       const api = requireAssistantApi();
-      await api.syncConnectedCalendarAccount({ accountId });
-      onSuccess("Calendar sync finished.");
+      const account = await api.syncConnectedCalendarAccount({ accountId });
+      if (account.syncState === "error") {
+        onError(getSyncFailureMessage(account, "Calendar sync failed."));
+      } else {
+        onSuccess("Calendar sync finished.");
+      }
       await loadAccounts();
       await onAccountsChanged();
     } catch (error) {
@@ -144,8 +164,14 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
     setIsSyncingAll(true);
     try {
       const api = requireAssistantApi();
-      await api.syncAllConnectedCalendarAccounts();
-      onSuccess("All connected calendars synced.");
+      const accountsAfterSync = await api.syncAllConnectedCalendarAccounts();
+      const failed = accountsAfterSync.filter((account) => account.syncState === "error");
+      const firstFailed = failed[0];
+      if (firstFailed) {
+        onError(getSyncFailureMessage(firstFailed, `${failed.length} calendar sync failed.`));
+      } else {
+        onSuccess("All connected calendars synced.");
+      }
       await loadAccounts();
       await onAccountsChanged();
     } catch (error) {
@@ -186,8 +212,7 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
         }
       />
       <p className="muted" id="connected-accounts-heading">
-        Connect Google Calendar or Outlook / Microsoft 365 to show read-only events in your calendar, including Teams
-        meetings from your Microsoft account.
+        {connectedAccountsIntro(oauthSetup)}
       </p>
       {oauthSetupMessage ? (
         <p className="connectedAccountsSetupWarning" role="status">
@@ -203,12 +228,10 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
       {oauthInstructions && pendingProvider ? (
         <div className="connectedAccountsOauthBox">
           <p>
-            Complete sign-in for <strong>{providerLabel(pendingProvider)}</strong> in your browser, then click below.
+            Waiting for <strong>{providerLabel(pendingProvider)}</strong> sign-in in your browser. This panel will
+            update automatically when authorization finishes.
           </p>
           <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
-            <button type="button" className="primaryButton" onClick={() => void handleCompleteOAuth()}>
-              Complete sign-in
-            </button>
             <button
               type="button"
               className="ghostButton"
@@ -217,7 +240,7 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
                 setPendingProvider(null);
               }}
             >
-              Cancel
+              Stop waiting
             </button>
           </div>
         </div>
@@ -229,9 +252,9 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
           className="ghostButton"
           onClick={() => void handleConnect("google")}
           disabled={Boolean(pendingProvider) || !oauthSetup?.googleConfigured}
-          title={oauthSetup?.googleConfigured ? undefined : "Google Calendar OAuth is not configured for this build."}
+          title={oauthSetup?.googleConfigured ? undefined : "Google Calendar sign-in is not available in this build."}
         >
-          <Calendar size={14} /> Connect Google
+          <Calendar size={14} /> Sign in with Google
         </button>
         <button
           type="button"
@@ -241,10 +264,10 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
           title={
             oauthSetup?.microsoftConfigured
               ? "Includes Outlook calendar and Teams meetings on your calendar."
-              : "Microsoft calendar OAuth is not configured for this build."
+              : "Outlook / Microsoft 365 sign-in is not available in this build."
           }
         >
-          <Calendar size={14} /> Connect Outlook / Microsoft 365
+          <Calendar size={14} /> Sign in with Outlook / Microsoft 365
         </button>
         {accounts.length > 0 ? (
           <button type="button" className="ghostButton" onClick={() => void handleSyncAll()} disabled={isSyncingAll}>
@@ -256,7 +279,7 @@ export function ConnectedAccountsPanel({ onClose, onError, onSuccess, onAccounts
       {isLoading ? (
         <LoadingState message="Loading connected accounts…" />
       ) : accounts.length === 0 ? (
-        <p className="muted">No connected calendars yet. Connect Google or Outlook to get started.</p>
+        <p className="muted">No connected calendars yet. Sign in with Google or Outlook to get started.</p>
       ) : (
         <ul className="list connectedAccountsList">
           {accounts.map((account) => (

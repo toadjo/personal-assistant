@@ -54,6 +54,7 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.appOpenBugReport,
   IpcInvoke.connectedCalendarAccountsList,
   IpcInvoke.connectedCalendarAccountsSummary,
+  IpcInvoke.connectedCalendarOAuthSetup,
   IpcInvoke.connectedCalendarAccountsSyncAll,
   // Team mode zero-arg channels
   IpcInvoke.teamGetConfig,

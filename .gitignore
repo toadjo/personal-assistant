@@ -37,6 +37,7 @@ blob-report/
 
 # Generated assets
 assets/generated/
+assets/calendar-oauth-clients.local.json
 
 # TypeScript build artifacts should never be emitted beside source files
 src/shared/**/*.js

@@ -1,5 +1,9 @@
 import type { ConnectedCalendarTokenSet } from "../../connectedCalendarSecrets";
-import { assertGoogleCalendarClientIdConfigured, getGoogleCalendarClientId } from "../oauthClientConfig";
+import {
+  assertGoogleCalendarClientIdConfigured,
+  getGoogleCalendarClientId,
+  getGoogleCalendarClientSecret
+} from "../oauthClientConfig";
 import { GOOGLE_CALENDAR_SCOPE } from "./config";
 import { generateOAuthState, generatePkcePair } from "./pkce";
 import { providerFetch } from "./providerHttp";
@@ -119,7 +123,7 @@ export function createGoogleCalendarAdapter(fetchImpl: ProviderFetch = fetch): C
         fetchImpl
       );
       if (!response.ok) {
-        throw new Error(`Google profile request failed (${response.status}).`);
+        throw new Error(`Google profile request failed (${response.status}): ${await readGoogleErrorMessage(response)}`);
       }
       const body = (await response.json()) as { email?: string; name?: string };
       const email = body.email?.trim();
@@ -142,7 +146,8 @@ async function exchangeGoogleTokens(
 ): Promise<ConnectedCalendarTokenSet> {
   assertGoogleCalendarClientIdConfigured();
   const clientId = getGoogleCalendarClientId();
-  const body = new URLSearchParams({ client_id: clientId });
+  const clientSecret = getGoogleCalendarClientSecret();
+  const body = new URLSearchParams({ client_id: clientId, client_secret: clientSecret });
   if ("code" in input) {
     body.set("grant_type", "authorization_code");
     body.set("code", input.code);
@@ -160,7 +165,7 @@ async function exchangeGoogleTokens(
     fetchImpl
   );
   if (!response.ok) {
-    throw new Error(`Google token exchange failed (${response.status}).`);
+    throw new Error(`Google token exchange failed (${response.status}): ${await readGoogleErrorMessage(response)}`);
   }
   const json = (await response.json()) as {
     access_token?: string;
@@ -183,6 +188,48 @@ async function exchangeGoogleTokens(
     scope: json.scope,
     tokenType: json.token_type
   };
+}
+
+async function readGoogleErrorMessage(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as {
+      error?: string | { code?: number; message?: string; status?: string };
+      error_description?: string;
+    };
+    const nestedError = typeof body.error === "object" ? body.error : null;
+    const code =
+      typeof body.error === "string"
+        ? body.error.trim()
+        : nestedError?.status?.trim() || (typeof nestedError?.code === "number" ? String(nestedError.code) : "");
+    const description = stripTrailingPeriod(body.error_description?.trim() || nestedError?.message?.trim() || "");
+    if (description && /api has not been used|disabled/i.test(description)) {
+      return `${description}. Enable the Google Calendar API for this Google Cloud project, then reconnect the account.`;
+    }
+    if (code === "PERMISSION_DENIED" || /insufficient authentication scopes/i.test(description ?? "")) {
+      return description
+        ? `${code}: ${description}. Reconnect Google Calendar so the app receives the updated calendar scope.`
+        : `${code}. Reconnect Google Calendar so the app receives the updated calendar scope.`;
+    }
+    if (code === "invalid_client") {
+      return description
+        ? `${code}: ${description}. Use a Google OAuth Desktop app client ID, not a Web application client ID.`
+        : `${code}. Use a Google OAuth Desktop app client ID, not a Web application client ID.`;
+    }
+    if (code === "invalid_grant") {
+      return description
+        ? `${code}: ${description}. Start Google sign-in again and finish with the same app window.`
+        : `${code}. Start Google sign-in again and finish with the same app window.`;
+    }
+    if (code && description) return `${code}: ${description}`;
+    if (code) return code;
+  } catch {
+    // Fall through to the generic message below.
+  }
+  return "Google did not include an error reason.";
+}
+
+function stripTrailingPeriod(value: string): string {
+  return value.replace(/\.+$/, "");
 }
 
 async function syncGoogleCalendar(
@@ -217,7 +264,7 @@ async function syncGoogleCalendar(
   }
 
   if (!response.ok) {
-    throw new Error(`Google calendar sync failed (${response.status}).`);
+    throw new Error(`Google calendar sync failed (${response.status}): ${await readGoogleErrorMessage(response)}`);
   }
 
   const json = (await response.json()) as {

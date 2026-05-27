@@ -4,6 +4,31 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-05-27
+
+### Added
+
+- Experimental Connected Calendar support for Google Calendar.
+- Google Calendar events now sync into the existing app Calendar instead of a separate calendar surface.
+- Google calendar source filtering in the Calendar panel.
+- Connected Accounts panel for signing in with Google and syncing connected calendar data.
+- Local OAuth loopback flow with secure token storage.
+- Calendar OAuth configuration support for maintainer-built installers.
+- Detailed Google OAuth and sync error messages for easier setup and QA.
+
+### Changed
+
+- Connected Accounts now uses a one-click sign-in flow that waits for browser authorization automatically.
+- Calendar sync success messages now only appear when the returned account state is actually synced.
+- Life Area panels received visual cleanup so summary cards and sections render compactly without excessive scrolling.
+
+### Experimental Access Note
+
+- Google Calendar is the only connected calendar provider enabled for this release.
+- This feature is still experimental and the Google OAuth app is in testing mode.
+- To use Google Calendar sync, users must email the maintainer so their Google account can be added as an approved tester on the Google side.
+- Outlook and Microsoft Teams calendar display remain planned, but are not enabled for this release.
+
 ## [3.6.0] - 2026-05-26
 
 ### Changed

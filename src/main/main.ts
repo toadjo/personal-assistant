@@ -1,3 +1,7 @@
+import { loadEnvFile } from "./config/loadEnvFile";
+
+loadEnvFile();
+
 import {
   app,
   crashReporter,

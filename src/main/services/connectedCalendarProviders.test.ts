@@ -84,6 +84,7 @@ describe("connected calendar providers", () => {
   beforeEach(() => {
     testDb = createMemoryDatabase();
     process.env.GOOGLE_CALENDAR_CLIENT_ID = "google-test-client";
+    process.env.GOOGLE_CALENDAR_CLIENT_SECRET = "google-test-secret";
     process.env.MICROSOFT_CALENDAR_CLIENT_ID = "microsoft-test-client";
     vi.mocked(policy.isConnectedCalendarAllowed).mockReturnValue(true);
     vi.mocked(policy.isGoogleCalendarAllowed).mockReturnValue(true);
@@ -107,6 +108,7 @@ describe("connected calendar providers", () => {
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
     expect(url.searchParams.get("code_challenge")).toBeTruthy();
     expect(url.searchParams.get("scope")).toContain("calendar.events.readonly");
+    expect(url.searchParams.get("scope")).toContain("userinfo.email");
   });
 
   it("builds Microsoft auth URL with PKCE, state, redirect URI, and calendar scope", async () => {
@@ -232,9 +234,11 @@ describe("connected calendar providers", () => {
       email: "test@gmail.com",
       enabledFeatures: JSON.stringify(["calendar"])
     });
-    const fetchMock = vi.fn(async (input: RequestInfo) => {
+    const fetchMock = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("oauth2.googleapis.com/token")) {
+        const body = String(init?.body ?? "");
+        expect(body).toContain("client_secret=google-test-secret");
         return jsonResponse({
           access_token: "access-token",
           refresh_token: "refresh-token",
@@ -253,6 +257,29 @@ describe("connected calendar providers", () => {
     await saveConnectedCalendarTokens(account.id, tokens);
     const stored = getSetting(`connectedCalendar.${account.id}.tokens`);
     expect(stored?.startsWith("enc:")).toBe(true);
+  });
+
+  it("includes Google token exchange error details", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(
+        {
+          error: "invalid_client",
+          error_description: "The OAuth client was not found."
+        },
+        400
+      )
+    ) as typeof fetch;
+    const adapter = createGoogleCalendarAdapter(fetchMock);
+
+    await expect(
+      adapter.exchangeCode({
+        code: "auth-code",
+        codeVerifier: "verifier",
+        redirectUri: "http://127.0.0.1/callback"
+      })
+    ).rejects.toThrow(
+      /invalid_client: The OAuth client was not found\. Use a Google OAuth Desktop app client ID/
+    );
   });
 
   it("handles Google 410 by clearing cache and full-resyncing", async () => {
