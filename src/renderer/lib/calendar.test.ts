@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Reminder } from "../../shared/types";
-import type { Task } from "../../shared/types";
-import { buildCalendarCells, parseLocalDateKey, toLocalDateKey } from "./calendar";
+import type { ExternalCalendarEvent, Reminder, Task } from "../../shared/types";
+import { buildCalendarCells, filterCalendarEvents, parseLocalDateKey, toLocalDateKey } from "./calendar";
+import { externalEventLocalDateKey, mapExternalCalendarEventToCalendarItem } from "./externalCalendar";
 
 describe("calendar", () => {
   it("buildCalendarCells includes event items from reminders and tasks", () => {
@@ -38,7 +38,7 @@ describe("calendar", () => {
       }
     ]);
 
-    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
+    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate, new Map());
 
     const reminderCell = cells.find((c) => c.dateKey === reminderDateKey);
     expect(reminderCell).toBeDefined();
@@ -108,7 +108,7 @@ describe("calendar", () => {
       }
     ]);
 
-    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
+    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate, new Map());
     const cell = cells.find((c) => c.dateKey === dateKey);
 
     expect(cell).toBeDefined();
@@ -138,7 +138,7 @@ describe("calendar", () => {
       }
     ]);
 
-    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
+    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate, new Map());
     const cell = cells.find((c) => c.dateKey === dateKey);
 
     expect(cell).toBeDefined();
@@ -167,7 +167,7 @@ describe("calendar", () => {
       }
     ]);
 
-    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate);
+    const cells = buildCalendarCells(monthDate, remindersByDate, tasksByDate, new Map());
     const cell = cells.find((c) => c.dateKey === dateKey);
 
     expect(cell).toBeDefined();
@@ -208,9 +208,166 @@ describe("buildCalendarCells", () => {
         ]
       ]
     ]);
-    const cells = buildCalendarCells(month, remindersByDate, new Map());
+    const cells = buildCalendarCells(month, remindersByDate, new Map(), new Map());
     expect(cells.length % 7).toBe(0);
     const fifteenth = cells.find((c) => c.dateKey === key && c.isCurrentMonth);
     expect(fifteenth?.count).toBe(1);
+  });
+});
+
+describe("external calendar events", () => {
+  const monthDate = new Date(2026, 5, 1);
+
+  function makeExternal(partial: Partial<ExternalCalendarEvent> & Pick<ExternalCalendarEvent, "id" | "title" | "startAt">): ExternalCalendarEvent {
+    return {
+      accountId: "acc-1",
+      provider: partial.provider ?? "google",
+      externalId: partial.externalId ?? partial.id,
+      calendarId: "primary",
+      calendarName: "Primary",
+      endAt: partial.endAt ?? partial.startAt,
+      allDay: partial.allDay ?? 0,
+      location: null,
+      status: null,
+      attendeesCount: 0,
+      htmlLink: null,
+      etag: null,
+      updatedAtProvider: null,
+      isOnlineMeeting: 0,
+      onlineMeetingProvider: null,
+      onlineMeetingUrl: null,
+      createdAt: "2026-06-01T00:00:00Z",
+      updatedAt: "2026-06-01T00:00:00Z",
+      ...partial
+    };
+  }
+
+  it("places Google and Microsoft events on the correct local dates", () => {
+    const external = new Map<string, ExternalCalendarEvent[]>([
+      [
+        "2026-06-10",
+        [
+          makeExternal({
+            id: "g1",
+            provider: "google",
+            title: "Google meet",
+            startAt: "2026-06-10T14:00:00Z",
+            endAt: "2026-06-10T15:00:00Z"
+          })
+        ]
+      ],
+      [
+        "2026-06-11",
+        [
+          makeExternal({
+            id: "m1",
+            provider: "microsoft",
+            title: "Outlook review",
+            startAt: "2026-06-11T09:00:00Z",
+            endAt: "2026-06-11T10:00:00Z"
+          })
+        ]
+      ]
+    ]);
+    const cells = buildCalendarCells(monthDate, new Map(), new Map(), new Map(), external);
+    expect(cells.find((c) => c.dateKey === "2026-06-10")?.events.some((e) => e.source === "google")).toBe(true);
+    expect(cells.find((c) => c.dateKey === "2026-06-11")?.events.some((e) => e.source === "microsoft")).toBe(true);
+  });
+
+  it("keeps local and external events on the same day", () => {
+    const remindersByDate = new Map<string, Reminder[]>([
+      [
+        "2026-06-10",
+        [
+          {
+            id: "r1",
+            text: "Local reminder",
+            dueAt: "2026-06-10T10:00:00Z",
+            recurrence: "none",
+            status: "pending",
+            notifyChannel: "desktop"
+          }
+        ]
+      ]
+    ]);
+    const external = new Map<string, ExternalCalendarEvent[]>([
+      [
+        "2026-06-10",
+        [
+          makeExternal({
+            id: "g1",
+            title: "External",
+            startAt: "2026-06-10T14:00:00Z",
+            endAt: "2026-06-10T15:00:00Z"
+          })
+        ]
+      ]
+    ]);
+    const cell = buildCalendarCells(monthDate, remindersByDate, new Map(), new Map(), external).find(
+      (c) => c.dateKey === "2026-06-10"
+    );
+    expect(cell?.events).toHaveLength(2);
+  });
+
+  it("does not shift all-day external event dates across time zones", () => {
+    const event = makeExternal({
+      id: "g-all-day",
+      title: "Holiday",
+      startAt: "2026-06-12",
+      endAt: "2026-06-13",
+      allDay: 1
+    });
+    expect(externalEventLocalDateKey(event)).toBe("2026-06-12");
+    const external = new Map<string, ExternalCalendarEvent[]>([["2026-06-12", [event]]]);
+    const cell = buildCalendarCells(monthDate, new Map(), new Map(), new Map(), external).find(
+      (c) => c.dateKey === "2026-06-12"
+    );
+    expect(cell?.events[0]?.allDay).toBe(true);
+    expect(cell?.events[0]?.title).toBe("Holiday");
+  });
+
+  it("maps Microsoft Teams meetings to teams display source", () => {
+    const item = mapExternalCalendarEventToCalendarItem(
+      makeExternal({
+        id: "teams-1",
+        provider: "microsoft",
+        title: "Sprint",
+        startAt: "2026-06-10T14:00:00Z",
+        isOnlineMeeting: 1,
+        onlineMeetingProvider: "teamsForBusiness",
+        onlineMeetingUrl: "https://teams.microsoft.com/l/meetup-join/abc"
+      })
+    );
+    expect(item.source).toBe("teams");
+    expect(item.sourceLabel).toBe("Teams");
+    expect(item.onlineMeetingUrl).toContain("teams.microsoft.com");
+  });
+
+  it("maps Microsoft events without online meeting as Outlook", () => {
+    const item = mapExternalCalendarEventToCalendarItem(
+      makeExternal({
+        id: "outlook-1",
+        provider: "microsoft",
+        title: "1:1",
+        startAt: "2026-06-10T14:00:00Z"
+      })
+    );
+    expect(item.source).toBe("microsoft");
+    expect(item.sourceLabel).toBe("Outlook");
+  });
+
+  it("filters events by source including Teams and Outlook split", () => {
+    const events = [
+      { source: "reminder" as const, id: "1", title: "r", startsAt: "", allDay: false },
+      { source: "google" as const, id: "2", title: "g", startsAt: "", allDay: false },
+      { source: "microsoft" as const, id: "3", title: "m", startsAt: "", allDay: false },
+      { source: "teams" as const, id: "4", title: "t", startsAt: "", allDay: false }
+    ];
+    expect(filterCalendarEvents(events, "local")).toHaveLength(1);
+    expect(filterCalendarEvents(events, "google")).toHaveLength(1);
+    expect(filterCalendarEvents(events, "microsoft")).toHaveLength(1);
+    expect(filterCalendarEvents(events, "teams")).toHaveLength(1);
+    expect(filterCalendarEvents(events, "teams").every((e) => e.source === "teams")).toBe(true);
+    expect(filterCalendarEvents(events, "microsoft").every((e) => e.source === "microsoft")).toBe(true);
   });
 });

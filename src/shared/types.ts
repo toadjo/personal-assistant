@@ -471,6 +471,9 @@ export type ExternalCalendarEvent = {
   htmlLink: string | null;
   etag: string | null;
   updatedAtProvider: string | null;
+  isOnlineMeeting: number;
+  onlineMeetingProvider: string | null;
+  onlineMeetingUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };

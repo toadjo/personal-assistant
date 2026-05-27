@@ -96,7 +96,10 @@ export async function syncConnectedCalendarAccount(accountId: string): Promise<C
         attendeesCount: event.attendeesCount,
         htmlLink: event.htmlLink,
         etag: event.etag,
-        updatedAtProvider: event.updatedAtProvider
+        updatedAtProvider: event.updatedAtProvider,
+        isOnlineMeeting: event.isOnlineMeeting,
+        onlineMeetingProvider: event.onlineMeetingProvider,
+        onlineMeetingUrl: event.onlineMeetingUrl
       });
     }
 

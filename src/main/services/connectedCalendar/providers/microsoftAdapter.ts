@@ -13,6 +13,7 @@ const SYNC_PAST_DAYS = 90;
 const SYNC_FUTURE_DAYS = 365;
 
 type MicrosoftDateTimeTimeZone = { dateTime?: string; timeZone?: string };
+type MicrosoftOnlineMeeting = { joinUrl?: string };
 type MicrosoftCalendarEvent = {
   id?: string;
   subject?: string;
@@ -22,6 +23,10 @@ type MicrosoftCalendarEvent = {
   webLink?: string;
   lastModifiedDateTime?: string;
   location?: { displayName?: string };
+  isOnlineMeeting?: boolean;
+  onlineMeetingProvider?: string;
+  onlineMeeting?: MicrosoftOnlineMeeting;
+  attendees?: unknown[];
 };
 
 export function mapMicrosoftCalendarEvent(event: MicrosoftCalendarEvent): NormalizedExternalEvent | null {
@@ -29,6 +34,10 @@ export function mapMicrosoftCalendarEvent(event: MicrosoftCalendarEvent): Normal
   const startAt = normalizeMicrosoftDateTime(event.start, Boolean(event.isAllDay));
   const endAt = normalizeMicrosoftDateTime(event.end, Boolean(event.isAllDay));
   if (!startAt || !endAt) return null;
+
+  const isOnlineMeeting = Boolean(event.isOnlineMeeting);
+  const onlineMeetingProvider = event.onlineMeetingProvider?.trim() || null;
+  const onlineMeetingUrl = event.onlineMeeting?.joinUrl?.trim() || null;
 
   return {
     externalId: event.id,
@@ -40,10 +49,13 @@ export function mapMicrosoftCalendarEvent(event: MicrosoftCalendarEvent): Normal
     allDay: Boolean(event.isAllDay),
     location: event.location?.displayName?.trim() || null,
     status: null,
-    attendeesCount: 0,
+    attendeesCount: Array.isArray(event.attendees) ? event.attendees.length : 0,
     htmlLink: event.webLink ?? null,
     etag: null,
-    updatedAtProvider: event.lastModifiedDateTime ?? null
+    updatedAtProvider: event.lastModifiedDateTime ?? null,
+    isOnlineMeeting,
+    onlineMeetingProvider,
+    onlineMeetingUrl
   };
 }
 

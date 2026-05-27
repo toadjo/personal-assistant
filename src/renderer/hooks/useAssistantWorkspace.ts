@@ -21,6 +21,7 @@ import { useDeskProductivityState } from "./composition/useDeskProductivityState
 import { useDeskCommandState } from "./composition/useDeskCommandState";
 import type { AssistantWorkspace } from "./workspace/workspaceTypes";
 import type { DailyCommandCenterFilter } from "../lib/derived/daily-command-center";
+import type { ExternalCalendarEvent } from "../../shared/types";
 import type { TeamProjectTask, TeamProject } from "../../shared/team/types";
 export type { AssistantWorkspace } from "./workspace/workspaceTypes";
 
@@ -33,6 +34,7 @@ type TeamDataParams = {
   onQuickCapture?: (type: "note" | "task" | "reminder" | "inbox", text: string) => void;
   onShowRecent?: () => void;
   onShowSavedSearches?: () => void;
+  externalCalendarEvents?: ExternalCalendarEvent[];
 };
 
 export function useAssistantWorkspace(
@@ -70,7 +72,8 @@ export function useAssistantWorkspace(
     mergeTask: undefined,
     mergeReminder: undefined,
     mergeTeamTask: teamDataParams?.mergeTeamTask || (() => {}),
-    refreshTeamTasks: teamDataParams?.refreshTeamTasks || (async () => {})
+    refreshTeamTasks: teamDataParams?.refreshTeamTasks || (async () => {}),
+    externalCalendarEvents: teamDataParams?.externalCalendarEvents ?? []
   });
 
   // Command state - depends on data, ha, productivity, and callbacks from UI

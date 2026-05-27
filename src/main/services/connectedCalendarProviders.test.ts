@@ -63,6 +63,7 @@ import {
   upsertExternalCalendarEvent,
   upsertExternalCalendarSyncState
 } from "./connectedCalendar";
+import { classifyMicrosoftCalendarDisplaySource } from "../../shared/connectedCalendarDisplay";
 import { mapGoogleCalendarEvent, mapMicrosoftCalendarEvent } from "./connectedCalendar/providers";
 import { createGoogleCalendarAdapter } from "./connectedCalendar/providers/googleAdapter";
 import { createMicrosoftCalendarAdapter } from "./connectedCalendar/providers/microsoftAdapter";
@@ -160,6 +161,64 @@ describe("connected calendar providers", () => {
     expect(timed?.title).toBe("Review");
     expect(timed?.location).toBe("Room A");
     expect(allDay?.allDay).toBe(true);
+    expect(timed?.isOnlineMeeting).toBe(false);
+    expect(timed?.onlineMeetingProvider).toBeNull();
+    expect(timed?.onlineMeetingUrl).toBeNull();
+  });
+
+  it("maps Microsoft Teams meeting online meeting fields", () => {
+    const teams = mapMicrosoftCalendarEvent({
+      id: "m-teams",
+      subject: "Sprint planning",
+      start: { dateTime: "2026-06-01T10:00:00Z", timeZone: "UTC" },
+      end: { dateTime: "2026-06-01T11:00:00Z", timeZone: "UTC" },
+      isOnlineMeeting: true,
+      onlineMeetingProvider: "teamsForBusiness",
+      onlineMeeting: { joinUrl: "https://teams.microsoft.com/l/meetup-join/abc" },
+      attendees: [{}, {}]
+    });
+    expect(teams?.isOnlineMeeting).toBe(true);
+    expect(teams?.onlineMeetingProvider).toBe("teamsForBusiness");
+    expect(teams?.onlineMeetingUrl).toBe("https://teams.microsoft.com/l/meetup-join/abc");
+    expect(teams?.attendeesCount).toBe(2);
+    expect(
+      classifyMicrosoftCalendarDisplaySource({
+        isOnlineMeeting: teams?.isOnlineMeeting,
+        onlineMeetingProvider: teams?.onlineMeetingProvider,
+        onlineMeetingUrl: teams?.onlineMeetingUrl
+      })
+    ).toBe("teams");
+  });
+
+  it("stores online meeting fields when upserting external events", () => {
+    const account = createConnectedCalendarAccount({
+      provider: "microsoft",
+      accountLabel: "user@contoso.com",
+      email: "user@contoso.com",
+      enabledFeatures: JSON.stringify(["calendar"])
+    });
+    const row = upsertExternalCalendarEvent({
+      accountId: account.id,
+      provider: "microsoft",
+      externalId: "evt-teams",
+      title: "Standup",
+      startAt: "2026-06-01T10:00:00Z",
+      endAt: "2026-06-01T10:30:00Z",
+      allDay: false,
+      isOnlineMeeting: true,
+      onlineMeetingProvider: "teamsForBusiness",
+      onlineMeetingUrl: "https://teams.microsoft.com/l/meetup-join/xyz"
+    });
+    const stored = testDb
+      .prepare("SELECT isOnlineMeeting, onlineMeetingProvider, onlineMeetingUrl FROM external_calendar_events WHERE id = ?")
+      .get(row.id) as {
+      isOnlineMeeting: number;
+      onlineMeetingProvider: string | null;
+      onlineMeetingUrl: string | null;
+    };
+    expect(stored.isOnlineMeeting).toBe(1);
+    expect(stored.onlineMeetingProvider).toBe("teamsForBusiness");
+    expect(stored.onlineMeetingUrl).toContain("teams.microsoft.com");
   });
 
   it("rejects mismatched OAuth state", () => {

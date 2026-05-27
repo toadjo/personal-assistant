@@ -345,6 +345,9 @@ export type BackupPayload = {
     htmlLink: string | null;
     etag: string | null;
     updatedAtProvider: string | null;
+    isOnlineMeeting: number;
+    onlineMeetingProvider: string | null;
+    onlineMeetingUrl: string | null;
     createdAt: string;
     updatedAt: string;
   }>;
@@ -1778,14 +1781,21 @@ export function importBackup(
     const externalCalendarEventStmt = db.prepare(
       `INSERT INTO external_calendar_events (
         id, accountId, provider, externalId, calendarId, calendarName, title, startAt, endAt, allDay,
-        location, status, attendeesCount, htmlLink, etag, updatedAtProvider, createdAt, updatedAt
+        location, status, attendeesCount, htmlLink, etag, updatedAtProvider, isOnlineMeeting, onlineMeetingProvider,
+        onlineMeetingUrl, createdAt, updatedAt
       ) VALUES (
         @id, @accountId, @provider, @externalId, @calendarId, @calendarName, @title, @startAt, @endAt, @allDay,
-        @location, @status, @attendeesCount, @htmlLink, @etag, @updatedAtProvider, @createdAt, @updatedAt
+        @location, @status, @attendeesCount, @htmlLink, @etag, @updatedAtProvider, @isOnlineMeeting, @onlineMeetingProvider,
+        @onlineMeetingUrl, @createdAt, @updatedAt
       )`
     );
     for (const row of actualPayload.external_calendar_events || []) {
-      externalCalendarEventStmt.run(row);
+      externalCalendarEventStmt.run({
+        ...row,
+        isOnlineMeeting: row.isOnlineMeeting ?? 0,
+        onlineMeetingProvider: row.onlineMeetingProvider ?? null,
+        onlineMeetingUrl: row.onlineMeetingUrl ?? null
+      });
     }
 
     const externalCalendarSyncStateStmt = db.prepare(

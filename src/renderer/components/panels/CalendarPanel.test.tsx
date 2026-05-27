@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi } from "vitest";
 import { CalendarPanel } from "./CalendarPanel";
-import type { CalendarCell } from "../../lib/calendar";
+import type { CalendarCell, CalendarEventItem } from "../../lib/calendar";
 import type { AgendaItem } from "../../hooks/workspace/useCalendarState";
 
 function makeCalendarCell(overrides: Partial<CalendarCell> = {}): CalendarCell {
@@ -666,5 +666,131 @@ describe("CalendarPanel", () => {
 
     // Month view should be active by default
     expect(screen.getByText("+2")).toBeInTheDocument();
+  });
+});
+
+describe("CalendarPanel external events", () => {
+  const calendarCursor = new Date(2024, 0, 1);
+  const baseProps = {
+    calendarCursor,
+    setCalendarCursor: vi.fn(),
+    todayKey: "2024-01-01",
+    selectedDateKey: "2024-01-01",
+    onSelectDateKey: vi.fn(),
+    dayAgenda: [] as AgendaItem[],
+    onCreateReminder: vi.fn(),
+    onCreateTask: vi.fn()
+  };
+
+  const googleEvent: CalendarEventItem = {
+    source: "google",
+    id: "ext-1",
+    title: "Team sync",
+    startsAt: "2024-01-01T10:00:00Z",
+    endsAt: "2024-01-01T11:00:00Z",
+    allDay: false,
+    provider: "google",
+    sourceLabel: "Google",
+    readOnly: true,
+    htmlLink: "https://calendar.google.com/event/1",
+    calendarName: "Primary",
+    location: "Room A",
+    attendeesCount: 2
+  };
+
+  const monthCells: CalendarCell[] = [
+    {
+      dateKey: "2024-01-01",
+      dayNumber: 1,
+      isCurrentMonth: true,
+      count: 1,
+      events: [googleEvent]
+    }
+  ];
+
+  it("renders provider badge and read-only marker in event detail", async () => {
+    const user = userEvent.setup();
+    render(
+      <CalendarPanel
+        {...baseProps}
+        monthCells={monthCells}
+        selectedDayExternalEvents={[googleEvent]}
+        calendarSourceFilter="all"
+        onCalendarSourceFilterChange={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /Team sync \(Google\)/i }));
+    expect(screen.getByRole("heading", { name: "Team sync" })).toBeInTheDocument();
+    expect(screen.getAllByText("Google").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Read-only external event/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Open in provider/i })).toHaveAttribute(
+      "href",
+      "https://calendar.google.com/event/1"
+    );
+  });
+
+  it("renders source filter controls", () => {
+    const onFilterChange = vi.fn();
+    render(
+      <CalendarPanel
+        {...baseProps}
+        monthCells={monthCells}
+        calendarSourceFilter="google"
+        onCalendarSourceFilterChange={onFilterChange}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Google" })).toHaveClass("calendarSourceFilterButtonActive");
+  });
+
+  it("still renders local create actions", () => {
+    render(<CalendarPanel {...baseProps} monthCells={monthCells} selectedDayExternalEvents={[googleEvent]} />);
+    expect(screen.getByText("Add reminder")).toBeInTheDocument();
+    expect(screen.getByText("Add task")).toBeInTheDocument();
+  });
+
+  it("shows Join Teams meeting when onlineMeetingUrl is present", async () => {
+    const user = userEvent.setup();
+    const teamsEvent: CalendarEventItem = {
+      source: "teams",
+      id: "ext-teams",
+      title: "Daily standup",
+      startsAt: "2024-01-01T10:00:00Z",
+      endsAt: "2024-01-01T10:30:00Z",
+      allDay: false,
+      provider: "microsoft",
+      sourceLabel: "Teams",
+      readOnly: true,
+      htmlLink: "https://outlook.office.com/calendar/item/1",
+      onlineMeetingUrl: "https://teams.microsoft.com/l/meetup-join/abc",
+      calendarName: "Calendar",
+      attendeesCount: 3
+    };
+    render(
+      <CalendarPanel
+        {...baseProps}
+        monthCells={[
+          {
+            dateKey: "2024-01-01",
+            dayNumber: 1,
+            isCurrentMonth: true,
+            count: 1,
+            events: [teamsEvent]
+          }
+        ]}
+        selectedDayExternalEvents={[teamsEvent]}
+      />
+    );
+    await user.click(screen.getByRole("button", { name: /Daily standup \(Teams\)/i }));
+    expect(screen.getAllByText("Teams").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /Join Teams meeting/i })).toHaveAttribute(
+      "href",
+      "https://teams.microsoft.com/l/meetup-join/abc"
+    );
+  });
+
+  it("includes Teams in source filter controls", () => {
+    render(<CalendarPanel {...baseProps} monthCells={monthCells} calendarSourceFilter="teams" onCalendarSourceFilterChange={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Teams" })).toHaveClass("calendarSourceFilterButtonActive");
   });
 });

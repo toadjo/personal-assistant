@@ -52,6 +52,9 @@ type UpsertExternalCalendarEventPayload = {
   htmlLink?: string | null;
   etag?: string | null;
   updatedAtProvider?: string | null;
+  isOnlineMeeting?: boolean;
+  onlineMeetingProvider?: string | null;
+  onlineMeetingUrl?: string | null;
 };
 
 type UpsertExternalCalendarSyncStatePayload = {
@@ -238,7 +241,8 @@ export function upsertExternalCalendarEvent(payload: UpsertExternalCalendarEvent
     db.prepare(
       `UPDATE external_calendar_events
        SET provider = ?, calendarId = ?, calendarName = ?, title = ?, startAt = ?, endAt = ?, allDay = ?,
-           location = ?, status = ?, attendeesCount = ?, htmlLink = ?, etag = ?, updatedAtProvider = ?, updatedAt = ?
+           location = ?, status = ?, attendeesCount = ?, htmlLink = ?, etag = ?, updatedAtProvider = ?,
+           isOnlineMeeting = ?, onlineMeetingProvider = ?, onlineMeetingUrl = ?, updatedAt = ?
        WHERE id = ?`
     ).run(
       payload.provider,
@@ -254,6 +258,9 @@ export function upsertExternalCalendarEvent(payload: UpsertExternalCalendarEvent
       payload.htmlLink ?? null,
       payload.etag ?? null,
       payload.updatedAtProvider ?? null,
+      payload.isOnlineMeeting ? 1 : 0,
+      payload.onlineMeetingProvider ?? null,
+      payload.onlineMeetingUrl ?? null,
       now,
       existing.id
     );
@@ -264,8 +271,9 @@ export function upsertExternalCalendarEvent(payload: UpsertExternalCalendarEvent
   db.prepare(
     `INSERT INTO external_calendar_events (
       id, accountId, provider, externalId, calendarId, calendarName, title, startAt, endAt, allDay,
-      location, status, attendeesCount, htmlLink, etag, updatedAtProvider, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      location, status, attendeesCount, htmlLink, etag, updatedAtProvider, isOnlineMeeting, onlineMeetingProvider,
+      onlineMeetingUrl, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
     payload.accountId,
@@ -283,6 +291,9 @@ export function upsertExternalCalendarEvent(payload: UpsertExternalCalendarEvent
     payload.htmlLink ?? null,
     payload.etag ?? null,
     payload.updatedAtProvider ?? null,
+    payload.isOnlineMeeting ? 1 : 0,
+    payload.onlineMeetingProvider ?? null,
+    payload.onlineMeetingUrl ?? null,
     now,
     now
   );

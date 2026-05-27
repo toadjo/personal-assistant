@@ -20,7 +20,7 @@
  * onboarding state.
  */
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import type { Note, Reminder, AutomationRule, Task } from "../../../shared/types";
+import type { ExternalCalendarEvent, Note, Reminder, AutomationRule, Task } from "../../../shared/types";
 import type { TeamProjectTask } from "../../../shared/team/types";
 import type { TeamProject } from "../../../shared/team/types";
 import type { ReminderFilter, TaskFilter } from "../../types";
@@ -31,7 +31,7 @@ import {
   visibleReminders as remindersVisible
 } from "../../lib/derived/reminders";
 import { useCalendarState } from "../workspace/useCalendarState";
-import type { AgendaItem, AgendaFilter } from "../workspace/useCalendarState";
+import type { AgendaItem, AgendaFilter, CalendarSourceFilter } from "../workspace/useCalendarState";
 import { useNoteActions } from "../workspace/useNoteActions";
 import { useAutomationRuleActions } from "../workspace/useAutomationRuleActions";
 import { useReminderActions } from "../workspace/useReminderActions";
@@ -49,7 +49,10 @@ export type DeskProductivityState = {
     setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
     agendaFilter: AgendaFilter;
     setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
+    calendarSourceFilter: CalendarSourceFilter;
+    setCalendarSourceFilter: Dispatch<SetStateAction<CalendarSourceFilter>>;
     selectedDayAgenda: AgendaItem[];
+    selectedDayExternalEvents: import("../../lib/calendar").CalendarEventItem[];
   };
   reminders: {
     filter: ReminderFilter;
@@ -121,6 +124,7 @@ export function useDeskProductivityState(args: {
   notes: Note[];
   reminders: Reminder[];
   tasks: Task[];
+  externalCalendarEvents?: ExternalCalendarEvent[];
   rules: AutomationRule[];
   setStatus: (value: string) => void;
   setError: (value: string) => void;
@@ -144,6 +148,7 @@ export function useDeskProductivityState(args: {
     reminders,
     tasks,
     notes,
+    externalCalendarEvents = [],
     setStatus,
     setError,
     refreshAll: _refreshAll,
@@ -165,7 +170,7 @@ export function useDeskProductivityState(args: {
 
   const [reminderFilter, setReminderFilterState] = useState<ReminderFilter>("all");
 
-  const calendar = useCalendarState(reminders, tasks, notes);
+  const calendar = useCalendarState(reminders, tasks, notes, externalCalendarEvents);
   const { deleteNote, updateNote } = useNoteActions(setStatus, setError, {
     mergeNote,
     removeNoteById,
@@ -215,7 +220,10 @@ export function useDeskProductivityState(args: {
       setCalendarSelectedKey: calendar.setCalendarSelectedKey,
       agendaFilter: calendar.agendaFilter,
       setAgendaFilter: calendar.setAgendaFilter,
-      selectedDayAgenda: calendar.selectedDayAgenda
+      calendarSourceFilter: calendar.calendarSourceFilter,
+      setCalendarSourceFilter: calendar.setCalendarSourceFilter,
+      selectedDayAgenda: calendar.selectedDayAgenda,
+      selectedDayExternalEvents: calendar.selectedDayExternalEvents
     },
     reminders: {
       filter: reminderFilter,

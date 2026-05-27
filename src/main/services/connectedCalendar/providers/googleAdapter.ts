@@ -53,7 +53,10 @@ export function mapGoogleCalendarEvent(event: GoogleCalendarEvent): NormalizedEx
     attendeesCount: Array.isArray(event.attendees) ? event.attendees.length : 0,
     htmlLink: event.htmlLink ?? null,
     etag: event.etag ?? null,
-    updatedAtProvider: event.updated ?? null
+    updatedAtProvider: event.updated ?? null,
+    isOnlineMeeting: false,
+    onlineMeetingProvider: null,
+    onlineMeetingUrl: null
   };
 }
 

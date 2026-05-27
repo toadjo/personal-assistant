@@ -101,7 +101,10 @@ export type AssistantWorkspace = {
     setCalendarSelectedKey: Dispatch<SetStateAction<string>>;
     agendaFilter: AgendaFilter;
     setAgendaFilter: Dispatch<SetStateAction<AgendaFilter>>;
+    calendarSourceFilter: import("../../lib/calendar").CalendarSourceFilter;
+    setCalendarSourceFilter: Dispatch<SetStateAction<import("../../lib/calendar").CalendarSourceFilter>>;
     selectedDayAgenda: AgendaItem[];
+    selectedDayExternalEvents: import("../../lib/calendar").CalendarEventItem[];
   };
   reminders: {
     filter: ReminderFilter;

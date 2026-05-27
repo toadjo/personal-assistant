@@ -1,4 +1,4 @@
-import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database, Users, Sparkles } from "lucide-react";
+import { Home, StickyNote, Bell, AlertTriangle, ListTodo, Palette, Database, Users, Sparkles, Link2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAssistantWorkspace } from "../hooks/useAssistantWorkspace";
 import { useBackupActions } from "../hooks/workspace/useBackupActions";
@@ -23,6 +23,9 @@ import { AppearancePanel } from "./panels/AppearancePanel";
 import { DataControlPanel } from "./panels/DataControlPanel";
 import { ProjectsPanel } from "./panels/ProjectsPanel";
 import { AiSettingsPanel } from "./panels/AiSettingsPanel";
+import { ConnectedAccountsPanel } from "./panels/ConnectedAccountsPanel";
+import { useExternalCalendarEvents } from "../hooks/workspace/useExternalCalendarEvents";
+import type { ExternalCalendarEvent } from "../../shared/types";
 import { FinancePanel } from "./panels/FinancePanel";
 import { CarPanel } from "./panels/CarPanel";
 import { FamilyPanel } from "./panels/FamilyPanel";
@@ -75,6 +78,9 @@ export function AssistantShell(): JSX.Element {
   const [showAppearance, setShowAppearance] = useState(false);
   const [showData, setShowData] = useState(false);
   const [showAi, setShowAi] = useState(false);
+  const [showConnectedAccounts, setShowConnectedAccounts] = useState(false);
+  const [externalCalendarEvents, setExternalCalendarEvents] = useState<ExternalCalendarEvent[]>([]);
+  const [externalCalendarRefreshKey, setExternalCalendarRefreshKey] = useState(0);
   const [showPalette, setShowPalette] = useState(false);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState<UnifiedWorkItem | null>(null);
@@ -212,8 +218,24 @@ export function AssistantShell(): JSX.Element {
       mergeTeamTask: () => {},
       refreshTeamTasks: team.loadTasks,
       aiConfigured: aiConfig?.configured ?? false,
-      onQuickCapture: handleQuickCapture
+      onQuickCapture: handleQuickCapture,
+      externalCalendarEvents
     });
+
+  const { externalEvents: loadedExternalEvents, reload: reloadExternalCalendarEvents } = useExternalCalendarEvents(
+    calendar.calendarCursor,
+    externalCalendarRefreshKey,
+    ui.reportError
+  );
+
+  useEffect(() => {
+    setExternalCalendarEvents(loadedExternalEvents);
+  }, [loadedExternalEvents]);
+
+  const refreshConnectedCalendarData = async (): Promise<void> => {
+    setExternalCalendarRefreshKey((key) => key + 1);
+    await reloadExternalCalendarEvents();
+  };
 
   const backupActions = useBackupActions(data.refreshAll, ui.setStatus, ui.reportError);
   const appVersion = __APP_VERSION__;
@@ -542,6 +564,15 @@ export function AssistantShell(): JSX.Element {
           <button
             type="button"
             className="ghostButton ghostButtonCompact"
+            title="Connected Accounts"
+            aria-label="Connected Accounts"
+            onClick={() => setShowConnectedAccounts((s) => !s)}
+          >
+            <Link2 size={14} />
+          </button>
+          <button
+            type="button"
+            className="ghostButton ghostButtonCompact"
             title="AI configuration"
             aria-label="AI configuration"
             onClick={() => setShowAi((s) => !s)}
@@ -730,6 +761,14 @@ export function AssistantShell(): JSX.Element {
               onClose={() => setShowAi(false)}
             />
           )}
+          {showConnectedAccounts && (
+            <ConnectedAccountsPanel
+              onClose={() => setShowConnectedAccounts(false)}
+              onError={ui.reportError}
+              onSuccess={ui.showSuccess}
+              onAccountsChanged={refreshConnectedCalendarData}
+            />
+          )}
 
           {onboarding.show && !onboarding.isComplete ? (
             <div className="onboardingHero">
@@ -844,6 +883,9 @@ export function AssistantShell(): JSX.Element {
                     selectedDateKey={calendar.calendarSelectedKey}
                     onSelectDateKey={calendar.setCalendarSelectedKey}
                     dayAgenda={calendar.selectedDayAgenda}
+                    selectedDayExternalEvents={calendar.selectedDayExternalEvents}
+                    calendarSourceFilter={calendar.calendarSourceFilter}
+                    onCalendarSourceFilterChange={calendar.setCalendarSourceFilter}
                     onCreateReminder={async (payload) => {
                       try {
                         const api = requireAssistantApi();

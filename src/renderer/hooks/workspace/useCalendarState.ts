@@ -1,9 +1,16 @@
 import { useMemo, useState } from "react";
-import type { Reminder, Task, Note } from "../../../shared/types";
-import { buildCalendarCells, toLocalDateKey } from "../../lib/calendar";
+import type { ExternalCalendarEvent, Note, Reminder, Task } from "../../../shared/types";
+import {
+  buildCalendarCells,
+  filterCalendarEvents,
+  toLocalDateKey,
+  type CalendarSourceFilter
+} from "../../lib/calendar";
+import { externalEventsGroupedByLocalDate, mapExternalCalendarEventToCalendarItem } from "../../lib/externalCalendar";
 import { agendaForDateKey, remindersGroupedByLocalDate } from "../../lib/derived/reminders";
 
 export type AgendaFilter = "day" | "today" | "tomorrow" | "week";
+export type { CalendarSourceFilter };
 
 export type AgendaItem =
   | { type: "reminder"; id: string; text: string; dueAt: string }
@@ -88,26 +95,51 @@ function notesGroupedByLocalDate(notes: Note[]): Map<string, Note[]> {
   return map;
 }
 
-export function useCalendarState(reminders: Reminder[], tasks: Task[], notes: Note[]) {
+function applySourceFilterToCells(
+  cells: ReturnType<typeof buildCalendarCells>,
+  sourceFilter: CalendarSourceFilter
+): ReturnType<typeof buildCalendarCells> {
+  if (sourceFilter === "all") return cells;
+  return cells.map((cell) => {
+    const events = filterCalendarEvents(cell.events, sourceFilter);
+    return { ...cell, events, count: events.length };
+  });
+}
+
+export function useCalendarState(
+  reminders: Reminder[],
+  tasks: Task[],
+  notes: Note[],
+  externalEvents: ExternalCalendarEvent[] = []
+) {
   const [calendarCursor, setCalendarCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [calendarSelectedKey, setCalendarSelectedKey] = useState(() => toLocalDateKey(new Date()));
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("day");
+  const [calendarSourceFilter, setCalendarSourceFilter] = useState<CalendarSourceFilter>("all");
 
   const remindersByDate = useMemo(() => remindersGroupedByLocalDate(reminders), [reminders]);
   const tasksByDate = useMemo(() => tasksGroupedByLocalDate(tasks), [tasks]);
   const notesByDate = useMemo(() => notesGroupedByLocalDate(notes), [notes]);
-  const monthCells = useMemo(
-    () => buildCalendarCells(calendarCursor, remindersByDate, tasksByDate, notesByDate),
-    [calendarCursor, remindersByDate, tasksByDate, notesByDate]
-  );
+  const externalEventsByDate = useMemo(() => externalEventsGroupedByLocalDate(externalEvents), [externalEvents]);
+
+  const monthCells = useMemo(() => {
+    const cells = buildCalendarCells(calendarCursor, remindersByDate, tasksByDate, notesByDate, externalEventsByDate);
+    return applySourceFilterToCells(cells, calendarSourceFilter);
+  }, [calendarCursor, remindersByDate, tasksByDate, notesByDate, externalEventsByDate, calendarSourceFilter]);
+
   const todayKey = toLocalDateKey(new Date());
   const selectedDayAgenda = useMemo(
     () => combinedAgenda(reminders, tasks, notes, calendarSelectedKey),
     [reminders, tasks, notes, calendarSelectedKey]
   );
+  const selectedDayExternalEvents = useMemo(() => {
+    const events = externalEventsByDate.get(calendarSelectedKey) || [];
+    const mapped = events.map(mapExternalCalendarEventToCalendarItem);
+    return filterCalendarEvents(mapped, calendarSourceFilter);
+  }, [externalEventsByDate, calendarSelectedKey, calendarSourceFilter]);
 
   const filteredAgenda = useMemo(
     () => filterAgenda(selectedDayAgenda, agendaFilter),
@@ -121,8 +153,11 @@ export function useCalendarState(reminders: Reminder[], tasks: Task[], notes: No
     setCalendarSelectedKey,
     agendaFilter,
     setAgendaFilter,
+    calendarSourceFilter,
+    setCalendarSourceFilter,
     monthCells,
     todayKey,
-    selectedDayAgenda: filteredAgenda
+    selectedDayAgenda: filteredAgenda,
+    selectedDayExternalEvents
   };
 }

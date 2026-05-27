@@ -35,6 +35,9 @@ export const migration = {
         htmlLink TEXT,
         etag TEXT,
         updatedAtProvider TEXT,
+        isOnlineMeeting INTEGER NOT NULL DEFAULT 0,
+        onlineMeetingProvider TEXT,
+        onlineMeetingUrl TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
         FOREIGN KEY (accountId) REFERENCES connected_accounts(id) ON DELETE CASCADE

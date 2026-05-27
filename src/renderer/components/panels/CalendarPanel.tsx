@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
-import type { CalendarCell, CalendarEventItem } from "../../lib/calendar";
-import { Calendar, ChevronLeft, ChevronRight, ListTodo, Bell, X } from "lucide-react";
+import type { CalendarCell, CalendarEventItem, CalendarSourceFilter } from "../../lib/calendar";
+import { Calendar, ChevronLeft, ChevronRight, ExternalLink, ListTodo, Bell, Lock, X } from "lucide-react";
 import {
   parseLocalDateKey,
   toLocalDateKey,
@@ -23,11 +23,41 @@ const MAX_EVENTS_PER_CELL = 3;
 function getEventBackgroundColor(event: CalendarEventItem): string {
   const isCompleted = event.status === "completed" || event.status === "done";
   if (isCompleted) return "var(--cal-completed-bg)";
+  if (event.source === "google") return "var(--cal-google-bg, #e8f0fe)";
+  if (event.source === "teams") return "var(--cal-teams-bg, #ede7f6)";
+  if (event.source === "microsoft") return "var(--cal-microsoft-bg, #e8f4fc)";
   if (event.source === "task" && event.priority === "high") return "var(--cal-task-high-bg)";
   if (event.source === "task") return "var(--cal-task-bg)";
   if (event.source === "note") return "var(--cal-memo-bg)";
   return "var(--cal-reminder-bg)";
 }
+
+function providerBadgeLabel(event: CalendarEventItem): string | null {
+  if (event.source === "google") return "Google";
+  if (event.source === "teams") return "Teams";
+  if (event.source === "microsoft") return "Outlook";
+  return null;
+}
+
+function externalEventActionLink(event: CalendarEventItem): { href: string; label: string } | null {
+  if (event.source === "teams" && event.onlineMeetingUrl) {
+    return { href: event.onlineMeetingUrl, label: "Join Teams meeting" };
+  }
+  if (event.htmlLink) {
+    const label =
+      event.source === "teams" ? "Open in Teams/Outlook" : event.source === "microsoft" ? "Open in Outlook" : "Open in provider";
+    return { href: event.htmlLink, label };
+  }
+  return null;
+}
+
+const SOURCE_FILTERS: { id: CalendarSourceFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "local", label: "Local" },
+  { id: "google", label: "Google" },
+  { id: "microsoft", label: "Outlook" },
+  { id: "teams", label: "Teams" }
+];
 
 type CalendarView = "day" | "workWeek" | "week" | "upcoming" | "month" | "agenda";
 
@@ -39,6 +69,9 @@ type Props = {
   selectedDateKey: string;
   onSelectDateKey: (dateKey: string) => void;
   dayAgenda: AgendaItem[];
+  selectedDayExternalEvents?: CalendarEventItem[];
+  calendarSourceFilter?: CalendarSourceFilter;
+  onCalendarSourceFilterChange?: (filter: CalendarSourceFilter) => void;
   onCreateReminder?: (payload: { text: string; dueAt: string; recurrence: "none" | "daily" }) => void;
   onCreateTask?: (payload: {
     title: string;
@@ -66,9 +99,13 @@ export const CalendarPanel = memo(function CalendarPanel({
   selectedDateKey,
   onSelectDateKey,
   dayAgenda,
+  selectedDayExternalEvents = [],
+  calendarSourceFilter = "all",
+  onCalendarSourceFilterChange,
   onCreateReminder,
   onCreateTask
 }: Props): JSX.Element {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventItem | null>(null);
   const [createMode, setCreateMode] = useState<"none" | "reminder" | "task">("none");
   const [reminderText, setReminderText] = useState("");
   const [reminderTime, setReminderTime] = useState("");
@@ -162,6 +199,18 @@ export const CalendarPanel = memo(function CalendarPanel({
         }
       />
       <p className="muted">{calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</p>
+      <div className="calendarSourceFilter" role="toolbar" aria-label="Calendar source filter">
+        {SOURCE_FILTERS.map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            className={`calendarSourceFilterButton ${calendarSourceFilter === filter.id ? "calendarSourceFilterButtonActive" : ""}`}
+            onClick={() => onCalendarSourceFilterChange?.(filter.id)}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
       <div className="calendarToolbar" role="toolbar" aria-label="Calendar view">
         {(["day", "workWeek", "week", "upcoming", "month", "agenda"] as CalendarView[]).map((view) => (
           <button
@@ -212,10 +261,24 @@ export const CalendarPanel = memo(function CalendarPanel({
                 <div className="calendarCellEvents">
                   {visibleEvents.map((event) => (
                     <div
-                      key={event.id}
-                      className="calendarEventBar"
+                      key={`${event.source}-${event.id}`}
+                      role="button"
+                      tabIndex={0}
+                      className="calendarEventBar calendarEventBarButton"
                       style={{ backgroundColor: getEventBackgroundColor(event) }}
                       title={event.title}
+                      aria-label={`${event.title}${providerBadgeLabel(event) ? ` (${providerBadgeLabel(event)})` : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedEvent(event);
+                        }
+                      }}
                     />
                   ))}
                   {overflowCount > 0 && <span className="calendarOverflow">+{overflowCount}</span>}
@@ -526,6 +589,15 @@ export const CalendarPanel = memo(function CalendarPanel({
             ) : (
               <li className="muted">Nothing scheduled.</li>
             )}
+            {selectedDayExternalEvents.map((event) => (
+              <li key={`${event.source}-${event.id}`} className="agendaListItem">
+                <button type="button" className="calendarExternalAgendaButton" onClick={() => setSelectedEvent(event)}>
+                  <span className="pill calendarProviderBadge">{providerBadgeLabel(event)}</span>
+                  <span className="agendaListItemText">{event.title}</span>
+                  {event.readOnly ? <Lock size={12} aria-label="Read-only" /> : null}
+                </button>
+              </li>
+            ))}
           </ul>
           <div className="row" style={{ gap: "0.5rem", padding: "var(--space-2) 0" }}>
             {onCreateReminder && createMode === "none" && (
@@ -580,6 +652,40 @@ export const CalendarPanel = memo(function CalendarPanel({
           </div>
         </div>
       )}
+      {selectedEvent ? (
+        <div className="calendarEventDetail" aria-label="Event details">
+          <div className="calendarEventDetailHeader">
+            <h3 className="subheading">{selectedEvent.title}</h3>
+            <IconButton icon={X} label="Close event details" onClick={() => setSelectedEvent(null)} variant="ghost" size={14} />
+          </div>
+          {providerBadgeLabel(selectedEvent) ? (
+            <span className="pill calendarProviderBadge">{providerBadgeLabel(selectedEvent)}</span>
+          ) : null}
+          {selectedEvent.readOnly ? (
+            <p className="calendarReadOnlyMarker">
+              <Lock size={12} /> Read-only external event
+            </p>
+          ) : null}
+          <p className="muted">
+            {selectedEvent.allDay
+              ? "All day"
+              : `${new Date(selectedEvent.startsAt).toLocaleString()}${selectedEvent.endsAt ? ` – ${new Date(selectedEvent.endsAt).toLocaleString()}` : ""}`}
+          </p>
+          {selectedEvent.calendarName ? <p className="muted">Calendar: {selectedEvent.calendarName}</p> : null}
+          {selectedEvent.location ? <p className="muted">Location: {selectedEvent.location}</p> : null}
+          {typeof selectedEvent.attendeesCount === "number" && selectedEvent.attendeesCount > 0 ? (
+            <p className="muted">Attendees: {selectedEvent.attendeesCount}</p>
+          ) : null}
+          {(() => {
+            const action = externalEventActionLink(selectedEvent);
+            return action ? (
+              <a className="ghostButton" href={action.href} target="_blank" rel="noreferrer">
+                <ExternalLink size={14} /> {action.label}
+              </a>
+            ) : null;
+          })()}
+        </div>
+      ) : null}
       {createMode === "task" && (
         <div className="calendarCreateForm">
           <div className="calendarCreateFormHeader">

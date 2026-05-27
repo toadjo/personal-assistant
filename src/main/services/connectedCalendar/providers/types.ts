@@ -17,6 +17,9 @@ export type NormalizedExternalEvent = {
   htmlLink: string | null;
   etag: string | null;
   updatedAtProvider: string | null;
+  isOnlineMeeting: boolean;
+  onlineMeetingProvider: string | null;
+  onlineMeetingUrl: string | null;
 };
 
 export type SyncCursor = {
