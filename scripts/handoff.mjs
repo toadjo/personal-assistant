@@ -54,9 +54,9 @@ const log = runGitCommand("git log --oneline -5");
 log.split("\n").forEach((line) => console.log("  ", line));
 
 console.log("\nHandoff file:");
-console.log("  ", join(repoRoot, "WORKER_HANDOFF.md"));
+console.log("  ", join(repoRoot, "docs", "handoff", "HANDOFF.md"));
 
 console.log("\nActivity log:");
-console.log("  ", join(repoRoot, "WORKER_ACTIVITY.md"));
+console.log("  ", join(repoRoot, "docs", "handoff", "ACTIVITY.md"));
 
 console.log("\n=== End Handoff Info ===");

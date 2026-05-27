@@ -98,30 +98,35 @@ Personal Assistant is a cross-platform desktop application built with Electron, 
 9. Upload assets to GitHub release
 10. Post-release QA: Verify GitHub release assets include all required files (.exe, .blockmap, latest.yml) and installed About version matches release
 
-## Current Release (v2.9.0 - Reliability and Recovery)
+## Current Release (v3.7.0 - Connected Calendar)
 
 ### Features Implemented
 
-- Backup preview with counts and validation before destructive import
-- SQLite data health diagnostics (integrity, schema, data, performance checks)
-- Database optimization (WAL checkpoint, VACUUM, optimize)
+- Experimental Connected Calendar support for Google Calendar with local OAuth loopback and secure token storage
+- Google Calendar events sync into the existing app Calendar with provider source filtering
+- Connected Accounts panel with one-click sign-in flow
+- Detailed Google OAuth and sync error messages
+- Life-area modules consolidated and shipped: Finance (v3.2), Family (v3.3), Health (v3.4), Hobbies (v3.5)
+- Shared Life Area UI components: `LoadingState`, `SummaryCard`, shared date/number formatters
+- Reliability foundation from v2.9: backup preview, SQLite health diagnostics, database optimize/VACUUM
 
-### Files Modified
+### Key Files
 
-- `src/main/services/backup.ts` - Added previewBackup function
-- `src/main/services/dbHealth.ts` - New health check service
-- `src/shared/ipc-channels.ts` - Added dbHealthCheck, dbOptimize channels
-- `src/main/ipc/handlers/backup.handlers.ts` - Registered health check handlers
-- `src/renderer/lib/assistantApi.ts` - Added health check API types
-- `src/renderer/vite-env.d.ts` - Added health check type definitions
-- `src/main/preload.ts` - Added health check preload bindings
-- `src/main/test/memoryDb.ts` - Enabled WAL mode for test databases
+- `src/main/services/connectedCalendar*.ts` - Connected calendar service, sync, secrets, OAuth
+- `src/main/services/{finance,family,health,hobbies,car}.ts` - Life-area services
+- `src/main/db/migrations/006_finance.ts` through `011_connected_calendar.ts` - Schema for life areas + calendar
+- `src/renderer/components/panels/ConnectedAccountsPanel.tsx` - Account management UI
+- `src/renderer/components/life-areas/` - Shared UI for all life-area panels
+- `src/renderer/lib/dateFormat.ts` - Shared formatters
+- `src/shared/connectedCalendar*.ts` - Shared calendar display types
+- `docs/V3.7_CONNECTED_CALENDAR_DESIGN.md`, `docs/CONNECTED_CALENDAR_OAUTH.md` - Design and setup docs
+- `docs/LIFE_AREAS.md` - Guide for adding new life-area modules
+- `docs/ROADMAP.md` - Forward-looking improvement plan (phases A through F)
 
 ### Testing
 
-- All backup tests passing (26 tests)
-- All dbHealth tests passing (8 tests)
-- Full test suite: 1031 tests passing
+- Full test suite: 1065+ tests passing
+- Test layers: Vitest unit (main + renderer), preload smoke, browser Playwright E2E, Electron Playwright E2E
 
 ## Known Issues
 

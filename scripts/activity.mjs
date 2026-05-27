@@ -74,7 +74,7 @@ function printActivity() {
 
   console.log("\nLatest activity entries:");
   try {
-    const activityPath = join(repoRoot, "WORKER_ACTIVITY.md");
+    const activityPath = join(repoRoot, "docs", "handoff", "ACTIVITY.md");
     const content = readFileSync(activityPath, "utf-8");
     const entries = selectLatestActivityEntries(content, 3);
     if (entries.length === 0) {
@@ -94,7 +94,7 @@ function printActivity() {
   log.split("\n").forEach((line) => console.log("  ", line));
 
   console.log("\nActivity log:");
-  console.log("  ", join(repoRoot, "WORKER_ACTIVITY.md"));
+  console.log("  ", join(repoRoot, "docs", "handoff", "ACTIVITY.md"));
 
   console.log("\n=== End Activity ===");
 }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A concise, durable record of meaningful worker slices for cross-machine continuity. This is the short-form counterpart to `WORKER_HANDOFF.md`.
+A concise, durable record of meaningful worker slices for cross-machine continuity. This is the short-form counterpart to [`HANDOFF.md`](./HANDOFF.md). Historical "Files touched" entries below reference the pre-2026-05-27 layout where these files lived at the repo root as `WORKER_HANDOFF.md` and `WORKER_ACTIVITY.md`; they are preserved verbatim as historical record.
 
 ## Rules
 

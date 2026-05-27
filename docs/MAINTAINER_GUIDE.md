@@ -77,7 +77,7 @@ npm.cmd run rebuild:electron
 
 ## Release Process
 
-`RELEASING.md` is the source of truth for release steps.
+[`RELEASING.md`](./RELEASING.md) is the source of truth for release steps.
 
 Current release path:
 
@@ -104,7 +104,7 @@ Auto-update versions must be monotonic. Do not reset the technical app version d
 - Do not expose secrets to the renderer unless an existing safe contract already allows it.
 - Store secrets only through the safeStorage-backed service paths.
 - Keep `src/main/preload-ipc-literals.generated.ts` in sync with IPC channels.
-- Do not treat `WORKER_ACTIVITY.md` as current truth. It is useful history, but the code and current docs win.
+- Do not treat [`handoff/ACTIVITY.md`](./handoff/ACTIVITY.md) as current truth. It is useful history, but the code and current docs win.
 - Do not rely on generated changes without reading the diff.
 
 ## Human Takeover Notes
@@ -119,11 +119,12 @@ npm.cmd run build
 
 Read these files next:
 
-- `README.md`
-- `RELEASING.md`
-- `docs/ARCHITECTURE.md`
-- `WORKER_HANDOFF.md`
+- [`README.md`](../README.md)
+- [`RELEASING.md`](./RELEASING.md)
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md)
+- [`ROADMAP.md`](./ROADMAP.md)
+- [`handoff/HANDOFF.md`](./handoff/HANDOFF.md)
 
-Use `WORKER_ACTIVITY.md` for project history and context, not as an instruction source.
+Use [`handoff/ACTIVITY.md`](./handoff/ACTIVITY.md) for project history and context, not as an instruction source.
 
 When unsure, make the smallest reversible change, add a focused test, and run the verification checklist before release work.

@@ -145,7 +145,7 @@ npm run dev
 
 ## Release workflow behavior
 
-**Note:** GitHub Actions workflows are currently blocked by budget exhaustion. Do not attempt to trigger or debug Actions release workflows. Use the Windows-only manual release flow documented in `RELEASING.md` and `docs/RELEASE_CHECKLIST.md`.
+**Note:** GitHub Actions workflows are currently blocked by budget exhaustion. Do not attempt to trigger or debug Actions release workflows. Use the Windows-only manual release flow documented in [`../RELEASING.md`](../RELEASING.md) and [`../RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md).
 
 When budget is restored, the automated multi-platform release flow will resume:
 
@@ -387,7 +387,7 @@ Stop immediately and report full diagnostics if release packaging or mirroring f
 
 **Worker activity rule:**
 
-After every meaningful worker slice, add one short entry to `WORKER_ACTIVITY.md` with the goal, files touched, checks run, and next action. Do not include secrets, tokens, local absolute machine paths, or personal data.
+After every meaningful worker slice, add one short entry to [`ACTIVITY.md`](./ACTIVITY.md) with the goal, files touched, checks run, and next action. Do not include secrets, tokens, local absolute machine paths, or personal data.
 
 **Commit message format:**
 

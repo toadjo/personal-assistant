@@ -13,7 +13,7 @@ The app behaves differently across platforms depending on system tray availabili
 
 ## Windows-Only Manual Release (Current Operating Path)
 
-Use this path for all releases while GitHub Actions budget is unavailable. macOS and Linux sections below are skipped until budget is restored. See `RELEASING.md` for the full local manual release flow.
+Use this path for all releases while GitHub Actions budget is unavailable. macOS and Linux sections below are skipped until budget is restored. See [`RELEASING.md`](./RELEASING.md) for the full local manual release flow.
 
 - [ ] Confirm the release will ship Windows-only and document this in release notes
 - [ ] Run `npm run lint`, `npm run typecheck`, `npm test`

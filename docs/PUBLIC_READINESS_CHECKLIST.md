@@ -37,7 +37,7 @@ This checklist ensures the application is ready for public release, including se
 
 ## Documentation
 
-- [ ] RELEASING.md reflects Windows-only release path
+- [ ] [`RELEASING.md`](./RELEASING.md) reflects Windows-only release path
 - [ ] RELEASE_CHECKLIST.md up to date
 - [ ] CORPORATE_MODE.md documents policy controls
 - [ ] Data and asset inventory updated

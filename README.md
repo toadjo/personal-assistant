@@ -11,11 +11,11 @@ Local-first desktop personal operating layer built with Electron + React + TypeS
 
 To **change or build** the app yourself, clone the repository and use **`dev.bat`** or **`npm run dev`** (see below); that path needs Node **22.12+** and npm.
 
-Releases are built locally and uploaded manually while GitHub Actions budget is unavailable. See [RELEASING.md](./RELEASING.md) for the full release process.
+Releases are built locally and uploaded manually while GitHub Actions budget is unavailable. See [docs/RELEASING.md](./docs/RELEASING.md) for the full release process.
 
 ## Working on the app
 
-Maintainers should start with [MAINTAINER_GUIDE.md](./MAINTAINER_GUIDE.md) for the architecture map, change workflow, verification checklist, and release cautions.
+Maintainers should start with [docs/MAINTAINER_GUIDE.md](./docs/MAINTAINER_GUIDE.md) for the architecture map, change workflow, verification checklist, and release cautions. The forward-looking improvement plan is in [docs/ROADMAP.md](./docs/ROADMAP.md).
 
 ## Personal OS Core Workflow
 
