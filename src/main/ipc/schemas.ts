@@ -1145,3 +1145,51 @@ export const hobbySupplyUpdateSchema = z
       message: "At least one field must be provided for update."
     }
   );
+
+export const connectedCalendarProviderSchema = z.enum(["google", "microsoft"]);
+export const connectedCalendarSyncStateSchema = z.enum(["disconnected", "connecting", "syncing", "synced", "error"]);
+export const connectedCalendarFeatureSchema = z.enum(["calendar"]);
+
+export const connectedCalendarEnabledFeaturesSchema = z
+  .string()
+  .trim()
+  .min(2)
+  .max(2_000)
+  .superRefine((value, ctx) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "enabledFeatures must be valid JSON." });
+      return;
+    }
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "enabledFeatures must be a non-empty JSON array." });
+      return;
+    }
+    for (const item of parsed) {
+      const result = connectedCalendarFeatureSchema.safeParse(item);
+      if (!result.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Unsupported connected calendar feature: ${String(item)}`
+        });
+      }
+    }
+  });
+
+export const connectedCalendarOAuthProviderSchema = z.object({
+  provider: connectedCalendarProviderSchema
+});
+
+export const connectedCalendarSyncAccountSchema = z.object({
+  accountId: uuidSchema
+});
+
+export const connectedCalendarEventsListSchema = z.object({
+  startAt: z.string().datetime({ offset: true }),
+  endAt: z.string().datetime({ offset: true }),
+  provider: connectedCalendarProviderSchema.optional(),
+  accountId: uuidSchema.optional()
+});
+

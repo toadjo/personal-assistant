@@ -7,6 +7,9 @@ describe("Security Policy Constants", () => {
     expect(PERSONAL_DEFAULTS.allowAi).toBe(true);
     expect(PERSONAL_DEFAULTS.allowTeamSync).toBe(true);
     expect(PERSONAL_DEFAULTS.allowHomeAssistant).toBe(true);
+    expect(PERSONAL_DEFAULTS.allowConnectedCalendar).toBe(true);
+    expect(PERSONAL_DEFAULTS.allowGoogleCalendar).toBe(true);
+    expect(PERSONAL_DEFAULTS.allowMicrosoftCalendar).toBe(true);
     expect(PERSONAL_DEFAULTS.allowCrashReporting).toBe(true);
   });
 
@@ -15,6 +18,9 @@ describe("Security Policy Constants", () => {
     expect(CORPORATE_DEFAULTS.allowAi).toBe(false);
     expect(CORPORATE_DEFAULTS.allowTeamSync).toBe(false);
     expect(CORPORATE_DEFAULTS.allowHomeAssistant).toBe(false);
+    expect(CORPORATE_DEFAULTS.allowConnectedCalendar).toBe(false);
+    expect(CORPORATE_DEFAULTS.allowGoogleCalendar).toBe(false);
+    expect(CORPORATE_DEFAULTS.allowMicrosoftCalendar).toBe(false);
     expect(CORPORATE_DEFAULTS.allowCrashReporting).toBe(false);
   });
 });

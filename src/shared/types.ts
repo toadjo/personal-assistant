@@ -435,3 +435,54 @@ export type HobbySummary = {
   openMilestones: number;
   recentSessions: number;
 };
+
+// Connected Calendar types
+export type ConnectedCalendarProvider = "google" | "microsoft";
+export type ConnectedCalendarFeature = "calendar";
+export type ConnectedCalendarSyncStateValue = "disconnected" | "connecting" | "syncing" | "synced" | "error";
+
+export type ConnectedCalendarAccount = {
+  id: string;
+  provider: ConnectedCalendarProvider;
+  accountLabel: string;
+  email: string;
+  enabledFeatures: string; // JSON string of ConnectedCalendarFeature[]
+  syncState: ConnectedCalendarSyncStateValue;
+  lastSyncAt: string | null;
+  syncError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExternalCalendarEvent = {
+  id: string;
+  accountId: string;
+  provider: ConnectedCalendarProvider;
+  externalId: string;
+  calendarId: string | null;
+  calendarName: string | null;
+  title: string;
+  startAt: string;
+  endAt: string;
+  allDay: number; // stored as INTEGER 0/1
+  location: string | null;
+  status: string | null;
+  attendeesCount: number;
+  htmlLink: string | null;
+  etag: string | null;
+  updatedAtProvider: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExternalCalendarSyncState = {
+  id: string;
+  accountId: string;
+  calendarId: string;
+  provider: ConnectedCalendarProvider;
+  syncToken: string | null;
+  deltaLink: string | null;
+  lastFullSyncAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};

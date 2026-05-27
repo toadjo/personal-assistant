@@ -15,8 +15,11 @@
 import { mainLog } from "../log";
 import {
   isAiAllowed,
+  isConnectedCalendarAllowed,
+  isGoogleCalendarAllowed,
   isTeamSyncAllowed,
   isHomeAssistantAllowed,
+  isMicrosoftCalendarAllowed,
   isCrashReportingAllowed,
   isHostAllowed
 } from "./policy";
@@ -71,6 +74,39 @@ export function checkHomeAssistantAllowed(): void {
   if (!isHomeAssistantAllowed()) {
     mainLog.warn("Home Assistant integration blocked by corporate policy");
     throw new OutboundIntegrationBlockedError("Home Assistant integration");
+  }
+}
+
+/**
+ * Check if connected calendar integration is allowed by policy.
+ * Throws OutboundIntegrationBlockedError if disabled.
+ */
+export function checkConnectedCalendarAllowed(): void {
+  if (!isConnectedCalendarAllowed()) {
+    mainLog.warn("Connected calendar integration blocked by corporate policy");
+    throw new OutboundIntegrationBlockedError("Connected calendar integration");
+  }
+}
+
+/**
+ * Check if Google Calendar integration is allowed by policy.
+ * Throws OutboundIntegrationBlockedError if disabled.
+ */
+export function checkGoogleCalendarAllowed(): void {
+  if (!isGoogleCalendarAllowed()) {
+    mainLog.warn("Google Calendar integration blocked by corporate policy");
+    throw new OutboundIntegrationBlockedError("Google Calendar integration");
+  }
+}
+
+/**
+ * Check if Microsoft Calendar integration is allowed by policy.
+ * Throws OutboundIntegrationBlockedError if disabled.
+ */
+export function checkMicrosoftCalendarAllowed(): void {
+  if (!isMicrosoftCalendarAllowed()) {
+    mainLog.warn("Microsoft Calendar integration blocked by corporate policy");
+    throw new OutboundIntegrationBlockedError("Microsoft Calendar integration");
   }
 }
 

@@ -9,6 +9,9 @@ export const SecurityPolicySchema = z.object({
   allowAi: z.boolean(),
   allowTeamSync: z.boolean(),
   allowHomeAssistant: z.boolean(),
+  allowConnectedCalendar: z.boolean(),
+  allowGoogleCalendar: z.boolean(),
+  allowMicrosoftCalendar: z.boolean(),
   allowCrashReporting: z.boolean(),
   allowBackupExport: z.boolean(),
   allowBackupImport: z.boolean(),
@@ -25,6 +28,9 @@ export const PERSONAL_DEFAULTS: SecurityPolicy = {
   allowAi: true,
   allowTeamSync: true,
   allowHomeAssistant: true,
+  allowConnectedCalendar: true,
+  allowGoogleCalendar: true,
+  allowMicrosoftCalendar: true,
   allowCrashReporting: true,
   allowBackupExport: true,
   allowBackupImport: true,
@@ -39,6 +45,9 @@ export const CORPORATE_DEFAULTS: SecurityPolicy = {
   allowAi: false,
   allowTeamSync: false,
   allowHomeAssistant: false,
+  allowConnectedCalendar: false,
+  allowGoogleCalendar: false,
+  allowMicrosoftCalendar: false,
   allowCrashReporting: false,
   allowBackupExport: false,
   allowBackupImport: false,
@@ -187,6 +196,18 @@ export function isHomeAssistantAllowed(): boolean {
 
 export function isCrashReportingAllowed(): boolean {
   return getSecurityPolicy().allowCrashReporting;
+}
+
+export function isConnectedCalendarAllowed(): boolean {
+  return getSecurityPolicy().allowConnectedCalendar;
+}
+
+export function isGoogleCalendarAllowed(): boolean {
+  return getSecurityPolicy().allowGoogleCalendar;
+}
+
+export function isMicrosoftCalendarAllowed(): boolean {
+  return getSecurityPolicy().allowMicrosoftCalendar;
 }
 
 export function isBackupExportAllowed(): boolean {

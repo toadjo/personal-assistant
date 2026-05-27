@@ -52,6 +52,9 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.appFocusDeskWindow,
   IpcInvoke.appHideDeskWindow,
   IpcInvoke.appOpenBugReport,
+  IpcInvoke.connectedCalendarAccountsList,
+  IpcInvoke.connectedCalendarAccountsSummary,
+  IpcInvoke.connectedCalendarAccountsSyncAll,
   // Team mode zero-arg channels
   IpcInvoke.teamGetConfig,
   IpcInvoke.teamClearConfig,
@@ -124,6 +127,11 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.haToggle ||
         ch === IpcInvoke.settingsSetAssistantName ||
         ch === IpcInvoke.settingsSetUserPreferredName ||
+        ch === IpcInvoke.connectedCalendarAccountDisconnect ||
+        ch === IpcInvoke.connectedCalendarEventsList ||
+        ch === IpcInvoke.connectedCalendarOAuthStart ||
+        ch === IpcInvoke.connectedCalendarOAuthComplete ||
+        ch === IpcInvoke.connectedCalendarAccountSync ||
         ch === IpcInvoke.automationRulesCreate ||
         ch === IpcInvoke.automationRulesDelete ||
         ch === IpcInvoke.automationRulesSetEnabled ||

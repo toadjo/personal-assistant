@@ -32,6 +32,14 @@ const invokeChannelMap = {
   settingsSetAssistantName: "settings:setAssistantName",
   settingsSetUserPreferredName: "settings:setUserPreferredName",
   settingsGetSecurityPolicy: "settings:getSecurityPolicy",
+  connectedCalendarAccountsList: "connectedCalendar:accounts:list",
+  connectedCalendarAccountsSummary: "connectedCalendar:accounts:summary",
+  connectedCalendarAccountDisconnect: "connectedCalendar:accounts:disconnect",
+  connectedCalendarEventsList: "connectedCalendar:events:list",
+  connectedCalendarOAuthStart: "connectedCalendar:oauth:start",
+  connectedCalendarOAuthComplete: "connectedCalendar:oauth:complete",
+  connectedCalendarAccountSync: "connectedCalendar:accounts:sync",
+  connectedCalendarAccountsSyncAll: "connectedCalendar:accounts:syncAll",
   automationLogs: "automation:logs",
   automationRulesList: "automation:rules:list",
   automationRulesCreate: "automation:rules:create",
@@ -221,6 +229,23 @@ contextBridge.exposeInMainWorld("assistantApi", {
   getAssistantSettings: () => ipcRenderer.invoke(invoke.settingsGetAssistant),
   setAssistantName: (name: string) => ipcRenderer.invoke(invoke.settingsSetAssistantName, name),
   setUserPreferredName: (name: string) => ipcRenderer.invoke(invoke.settingsSetUserPreferredName, name),
+  listConnectedCalendarAccounts: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsList),
+  getConnectedCalendarAccountsSummary: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsSummary),
+  disconnectConnectedCalendarAccount: (accountId: string) =>
+    ipcRenderer.invoke(invoke.connectedCalendarAccountDisconnect, accountId),
+  listExternalCalendarEvents: (payload: {
+    startAt: string;
+    endAt: string;
+    provider?: "google" | "microsoft";
+    accountId?: string;
+  }) => ipcRenderer.invoke(invoke.connectedCalendarEventsList, payload),
+  startConnectedCalendarOAuth: (payload: { provider: "google" | "microsoft" }) =>
+    ipcRenderer.invoke(invoke.connectedCalendarOAuthStart, payload),
+  completeConnectedCalendarOAuth: (payload: { provider: "google" | "microsoft" }) =>
+    ipcRenderer.invoke(invoke.connectedCalendarOAuthComplete, payload),
+  syncConnectedCalendarAccount: (payload: { accountId: string }) =>
+    ipcRenderer.invoke(invoke.connectedCalendarAccountSync, payload),
+  syncAllConnectedCalendarAccounts: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsSyncAll),
   listExecutionLogs: () => ipcRenderer.invoke(invoke.automationLogs),
   listRules: () => ipcRenderer.invoke(invoke.automationRulesList),
   createRule: (

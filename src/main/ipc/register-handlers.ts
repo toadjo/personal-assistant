@@ -5,6 +5,7 @@ import { registerAiHandlers } from "./handlers/ai.handlers";
 import { registerAutomationHandlers } from "./handlers/automation.handlers";
 import { registerBackupHandlers } from "./handlers/backup.handlers";
 import { registerCarHandlers } from "./handlers/car.handlers";
+import { registerConnectedCalendarHandlers } from "./handlers/connectedCalendar.handlers";
 import { registerFamilyHandlers } from "./handlers/family.handlers";
 import { registerHealthHandlers } from "./handlers/health.handlers";
 import { registerHobbiesHandlers } from "./handlers/hobbies.handlers";
@@ -35,6 +36,7 @@ export function registerIpcHandlers(getTrustedWindows: () => readonly (BrowserWi
   registerSettingsHandlers(assertSender);
   registerAutomationHandlers(assertSender);
   registerBackupHandlers(assertSender);
+  registerConnectedCalendarHandlers(assertSender);
   registerRendererHandlers(assertSender);
   registerTeamHandlers(assertSender);
   registerAiHandlers(assertSender);

@@ -2,11 +2,18 @@ import { app } from "electron";
 import { getDb } from "../db";
 import { encryptSecret, decryptSecret, SecureStorageUnavailableError } from "./secureSecrets";
 import { isCorporateMode } from "../security/policy";
+import { isConnectedCalendarTokenSettingKey } from "./connectedCalendarSecrets";
 
 /**
  * Secret setting keys that should never be included in backups.
  */
 const SECRET_SETTING_KEYS = ["ha.token", "ai.apiKey", "ai.provider", "ai.configured", "ai.lastTestedAt"] as const;
+
+function isSecretSettingKey(key: string): boolean {
+  return (
+    SECRET_SETTING_KEYS.includes(key as (typeof SECRET_SETTING_KEYS)[number]) || isConnectedCalendarTokenSettingKey(key)
+  );
+}
 
 export type BackupPayload = {
   version: string;
@@ -309,6 +316,49 @@ export type BackupPayload = {
     createdAt: string;
     updatedAt: string;
   }>;
+  connected_accounts?: Array<{
+    id: string;
+    provider: string;
+    accountLabel: string;
+    email: string;
+    enabledFeatures: string;
+    syncState: string;
+    lastSyncAt: string | null;
+    syncError: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  external_calendar_events?: Array<{
+    id: string;
+    accountId: string;
+    provider: string;
+    externalId: string;
+    calendarId: string | null;
+    calendarName: string | null;
+    title: string;
+    startAt: string;
+    endAt: string;
+    allDay: number;
+    location: string | null;
+    status: string | null;
+    attendeesCount: number;
+    htmlLink: string | null;
+    etag: string | null;
+    updatedAtProvider: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  external_calendar_sync_state?: Array<{
+    id: string;
+    accountId: string;
+    calendarId: string;
+    provider: string;
+    syncToken: string | null;
+    deltaLink: string | null;
+    lastFullSyncAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   app_settings?: Array<{
     key: string;
     value: string;
@@ -353,6 +403,9 @@ export type BackupPreviewResult = {
   hobby_projects: number;
   hobby_milestones: number;
   hobby_supplies: number;
+  connected_accounts: number;
+  external_calendar_events: number;
+  external_calendar_sync_state: number;
   app_settings: number;
   unsupported_sections: string[];
   has_encrypted_content: boolean;
@@ -387,12 +440,17 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
   const hobby_projects = db.prepare("SELECT * FROM hobby_projects").all() as BackupPayload["hobby_projects"];
   const hobby_milestones = db.prepare("SELECT * FROM hobby_milestones").all() as BackupPayload["hobby_milestones"];
   const hobby_supplies = db.prepare("SELECT * FROM hobby_supplies").all() as BackupPayload["hobby_supplies"];
+  const connected_accounts = db.prepare("SELECT * FROM connected_accounts").all() as BackupPayload["connected_accounts"];
+  const external_calendar_events = db
+    .prepare("SELECT * FROM external_calendar_events")
+    .all() as BackupPayload["external_calendar_events"];
+  const external_calendar_sync_state = db
+    .prepare("SELECT * FROM external_calendar_sync_state")
+    .all() as BackupPayload["external_calendar_sync_state"];
 
   // Filter out secret settings from backup
   const allSettings = db.prepare("SELECT * FROM app_settings").all() as BackupPayload["app_settings"];
-  const app_settings = (allSettings || []).filter(
-    (setting) => !SECRET_SETTING_KEYS.includes(setting.key as (typeof SECRET_SETTING_KEYS)[number])
-  );
+  const app_settings = (allSettings || []).filter((setting) => !isSecretSettingKey(setting.key));
 
   const payload: BackupPayload = {
     version: app.getVersion(),
@@ -422,6 +480,9 @@ export function exportBackup(options?: BackupExportOptions): BackupPayload {
     hobby_projects,
     hobby_milestones,
     hobby_supplies,
+    connected_accounts,
+    external_calendar_events,
+    external_calendar_sync_state,
     app_settings
   };
 
@@ -488,6 +549,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -527,6 +591,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: true,
@@ -565,6 +632,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -605,6 +675,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -642,6 +715,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -679,6 +755,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -716,6 +795,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -753,6 +835,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -790,6 +875,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -827,6 +915,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -864,6 +955,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -901,6 +995,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -938,6 +1035,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -975,6 +1075,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1012,6 +1115,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1049,6 +1155,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1086,6 +1195,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1123,6 +1235,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1160,6 +1275,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1197,6 +1315,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1234,6 +1355,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
       hobby_projects: 0,
       hobby_milestones: 0,
       hobby_supplies: 0,
+      connected_accounts: 0,
+      external_calendar_events: 0,
+      external_calendar_sync_state: 0,
       app_settings: 0,
       unsupported_sections: [],
       has_encrypted_content: false,
@@ -1271,6 +1395,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     "hobby_projects",
     "hobby_milestones",
     "hobby_supplies",
+    "connected_accounts",
+    "external_calendar_events",
+    "external_calendar_sync_state",
     "app_settings",
     "_encrypted"
   ];
@@ -1308,6 +1435,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
   const hobby_projects = payload.hobby_projects?.length ?? 0;
   const hobby_milestones = payload.hobby_milestones?.length ?? 0;
   const hobby_supplies = payload.hobby_supplies?.length ?? 0;
+  const connected_accounts = payload.connected_accounts?.length ?? 0;
+  const external_calendar_events = payload.external_calendar_events?.length ?? 0;
+  const external_calendar_sync_state = payload.external_calendar_sync_state?.length ?? 0;
 
   return {
     valid: true,
@@ -1336,6 +1466,9 @@ export function previewBackup(payload: BackupPayload): BackupPreviewResult {
     hobby_projects,
     hobby_milestones,
     hobby_supplies,
+    connected_accounts,
+    external_calendar_events,
+    external_calendar_sync_state,
     app_settings,
     unsupported_sections,
     has_encrypted_content: false,
@@ -1373,6 +1506,9 @@ export function importBackup(
   hobby_projects: number;
   hobby_milestones: number;
   hobby_supplies: number;
+  connected_accounts: number;
+  external_calendar_events: number;
+  external_calendar_sync_state: number;
   app_settings: number;
   rejected_secret_settings: number;
 } {
@@ -1418,6 +1554,9 @@ export function importBackup(
   if (!actualPayload.hobby_projects) actualPayload.hobby_projects = [];
   if (!actualPayload.hobby_milestones) actualPayload.hobby_milestones = [];
   if (!actualPayload.hobby_supplies) actualPayload.hobby_supplies = [];
+  if (!actualPayload.connected_accounts) actualPayload.connected_accounts = [];
+  if (!actualPayload.external_calendar_events) actualPayload.external_calendar_events = [];
+  if (!actualPayload.external_calendar_sync_state) actualPayload.external_calendar_sync_state = [];
   if (!actualPayload.app_settings) actualPayload.app_settings = [];
 
   const db = getDb();
@@ -1449,6 +1588,9 @@ export function importBackup(
     db.prepare("DELETE FROM hobby_projects").run();
     db.prepare("DELETE FROM hobby_milestones").run();
     db.prepare("DELETE FROM hobby_supplies").run();
+    db.prepare("DELETE FROM external_calendar_events").run();
+    db.prepare("DELETE FROM external_calendar_sync_state").run();
+    db.prepare("DELETE FROM connected_accounts").run();
     db.prepare("DELETE FROM app_settings").run();
 
     const noteStmt = db.prepare(
@@ -1626,12 +1768,43 @@ export function importBackup(
       hobbySupplyStmt.run(row);
     }
 
+    const connectedAccountStmt = db.prepare(
+      "INSERT INTO connected_accounts (id, provider, accountLabel, email, enabledFeatures, syncState, lastSyncAt, syncError, createdAt, updatedAt) VALUES (@id, @provider, @accountLabel, @email, @enabledFeatures, @syncState, @lastSyncAt, @syncError, @createdAt, @updatedAt)"
+    );
+    for (const row of actualPayload.connected_accounts || []) {
+      connectedAccountStmt.run(row);
+    }
+
+    const externalCalendarEventStmt = db.prepare(
+      `INSERT INTO external_calendar_events (
+        id, accountId, provider, externalId, calendarId, calendarName, title, startAt, endAt, allDay,
+        location, status, attendeesCount, htmlLink, etag, updatedAtProvider, createdAt, updatedAt
+      ) VALUES (
+        @id, @accountId, @provider, @externalId, @calendarId, @calendarName, @title, @startAt, @endAt, @allDay,
+        @location, @status, @attendeesCount, @htmlLink, @etag, @updatedAtProvider, @createdAt, @updatedAt
+      )`
+    );
+    for (const row of actualPayload.external_calendar_events || []) {
+      externalCalendarEventStmt.run(row);
+    }
+
+    const externalCalendarSyncStateStmt = db.prepare(
+      `INSERT INTO external_calendar_sync_state (
+        id, accountId, calendarId, provider, syncToken, deltaLink, lastFullSyncAt, createdAt, updatedAt
+      ) VALUES (
+        @id, @accountId, @calendarId, @provider, @syncToken, @deltaLink, @lastFullSyncAt, @createdAt, @updatedAt
+      )`
+    );
+    for (const row of actualPayload.external_calendar_sync_state || []) {
+      externalCalendarSyncStateStmt.run(row);
+    }
+
     const settingStmt = db.prepare(
       "INSERT INTO app_settings (key, value, updatedAt) VALUES (@key, @value, @updatedAt)"
     );
     for (const row of actualPayload.app_settings || []) {
       // Reject secret settings from import
-      if (SECRET_SETTING_KEYS.includes(row.key as (typeof SECRET_SETTING_KEYS)[number])) {
+      if (isSecretSettingKey(row.key)) {
         rejectedSecretSettings++;
         continue;
       }
@@ -1665,6 +1838,9 @@ export function importBackup(
     hobby_projects: actualPayload.hobby_projects?.length ?? 0,
     hobby_milestones: actualPayload.hobby_milestones?.length ?? 0,
     hobby_supplies: actualPayload.hobby_supplies?.length ?? 0,
+    connected_accounts: actualPayload.connected_accounts?.length ?? 0,
+    external_calendar_events: actualPayload.external_calendar_events?.length ?? 0,
+    external_calendar_sync_state: actualPayload.external_calendar_sync_state?.length ?? 0,
     app_settings: (actualPayload.app_settings?.length ?? 0) - rejectedSecretSettings,
     rejected_secret_settings: rejectedSecretSettings
   };
@@ -1698,6 +1874,9 @@ export function resetAllData(): void {
     db.prepare("DELETE FROM hobby_projects").run();
     db.prepare("DELETE FROM hobby_milestones").run();
     db.prepare("DELETE FROM hobby_supplies").run();
+    db.prepare("DELETE FROM external_calendar_events").run();
+    db.prepare("DELETE FROM external_calendar_sync_state").run();
+    db.prepare("DELETE FROM connected_accounts").run();
     db.prepare("DELETE FROM app_settings").run();
     db.prepare("DELETE FROM execution_logs").run();
     db.prepare("DELETE FROM renderer_errors").run();

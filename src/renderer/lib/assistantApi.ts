@@ -6,7 +6,7 @@
  */
 
 import { PRELOAD_BRIDGE_MISSING_MESSAGE } from "../constants/assistant";
-import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary, Hobby, HobbySession, HobbyProject, HobbyMilestone, HobbySupply, HobbySummary } from "../../shared/types";
+import type { AssistantSettings, AutomationRule, Note, Reminder, Task, FinanceBill, FinanceExpense, FinanceMonthlySummary, CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder, FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary, Hobby, HobbySession, HobbyProject, HobbyMilestone, HobbySupply, HobbySummary, ConnectedCalendarAccount, ExternalCalendarEvent } from "../../shared/types";
 import type { TeamConfigStatus, TeamWorkspace, TeamProject, TeamProjectTask } from "../../shared/team/types";
 import type { AiConfigStatus, AiProvider, AiActionDraft } from "../../shared/ai/types";
 
@@ -59,6 +59,19 @@ export type AssistantApi = {
   getAssistantSettings: () => Promise<AssistantSettings>;
   setAssistantName: (name: string) => Promise<AssistantSettings>;
   setUserPreferredName: (name: string) => Promise<AssistantSettings>;
+  listConnectedCalendarAccounts: () => Promise<ConnectedCalendarAccount[]>;
+  getConnectedCalendarAccountsSummary: () => Promise<{ total: number; synced: number; error: number }>;
+  disconnectConnectedCalendarAccount: (accountId: string) => Promise<void>;
+  listExternalCalendarEvents: (payload: {
+    startAt: string;
+    endAt: string;
+    provider?: "google" | "microsoft";
+    accountId?: string;
+  }) => Promise<ExternalCalendarEvent[]>;
+  startConnectedCalendarOAuth: (payload: { provider: "google" | "microsoft" }) => Promise<void>;
+  completeConnectedCalendarOAuth: (payload: { provider: "google" | "microsoft" }) => Promise<ConnectedCalendarAccount>;
+  syncConnectedCalendarAccount: (payload: { accountId: string }) => Promise<ConnectedCalendarAccount>;
+  syncAllConnectedCalendarAccounts: () => Promise<ConnectedCalendarAccount[]>;
   listExecutionLogs: () => Promise<
     Array<{
       id: string;
