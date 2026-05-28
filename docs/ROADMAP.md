@@ -10,23 +10,6 @@ Build a free community desktop app that people can run locally, inspect, fork, a
 
 Final boss goal: friendly AI takeover of your tasks, calendar, chores, reminders, notes, and general life chaos through this app. World domination remains a stretch goal. Mostly joking.
 
-## Phase B: Renderer Data Layer
-
-Goal: replace ad-hoc fetch and refresh code with a cached, resilient data layer.
-
-- Adopt TanStack Query or a small in-house equivalent for renderer calls to `assistantApi`.
-- Remove manual `isRefreshing` state and isolated `useEffect(loadFoo, [])` patterns from panels and shared hooks.
-- Add optimistic mutations with rollback for tasks, reminders, notes, and high-touch life-area items.
-- Add per-panel error boundaries with retry controls so one crashed panel never tears down the shell.
-- Surface uncaught renderer errors as visible in-app notifications, not only persisted logs.
-- Add panel-render timing in `src/renderer/lib/performance.ts` and expose diagnostics in About.
-
-Acceptance signal:
-
-- No `isRefreshing` boolean state remains in renderer code.
-- Completing a task updates immediately and rolls back visibly on IPC failure.
-- A panel crash is contained to that panel.
-
 ## Phase C: UX And Accessibility
 
 Goal: make the app feel polished, keyboard-safe, and reliable for repeated daily use.
@@ -104,3 +87,9 @@ Acceptance signal:
 - Move items into GitHub issues when they become active work.
 - Keep completed work out of this file and record it in the changelog instead.
 - Revisit this roadmap after each release so it stays honest and useful.
+
+## Maintenance Notes
+
+**Phase B (Completed in v3.7.0)**: Renderer data layer migrated to TanStack Query with optimistic mutations and panel crash isolation. See commit `175792c` and CHANGELOG.md for details.
+
+**Non-blocking cleanup**: React `act(...)` warnings in async error-path tests remain as a low-priority maintenance item. These do not block Phase C work.
