@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Task } from "../../../shared/types";
 import type { TaskFilter } from "../../types";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { requireAssistantApi } from "../../lib/assistantApi";
+import { workspaceQueryKeys } from "../../lib/query/keys";
 
 export type UndoableTaskAction = {
   type: "priority";
@@ -13,9 +15,9 @@ export type UndoableTaskAction = {
 export function useTaskActions(
   tasks: Task[],
   setStatus: (value: string) => void,
-  setError: (value: string) => void,
-  refreshTasks: () => Promise<void>
+  setError: (value: string) => void
 ) {
+  const queryClient = useQueryClient();
   const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
   const [undoStack, setUndoStack] = useState<UndoableTaskAction[]>([]);
 
@@ -44,26 +46,89 @@ export function useTaskActions(
     return tasks;
   }, [taskFilter, tasks, overdueOpen]);
 
-  async function completeById(id: string): Promise<void> {
-    try {
-      const api = requireAssistantApi();
-      await api.completeTask(id);
-      await refreshTasks();
-      setStatus("Task updated.");
-    } catch (err) {
+  const completeTaskMutation = useMutation({
+    mutationFn: async (id: string) => requireAssistantApi().completeTask(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: workspaceQueryKeys.tasks() });
+      const previousTasks = queryClient.getQueryData<Task[]>(workspaceQueryKeys.tasks()) ?? [];
+      queryClient.setQueryData<Task[]>(workspaceQueryKeys.tasks(), (prev = []) =>
+        prev.map((task) =>
+          task.id === id ? { ...task, status: "done", lastCompletedAt: new Date().toISOString() } : task
+        )
+      );
+      return { previousTasks };
+    },
+    onError: (err, _id, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(workspaceQueryKeys.tasks(), context.previousTasks);
+      }
       setError(getAssistantInvokeErrorMessage(err));
+    },
+    onSuccess: () => {
+      setStatus("Task updated.");
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
     }
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: string) => requireAssistantApi().deleteTask(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: workspaceQueryKeys.tasks() });
+      const previousTasks = queryClient.getQueryData<Task[]>(workspaceQueryKeys.tasks()) ?? [];
+      queryClient.setQueryData<Task[]>(workspaceQueryKeys.tasks(), (prev = []) => prev.filter((task) => task.id !== id));
+      return { previousTasks };
+    },
+    onError: (err, _id, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(workspaceQueryKeys.tasks(), context.previousTasks);
+      }
+      setError(getAssistantInvokeErrorMessage(err));
+    },
+    onSuccess: () => {
+      setStatus("Task deleted.");
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
+    }
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: async (payload: {
+      id: string;
+      title?: string;
+      notes?: string;
+      dueAt?: string | null;
+      priority?: "low" | "normal" | "high";
+      recurrence?: "none" | "daily" | "weekly" | "monthly";
+      status?: "open" | "done";
+    }) => requireAssistantApi().updateTask(payload),
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: workspaceQueryKeys.tasks() });
+      const previousTasks = queryClient.getQueryData<Task[]>(workspaceQueryKeys.tasks()) ?? [];
+      queryClient.setQueryData<Task[]>(workspaceQueryKeys.tasks(), (prev = []) =>
+        prev.map((task) => (task.id === payload.id ? { ...task, ...payload } : task))
+      );
+      return { previousTasks };
+    },
+    onError: (err, _payload, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(workspaceQueryKeys.tasks(), context.previousTasks);
+      }
+      setError(getAssistantInvokeErrorMessage(err));
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
+    }
+  });
+
+  async function completeById(id: string): Promise<void> {
+    await completeTaskMutation.mutateAsync(id);
   }
 
   async function deleteById(id: string): Promise<void> {
-    try {
-      const api = requireAssistantApi();
-      await api.deleteTask(id);
-      await refreshTasks();
-      setStatus("Task deleted.");
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
+    await deleteTaskMutation.mutateAsync(id);
   }
 
   async function saveTask(payload: {
@@ -90,7 +155,7 @@ export function useTaskActions(
         await api.createTask(payload);
         setStatus("Task created.");
       }
-      await refreshTasks();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
     }
@@ -98,9 +163,7 @@ export function useTaskActions(
 
   async function updateDetailsById(id: string, title: string, notes: string): Promise<void> {
     try {
-      const api = requireAssistantApi();
-      await api.updateTask({ id, title, notes });
-      await refreshTasks();
+      await updateTaskMutation.mutateAsync({ id, title, notes });
       setStatus("Task updated.");
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -111,7 +174,7 @@ export function useTaskActions(
     try {
       const api = requireAssistantApi();
       await Promise.all(ids.map((id) => api.completeTask(id)));
-      await refreshTasks();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
       setStatus(`${ids.length} task${ids.length > 1 ? "s" : ""} completed.`);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -124,8 +187,7 @@ export function useTaskActions(
     const previousPriority = task.priority;
     try {
       setUndoStack((prev) => [...prev, { type: "priority" as const, taskId: id, previousValue: previousPriority }]);
-      const api = requireAssistantApi();
-      await api.updateTask({
+      await updateTaskMutation.mutateAsync({
         id,
         title: task.title,
         notes: task.notes,
@@ -133,7 +195,6 @@ export function useTaskActions(
         priority,
         recurrence: task.recurrence
       });
-      await refreshTasks();
       setStatus("Priority updated.");
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
@@ -158,7 +219,7 @@ export function useTaskActions(
         });
       }
       setStatus("Priority restored.");
-      await refreshTasks();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
       setUndoStack((prev) => prev.slice(0, -1));
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));

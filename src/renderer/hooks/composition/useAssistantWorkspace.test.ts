@@ -2,8 +2,10 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { useAssistantWorkspace } from "../useAssistantWorkspace";
+import { createQueryTestWrapper } from "../../test/queryTestUtils";
 
 describe("useAssistantWorkspace after refactor", () => {
+  const wrapper = createQueryTestWrapper();
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
@@ -26,7 +28,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("returns the same public sections as before refactor", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current).toHaveProperty("ui");
     expect(result.current).toHaveProperty("data");
@@ -43,7 +45,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("ui section has theme, status, error setters", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.ui).toHaveProperty("theme");
     expect(result.current.ui).toHaveProperty("setTheme");
@@ -54,7 +56,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("data section has query, entities, and refresh functions", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.data).toHaveProperty("query");
     expect(result.current.data).toHaveProperty("setQuery");
@@ -64,7 +66,8 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current.data).toHaveProperty("devices");
     expect(result.current.data).toHaveProperty("logs");
     expect(result.current.data).toHaveProperty("rules");
-    expect(result.current.data).toHaveProperty("isRefreshing");
+    expect(result.current.data).toHaveProperty("isLoading");
+    expect(result.current.data).toHaveProperty("isFetching");
     expect(result.current.data).toHaveProperty("refreshAll");
     expect(result.current.data).toHaveProperty("refreshNotes");
     expect(result.current.data).toHaveProperty("refreshReminders");
@@ -72,7 +75,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("ha section has credentials, readiness, and device toggle", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.ha).toHaveProperty("haUrl");
     expect(result.current.ha).toHaveProperty("setHaUrl");
@@ -93,7 +96,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("command section has input, history, hints, and execution", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.command).toHaveProperty("commandInput");
     expect(result.current.command).toHaveProperty("setCommandInput");
@@ -110,7 +113,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("calendar section has cursor, cells, and agenda", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.calendar).toHaveProperty("calendarCursor");
     expect(result.current.calendar).toHaveProperty("setCalendarCursor");
@@ -122,7 +125,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("reminders section has filter, derived views, and actions", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.reminders).toHaveProperty("filter");
     expect(result.current.reminders).toHaveProperty("setFilter");
@@ -135,7 +138,7 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("tasks section has filter, derived views, and actions", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.tasks).toHaveProperty("filter");
     expect(result.current.tasks).toHaveProperty("setFilter");
@@ -148,21 +151,21 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("automation section has rule actions", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.automation).toHaveProperty("deleteRuleById");
     expect(result.current.automation).toHaveProperty("setRuleEnabledById");
   });
 
   it("memos section has note actions", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.memos).toHaveProperty("deleteNote");
     expect(result.current.memos).toHaveProperty("updateNote");
   });
 
   it("profile section has user preferred name actions", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.profile).toHaveProperty("userPreferredName");
     expect(result.current.profile).toHaveProperty("userPreferredNameIsSet");
@@ -170,14 +173,14 @@ describe("useAssistantWorkspace after refactor", () => {
   });
 
   it("onboarding section has show and setShow", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.onboarding).toHaveProperty("show");
     expect(result.current.onboarding).toHaveProperty("setShow");
   });
 
   it("desk section has hideWindow action", () => {
-    const { result } = renderHook(() => useAssistantWorkspace());
+    const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.desk).toHaveProperty("hideWindow");
   });

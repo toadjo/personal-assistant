@@ -1,8 +1,6 @@
 import { memo, useState } from "react";
 import type { Note } from "../../../shared/types";
 import { StickyNote, Pencil, Trash2 } from "lucide-react";
-import { useShallow } from "zustand/react/shallow";
-import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { QuickNoteForm } from "../forms/QuickNoteForm";
 import { PanelHeader } from "../ui/PanelHeader";
 import { IconButton } from "../ui/IconButton";
@@ -17,6 +15,8 @@ type UpdatePayload = {
 };
 
 type Props = {
+  notes: Note[];
+  isRefreshing: boolean;
   onFetchNotes: () => Promise<void>;
   onError: (message: string) => void;
   onShowSuccess?: (message: string) => void;
@@ -33,6 +33,8 @@ function parseTagsInput(raw: string): string[] {
 }
 
 export const NotesPanel = memo(function NotesPanel({
+  notes,
+  isRefreshing,
   onFetchNotes,
   onError,
   onShowSuccess,
@@ -40,12 +42,6 @@ export const NotesPanel = memo(function NotesPanel({
   onUpdateNote,
   onNoteCreated
 }: Props): JSX.Element {
-  const { notes, isRefreshing } = useWorkspaceStore(
-    useShallow((s) => ({
-      notes: s.notes,
-      isRefreshing: s.isRefreshing
-    }))
-  );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useEffect, useState, memo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Palette, Plus, Trash2, CheckCircle } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
@@ -7,6 +8,8 @@ import { SummaryCard } from "../life-areas/SummaryCard";
 import { LifeAreaPanelProps } from "../life-areas/types";
 import { formatDate } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
+import { workspaceQueryKeys } from "../../lib/query/keys";
+import { fetchHobbiesAll } from "../../lib/query/lifeAreas";
 import type { Hobby, HobbySession, HobbyProject, HobbyMilestone, HobbySupply, HobbySummary, HobbyStatus, HobbyProjectStatus } from "../../../shared/types";
 
 export const HobbiesPanel = memo(function HobbiesPanel({
@@ -15,13 +18,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
   onError,
   onShowSuccess
 }: LifeAreaPanelProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(false);
-  const [hobbies, setHobbies] = useState<Hobby[]>([]);
-  const [sessions, setSessions] = useState<HobbySession[]>([]);
-  const [projects, setProjects] = useState<HobbyProject[]>([]);
-  const [milestones, setMilestones] = useState<HobbyMilestone[]>([]);
-  const [supplies, setSupplies] = useState<HobbySupply[]>([]);
-  const [summary, setSummary] = useState<HobbySummary | null>(null);
+  const queryClient = useQueryClient();
   const [showHobbyForm, setShowHobbyForm] = useState(false);
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
@@ -74,35 +71,20 @@ export const HobbiesPanel = memo(function HobbiesPanel({
   });
 
   const api = requireAssistantApi();
-
-  const loadHobbiesData = useCallback(async () => {
-    if (!api) return;
-    setIsLoading(true);
-    try {
-      const [hobbiesData, sessionsData, projectsData, milestonesData, suppliesData, summaryData] = await Promise.all([
-        api.listHobbies(),
-        api.listHobbySessions(),
-        api.listHobbyProjects(),
-        api.listHobbyMilestones(),
-        api.listHobbySupplies(),
-        api.getHobbiesSummary()
-      ]);
-      setHobbies(hobbiesData);
-      setSessions(sessionsData);
-      setProjects(projectsData);
-      setMilestones(milestonesData);
-      setSupplies(suppliesData);
-      setSummary(summaryData);
-    } catch {
-      onError("Failed to load hobbies data");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [api, onError]);
+  const hobbiesAllQuery = useQuery({ queryKey: workspaceQueryKeys.hobbies.all(), queryFn: fetchHobbiesAll });
+  const hobbies: Hobby[] = hobbiesAllQuery.data?.hobbies ?? [];
+  const sessions: HobbySession[] = hobbiesAllQuery.data?.sessions ?? [];
+  const projects: HobbyProject[] = hobbiesAllQuery.data?.projects ?? [];
+  const milestones: HobbyMilestone[] = hobbiesAllQuery.data?.milestones ?? [];
+  const supplies: HobbySupply[] = hobbiesAllQuery.data?.supplies ?? [];
+  const summary: HobbySummary | null = hobbiesAllQuery.data?.summary ?? null;
+  const isLoading = hobbiesAllQuery.isLoading;
 
   useEffect(() => {
-    loadHobbiesData();
-  }, [_isRefreshing, loadHobbiesData]);
+    if (hobbiesAllQuery.error) {
+      onError("Failed to load hobbies data");
+    }
+  }, [hobbiesAllQuery.error, onError]);
 
   async function handleCreateHobby() {
     if (!api) return;
@@ -111,7 +93,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
       setShowHobbyForm(false);
       setHobbyForm({ name: "", category: "", description: "", status: "active" });
       onShowSuccess?.("Hobby created successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to create hobby");
     }
@@ -122,7 +104,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.deleteHobby(id);
       onShowSuccess?.("Hobby deleted successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to delete hobby");
     }
@@ -143,7 +125,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
         progressRating: null
       });
       onShowSuccess?.("Session created successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to create session");
     }
@@ -154,7 +136,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.deleteHobbySession(id);
       onShowSuccess?.("Session deleted successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to delete session");
     }
@@ -174,7 +156,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
         completedAt: null
       });
       onShowSuccess?.("Project created successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to create project");
     }
@@ -185,7 +167,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.completeHobbyProject(id);
       onShowSuccess?.("Project completed successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to complete project");
     }
@@ -196,7 +178,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.deleteHobbyProject(id);
       onShowSuccess?.("Project deleted successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to delete project");
     }
@@ -215,7 +197,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
         completedAt: null
       });
       onShowSuccess?.("Milestone created successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to create milestone");
     }
@@ -226,7 +208,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.completeHobbyMilestone(id);
       onShowSuccess?.("Milestone completed successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to complete milestone");
     }
@@ -237,7 +219,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.deleteHobbyMilestone(id);
       onShowSuccess?.("Milestone deleted successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to delete milestone");
     }
@@ -259,7 +241,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
         notes: ""
       });
       onShowSuccess?.("Supply created successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to create supply");
     }
@@ -270,7 +252,7 @@ export const HobbiesPanel = memo(function HobbiesPanel({
     try {
       await api.deleteHobbySupply(id);
       onShowSuccess?.("Supply deleted successfully");
-      await loadHobbiesData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.hobbies.root });
     } catch {
       onError("Failed to delete supply");
     }

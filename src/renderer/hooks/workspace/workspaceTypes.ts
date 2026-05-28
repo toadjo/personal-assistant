@@ -46,7 +46,8 @@ export type AssistantWorkspace = {
     devices: HaDeviceRow[];
     logs: ExecutionLogRow[];
     rules: AutomationRule[];
-    isRefreshing: boolean;
+    isLoading: boolean;
+    isFetching: boolean;
     refreshAll: () => Promise<void>;
     refreshNotes: () => Promise<void>;
     refreshReminders: () => Promise<void>;

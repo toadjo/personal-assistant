@@ -1,4 +1,5 @@
-import { useState, useEffect, memo } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Car, Plus, Trash2, Calendar, Fuel, Wrench, Gauge, AlertCircle } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
@@ -6,7 +7,9 @@ import { LoadingState } from "../life-areas/LoadingState";
 import { LifeAreaPanelProps } from "../life-areas/types";
 import { formatDate, formatEur, formatMileage } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
-import type { CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder } from "../../../shared/types";
+import { workspaceQueryKeys } from "../../lib/query/keys";
+import { fetchCarDetails, fetchCarVehicles } from "../../lib/query/lifeAreas";
+import type { CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder } from "../../../shared/types";
 
 export const CarPanel = memo(function CarPanel({
   isRefreshing: _isRefreshing,
@@ -14,14 +17,8 @@ export const CarPanel = memo(function CarPanel({
   onError,
   onShowSuccess
 }: LifeAreaPanelProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(false);
-  const [vehicles, setVehicles] = useState<CarVehicle[]>([]);
+  const queryClient = useQueryClient();
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const [fuelEntries, setFuelEntries] = useState<CarFuelEntry[]>([]);
-  const [maintenance, setMaintenance] = useState<CarMaintenance[]>([]);
-  const [recurringBills, setRecurringBills] = useState<CarRecurringBill[]>([]);
-  const [mileage, setMileage] = useState<CarMileage[]>([]);
-  const [serviceReminders, setServiceReminders] = useState<CarServiceReminder[]>([]);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [vehicleForm, setVehicleForm] = useState({
     name: "",
@@ -38,55 +35,37 @@ export const CarPanel = memo(function CarPanel({
   });
 
   const api = requireAssistantApi();
+  const vehiclesQuery = useQuery({ queryKey: workspaceQueryKeys.car.vehicles(), queryFn: fetchCarVehicles });
+  const vehicles = useMemo(() => vehiclesQuery.data ?? [], [vehiclesQuery.data]);
+  const detailsQuery = useQuery({
+    queryKey: workspaceQueryKeys.car.details(selectedVehicleId ?? "none"),
+    queryFn: () => fetchCarDetails(selectedVehicleId ?? ""),
+    enabled: Boolean(selectedVehicleId)
+  });
+  const fuelEntries: CarFuelEntry[] = detailsQuery.data?.fuelEntries ?? [];
+  const maintenance: CarMaintenance[] = detailsQuery.data?.maintenance ?? [];
+  const recurringBills: CarRecurringBill[] = detailsQuery.data?.recurringBills ?? [];
+  const mileage: CarMileage[] = detailsQuery.data?.mileage ?? [];
+  const serviceReminders: CarServiceReminder[] = detailsQuery.data?.serviceReminders ?? [];
+  const isLoading = vehiclesQuery.isLoading && vehicles.length === 0;
 
-  async function loadData() {
-    setIsLoading(true);
-    try {
-      const vehiclesData = await api.listVehicles();
-      setVehicles(vehiclesData);
-      if (vehiclesData.length > 0 && !selectedVehicleId) {
-        setSelectedVehicleId(vehiclesData[0]?.id ?? null);
-      }
-    } catch {
+  useEffect(() => {
+    if (vehiclesQuery.error) {
       onError("Failed to load car data");
-    } finally {
-      setIsLoading(false);
     }
-  }
+  }, [onError, vehiclesQuery.error]);
 
-  async function loadVehicleData(vehicleId: string) {
-    setIsLoading(true);
-    try {
-      const [fuelData, maintenanceData, billsData, mileageData, remindersData] = await Promise.all([
-        api.listFuelEntries(vehicleId),
-        api.listMaintenance(vehicleId),
-        api.listRecurringBills(vehicleId),
-        api.listMileage(vehicleId),
-        api.listServiceReminders(vehicleId)
-      ]);
-      setFuelEntries(fuelData);
-      setMaintenance(maintenanceData);
-      setRecurringBills(billsData);
-      setMileage(mileageData);
-      setServiceReminders(remindersData);
-    } catch {
+  useEffect(() => {
+    if (detailsQuery.error) {
       onError("Failed to load vehicle data");
-    } finally {
-      setIsLoading(false);
     }
-  }
+  }, [detailsQuery.error, onError]);
 
   useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (selectedVehicleId) {
-      void loadVehicleData(selectedVehicleId);
+    if (!selectedVehicleId && vehicles.length > 0) {
+      setSelectedVehicleId(vehicles[0]?.id ?? null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVehicleId]);
+  }, [selectedVehicleId, vehicles]);
 
   async function handleCreateVehicle(e: React.FormEvent) {
     e.preventDefault();
@@ -108,7 +87,7 @@ export const CarPanel = memo(function CarPanel({
       setShowVehicleForm(false);
       setVehicleForm({ name: "", make: "", model: "", year: new Date().getFullYear().toString(), licensePlate: "", vin: "", color: "", purchaseDate: "", purchasePrice: "", currentMileage: "0", notes: "" });
       onShowSuccess?.("Vehicle created");
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.car.root });
     } catch {
       onError("Failed to create vehicle");
     }
@@ -122,7 +101,7 @@ export const CarPanel = memo(function CarPanel({
       if (selectedVehicleId === id) {
         setSelectedVehicleId(null);
       }
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.car.root });
     } catch {
       onError("Failed to delete vehicle");
     }

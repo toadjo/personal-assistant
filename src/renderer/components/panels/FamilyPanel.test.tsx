@@ -1,9 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom";
+import type { ReactElement } from "react";
 import { FamilyPanel } from "./FamilyPanel";
 import type { FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary } from "../../../shared/types";
+import { createQueryTestWrapper } from "../../test/queryTestUtils";
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: createQueryTestWrapper() });
+}
 
 function makeMember(overrides: Partial<FamilyMember> = {}): FamilyMember {
   return {
@@ -86,7 +92,8 @@ const mockApi = {
 };
 
 vi.mock("../../lib/assistantApi", () => ({
-  requireAssistantApi: () => mockApi
+  requireAssistantApi: () => mockApi,
+  getAssistantApi: () => mockApi
 }));
 
 describe("FamilyPanel", () => {

@@ -1,246 +1,181 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useShallow } from "zustand/react/shallow";
-import type { Note, ExecutionLog } from "../../../shared/types";
+import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Note, Task } from "../../../shared/types";
 import { QUERY_REFRESH_DEBOUNCE_MS } from "../../constants/timing";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { getAssistantApi } from "../../lib/assistantApi";
+import { workspaceQueryKeys } from "../../lib/query/keys";
+import { fetchDevices, fetchLogs, fetchNotes, fetchReminders, fetchRules, fetchTasks } from "../../lib/query/workspace";
 type SetError = (message: string) => void;
 
 export function useAssistantData(setError: SetError) {
-  const {
-    query,
-    setQuery,
-    notes,
-    reminders,
-    tasks,
-    devices,
-    logs,
-    rules,
-    isRefreshing,
-    setNotes,
-    setReminders,
-    setTasks,
-    setDevices,
-    setLogs,
-    setRules
-  } = useWorkspaceStore(
-    useShallow((s) => ({
-      query: s.query,
-      setQuery: s.setQuery,
-      notes: s.notes,
-      reminders: s.reminders,
-      tasks: s.tasks,
-      devices: s.devices,
-      logs: s.logs,
-      rules: s.rules,
-      isRefreshing: s.isRefreshing,
-      setNotes: s.setNotes,
-      setReminders: s.setReminders,
-      setTasks: s.setTasks,
-      setDevices: s.setDevices,
-      setLogs: s.setLogs,
-      setRules: s.setRules
-    }))
-  );
-  const setFromFullRefresh = useWorkspaceStore((s) => s.setFromFullRefresh);
-  const setIsRefreshing = useWorkspaceStore((s) => s.setIsRefreshing);
-
-  const queryRef = useRef(query);
-  queryRef.current = query;
-
-  const refreshNotes = useCallback(async (): Promise<void> => {
-    const api = getAssistantApi();
-    if (!api?.listNotes) return;
-    try {
-      setNotes(await api.listNotes(queryRef.current));
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [setError, setNotes]);
-
-  const refreshReminders = useCallback(async (): Promise<void> => {
-    const api = getAssistantApi();
-    if (!api?.listReminders) return;
-    try {
-      setReminders(await api.listReminders());
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [setError, setReminders]);
-
-  const refreshTasks = useCallback(async (): Promise<void> => {
-    const api = getAssistantApi();
-    if (!api?.listTasks) return;
-    try {
-      setTasks(await api.listTasks());
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [setError, setTasks]);
-
-  const refreshDevices = useCallback(async (): Promise<void> => {
-    const api = getAssistantApi();
-    if (!api?.listDevices) return;
-    try {
-      setDevices(await api.listDevices());
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [setError, setDevices]);
-
-  const refreshLogs = useCallback(async (): Promise<void> => {
-    const api = getAssistantApi();
-    if (!api?.listExecutionLogs) return;
-    try {
-      const rows = await api.listExecutionLogs();
-      const transformed: ExecutionLog[] = rows.map(
-        (l: {
-          id: string;
-          ruleId: string;
-          status: string;
-          startedAt: string;
-          endedAt: string;
-          error?: string;
-          attemptCount: number;
-          retryCount: number;
-          ruleName?: string;
-          actionLabel?: string;
-        }) => ({
-          id: l.id,
-          ruleId: l.ruleId,
-          status: l.status as "success" | "failed",
-          startedAt: l.startedAt,
-          endedAt: l.endedAt,
-          error: l.error,
-          attemptCount: l.attemptCount,
-          retryCount: l.retryCount,
-          ruleName: l.ruleName,
-          actionLabel: l.actionLabel
-        })
-      );
-      setLogs(transformed);
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [setError, setLogs]);
-
-  const refreshRules = useCallback(async (): Promise<void> => {
-    const api = getAssistantApi();
-    if (!api?.listRules) return;
-    try {
-      setRules(await api.listRules());
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    }
-  }, [setError, setRules]);
-
-  const refreshAll = useCallback(async () => {
-    const api = getAssistantApi();
-    if (!api?.listNotes) return;
-    try {
-      setError("");
-      setIsRefreshing(true);
-      const [noteRows, rems, taskRows, devs, logRows, ruleRows] = await Promise.all([
-        api.listNotes(queryRef.current),
-        api.listReminders(),
-        api.listTasks(),
-        api.listDevices(),
-        api.listExecutionLogs(),
-        api.listRules()
-      ]);
-      // Transform log rows to match ExecutionLogRow type
-      const transformedLogs: ExecutionLog[] = logRows.map(
-        (l: {
-          id: string;
-          ruleId: string;
-          status: string;
-          startedAt: string;
-          endedAt: string;
-          error?: string;
-          attemptCount: number;
-          retryCount: number;
-          ruleName?: string;
-          actionLabel?: string;
-        }) => ({
-          id: l.id,
-          ruleId: l.ruleId,
-          status: l.status as "success" | "failed",
-          startedAt: l.startedAt,
-          endedAt: l.endedAt,
-          error: l.error,
-          attemptCount: l.attemptCount,
-          retryCount: l.retryCount,
-          ruleName: l.ruleName,
-          actionLabel: l.actionLabel
-        })
-      );
-      setFromFullRefresh({
-        notes: noteRows,
-        reminders: rems,
-        tasks: taskRows,
-        devices: devs,
-        logs: transformedLogs,
-        rules: ruleRows
-      });
-    } catch (err) {
-      setError(getAssistantInvokeErrorMessage(err));
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [setError, setFromFullRefresh, setIsRefreshing]);
-
-  const refreshRef = useRef(refreshAll);
-  refreshRef.current = refreshAll;
+  const queryClient = useQueryClient();
+  const query = useWorkspaceStore((s) => s.query);
+  const setQuery = useWorkspaceStore((s) => s.setQuery);
+  const api = getAssistantApi();
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   useEffect(() => {
-    const api = getAssistantApi();
+    const timeoutId = window.setTimeout(() => setDebouncedQuery(query), QUERY_REFRESH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [query]);
+
+  const notesQuery = useQuery({
+    queryKey: workspaceQueryKeys.notes(debouncedQuery),
+    queryFn: () => fetchNotes(debouncedQuery),
+    enabled: Boolean(api?.listNotes)
+  });
+  const remindersQuery = useQuery({
+    queryKey: workspaceQueryKeys.reminders(),
+    queryFn: fetchReminders,
+    enabled: Boolean(api?.listReminders)
+  });
+  const tasksQuery = useQuery({
+    queryKey: workspaceQueryKeys.tasks(),
+    queryFn: fetchTasks,
+    enabled: Boolean(api?.listTasks)
+  });
+  const devicesQuery = useQuery({
+    queryKey: workspaceQueryKeys.devices(),
+    queryFn: fetchDevices,
+    enabled: Boolean(api?.listDevices)
+  });
+  const logsQuery = useQuery({
+    queryKey: workspaceQueryKeys.logs(),
+    queryFn: fetchLogs,
+    enabled: Boolean(api?.listExecutionLogs)
+  });
+  const rulesQuery = useQuery({
+    queryKey: workspaceQueryKeys.rules(),
+    queryFn: fetchRules,
+    enabled: Boolean(api?.listRules)
+  });
+
+  useEffect(() => {
     if (!api?.onRemindersUpdated) {
       // Don't show scary warning on initial passive load
       // Only user-triggered actions should fail with the bridge missing message
       return;
     }
-    void refreshRef.current();
     return api.onRemindersUpdated(() => {
-      void (async () => {
-        try {
-          setReminders(await api.listReminders());
-        } catch (err) {
-          setError(getAssistantInvokeErrorMessage(err));
-        }
-      })();
+      void queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.reminders() });
     });
-  }, [setError, setReminders]);
+  }, [api, queryClient]);
 
   useEffect(() => {
-    const id = window.setTimeout(() => void refreshNotes(), QUERY_REFRESH_DEBOUNCE_MS);
-    return () => window.clearTimeout(id);
-  }, [query, refreshNotes]);
+    const firstError =
+      notesQuery.error ??
+      remindersQuery.error ??
+      tasksQuery.error ??
+      devicesQuery.error ??
+      logsQuery.error ??
+      rulesQuery.error;
+    if (firstError) {
+      setError(getAssistantInvokeErrorMessage(firstError));
+    }
+  }, [
+    notesQuery.error,
+    remindersQuery.error,
+    tasksQuery.error,
+    devicesQuery.error,
+    logsQuery.error,
+    rulesQuery.error,
+    setError
+  ]);
+
+  const refreshNotes = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({
+      predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === workspaceQueryKeys.root[0] && q.queryKey[1] === "notes"
+    });
+  }, [queryClient]);
+  const refreshReminders = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.reminders() });
+  }, [queryClient]);
+  const refreshTasks = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() });
+  }, [queryClient]);
+  const refreshDevices = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.devices() });
+  }, [queryClient]);
+  const refreshLogs = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.logs() });
+  }, [queryClient]);
+  const refreshRules = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.rules() });
+  }, [queryClient]);
+  const refreshAll = useCallback(async (): Promise<void> => {
+    setError("");
+    await Promise.all([
+      queryClient.invalidateQueries({
+        predicate: (q) =>
+          Array.isArray(q.queryKey) && q.queryKey[0] === workspaceQueryKeys.root[0] && q.queryKey[1] === "notes"
+      }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.reminders() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.tasks() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.devices() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.logs() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.rules() })
+    ]);
+  }, [queryClient, setError]);
 
   const mergeNote = useCallback(
     (note: Note) => {
-      setNotes((prev) => prev.map((x) => (x.id === note.id ? note : x)));
+      queryClient.setQueriesData(
+        {
+          predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === workspaceQueryKeys.root[0] && q.queryKey[1] === "notes"
+        },
+        (prev: Note[] | undefined) => (prev ? prev.map((x) => (x.id === note.id ? note : x)) : prev)
+      );
     },
-    [setNotes]
+    [queryClient]
   );
 
   const removeNoteById = useCallback(
     (id: string) => {
-      setNotes((prev) => prev.filter((x) => x.id !== id));
+      queryClient.setQueriesData(
+        {
+          predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === workspaceQueryKeys.root[0] && q.queryKey[1] === "notes"
+        },
+        (prev: Note[] | undefined) => (prev ? prev.filter((x) => x.id !== id) : prev)
+      );
     },
-    [setNotes]
+    [queryClient]
+  );
+
+  const setTasks = useCallback(
+    (value: Task[] | ((prev: Task[]) => Task[])) => {
+      queryClient.setQueryData(workspaceQueryKeys.tasks(), (prev: Task[] | undefined) => {
+        const safePrev = prev ?? [];
+        return typeof value === "function" ? value(safePrev) : value;
+      });
+    },
+    [queryClient]
   );
 
   return {
     query,
     setQuery,
-    notes,
-    reminders,
-    tasks,
-    devices,
-    logs,
-    rules,
-    isRefreshing,
+    notes: notesQuery.data ?? [],
+    reminders: remindersQuery.data ?? [],
+    tasks: tasksQuery.data ?? [],
+    devices: devicesQuery.data ?? [],
+    logs: logsQuery.data ?? [],
+    rules: rulesQuery.data ?? [],
+    isLoading:
+      notesQuery.isLoading ||
+      remindersQuery.isLoading ||
+      tasksQuery.isLoading ||
+      devicesQuery.isLoading ||
+      logsQuery.isLoading ||
+      rulesQuery.isLoading,
+    isFetching:
+      notesQuery.isFetching ||
+      remindersQuery.isFetching ||
+      tasksQuery.isFetching ||
+      devicesQuery.isFetching ||
+      logsQuery.isFetching ||
+      rulesQuery.isFetching,
     refreshAll,
     refreshNotes,
     refreshReminders,

@@ -4,6 +4,7 @@ import { useBackupActions } from "../hooks/workspace/useBackupActions";
 import { useTeamState } from "../hooks/team/useTeamState";
 import { useTeamRealtime } from "../hooks/team/useTeamRealtime";
 import { useExternalCalendarEvents } from "../hooks/workspace/useExternalCalendarEvents";
+import { PanelErrorBoundary } from "./ErrorBoundary";
 import { StatusBanner } from "./layout/StatusBanner";
 import { SuccessBanner } from "./layout/SuccessBanner";
 import { ProjectsPanel } from "./panels/ProjectsPanel";
@@ -114,10 +115,10 @@ export function AssistantShell(): JSX.Element {
   });
 
   useEffect(() => {
-    if (!data.isRefreshing) {
+    if (!data.isLoading) {
       setLastSeenAt(new Date().toISOString());
     }
-  }, [data.isRefreshing]);
+  }, [data.isLoading]);
 
   useEffect(() => {
     const lastSeenVersion = window.localStorage.getItem(STORAGE_LAST_SEEN_RELEASE_VERSION);
@@ -245,23 +246,30 @@ export function AssistantShell(): JSX.Element {
             onSetStatus={ui.setStatus}
             onRunPreset={command.runPresetCommand}
           />
-          <ShellModuleRouter
-            active={nav.activePersonalModule}
-            workspace={workspace}
-            team={team}
-            derived={derived}
-            showEndOfDayReview={modals.showEndOfDayReview}
-            aiConfigured={ai.isConfigured}
-            teamOpenCount={team.config?.configured ? teamOpenTasks.length : undefined}
-            teamAttentionCount={team.config?.configured ? teamOverdueTasks.length : undefined}
-            onSelectModule={nav.setActivePersonalModule}
-            onOpenHousehold={handleOpenHouseholdWindow}
-            onOpenBriefItem={drawer.openBriefItemInDrawer}
-            onOpenWorkItem={drawer.setSelectedWorkItem}
-            onReviewDay={handleReviewDay}
-            onSetDailyCommandCenterFilter={derived.setDailyCommandCenterFilter}
-            onSetStatus={ui.setStatus}
-          />
+          <PanelErrorBoundary
+            scope={`router:${nav.activePersonalModule}`}
+            fallbackTitle="This module hit a snag"
+            onCaught={({ message }) => ui.reportError(message)}
+            resetKeys={[nav.activePersonalModule]}
+          >
+            <ShellModuleRouter
+              active={nav.activePersonalModule}
+              workspace={workspace}
+              team={team}
+              derived={derived}
+              showEndOfDayReview={modals.showEndOfDayReview}
+              aiConfigured={ai.isConfigured}
+              teamOpenCount={team.config?.configured ? teamOpenTasks.length : undefined}
+              teamAttentionCount={team.config?.configured ? teamOverdueTasks.length : undefined}
+              onSelectModule={nav.setActivePersonalModule}
+              onOpenHousehold={handleOpenHouseholdWindow}
+              onOpenBriefItem={drawer.openBriefItemInDrawer}
+              onOpenWorkItem={drawer.setSelectedWorkItem}
+              onReviewDay={handleReviewDay}
+              onSetDailyCommandCenterFilter={derived.setDailyCommandCenterFilter}
+              onSetStatus={ui.setStatus}
+            />
+          </PanelErrorBoundary>
         </>
       )}
 

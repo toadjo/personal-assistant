@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useTaskActions } from "./useTaskActions";
 import type { Task } from "../../../shared/types";
+import { createQueryTestWrapper } from "../../test/queryTestUtils";
 
 const mockTasks: Task[] = [
   {
@@ -21,7 +22,6 @@ const mockTasks: Task[] = [
 
 const mockSetStatus = vi.fn();
 const mockSetError = vi.fn();
-const mockRefreshTasks = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("../../lib/errors", () => ({
   getAssistantInvokeErrorMessage: vi.fn((err) => (err instanceof Error ? err.message : "Unknown error"))
@@ -31,7 +31,6 @@ describe("useTaskActions", () => {
   beforeEach(() => {
     mockSetStatus.mockClear();
     mockSetError.mockClear();
-    mockRefreshTasks.mockClear();
     (window as unknown as { assistantApi: unknown }).assistantApi = {
       completeTask: vi.fn().mockResolvedValue(undefined),
       deleteTask: vi.fn().mockResolvedValue(undefined),
@@ -41,7 +40,8 @@ describe("useTaskActions", () => {
   });
 
   it("updateDetailsById calls assistantApi.updateTask with only id, title, and notes", async () => {
-    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks));
+    const wrapper = createQueryTestWrapper();
+    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError), { wrapper });
 
     await result.current.updateDetailsById("task-1", "Updated Title", "Updated Notes");
 
@@ -68,12 +68,12 @@ describe("useTaskActions", () => {
   });
 
   it("updateDetailsById refreshes tasks and sets status on success", async () => {
-    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks));
+    const wrapper = createQueryTestWrapper();
+    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError), { wrapper });
 
     await result.current.updateDetailsById("task-1", "Updated Title", "Updated Notes");
 
     await waitFor(() => {
-      expect(mockRefreshTasks).toHaveBeenCalled();
       expect(mockSetStatus).toHaveBeenCalledWith("Task updated.");
     });
   });
@@ -85,7 +85,8 @@ describe("useTaskActions", () => {
       >
     ).mockRejectedValue(new Error("API Error"));
 
-    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError, mockRefreshTasks));
+    const wrapper = createQueryTestWrapper();
+    const { result } = renderHook(() => useTaskActions(mockTasks, mockSetStatus, mockSetError), { wrapper });
 
     await result.current.updateDetailsById("task-1", "Updated Title", "Updated Notes");
 

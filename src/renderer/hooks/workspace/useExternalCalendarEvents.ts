@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ExternalCalendarEvent } from "../../../shared/types";
 import { getVisibleCalendarRangeIso } from "../../lib/externalCalendar";
 import { requireAssistantApi } from "../../lib/assistantApi";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { workspaceQueryKeys } from "../../lib/query/keys";
 
 export function useExternalCalendarEvents(
   calendarCursor: Date,
@@ -13,30 +15,34 @@ export function useExternalCalendarEvents(
   isLoading: boolean;
   reload: () => Promise<void>;
 } {
-  const [externalEvents, setExternalEvents] = useState<ExternalCalendarEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const range = getVisibleCalendarRangeIso(calendarCursor);
 
-  const reload = useCallback(async () => {
-    const range = getVisibleCalendarRangeIso(calendarCursor);
-    setIsLoading(true);
-    try {
+  const externalEventsQuery = useQuery({
+    queryKey: workspaceQueryKeys.calendar.externalEvents(range.startAt, range.endAt, refreshKey),
+    queryFn: async () => {
       const api = requireAssistantApi();
-      const events = await api.listExternalCalendarEvents({
+      return api.listExternalCalendarEvents({
         startAt: range.startAt,
         endAt: range.endAt
       });
-      setExternalEvents(events);
-    } catch (error) {
-      onError?.(getAssistantInvokeErrorMessage(error));
-      setExternalEvents([]);
-    } finally {
-      setIsLoading(false);
     }
-  }, [calendarCursor, onError]);
+  });
+
+  const reload = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "workspace" && q.queryKey[1] === "calendar"
+    });
+  }, [queryClient]);
 
   useEffect(() => {
-    void reload();
-  }, [reload, refreshKey]);
+    if (!externalEventsQuery.error) return;
+    onError?.(getAssistantInvokeErrorMessage(externalEventsQuery.error));
+  }, [externalEventsQuery.error, onError]);
 
-  return { externalEvents, isLoading, reload };
+  return {
+    externalEvents: (externalEventsQuery.data ?? []) as ExternalCalendarEvent[],
+    isLoading: externalEventsQuery.isLoading || externalEventsQuery.isFetching,
+    reload
+  };
 }

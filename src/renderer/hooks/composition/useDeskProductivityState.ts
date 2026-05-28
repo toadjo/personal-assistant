@@ -184,10 +184,9 @@ export function useDeskProductivityState(args: {
   );
   const { snoozeReminderMinutes, completeReminderById, deleteReminderById, updateReminderById } = useReminderActions(
     setStatus,
-    setError,
-    refreshReminders
+    setError
   );
-  const taskActions = useTaskActions(tasks, setStatus, setError, refreshTasks);
+  const taskActions = useTaskActions(tasks, setStatus, setError);
   const profile = useUserProfileSettings(setError, setStatus);
 
   const inbox = useInboxState(setStatus, setError, {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useDeskProductivityState } from "./useDeskProductivityState";
 import type { Note, Task } from "../../../shared/types";
+import { createQueryTestWrapper } from "../../test/queryTestUtils";
 
 describe("useDeskProductivityState inbox integration", () => {
   it("includes inbox state with required properties", () => {
@@ -17,29 +18,31 @@ describe("useDeskProductivityState inbox integration", () => {
     const mergeNote = vi.fn();
     const removeNoteById = vi.fn();
 
-    const { result } = renderHook(() =>
-      useDeskProductivityState({
-        notes: [],
-        reminders: [],
-        tasks: [],
-        rules: [],
-        setStatus,
-        setError,
-        refreshAll,
-        refreshNotes,
-        refreshReminders,
-        refreshTasks,
-        refreshDevices,
-        refreshLogs,
-        refreshRules,
-        mergeNote,
-        removeNoteById,
-        teamTasks: [],
-        mergeTask: undefined,
-        mergeReminder: undefined,
-        mergeTeamTask: undefined,
-        refreshTeamTasks: undefined
-      })
+    const { result } = renderHook(
+      () =>
+        useDeskProductivityState({
+          notes: [],
+          reminders: [],
+          tasks: [],
+          rules: [],
+          setStatus,
+          setError,
+          refreshAll,
+          refreshNotes,
+          refreshReminders,
+          refreshTasks,
+          refreshDevices,
+          refreshLogs,
+          refreshRules,
+          mergeNote,
+          removeNoteById,
+          teamTasks: [],
+          mergeTask: undefined,
+          mergeReminder: undefined,
+          mergeTeamTask: undefined,
+          refreshTeamTasks: undefined
+        }),
+      { wrapper: createQueryTestWrapper() }
     );
 
     expect(result.current.inbox).toBeDefined();
@@ -93,29 +96,31 @@ describe("useDeskProductivityState inbox integration", () => {
       }
     ];
 
-    const { result } = renderHook(() =>
-      useDeskProductivityState({
-        notes,
-        reminders: [],
-        tasks,
-        rules: [],
-        setStatus,
-        setError,
-        refreshAll,
-        refreshNotes,
-        refreshReminders,
-        refreshTasks,
-        refreshDevices,
-        refreshLogs,
-        refreshRules,
-        mergeNote,
-        removeNoteById,
-        teamTasks: [],
-        mergeTask: undefined,
-        mergeReminder: undefined,
-        mergeTeamTask: undefined,
-        refreshTeamTasks: undefined
-      })
+    const { result } = renderHook(
+      () =>
+        useDeskProductivityState({
+          notes,
+          reminders: [],
+          tasks,
+          rules: [],
+          setStatus,
+          setError,
+          refreshAll,
+          refreshNotes,
+          refreshReminders,
+          refreshTasks,
+          refreshDevices,
+          refreshLogs,
+          refreshRules,
+          mergeNote,
+          removeNoteById,
+          teamTasks: [],
+          mergeTask: undefined,
+          mergeReminder: undefined,
+          mergeTeamTask: undefined,
+          refreshTeamTasks: undefined
+        }),
+      { wrapper: createQueryTestWrapper() }
     );
 
     expect(result.current.inbox.unifiedItems.length).toBeGreaterThan(0);

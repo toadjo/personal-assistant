@@ -292,6 +292,8 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <NotesPanel
+            notes={data.notes}
+            isRefreshing={data.isFetching}
             onFetchNotes={data.refreshNotes}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
@@ -309,7 +311,7 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <RemindersPanel
-            isRefreshing={data.isRefreshing}
+            isRefreshing={data.isFetching}
             reminderFilter={reminders.filter}
             setReminderFilter={reminders.setFilter}
             visibleReminders={reminders.visible}
@@ -366,8 +368,8 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <FinancePanel
-            isRefreshing={false}
-            onRefresh={async () => {}}
+            isRefreshing={data.isFetching}
+            onRefresh={data.refreshAll}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
           />
@@ -381,8 +383,8 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <CarPanel
-            isRefreshing={false}
-            onRefresh={async () => {}}
+            isRefreshing={data.isFetching}
+            onRefresh={data.refreshAll}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
           />
@@ -396,8 +398,8 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <FamilyPanel
-            isRefreshing={false}
-            onRefresh={async () => {}}
+            isRefreshing={data.isFetching}
+            onRefresh={data.refreshAll}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
           />
@@ -411,8 +413,8 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <HealthPanel
-            isRefreshing={false}
-            onRefresh={async () => {}}
+            isRefreshing={data.isFetching}
+            onRefresh={data.refreshAll}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
           />
@@ -426,8 +428,8 @@ export function ShellModuleRouter({
       <div className="contentGrid">
         <div className="contentMain">
           <HobbiesPanel
-            isRefreshing={false}
-            onRefresh={async () => {}}
+            isRefreshing={data.isFetching}
+            onRefresh={data.refreshAll}
             onError={ui.reportError}
             onShowSuccess={ui.showSuccess}
           />

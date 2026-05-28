@@ -1,9 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom";
+import type { ReactElement } from "react";
 import { CarPanel } from "./CarPanel";
 import type { CarVehicle, CarFuelEntry, CarMaintenance, CarRecurringBill, CarMileage, CarServiceReminder } from "../../../shared/types";
+import { createQueryTestWrapper } from "../../test/queryTestUtils";
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: createQueryTestWrapper() });
+}
 
 function makeVehicle(overrides: Partial<CarVehicle> = {}): CarVehicle {
   return {
@@ -119,20 +125,20 @@ const mockApi = {
   createFuelEntry: vi.fn().mockResolvedValue(undefined),
   _updateFuelEntry: vi.fn().mockResolvedValue(undefined),
   _deleteFuelEntry: vi.fn().mockResolvedValue(undefined),
-  _listMaintenance: vi.fn().mockResolvedValue([]),
+  listMaintenance: vi.fn().mockResolvedValue([]),
   createMaintenance: vi.fn().mockResolvedValue(undefined),
   _updateMaintenance: vi.fn().mockResolvedValue(undefined),
   _deleteMaintenance: vi.fn().mockResolvedValue(undefined),
-  _listRecurringBills: vi.fn().mockResolvedValue([]),
+  listRecurringBills: vi.fn().mockResolvedValue([]),
   createRecurringBill: vi.fn().mockResolvedValue(undefined),
   _updateRecurringBill: vi.fn().mockResolvedValue(undefined),
   markRecurringBillPaid: vi.fn().mockResolvedValue(undefined),
   _deleteRecurringBill: vi.fn().mockResolvedValue(undefined),
-  _listMileage: vi.fn().mockResolvedValue([]),
+  listMileage: vi.fn().mockResolvedValue([]),
   createMileage: vi.fn().mockResolvedValue(undefined),
   _updateMileage: vi.fn().mockResolvedValue(undefined),
   _deleteMileage: vi.fn().mockResolvedValue(undefined),
-  _listServiceReminders: vi.fn().mockResolvedValue([]),
+  listServiceReminders: vi.fn().mockResolvedValue([]),
   createServiceReminder: vi.fn().mockResolvedValue(undefined),
   _updateServiceReminder: vi.fn().mockResolvedValue(undefined),
   completeServiceReminder: vi.fn().mockResolvedValue(undefined),
@@ -140,7 +146,8 @@ const mockApi = {
 };
 
 vi.mock("../../lib/assistantApi", () => ({
-  requireAssistantApi: vi.fn(() => mockApi)
+  requireAssistantApi: vi.fn(() => mockApi),
+  getAssistantApi: vi.fn(() => mockApi)
 }));
 
 describe("CarPanel", () => {
@@ -323,10 +330,10 @@ describe("CarPanel", () => {
     const vehicle = makeVehicle({ id: "vehicle-1", name: "Test Vehicle", make: "Toyota", model: "Camry", year: 2020, currentMileage: 50000 });
     mockApi.listVehicles.mockResolvedValue([vehicle]);
     mockApi.listFuelEntries.mockResolvedValue([]);
-    mockApi._listMaintenance.mockResolvedValue([]);
-    mockApi._listRecurringBills.mockResolvedValue([]);
-    mockApi._listMileage.mockResolvedValue([]);
-    mockApi._listServiceReminders.mockResolvedValue([]);
+    mockApi.listMaintenance.mockResolvedValue([]);
+    mockApi.listRecurringBills.mockResolvedValue([]);
+    mockApi.listMileage.mockResolvedValue([]);
+    mockApi.listServiceReminders.mockResolvedValue([]);
 
     render(
       <CarPanel

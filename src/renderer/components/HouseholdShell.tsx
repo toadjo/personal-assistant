@@ -76,7 +76,7 @@ export function HouseholdShell(): JSX.Element {
           canSaveHa={ha.canSaveHa}
           isSavingHa={ha.isSavingHa}
           isRefreshingHa={ha.isRefreshingHa}
-          isRefreshing={data.isRefreshing}
+          isRefreshing={data.isFetching}
           devices={data.devices}
           isEntityTogglePending={ha.isEntityTogglePending}
           onSave={() => {
@@ -93,7 +93,7 @@ export function HouseholdShell(): JSX.Element {
         <div className="grid householdAutomationGrid">
           <AutomationRulesPanel
             focusedRuleId={focusedRuleId}
-            isRefreshing={data.isRefreshing}
+            isRefreshing={data.isFetching}
             rules={data.rules}
             devices={data.devices}
             onRefresh={data.refreshAll}
@@ -107,7 +107,7 @@ export function HouseholdShell(): JSX.Element {
             onDuplicateRule={(id) => void automation.duplicateRuleById(id)}
             onTestRunRule={(id) => void automation.testRunRuleById(id)}
           />
-          <AutomationLogsPanel isRefreshing={data.isRefreshing} logs={data.logs} />
+          <AutomationLogsPanel isRefreshing={data.isFetching} logs={data.logs} />
         </div>
       </div>
     </main>

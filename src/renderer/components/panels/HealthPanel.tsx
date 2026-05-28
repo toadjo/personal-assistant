@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useEffect, useState, memo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Plus, Trash2, Calendar, CheckCircle, AlertCircle, Pill, Activity, Scale } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
@@ -7,6 +8,8 @@ import { SummaryCard } from "../life-areas/SummaryCard";
 import { LifeAreaPanelProps } from "../life-areas/types";
 import { formatDate } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
+import { workspaceQueryKeys } from "../../lib/query/keys";
+import { fetchHealthAll } from "../../lib/query/lifeAreas";
 import type { HealthAppointment, HealthMedication, HealthSymptom, HealthMeasurement, HealthObligation, HealthSummary, HealthAppointmentType, HealthMedicationStatus, HealthSymptomSeverity, HealthMeasurementType, HealthObligationType, HealthPriority } from "../../../shared/types";
 
 export const HealthPanel = memo(function HealthPanel({
@@ -15,13 +18,7 @@ export const HealthPanel = memo(function HealthPanel({
   onError,
   onShowSuccess
 }: LifeAreaPanelProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(false);
-  const [appointments, setAppointments] = useState<HealthAppointment[]>([]);
-  const [medications, setMedications] = useState<HealthMedication[]>([]);
-  const [symptoms, setSymptoms] = useState<HealthSymptom[]>([]);
-  const [measurements, setMeasurements] = useState<HealthMeasurement[]>([]);
-  const [obligations, setObligations] = useState<HealthObligation[]>([]);
-  const [summary, setSummary] = useState<HealthSummary | null>(null);
+  const queryClient = useQueryClient();
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [showSymptomForm, setShowSymptomForm] = useState(false);
@@ -78,35 +75,20 @@ export const HealthPanel = memo(function HealthPanel({
   });
 
   const api = requireAssistantApi();
-
-  const loadHealthData = useCallback(async () => {
-    if (!api) return;
-    setIsLoading(true);
-    try {
-      const [appointmentsData, medicationsData, symptomsData, measurementsData, obligationsData, summaryData] = await Promise.all([
-        api.listHealthAppointments(),
-        api.listHealthMedications(),
-        api.listHealthSymptoms(),
-        api.listHealthMeasurements(),
-        api.listHealthObligations(),
-        api.getHealthSummary()
-      ]);
-      setAppointments(appointmentsData);
-      setMedications(medicationsData);
-      setSymptoms(symptomsData);
-      setMeasurements(measurementsData);
-      setObligations(obligationsData);
-      setSummary(summaryData);
-    } catch {
-      onError("Failed to load health data");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [api, onError]);
+  const healthAllQuery = useQuery({ queryKey: workspaceQueryKeys.health.all(), queryFn: fetchHealthAll });
+  const appointments: HealthAppointment[] = healthAllQuery.data?.appointments ?? [];
+  const medications: HealthMedication[] = healthAllQuery.data?.medications ?? [];
+  const symptoms: HealthSymptom[] = healthAllQuery.data?.symptoms ?? [];
+  const measurements: HealthMeasurement[] = healthAllQuery.data?.measurements ?? [];
+  const obligations: HealthObligation[] = healthAllQuery.data?.obligations ?? [];
+  const summary: HealthSummary | null = healthAllQuery.data?.summary ?? null;
+  const isLoading = healthAllQuery.isLoading;
 
   useEffect(() => {
-    loadHealthData();
-  }, [_isRefreshing, loadHealthData]);
+    if (healthAllQuery.error) {
+      onError("Failed to load health data");
+    }
+  }, [healthAllQuery.error, onError]);
 
   async function handleCreateAppointment() {
     if (!api) return;
@@ -124,7 +106,7 @@ export const HealthPanel = memo(function HealthPanel({
         status: "scheduled",
         notes: ""
       });
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Appointment created");
     } catch {
       onError("Failed to create appointment");
@@ -147,7 +129,7 @@ export const HealthPanel = memo(function HealthPanel({
         prescriber: "",
         notes: ""
       });
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Medication created");
     } catch {
       onError("Failed to create medication");
@@ -166,7 +148,7 @@ export const HealthPanel = memo(function HealthPanel({
         endDate: "",
         notes: ""
       });
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Symptom created");
     } catch {
       onError("Failed to create symptom");
@@ -185,7 +167,7 @@ export const HealthPanel = memo(function HealthPanel({
         date: "",
         notes: ""
       });
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Measurement created");
     } catch {
       onError("Failed to create measurement");
@@ -205,7 +187,7 @@ export const HealthPanel = memo(function HealthPanel({
         priority: "normal",
         notes: ""
       });
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Obligation created");
     } catch {
       onError("Failed to create obligation");
@@ -217,7 +199,7 @@ export const HealthPanel = memo(function HealthPanel({
     if (!confirm("Delete this appointment?")) return;
     try {
       await api.deleteHealthAppointment(id);
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Appointment deleted");
     } catch {
       onError("Failed to delete appointment");
@@ -229,7 +211,7 @@ export const HealthPanel = memo(function HealthPanel({
     if (!confirm("Delete this medication?")) return;
     try {
       await api.deleteHealthMedication(id);
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Medication deleted");
     } catch {
       onError("Failed to delete medication");
@@ -241,7 +223,7 @@ export const HealthPanel = memo(function HealthPanel({
     if (!confirm("Delete this symptom?")) return;
     try {
       await api.deleteHealthSymptom(id);
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Symptom deleted");
     } catch {
       onError("Failed to delete symptom");
@@ -253,7 +235,7 @@ export const HealthPanel = memo(function HealthPanel({
     if (!confirm("Delete this measurement?")) return;
     try {
       await api.deleteHealthMeasurement(id);
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Measurement deleted");
     } catch {
       onError("Failed to delete measurement");
@@ -264,7 +246,7 @@ export const HealthPanel = memo(function HealthPanel({
     if (!api) return;
     try {
       await api.completeHealthObligation(id);
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Obligation completed");
     } catch {
       onError("Failed to complete obligation");
@@ -276,7 +258,7 @@ export const HealthPanel = memo(function HealthPanel({
     if (!confirm("Delete this obligation?")) return;
     try {
       await api.deleteHealthObligation(id);
-      await loadHealthData();
+      await queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.health.root });
       onShowSuccess?.("Obligation deleted");
     } catch {
       onError("Failed to delete obligation");

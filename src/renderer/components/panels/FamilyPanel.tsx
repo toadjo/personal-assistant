@@ -1,4 +1,5 @@
-import { useState, useEffect, memo } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users, Plus, Trash2, Calendar, CheckCircle, AlertCircle, Phone, Mail, Star } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
@@ -7,7 +8,9 @@ import { SummaryCard } from "../life-areas/SummaryCard";
 import { LifeAreaPanelProps } from "../life-areas/types";
 import { formatDate, formatDateTime } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
-import type { FamilyMember, FamilyOccasion, FamilyObligation, FamilySummary, FamilyOccasionType, FamilyObligationType, FamilyPriority } from "../../../shared/types";
+import { workspaceQueryKeys } from "../../lib/query/keys";
+import { fetchFamilyMembers, fetchFamilyObligations, fetchFamilyOccasions, fetchFamilySummary } from "../../lib/query/lifeAreas";
+import type { FamilyOccasion, FamilyObligation, FamilySummary, FamilyOccasionType, FamilyObligationType, FamilyPriority } from "../../../shared/types";
 
 export const FamilyPanel = memo(function FamilyPanel({
   isRefreshing: _isRefreshing,
@@ -15,11 +18,9 @@ export const FamilyPanel = memo(function FamilyPanel({
   onError,
   onShowSuccess
 }: LifeAreaPanelProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(false);
-  const [members, setMembers] = useState<FamilyMember[]>([]);
-  const [occasions, setOccasions] = useState<FamilyOccasion[]>([]);
-  const [obligations, setObligations] = useState<FamilyObligation[]>([]);
-  const [summary, setSummary] = useState<FamilySummary | null>(null);
+  const queryClient = useQueryClient();
+  const membersQuery = useQuery({ queryKey: workspaceQueryKeys.family.members(), queryFn: fetchFamilyMembers });
+  const summaryQuery = useQuery({ queryKey: workspaceQueryKeys.family.summary(), queryFn: fetchFamilySummary });
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [showMemberForm, setShowMemberForm] = useState(false);
   const [showOccasionForm, setShowOccasionForm] = useState(false);
@@ -54,53 +55,53 @@ export const FamilyPanel = memo(function FamilyPanel({
   });
 
   const api = requireAssistantApi();
+  const members = useMemo(() => membersQuery.data ?? [], [membersQuery.data]);
+  const summary: FamilySummary | null = summaryQuery.data ?? null;
+  const occasionsQuery = useQuery({
+    queryKey: workspaceQueryKeys.family.occasions(selectedMemberId ?? "none"),
+    queryFn: () => fetchFamilyOccasions(selectedMemberId ?? ""),
+    enabled: Boolean(selectedMemberId)
+  });
+  const obligationsQuery = useQuery({
+    queryKey: workspaceQueryKeys.family.obligations(selectedMemberId ?? "none"),
+    queryFn: () => fetchFamilyObligations(selectedMemberId ?? ""),
+    enabled: Boolean(selectedMemberId)
+  });
+  const occasions: FamilyOccasion[] = occasionsQuery.data ?? [];
+  const obligations: FamilyObligation[] = obligationsQuery.data ?? [];
+  const isLoading = membersQuery.isLoading || summaryQuery.isLoading || occasionsQuery.isLoading || obligationsQuery.isLoading;
 
-  async function loadData() {
-    setIsLoading(true);
-    try {
-      const [membersData, summaryData] = await Promise.all([
-        api.listFamilyMembers(),
-        api.getFamilySummary()
-      ]);
-      setMembers(membersData);
-      setSummary(summaryData);
-      if (membersData.length > 0 && !selectedMemberId) {
-        setSelectedMemberId(membersData[0]?.id ?? null);
-      }
-    } catch {
+  useEffect(() => {
+    if (membersQuery.error || summaryQuery.error) {
       onError("Failed to load family data");
-    } finally {
-      setIsLoading(false);
     }
-  }
+  }, [membersQuery.error, onError, summaryQuery.error]);
 
-  async function loadMemberData(memberId: string) {
-    setIsLoading(true);
-    try {
-      const [occasionsData, obligationsData] = await Promise.all([
-        api.listFamilyOccasions(memberId),
-        api.listFamilyObligations(memberId)
-      ]);
-      setOccasions(occasionsData);
-      setObligations(obligationsData);
-    } catch {
+  useEffect(() => {
+    if (occasionsQuery.error || obligationsQuery.error) {
       onError("Failed to load member data");
-    } finally {
-      setIsLoading(false);
     }
-  }
+  }, [obligationsQuery.error, occasionsQuery.error, onError]);
 
   useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (selectedMemberId) {
-      void loadMemberData(selectedMemberId);
+    if (!selectedMemberId && members.length > 0) {
+      setSelectedMemberId(members[0]?.id ?? null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMemberId]);
+  }, [members, selectedMemberId]);
+
+  const invalidateFamilyBase = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.family.members() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.family.summary() })
+    ]);
+  };
+  const invalidateSelectedMember = async () => {
+    if (!selectedMemberId) return;
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.family.occasions(selectedMemberId) }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.family.obligations(selectedMemberId) })
+    ]);
+  };
 
   async function handleCreateMember(e: React.FormEvent) {
     e.preventDefault();
@@ -127,7 +128,7 @@ export const FamilyPanel = memo(function FamilyPanel({
         isImportant: false
       });
       onShowSuccess?.("Family member added");
-      void loadData();
+      await invalidateFamilyBase();
     } catch {
       onError("Failed to add family member");
     }
@@ -140,7 +141,7 @@ export const FamilyPanel = memo(function FamilyPanel({
       if (selectedMemberId === id) {
         setSelectedMemberId(null);
       }
-      void loadData();
+      await invalidateFamilyBase();
     } catch {
       onError("Failed to delete family member");
     }
@@ -170,7 +171,7 @@ export const FamilyPanel = memo(function FamilyPanel({
         notes: ""
       });
       onShowSuccess?.("Occasion added");
-      void loadMemberData(selectedMemberId);
+      await invalidateSelectedMember();
     } catch {
       onError("Failed to add occasion");
     }
@@ -180,9 +181,7 @@ export const FamilyPanel = memo(function FamilyPanel({
     try {
       await api.deleteFamilyOccasion(id);
       onShowSuccess?.("Occasion deleted");
-      if (selectedMemberId) {
-        void loadMemberData(selectedMemberId);
-      }
+      await invalidateSelectedMember();
     } catch {
       onError("Failed to delete occasion");
     }
@@ -213,7 +212,7 @@ export const FamilyPanel = memo(function FamilyPanel({
         notes: ""
       });
       onShowSuccess?.("Obligation added");
-      void loadMemberData(selectedMemberId);
+      await invalidateSelectedMember();
     } catch {
       onError("Failed to add obligation");
     }
@@ -223,9 +222,7 @@ export const FamilyPanel = memo(function FamilyPanel({
     try {
       await api.completeFamilyObligation(id);
       onShowSuccess?.("Obligation completed");
-      if (selectedMemberId) {
-        void loadMemberData(selectedMemberId);
-      }
+      await invalidateSelectedMember();
     } catch {
       onError("Failed to complete obligation");
     }
@@ -235,9 +232,7 @@ export const FamilyPanel = memo(function FamilyPanel({
     try {
       await api.deleteFamilyObligation(id);
       onShowSuccess?.("Obligation deleted");
-      if (selectedMemberId) {
-        void loadMemberData(selectedMemberId);
-      }
+      await invalidateSelectedMember();
     } catch {
       onError("Failed to delete obligation");
     }

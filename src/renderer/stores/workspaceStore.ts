@@ -1,9 +1,7 @@
 import { create } from "zustand";
-import type { AutomationRule, Note, Reminder, Task } from "../../shared/types";
-import type { ExecutionLogRow, HaDeviceRow } from "../types";
 
 /**
- * Fetched / cached desk data only (notes, reminders, HA devices, automation rows, search query, refresh flag).
+ * Local renderer workspace state only.
  *
  * Ownership:
  * - This store owns ONLY fetched/cached workspace data and refresh state
@@ -18,53 +16,10 @@ import type { ExecutionLogRow, HaDeviceRow } from "../types";
  */
 export type WorkspaceDataState = {
   query: string;
-  notes: Note[];
-  reminders: Reminder[];
-  tasks: Task[];
-  devices: HaDeviceRow[];
-  logs: ExecutionLogRow[];
-  rules: AutomationRule[];
-  isRefreshing: boolean;
   setQuery: (query: string) => void;
-  setIsRefreshing: (value: boolean) => void;
-  setFromFullRefresh: (payload: {
-    notes: Note[];
-    reminders: Reminder[];
-    tasks: Task[];
-    devices: HaDeviceRow[];
-    logs: ExecutionLogRow[];
-    rules: AutomationRule[];
-  }) => void;
-  setNotes: (value: Note[] | ((prev: Note[]) => Note[])) => void;
-  setReminders: (value: Reminder[] | ((prev: Reminder[]) => Reminder[])) => void;
-  setTasks: (value: Task[] | ((prev: Task[]) => Task[])) => void;
-  setDevices: (value: HaDeviceRow[] | ((prev: HaDeviceRow[]) => HaDeviceRow[])) => void;
-  setLogs: (value: ExecutionLogRow[] | ((prev: ExecutionLogRow[]) => ExecutionLogRow[])) => void;
-  setRules: (value: AutomationRule[] | ((prev: AutomationRule[]) => AutomationRule[])) => void;
 };
 
 export const useWorkspaceStore = create<WorkspaceDataState>((set) => ({
   query: "",
-  notes: [],
-  reminders: [],
-  tasks: [],
-  devices: [],
-  logs: [],
-  rules: [],
-  isRefreshing: true,
-  setQuery: (query) => set({ query }),
-  setIsRefreshing: (isRefreshing) => set({ isRefreshing }),
-  setFromFullRefresh: (payload) => set({ ...payload }),
-  setNotes: (value: Note[] | ((prev: Note[]) => Note[])) =>
-    set((s) => ({ notes: typeof value === "function" ? value(s.notes) : value })),
-  setReminders: (value: Reminder[] | ((prev: Reminder[]) => Reminder[])) =>
-    set((s) => ({ reminders: typeof value === "function" ? value(s.reminders) : value })),
-  setTasks: (value: Task[] | ((prev: Task[]) => Task[])) =>
-    set((s) => ({ tasks: typeof value === "function" ? value(s.tasks) : value })),
-  setDevices: (value: HaDeviceRow[] | ((prev: HaDeviceRow[]) => HaDeviceRow[])) =>
-    set((s) => ({ devices: typeof value === "function" ? value(s.devices) : value })),
-  setLogs: (value: ExecutionLogRow[] | ((prev: ExecutionLogRow[]) => ExecutionLogRow[])) =>
-    set((s) => ({ logs: typeof value === "function" ? value(s.logs) : value })),
-  setRules: (value: AutomationRule[] | ((prev: AutomationRule[]) => AutomationRule[])) =>
-    set((s) => ({ rules: typeof value === "function" ? value(s.rules) : value }))
+  setQuery: (query) => set({ query })
 }));

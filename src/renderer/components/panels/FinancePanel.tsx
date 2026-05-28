@@ -1,4 +1,5 @@
-import { useState, useEffect, memo } from "react";
+import { useEffect, useState, memo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DollarSign, Plus, Trash2, Check, Calendar, Clock } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
 import { EmptyState } from "../ui/EmptyState";
@@ -7,6 +8,8 @@ import { SummaryCard } from "../life-areas/SummaryCard";
 import { LifeAreaPanelProps } from "../life-areas/types";
 import { formatDate, formatEur } from "../../lib/dateFormat";
 import { requireAssistantApi } from "../../lib/assistantApi";
+import { workspaceQueryKeys } from "../../lib/query/keys";
+import { fetchFinanceBills, fetchFinanceExpenses, fetchFinanceSummary } from "../../lib/query/lifeAreas";
 import type { FinanceBill, FinanceExpense, FinanceMonthlySummary, FinanceCategory } from "../../../shared/types";
 
 const FINANCE_CATEGORIES: FinanceCategory[] = [
@@ -34,10 +37,20 @@ export const FinancePanel = memo(function FinancePanel({
   onError,
   onShowSuccess
 }: LifeAreaPanelProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(false);
-  const [bills, setBills] = useState<FinanceBill[]>([]);
-  const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
-  const [summary, setSummary] = useState<FinanceMonthlySummary | null>(null);
+  const queryClient = useQueryClient();
+  const billsQuery = useQuery({ queryKey: workspaceQueryKeys.finance.bills(), queryFn: fetchFinanceBills });
+  const expensesQuery = useQuery({ queryKey: workspaceQueryKeys.finance.expenses(), queryFn: fetchFinanceExpenses });
+  const summaryQuery = useQuery({ queryKey: workspaceQueryKeys.finance.summary(), queryFn: fetchFinanceSummary });
+  const bills: FinanceBill[] = billsQuery.data ?? [];
+  const expenses: FinanceExpense[] = expensesQuery.data ?? [];
+  const summary: FinanceMonthlySummary | null = summaryQuery.data ?? null;
+  const isLoading = billsQuery.isLoading || expensesQuery.isLoading || summaryQuery.isLoading;
+
+  useEffect(() => {
+    if (billsQuery.error || expensesQuery.error || summaryQuery.error) {
+      onError("Failed to load finance data");
+    }
+  }, [billsQuery.error, expensesQuery.error, onError, summaryQuery.error]);
   const [showBillForm, setShowBillForm] = useState(false);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [billForm, setBillForm] = useState({
@@ -58,34 +71,58 @@ export const FinancePanel = memo(function FinancePanel({
 
   const api = requireAssistantApi();
 
-  async function loadData() {
-    setIsLoading(true);
-    try {
-      const [billsData, expensesData, summaryData] = await Promise.all([
-        api.listBills(),
-        api.listExpenses(),
-        api.getMonthlySummary()
-      ]);
-      setBills(billsData);
-      setExpenses(expensesData);
-      setSummary(summaryData);
-    } catch {
-      onError("Failed to load finance data");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const invalidateFinance = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.finance.bills() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.finance.expenses() }),
+      queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.finance.summary() })
+    ]);
+  };
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const createBillMutation = useMutation({
+    mutationFn: async (payload: {
+      name: string;
+      amount: number;
+      dueAt: string;
+      recurrence: "none" | "weekly" | "monthly" | "yearly";
+      category: FinanceCategory;
+      notes: string;
+    }) => api.createBill(payload),
+    onError: () => onError("Failed to create bill"),
+    onSettled: async () => invalidateFinance()
+  });
+  const createExpenseMutation = useMutation({
+    mutationFn: async (payload: {
+      description: string;
+      amount: number;
+      date: string;
+      category: FinanceCategory;
+      notes: string;
+    }) => api.createExpense(payload),
+    onError: () => onError("Failed to create expense"),
+    onSettled: async () => invalidateFinance()
+  });
+  const markBillPaidMutation = useMutation({
+    mutationFn: async (id: string) => api.markBillPaid(id),
+    onError: () => onError("Failed to mark bill as paid"),
+    onSettled: async () => invalidateFinance()
+  });
+  const deleteBillMutation = useMutation({
+    mutationFn: async (id: string) => api.deleteBill(id),
+    onError: () => onError("Failed to delete bill"),
+    onSettled: async () => invalidateFinance()
+  });
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: string) => api.deleteExpense(id),
+    onError: () => onError("Failed to delete expense"),
+    onSettled: async () => invalidateFinance()
+  });
 
   async function handleCreateBill(e: React.FormEvent) {
     e.preventDefault();
     try {
       const amountCents = Math.round(parseFloat(billForm.amount) * 100);
-      await api.createBill({
+      await createBillMutation.mutateAsync({
         name: billForm.name,
         amount: amountCents,
         dueAt: new Date(billForm.dueAt).toISOString(),
@@ -96,7 +133,6 @@ export const FinancePanel = memo(function FinancePanel({
       setShowBillForm(false);
       setBillForm({ name: "", amount: "", dueAt: "", recurrence: "none", category: "other", notes: "" });
       onShowSuccess?.("Bill created");
-      await loadData();
     } catch {
       onError("Failed to create bill");
     }
@@ -106,7 +142,7 @@ export const FinancePanel = memo(function FinancePanel({
     e.preventDefault();
     try {
       const amountCents = Math.round(parseFloat(expenseForm.amount) * 100);
-      await api.createExpense({
+      await createExpenseMutation.mutateAsync({
         description: expenseForm.description,
         amount: amountCents,
         date: new Date(expenseForm.date).toISOString(),
@@ -116,7 +152,6 @@ export const FinancePanel = memo(function FinancePanel({
       setShowExpenseForm(false);
       setExpenseForm({ description: "", amount: "", date: "", category: "other", notes: "" });
       onShowSuccess?.("Expense created");
-      await loadData();
     } catch {
       onError("Failed to create expense");
     }
@@ -124,9 +159,8 @@ export const FinancePanel = memo(function FinancePanel({
 
   async function handleMarkBillPaid(id: string) {
     try {
-      await api.markBillPaid(id);
+      await markBillPaidMutation.mutateAsync(id);
       onShowSuccess?.("Bill marked as paid");
-      await loadData();
     } catch {
       onError("Failed to mark bill as paid");
     }
@@ -135,9 +169,8 @@ export const FinancePanel = memo(function FinancePanel({
   async function handleDeleteBill(id: string) {
     if (!window.confirm("Delete this bill?")) return;
     try {
-      await api.deleteBill(id);
+      await deleteBillMutation.mutateAsync(id);
       onShowSuccess?.("Bill deleted");
-      await loadData();
     } catch {
       onError("Failed to delete bill");
     }
@@ -146,9 +179,8 @@ export const FinancePanel = memo(function FinancePanel({
   async function handleDeleteExpense(id: string) {
     if (!window.confirm("Delete this expense?")) return;
     try {
-      await api.deleteExpense(id);
+      await deleteExpenseMutation.mutateAsync(id);
       onShowSuccess?.("Expense deleted");
-      await loadData();
     } catch {
       onError("Failed to delete expense");
     }

@@ -27,7 +27,8 @@ export type DeskDataState = {
   devices: HaDeviceRow[];
   logs: ExecutionLogRow[];
   rules: AutomationRule[];
-  isRefreshing: boolean;
+  isLoading: boolean;
+  isFetching: boolean;
   refreshAll: () => Promise<void>;
   refreshNotes: () => Promise<void>;
   refreshReminders: () => Promise<void>;
@@ -51,7 +52,8 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     devices,
     logs,
     rules,
-    isRefreshing,
+    isLoading,
+    isFetching,
     refreshAll,
     refreshNotes,
     refreshReminders,
@@ -73,7 +75,8 @@ export function useDeskDataState(setError: (message: string) => void): DeskDataS
     devices,
     logs,
     rules,
-    isRefreshing,
+    isLoading,
+    isFetching,
     refreshAll,
     refreshNotes,
     refreshReminders,
