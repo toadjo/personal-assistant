@@ -55,22 +55,60 @@ export function ReleaseNotesPanel({ version, onClose, onOpenAbout }: Props): JSX
         <div className="releaseNotes">
           <div className="releaseNotesDate">{releaseNote.date}</div>
           <div className="releaseNotesMarkdown">
-            {releaseNote.markdown.split("\n").map((line, index) => {
-              if (line.startsWith("### ")) {
-                const heading = line.replace("### ", "");
-                return <h4 key={index}>{heading}</h4>;
+            {(() => {
+              const lines = releaseNote.markdown.split("\n");
+              const elements: JSX.Element[] = [];
+              let inList = false;
+
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line) continue;
+
+                if (line.startsWith("### ")) {
+                  if (inList) {
+                    elements.push(
+                      <ul key={`list-${i}`}>
+                        {elements.splice(elements.length - elements.filter((el) => el.type === "li").length)}
+                      </ul>
+                    );
+                    inList = false;
+                  }
+                  const heading = line.replace("### ", "");
+                  elements.push(<h3 key={i}>{heading}</h3>);
+                } else if (line.startsWith("- ")) {
+                  if (!inList) {
+                    inList = true;
+                  }
+                  elements.push(<li key={i}>{line.replace("- ", "")}</li>);
+                } else if (line.trim() === "") {
+                  if (inList) {
+                    const listItems = elements.splice(
+                      elements.length - elements.filter((el) => el.type === "li").length
+                    );
+                    elements.push(<ul key={`list-${i}`}>{listItems}</ul>);
+                    inList = false;
+                  }
+                  elements.push(<br key={i} />);
+                } else if (!line.startsWith("#") && !line.startsWith("[")) {
+                  if (inList) {
+                    const listItems = elements.splice(
+                      elements.length - elements.filter((el) => el.type === "li").length
+                    );
+                    elements.push(<ul key={`list-${i}`}>{listItems}</ul>);
+                    inList = false;
+                  }
+                  elements.push(<p key={i}>{line}</p>);
+                }
+
+                // Close list at end if still open
+                if (i === lines.length - 1 && inList) {
+                  const listItems = elements.splice(elements.length - elements.filter((el) => el.type === "li").length);
+                  elements.push(<ul key={`list-end`}>{listItems}</ul>);
+                }
               }
-              if (line.startsWith("- ")) {
-                return <li key={index}>{line.replace("- ", "")}</li>;
-              }
-              if (line.trim() === "") {
-                return <br key={index} />;
-              }
-              if (!line.startsWith("#") && !line.startsWith("[")) {
-                return <p key={index}>{line}</p>;
-              }
-              return null;
-            })}
+
+              return elements;
+            })()}
           </div>
         </div>
       </div>

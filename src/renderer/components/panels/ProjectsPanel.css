@@ -183,7 +183,6 @@
   padding: 0.625rem 0.75rem;
   border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
   border-radius: 0.375rem;
-  background: var(--panel-background, #ffffff);
 }
 
 .taskInfo {
@@ -205,6 +204,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   font-size: 0.75rem;
+  color: var(--text, #141418);
 }
 
 .taskProject {
@@ -216,31 +216,45 @@
 }
 
 .taskPriority {
-  color: var(--muted, #6b6b76);
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskPriority.low {
-  color: var(--muted, #6b6b76);
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskPriority.normal {
-  color: var(--subtitle, #5c5c66);
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskPriority.high {
-  color: var(--error-text, #8f1f2b);
+  color: #8b0000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskDue {
-  color: var(--muted, #6b6b76);
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskStatus {
-  color: var(--muted, #6b6b76);
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskStatus.open {
-  color: var(--subtitle, #5c5c66);
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .taskStatus.done {

@@ -308,9 +308,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
           </button>
         </div>
 
-        <div className="list">
+        <ul className="list">
           {hobbies.map((hobby) => (
-            <div key={hobby.id} className="listItem">
+            <li key={hobby.id} className="listItem">
               <div className="listItemContent">
                 <div className="listItemTitle">{hobby.name}</div>
                 <div className="listItemSubtitle">{hobby.category} • {hobby.status}</div>
@@ -319,9 +319,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
               <button onClick={() => handleDeleteHobby(hobby.id)} className="btn btn-sm btn-danger" aria-label="Delete hobby">
                 <Trash2 className="w-4 h-4" />
               </button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <div className="sectionHeader">
           <h3>Recent Sessions</h3>
@@ -330,9 +330,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
           </button>
         </div>
 
-        <div className="list">
+        <ul className="list">
           {sessions.slice(0, 10).map((session) => (
-            <div key={session.id} className="listItem">
+            <li key={session.id} className="listItem">
               <div className="listItemContent">
                 <div className="listItemTitle">{formatDate(session.date)} • {session.durationMinutes} min</div>
                 {session.mood && <div className="listItemSubtitle">Mood: {session.mood}</div>}
@@ -342,9 +342,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
               <button onClick={() => handleDeleteSession(session.id)} className="btn btn-sm btn-danger" aria-label="Delete session">
                 <Trash2 className="w-4 h-4" />
               </button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <div className="sectionHeader">
           <h3>Projects</h3>
@@ -353,9 +353,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
           </button>
         </div>
 
-        <div className="list">
+        <ul className="list">
           {projects.map((project) => (
-            <div key={project.id} className="listItem">
+            <li key={project.id} className="listItem">
               <div className="listItemContent">
                 <div className="listItemTitle">{project.name}</div>
                 <div className="listItemSubtitle">{project.status}</div>
@@ -372,9 +372,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <div className="sectionHeader">
           <h3>Milestones</h3>
@@ -383,9 +383,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
           </button>
         </div>
 
-        <div className="list">
+        <ul className="list">
           {milestones.map((milestone) => (
-            <div key={milestone.id} className="listItem">
+            <li key={milestone.id} className="listItem">
               <div className="listItemContent">
                 <div className="listItemTitle">{milestone.name}</div>
                 {milestone.targetDate && <div className="listItemSubtitle">Target: {formatDate(milestone.targetDate)}</div>}
@@ -401,9 +401,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <div className="sectionHeader">
           <h3>Supplies & Resources</h3>
@@ -412,9 +412,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
           </button>
         </div>
 
-        <div className="list">
+        <ul className="list">
           {supplies.map((supply) => (
-            <div key={supply.id} className="listItem">
+            <li key={supply.id} className="listItem">
               <div className="listItemContent">
                 <div className="listItemTitle">{supply.name}</div>
                 <div className="listItemSubtitle">{supply.type}</div>
@@ -425,9 +425,9 @@ export const HobbiesPanel = memo(function HobbiesPanel({
               <button onClick={() => handleDeleteSupply(supply.id)} className="btn btn-sm btn-danger" aria-label="Delete supply">
                 <Trash2 className="w-4 h-4" />
               </button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         {/* Hobby Form Modal */}
         {showHobbyForm && (

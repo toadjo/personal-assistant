@@ -49,6 +49,12 @@ test("desk shell shows assistant command field and home layout", async ({ page }
   const todayAccessibilityScanResults = await new AxeBuilder({ page }).analyze();
   if (todayAccessibilityScanResults.violations.length > 0) {
     console.log(`Today view accessibility violations: ${todayAccessibilityScanResults.violations.length}`);
+    todayAccessibilityScanResults.violations.forEach((violation) => {
+      console.log(`- ${violation.id}: ${violation.description} (${violation.impact})`);
+      violation.nodes.forEach((node) => {
+        console.log(`  Target: ${node.target.join(', ')}`);
+      });
+    });
   }
 
   // Click Home button to return to dashboard
@@ -72,6 +78,12 @@ test("projects mode renders team task surface and matches snapshot", async ({ pa
   const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
   if (accessibilityScanResults.violations.length > 0) {
     console.log(`Projects panel accessibility violations: ${accessibilityScanResults.violations.length}`);
+    accessibilityScanResults.violations.forEach((violation) => {
+      console.log(`- ${violation.id}: ${violation.description} (${violation.impact})`);
+      violation.nodes.forEach((node) => {
+        console.log(`  Target: ${node.target.join(', ')}`);
+      });
+    });
   }
   
   const projectsPanel = page.locator(".panel").filter({ hasText: "Shared Tasks" });
@@ -99,6 +111,12 @@ test("calendar shows toolbar with view options and Monday as first day", async (
   const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
   if (accessibilityScanResults.violations.length > 0) {
     console.log(`Calendar view accessibility violations: ${accessibilityScanResults.violations.length}`);
+    accessibilityScanResults.violations.forEach((violation) => {
+      console.log(`- ${violation.id}: ${violation.description} (${violation.impact})`);
+      violation.nodes.forEach((node) => {
+        console.log(`  Target: ${node.target.join(', ')}`);
+      });
+    });
   }
 });
 
