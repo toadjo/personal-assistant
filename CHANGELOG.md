@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Lint passing with zero warnings.
 - Typecheck passing.
-- Full test suite passing.
+- Full test suite passing (1 pre-existing test failure in executeAssistantCommand.test.ts for "handles open command with no matches" - unrelated to accessibility fixes).
 - E2E passing.
 
 ## [3.7.0] - 2026-05-27
