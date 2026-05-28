@@ -14,10 +14,6 @@ Final boss goal: friendly AI takeover of your tasks, calendar, chores, reminders
 
 Goal: make the app feel polished, keyboard-safe, and reliable for repeated daily use.
 
-- Add axe checks to browser E2E coverage.
-- Add keyboard-only smoke tests for the main workflow.
-- Implement a focus-stack manager for Quick Capture, Command Palette, modals, and drawers.
-- Upgrade Command Palette with better fuzzy ranking, recently-used boost, scoped filters, and action history.
 - Move themes toward a JSON-backed system with user-authored themes and `prefers-color-scheme` defaults.
 - Refactor onboarding into one persisted flow with clear skip points and restart support.
 
@@ -91,5 +87,7 @@ Acceptance signal:
 ## Maintenance Notes
 
 **Phase B (Completed in v3.7.0)**: Renderer data layer migrated to TanStack Query with optimistic mutations and panel crash isolation. See commit `175792c` and CHANGELOG.md for details.
+
+**v3.8.0 accessibility foundation**: Axe E2E checks, keyboard smoke coverage, focus-stack manager, Command Palette ranking upgrades, and initial axe fixes shipped in v3.8.0. See commit `6016aef` and CHANGELOG.md for details.
 
 **Non-blocking cleanup**: React `act(...)` warnings in async error-path tests remain as a low-priority maintenance item. These do not block Phase C work.

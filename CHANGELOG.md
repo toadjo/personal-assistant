@@ -4,6 +4,39 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.0] - 2026-05-28
+
+### Added
+
+- TanStack Query renderer data layer for workspace and life-area data.
+- Query-backed optimistic mutations for tasks, reminders, and notes with rollback behavior.
+- Panel and overlay crash isolation through scoped error boundaries.
+- Axe-powered E2E accessibility checks.
+- Keyboard-only smoke coverage for the main workflow.
+- Focus-stack manager for modal and overlay focus restoration.
+- Command Palette scope filters and improved fuzzy ranking.
+
+### Changed
+
+- Core workspace data now refreshes through query invalidation instead of local refresh state.
+- Finance, Family, Health, Hobbies, and Car panels now use query-backed data loading.
+- Notes search now uses debounced query values instead of polling.
+- Command Palette search now boosts recent, active, and better fuzzy matches.
+- Roadmap now treats Phase C as the active future track.
+
+### Fixed
+
+- Reduced documented axe accessibility violations across Calendar, Projects, Hobbies, Release Notes, and heading hierarchy.
+- Improved list semantics in Hobbies and release-note rendering.
+- Preserved shell stability when individual panels or overlays fail.
+
+### Tests
+
+- Lint passing with zero warnings.
+- Typecheck passing.
+- Full test suite passing.
+- E2E passing.
+
 ## [3.7.0] - 2026-05-27
 
 ### Added
