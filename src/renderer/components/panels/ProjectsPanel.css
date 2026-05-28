@@ -217,44 +217,42 @@
 
 .taskPriority {
   color: #000000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  font-weight: 900;
 }
 
 .taskPriority.low {
   color: #000000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  font-weight: 900;
 }
 
 .taskPriority.normal {
   color: #000000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  font-weight: 900;
 }
 
 .taskPriority.high {
-  color: #8b0000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  color: #000000;
+  font-weight: 900;
 }
 
 .taskDue {
   color: #000000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  font-weight: 900;
 }
 
 .taskStatus {
   color: #000000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  font-weight: 900;
 }
 
 .taskStatus.open {
   color: #000000;
-  font-weight: 700;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  font-weight: 900;
+}
+
+.taskStatus.done {
+  color: #000000;
+  font-weight: 900;
 }
 
 .taskStatus.done {
