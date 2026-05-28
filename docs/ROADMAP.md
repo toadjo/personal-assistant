@@ -14,6 +14,8 @@ Final boss goal: friendly AI takeover of your tasks, calendar, chores, reminders
 
 Goal: make the app feel polished, keyboard-safe, and reliable for repeated daily use.
 
+- Resolve remaining ProjectsPanel color contrast violation via accessible state color tokens ([#34](https://github.com/toadjo/personal-assistant/issues/34)).
+- Add focus-return E2E coverage for Command Palette and Quick Capture ([#35](https://github.com/toadjo/personal-assistant/issues/35)).
 - Move themes toward a JSON-backed system with user-authored themes and `prefers-color-scheme` defaults.
 - Refactor onboarding into one persisted flow with clear skip points and restart support.
 
@@ -89,5 +91,10 @@ Acceptance signal:
 **Phase B (Completed in v3.7.0)**: Renderer data layer migrated to TanStack Query with optimistic mutations and panel crash isolation. See commit `175792c` and CHANGELOG.md for details.
 
 **v3.8.0 accessibility foundation**: Axe E2E checks, keyboard smoke coverage, focus-stack manager, Command Palette ranking upgrades, and initial axe fixes shipped in v3.8.0. See commit `6016aef` and CHANGELOG.md for details.
+
+**Phase C follow-up issues**:
+
+- [#34](https://github.com/toadjo/personal-assistant/issues/34): Resolve remaining ProjectsPanel color contrast violation via accessible state color tokens
+- [#35](https://github.com/toadjo/personal-assistant/issues/35): Add focus-return E2E coverage for Command Palette and Quick Capture after investigating keyboard shortcut behavior
 
 **Non-blocking cleanup**: React `act(...)` warnings in async error-path tests remain as a low-priority maintenance item. These do not block Phase C work.
