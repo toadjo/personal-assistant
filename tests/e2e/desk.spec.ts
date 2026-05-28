@@ -1,5 +1,6 @@
 import path from "node:path";
 import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 const stubPath = path.join(process.cwd(), "tests", "e2e", "install-assistant-api-stub.js");
 
@@ -29,11 +30,26 @@ test("desk shell shows assistant command field and home layout", async ({ page }
   await expect(page.locator(".moduleTab").filter({ hasText: "Tasks" })).toBeVisible();
   await expect(page.locator(".moduleTab").filter({ hasText: "Automations" })).toBeVisible();
 
+  // Check accessibility on home layout (non-blocking for now)
+  const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+  if (accessibilityScanResults.violations.length > 0) {
+    console.log(`Accessibility violations found: ${accessibilityScanResults.violations.length}`);
+    accessibilityScanResults.violations.forEach((violation) => {
+      console.log(`- ${violation.id}: ${violation.description} (${violation.impact})`);
+    });
+  }
+
   // Click Today button and verify it becomes active
   const todayButton = page.locator(".moduleTab").filter({ hasText: "Today" });
   await todayButton.click();
   await expect(todayButton).toHaveClass(/moduleTabActive/);
   await expect(page.getByRole("heading", { name: /^daily command center$/i })).toBeVisible();
+
+  // Check accessibility on Today view (non-blocking for now)
+  const todayAccessibilityScanResults = await new AxeBuilder({ page }).analyze();
+  if (todayAccessibilityScanResults.violations.length > 0) {
+    console.log(`Today view accessibility violations: ${todayAccessibilityScanResults.violations.length}`);
+  }
 
   // Click Home button to return to dashboard
   await homeButton.click();
@@ -51,6 +67,13 @@ test("projects mode renders team task surface and matches snapshot", async ({ pa
   await page.getByRole("button", { name: /^Projects$/ }).click();
   await expect(page.getByRole("heading", { name: /^Shared Tasks$/ })).toBeVisible();
   await expect(page.getByText("Design logo")).toBeVisible();
+  
+  // Check accessibility on projects panel (non-blocking for now)
+  const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+  if (accessibilityScanResults.violations.length > 0) {
+    console.log(`Projects panel accessibility violations: ${accessibilityScanResults.violations.length}`);
+  }
+  
   const projectsPanel = page.locator(".panel").filter({ hasText: "Shared Tasks" });
   await expect(projectsPanel).toHaveScreenshot("projects-panel.png");
 });
@@ -71,6 +94,12 @@ test("calendar shows toolbar with view options and Monday as first day", async (
   const calendarHeaders = page.locator(".calendarHeader");
   await expect(calendarHeaders.first()).toHaveText("Mon");
   await expect(calendarHeaders.nth(6)).toHaveText("Sun");
+
+  // Check accessibility on calendar view (non-blocking for now)
+  const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+  if (accessibilityScanResults.violations.length > 0) {
+    console.log(`Calendar view accessibility violations: ${accessibilityScanResults.violations.length}`);
+  }
 });
 
 test("calendar view buttons switch content", async ({ page }) => {
@@ -151,4 +180,31 @@ test("top module buttons switch between Today, Inbox, Memos, Reminders, and Task
   const tasksButton = page.locator(".moduleTab").filter({ hasText: "Tasks" });
   await tasksButton.click();
   await expect(tasksButton).toHaveClass(/moduleTabActive/);
+});
+
+test("keyboard-only navigation for main workflow", async ({ page }) => {
+  await page.goto("/");
+
+  // Focus and activate Today button
+  const todayButton = page.locator(".moduleTab").filter({ hasText: "Today" });
+  await todayButton.focus();
+  await expect(todayButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(todayButton).toHaveClass(/moduleTabActive/);
+  await expect(page.getByRole("heading", { name: /^daily command center$/i })).toBeVisible();
+
+  // Focus and activate Inbox button
+  const inboxButton = page.locator(".moduleTab").filter({ hasText: "Inbox" });
+  await inboxButton.focus();
+  await expect(inboxButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(inboxButton).toHaveClass(/moduleTabActive/);
+
+  // Focus and return to Home button
+  const homeButton = page.getByRole("button", { name: /^Home$/ }).first();
+  await homeButton.focus();
+  await expect(homeButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(homeButton).toHaveClass(/moduleTabActive/);
+  await expect(page.getByRole("heading", { name: /^calendar$/i })).toBeVisible();
 });

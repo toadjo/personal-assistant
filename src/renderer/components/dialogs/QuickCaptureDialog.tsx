@@ -13,6 +13,7 @@ import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { X, FileText, ListTodo, Bell, Inbox } from "lucide-react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { requireAssistantApi } from "../../lib/assistantApi";
+import { focusStack } from "../../lib/focusStack";
 
 type CaptureType = "note" | "task" | "reminder" | "inbox";
 
@@ -73,6 +74,9 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
+      // Store current focus before opening dialog
+      focusStack.push();
+      
       setCaptureType(initialType);
       setText(initialText);
       setTaskDueAt("");
@@ -82,6 +86,9 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
+    } else {
+      // Restore focus when dialog closes
+      focusStack.pop();
     }
   }, [isOpen, initialType, initialText]);
 

@@ -34,6 +34,40 @@ function scoreMatch(queryTokens: string[], haystack: string): number {
   return matched / queryTokens.length;
 }
 
+// Enhanced fuzzy matching with character-level scoring
+function fuzzyMatch(query: string, text: string): number {
+  const normalizedQuery = normalize(query);
+  const normalizedText = normalize(text);
+  
+  if (!normalizedQuery) return 0;
+  if (normalizedText === normalizedQuery) return 1; // Exact match
+  
+  let queryIndex = 0;
+  let textIndex = 0;
+  let matches = 0;
+  
+  while (queryIndex < normalizedQuery.length && textIndex < normalizedText.length) {
+    if (normalizedQuery[queryIndex] === normalizedText[textIndex]) {
+      matches++;
+      queryIndex++;
+    }
+    textIndex++;
+  }
+  
+  // Calculate score based on how many characters matched and their position
+  const score = matches / normalizedQuery.length;
+  
+  // Bonus for consecutive matches at start
+  if (normalizedQuery.length > 0 && normalizedText.length > 0) {
+    const firstChar = normalizedQuery[0];
+    if (firstChar && normalizedText.startsWith(firstChar)) {
+      return score * 1.5;
+    }
+  }
+  
+  return score;
+}
+
 function isExactMatch(query: string, text: string): boolean {
   return normalize(query) === normalize(text);
 }
@@ -76,25 +110,39 @@ function rankResults(query: string, items: SearchResult[]): SearchResult[] {
       score += 50;
     }
 
-    // Fuzzy/content matches
+    // Enhanced fuzzy matching for title
+    const fuzzyTitleScore = fuzzyMatch(query, item.title) * 40;
+    score += fuzzyTitleScore;
+
+    // Fuzzy/content matches for subtitle and action
     const titleScore = scoreMatch(queryTokens, item.title) * 3;
     const subtitleScore = scoreMatch(queryTokens, item.subtitle);
     const actionScore = scoreMatch(queryTokens, item.action);
     score += titleScore + subtitleScore + actionScore;
 
-    // Boost for recent items (20 points)
+    // Boost for recent items (25 points, increased from 20)
     if (item.isRecent) {
+      score += 25;
+    }
+
+    // Boost for open/active items (20 points, increased from 15)
+    if (isOpenOrActive(item)) {
       score += 20;
     }
 
-    // Boost for open/active items (15 points)
-    if (isOpenOrActive(item)) {
-      score += 15;
+    // Penalize completed/done items (15 points, increased from 10)
+    if (isCompletedOrDone(item)) {
+      score -= 15;
     }
 
-    // Penalize completed/done items (10 points)
-    if (isCompletedOrDone(item)) {
-      score -= 10;
+    // Recency boost based on timestamp (up to 10 points)
+    if (item.timestamp) {
+      const daysSinceUpdate = (Date.now() - item.timestamp) / (1000 * 60 * 60 * 24);
+      if (daysSinceUpdate < 1) {
+        score += 10;
+      } else if (daysSinceUpdate < 7) {
+        score += 5;
+      }
     }
 
     return { ...item, score };

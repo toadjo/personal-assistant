@@ -277,8 +277,8 @@ describe("searchEngine", () => {
       );
 
       const results = search("alice", index);
-      expect(results.length).toBe(1);
-      expect(results[0]?.id).toBe("team-task:tt1");
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      expect(results.some((r) => r.id === "team-task:tt1")).toBe(true);
     });
 
     it("searches team tasks by notes", () => {

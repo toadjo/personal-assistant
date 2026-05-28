@@ -8,6 +8,7 @@ import type { HaDeviceRow } from "../../types";
 import { IconButton } from "../ui/IconButton";
 import { getRecentItemIds, addRecentItem } from "../../lib/storage/recentItems";
 import { getSavedSearches, addSavedSearch, removeSavedSearch } from "../../lib/storage/savedSearches";
+import { focusStack } from "../../lib/focusStack";
 
 const CATEGORY_ICONS: Record<SearchResult["category"], typeof FileText> = {
   note: FileText,
@@ -20,6 +21,7 @@ const CATEGORY_ICONS: Record<SearchResult["category"], typeof FileText> = {
 };
 
 type DisplayMode = "search" | "recent" | "saved";
+type FilterScope = "all" | "note" | "task" | "reminder" | "automation" | "device" | "team-task" | "setting";
 
 type Props = {
   notes: Note[];
@@ -59,6 +61,7 @@ export function CommandPalette({
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [displayMode, setDisplayMode] = useState<DisplayMode>("search");
+  const [filterScope, setFilterScope] = useState<FilterScope>("all");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -70,7 +73,16 @@ export function CommandPalette({
     [notes, tasks, reminders, rules, devices, teamTasks, teamProjects, recentItemIds]
   );
 
-  const results = useMemo(() => search(query, index), [query, index]);
+  const results = useMemo(() => {
+    const allResults = search(query, index);
+    
+    // Apply scope filter if not "all"
+    if (filterScope !== "all") {
+      return allResults.filter((result) => result.category === filterScope);
+    }
+    
+    return allResults;
+  }, [query, index, filterScope]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -102,7 +114,14 @@ export function CommandPalette({
   }, []);
 
   useEffect(() => {
+    // Store current focus when palette opens
+    focusStack.push();
     inputRef.current?.focus();
+    
+    // Restore focus when palette unmounts
+    return () => {
+      focusStack.pop();
+    };
   }, []);
 
   const handleSelect = useCallback(
@@ -179,6 +198,23 @@ export function CommandPalette({
         }
         return;
       }
+      // Scope filter shortcuts
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case "1":
+            setFilterScope("all");
+            break;
+          case "2":
+            setFilterScope("note");
+            break;
+          case "3":
+            setFilterScope("task");
+            break;
+          case "4":
+            setFilterScope("reminder");
+            break;
+        }
+      }
     },
     [results, selectedIndex, onClose, handleSelect]
   );
@@ -204,6 +240,38 @@ export function CommandPalette({
             aria-label="Search"
           />
           <IconButton icon={X} label="Close" title="Close" onClick={onClose} variant="ghost" size={16} />
+        </div>
+
+        {/* Scope filter buttons */}
+        <div className="commandPaletteScopes">
+          <button
+            type="button"
+            className={`commandPaletteScope ${filterScope === "all" ? "active" : ""}`}
+            onClick={() => setFilterScope("all")}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            className={`commandPaletteScope ${filterScope === "note" ? "active" : ""}`}
+            onClick={() => setFilterScope("note")}
+          >
+            Notes
+          </button>
+          <button
+            type="button"
+            className={`commandPaletteScope ${filterScope === "task" ? "active" : ""}`}
+            onClick={() => setFilterScope("task")}
+          >
+            Tasks
+          </button>
+          <button
+            type="button"
+            className={`commandPaletteScope ${filterScope === "reminder" ? "active" : ""}`}
+            onClick={() => setFilterScope("reminder")}
+          >
+            Reminders
+          </button>
         </div>
 
         {results.length === 0 ? (
