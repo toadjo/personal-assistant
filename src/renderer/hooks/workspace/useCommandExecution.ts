@@ -158,11 +158,7 @@ export function useCommandExecution(args: {
     }
 
     function onKey(event: KeyboardEvent): void {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        commandInputRef.current?.focus();
-        return;
-      }
+      // Ctrl+K is reserved for Command Palette (handled by useShellKeybindings)
       if (event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey) {
         if (isEditableTarget(event.target)) return;
         event.preventDefault();

@@ -73,19 +73,23 @@ test("projects mode renders team task surface and matches snapshot", async ({ pa
   await page.getByRole("button", { name: /^Projects$/ }).click();
   await expect(page.getByRole("heading", { name: /^Shared Tasks$/ })).toBeVisible();
   await expect(page.getByText("Design logo")).toBeVisible();
-  
-  // Check accessibility on projects panel (non-blocking for now)
+
+  // Check accessibility on projects panel (fail on serious or critical violations)
   const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
-  if (accessibilityScanResults.violations.length > 0) {
-    console.log(`Projects panel accessibility violations: ${accessibilityScanResults.violations.length}`);
-    accessibilityScanResults.violations.forEach((violation) => {
-      console.log(`- ${violation.id}: ${violation.description} (${violation.impact})`);
+  const seriousOrCriticalViolations = accessibilityScanResults.violations.filter(
+    (v) => v.impact === "serious" || v.impact === "critical"
+  );
+  if (seriousOrCriticalViolations.length > 0) {
+    console.error(`Projects panel has ${seriousOrCriticalViolations.length} serious/critical accessibility violations`);
+    seriousOrCriticalViolations.forEach((violation) => {
+      console.error(`- ${violation.id}: ${violation.description} (${violation.impact})`);
       violation.nodes.forEach((node) => {
-        console.log(`  Target: ${node.target.join(', ')}`);
+        console.error(`  Target: ${node.target.join(', ')}`);
       });
     });
+    throw new Error(`Projects panel has ${seriousOrCriticalViolations.length} serious/critical accessibility violations`);
   }
-  
+
   const projectsPanel = page.locator(".panel").filter({ hasText: "Shared Tasks" });
   await expect(projectsPanel).toHaveScreenshot("projects-panel.png");
 });
@@ -225,4 +229,53 @@ test("keyboard-only navigation for main workflow", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(homeButton).toHaveClass(/moduleTabActive/);
   await expect(page.getByRole("heading", { name: /^calendar$/i })).toBeVisible();
+});
+
+test("command palette focus returns to trigger after closing with Escape", async ({ page }) => {
+  await page.goto("/");
+
+  // Focus the command field first
+  const commandField = page.getByRole("textbox", { name: /message the assistant/i });
+  await commandField.focus();
+  await expect(commandField).toBeFocused();
+
+  // Open Command Palette with Ctrl+K
+  await page.keyboard.press("Control+k");
+
+  // Wait for Command Palette to appear
+  await expect(page.locator(".commandPalette")).toBeVisible();
+
+  // Close with Escape
+  await page.keyboard.press("Escape");
+
+  // Wait for Command Palette to close
+  await expect(page.locator(".commandPalette")).not.toBeVisible();
+
+  // Focus should return to command field
+  await expect(commandField).toBeFocused();
+});
+
+test("quick capture focus returns to trigger after closing with Escape", async ({ page }) => {
+  await page.goto("/");
+
+  // Focus the command field first
+  const commandField = page.getByRole("textbox", { name: /message the assistant/i });
+  await commandField.focus();
+  await expect(commandField).toBeFocused();
+
+  // Type "capture test" to open Quick Capture
+  await commandField.fill("capture test");
+  await page.keyboard.press("Enter");
+
+  // Wait for Quick Capture dialog to appear
+  await expect(page.locator(".quick-capture-dialog")).toBeVisible();
+
+  // Close with Escape
+  await page.keyboard.press("Escape");
+
+  // Wait for Quick Capture dialog to close
+  await expect(page.locator(".quick-capture-dialog")).not.toBeVisible();
+
+  // Focus should return to command field
+  await expect(commandField).toBeFocused();
 });

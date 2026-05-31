@@ -50,7 +50,17 @@ const TOKEN_LABELS: Record<ThemeTokenKey, string> = {
   calMemoBg: "Calendar memo/note background",
   calEventText: "Calendar event text",
   calGridBg: "Calendar grid background",
-  calGridBorder: "Calendar grid border"
+  calGridBorder: "Calendar grid border",
+  badgePriorityLowBg: "Badge: Low priority background",
+  badgePriorityLowText: "Badge: Low priority text",
+  badgePriorityNormalBg: "Badge: Normal priority background",
+  badgePriorityNormalText: "Badge: Normal priority text",
+  badgePriorityHighBg: "Badge: High priority background",
+  badgePriorityHighText: "Badge: High priority text",
+  badgeStatusOpenBg: "Badge: Open status background",
+  badgeStatusOpenText: "Badge: Open status text",
+  badgeStatusDoneBg: "Badge: Done status background",
+  badgeStatusDoneText: "Badge: Done status text"
 };
 
 const TOKEN_GROUPS: { label: string; keys: ThemeTokenKey[] }[] = [
@@ -74,6 +84,21 @@ const TOKEN_GROUPS: { label: string; keys: ThemeTokenKey[] }[] = [
       "calEventText",
       "calGridBg",
       "calGridBorder"
+    ]
+  },
+  {
+    label: "Badges",
+    keys: [
+      "badgePriorityLowBg",
+      "badgePriorityLowText",
+      "badgePriorityNormalBg",
+      "badgePriorityNormalText",
+      "badgePriorityHighBg",
+      "badgePriorityHighText",
+      "badgeStatusOpenBg",
+      "badgeStatusOpenText",
+      "badgeStatusDoneBg",
+      "badgeStatusDoneText"
     ]
   }
 ];

@@ -44,7 +44,17 @@ export type ThemeTokenKey =
   | "calMemoBg"
   | "calEventText"
   | "calGridBg"
-  | "calGridBorder";
+  | "calGridBorder"
+  | "badgePriorityLowBg"
+  | "badgePriorityLowText"
+  | "badgePriorityNormalBg"
+  | "badgePriorityNormalText"
+  | "badgePriorityHighBg"
+  | "badgePriorityHighText"
+  | "badgeStatusOpenBg"
+  | "badgeStatusOpenText"
+  | "badgeStatusDoneBg"
+  | "badgeStatusDoneText";
 
 /** Map each typed token to its CSS custom property name. */
 export const TOKEN_CSS_VAR: Record<ThemeTokenKey, string> = {
@@ -83,7 +93,17 @@ export const TOKEN_CSS_VAR: Record<ThemeTokenKey, string> = {
   calMemoBg: "--cal-memo-bg",
   calEventText: "--cal-event-text",
   calGridBg: "--cal-grid-bg",
-  calGridBorder: "--cal-grid-border"
+  calGridBorder: "--cal-grid-border",
+  badgePriorityLowBg: "--badge-priority-low-bg",
+  badgePriorityLowText: "--badge-priority-low-text",
+  badgePriorityNormalBg: "--badge-priority-normal-bg",
+  badgePriorityNormalText: "--badge-priority-normal-text",
+  badgePriorityHighBg: "--badge-priority-high-bg",
+  badgePriorityHighText: "--badge-priority-high-text",
+  badgeStatusOpenBg: "--badge-status-open-bg",
+  badgeStatusOpenText: "--badge-status-open-text",
+  badgeStatusDoneBg: "--badge-status-done-bg",
+  badgeStatusDoneText: "--badge-status-done-text"
 };
 
 /** A full preset with a label and its complete token map. */
@@ -141,7 +161,17 @@ const GLASS_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(147, 51, 234, 0.12)",
   calEventText: "#1d1d21",
   calGridBg: "rgba(0, 0, 0, 0.02)",
-  calGridBorder: "rgba(0, 0, 0, 0.06)"
+  calGridBorder: "rgba(0, 0, 0, 0.06)",
+  badgePriorityLowBg: "#e2e8f0",
+  badgePriorityLowText: "#1e293b",
+  badgePriorityNormalBg: "#dbeafe",
+  badgePriorityNormalText: "#1e40af",
+  badgePriorityHighBg: "#fee2e2",
+  badgePriorityHighText: "#991b1b",
+  badgeStatusOpenBg: "#e2e8f0",
+  badgeStatusOpenText: "#1e293b",
+  badgeStatusDoneBg: "#dcfce7",
+  badgeStatusDoneText: "#166534"
 };
 
 const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
@@ -180,7 +210,17 @@ const PAPER_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(147, 51, 234, 0.1)",
   calEventText: "#141418",
   calGridBg: "rgba(20, 20, 28, 0.03)",
-  calGridBorder: "rgba(20, 20, 28, 0.08)"
+  calGridBorder: "rgba(20, 20, 28, 0.08)",
+  badgePriorityLowBg: "#e2e8f0",
+  badgePriorityLowText: "#1e293b",
+  badgePriorityNormalBg: "#dbeafe",
+  badgePriorityNormalText: "#1e40af",
+  badgePriorityHighBg: "#fee2e2",
+  badgePriorityHighText: "#991b1b",
+  badgeStatusOpenBg: "#e2e8f0",
+  badgeStatusOpenText: "#1e293b",
+  badgeStatusDoneBg: "#dcfce7",
+  badgeStatusDoneText: "#166534"
 };
 
 const OBSIDIAN_TOKENS: Record<ThemeTokenKey, string> = {
@@ -219,7 +259,17 @@ const OBSIDIAN_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(168, 85, 247, 0.15)",
   calEventText: "#e2e8f0",
   calGridBg: "rgba(255, 255, 255, 0.03)",
-  calGridBorder: "rgba(255, 255, 255, 0.1)"
+  calGridBorder: "rgba(255, 255, 255, 0.1)",
+  badgePriorityLowBg: "#334155",
+  badgePriorityLowText: "#f1f5f9",
+  badgePriorityNormalBg: "#1e3a8a",
+  badgePriorityNormalText: "#dbeafe",
+  badgePriorityHighBg: "#7f1d1d",
+  badgePriorityHighText: "#fee2e2",
+  badgeStatusOpenBg: "#334155",
+  badgeStatusOpenText: "#f1f5f9",
+  badgeStatusDoneBg: "#14532d",
+  badgeStatusDoneText: "#dcfce7"
 };
 
 const FOG_TOKENS: Record<ThemeTokenKey, string> = {
@@ -258,7 +308,17 @@ const FOG_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(139, 92, 246, 0.15)",
   calEventText: "#f1f5f9",
   calGridBg: "rgba(0, 0, 0, 0.04)",
-  calGridBorder: "rgba(255, 255, 255, 0.08)"
+  calGridBorder: "rgba(255, 255, 255, 0.08)",
+  badgePriorityLowBg: "#e2e8f0",
+  badgePriorityLowText: "#1e293b",
+  badgePriorityNormalBg: "#dbeafe",
+  badgePriorityNormalText: "#1e40af",
+  badgePriorityHighBg: "#fee2e2",
+  badgePriorityHighText: "#991b1b",
+  badgeStatusOpenBg: "#e2e8f0",
+  badgeStatusOpenText: "#1e293b",
+  badgeStatusDoneBg: "#dcfce7",
+  badgeStatusDoneText: "#166534"
 };
 
 const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
@@ -297,7 +357,17 @@ const DEEPBLUE_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(192, 132, 252, 0.18)",
   calEventText: "#dce8f4",
   calGridBg: "rgba(100, 160, 220, 0.06)",
-  calGridBorder: "rgba(100, 160, 220, 0.22)"
+  calGridBorder: "rgba(100, 160, 220, 0.22)",
+  badgePriorityLowBg: "#1e3a5f",
+  badgePriorityLowText: "#e0f2fe",
+  badgePriorityNormalBg: "#0369a1",
+  badgePriorityNormalText: "#e0f2fe",
+  badgePriorityHighBg: "#7f1d1d",
+  badgePriorityHighText: "#fee2e2",
+  badgeStatusOpenBg: "#1e3a5f",
+  badgeStatusOpenText: "#e0f2fe",
+  badgeStatusDoneBg: "#14532d",
+  badgeStatusDoneText: "#dcfce7"
 };
 
 const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
@@ -336,7 +406,17 @@ const CORPORATE_TOKENS: Record<ThemeTokenKey, string> = {
   calMemoBg: "rgba(139, 92, 246, 0.08)",
   calEventText: "#1a1a1f",
   calGridBg: "rgba(20, 20, 28, 0.02)",
-  calGridBorder: "rgba(20, 20, 28, 0.1)"
+  calGridBorder: "rgba(20, 20, 28, 0.1)",
+  badgePriorityLowBg: "#e2e8f0",
+  badgePriorityLowText: "#1e293b",
+  badgePriorityNormalBg: "#dbeafe",
+  badgePriorityNormalText: "#1e40af",
+  badgePriorityHighBg: "#fee2e2",
+  badgePriorityHighText: "#991b1b",
+  badgeStatusOpenBg: "#e2e8f0",
+  badgeStatusOpenText: "#1e293b",
+  badgeStatusDoneBg: "#dcfce7",
+  badgeStatusDoneText: "#166534"
 };
 
 /** Ordered list of all built-in presets. */

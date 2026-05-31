@@ -10,6 +10,7 @@ import {
 } from "./tokens";
 import { applyThemeTokens, applyPreset, clearThemeTokens } from "./applyTheme";
 import { readThemeState, writeThemeState } from "./storage";
+import { contrastRatio, isContrastSafe } from "./contrast";
 import type { ThemeMode, ThemeTokenKey, AccentPreset } from "./tokens";
 
 describe("Theme token system (v1.5.6)", () => {
@@ -69,6 +70,48 @@ describe("Theme token system (v1.5.6)", () => {
           expect(preset.tokens[token]).toBeDefined();
           expect(typeof preset.tokens[token]).toBe("string");
           expect(preset.tokens[token].length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it("each preset includes all badge tokens for priority and status", () => {
+      const badgeTokens: ThemeTokenKey[] = [
+        "badgePriorityLowBg",
+        "badgePriorityLowText",
+        "badgePriorityNormalBg",
+        "badgePriorityNormalText",
+        "badgePriorityHighBg",
+        "badgePriorityHighText",
+        "badgeStatusOpenBg",
+        "badgeStatusOpenText",
+        "badgeStatusDoneBg",
+        "badgeStatusDoneText"
+      ];
+      for (const preset of THEME_PRESETS) {
+        for (const token of badgeTokens) {
+          expect(preset.tokens[token]).toBeDefined();
+          expect(typeof preset.tokens[token]).toBe("string");
+          expect(preset.tokens[token].length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it("badge foreground/background pairs meet WCAG AA contrast (4.5:1)", () => {
+      const badgePairs: Array<{ bg: ThemeTokenKey; text: ThemeTokenKey }> = [
+        { bg: "badgePriorityLowBg", text: "badgePriorityLowText" },
+        { bg: "badgePriorityNormalBg", text: "badgePriorityNormalText" },
+        { bg: "badgePriorityHighBg", text: "badgePriorityHighText" },
+        { bg: "badgeStatusOpenBg", text: "badgeStatusOpenText" },
+        { bg: "badgeStatusDoneBg", text: "badgeStatusDoneText" }
+      ];
+
+      for (const preset of THEME_PRESETS) {
+        for (const pair of badgePairs) {
+          const bgColor = preset.tokens[pair.bg];
+          const textColor = preset.tokens[pair.text];
+          const ratio = contrastRatio(textColor, bgColor);
+          expect(ratio).toBeGreaterThanOrEqual(4.5);
+          expect(isContrastSafe(textColor, bgColor, 4.5)).toBe(true);
         }
       }
     });

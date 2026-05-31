@@ -216,47 +216,55 @@
 }
 
 .taskPriority {
-  color: #000000;
-  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .taskPriority.low {
-  color: #000000;
-  font-weight: 900;
+  background: var(--badge-priority-low-bg, rgba(100, 116, 139, 0.15));
+  color: var(--badge-priority-low-text, #475569);
 }
 
 .taskPriority.normal {
-  color: #000000;
-  font-weight: 900;
+  background: var(--badge-priority-normal-bg, rgba(59, 130, 246, 0.15));
+  color: var(--badge-priority-normal-text, #1d4ed8);
 }
 
 .taskPriority.high {
-  color: #000000;
-  font-weight: 900;
+  background: var(--badge-priority-high-bg, rgba(239, 68, 68, 0.15));
+  color: var(--badge-priority-high-text, #dc2626);
 }
 
 .taskDue {
-  color: #000000;
-  font-weight: 900;
+  color: var(--subtitle, #5c5c66);
+  font-weight: 500;
 }
 
 .taskStatus {
-  color: #000000;
-  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .taskStatus.open {
-  color: #000000;
-  font-weight: 900;
+  background: var(--badge-status-open-bg, rgba(100, 116, 139, 0.15));
+  color: var(--badge-status-open-text, #475569);
 }
 
 .taskStatus.done {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskStatus.done {
-  color: var(--success-text, #1a5f3a);
+  background: var(--badge-status-done-bg, rgba(52, 199, 89, 0.12));
+  color: var(--badge-status-done-text, #1a7f37);
 }
 
 .taskActions {

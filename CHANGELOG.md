@@ -4,6 +4,41 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.1] - 2026-06-01
+
+### Added
+
+- Semantic accessible badge styles for Projects panel priority (low, normal, high) and status (open, done).
+- Theme tokens for badge foreground/background pairs across all themes (glass, paper, corporate, obsidian, deepblue, fog).
+- Unit coverage for theme badge tokens ensuring all themes define required badge tokens.
+- Contrast assertions for badge foreground/background pairs using WCAG AA 4.5:1 standard.
+- E2E focus-return coverage for Command Palette and Quick Capture overlays.
+- E2E test enforcement for Projects panel to fail on serious or critical accessibility violations.
+
+### Changed
+
+- Projects panel now uses semantic badge styles instead of hardcoded colors for improved accessibility.
+- Ctrl+K now exclusively opens Command Palette (removed conflicting command field focus handler).
+- `/` shortcut continues to focus the command field (handled by useCommandExecution hook).
+- Projects panel E2E test now throws error on serious/critical axe violations instead of logging only.
+
+### Fixed
+
+- Resolved Projects panel color contrast violation (#34) by implementing accessible badge tokens.
+- Added focus-return E2E coverage for Command Palette and Quick Capture (#35).
+
+### Tests
+
+- Lint passing with zero warnings.
+- Theme unit tests passing with new badge token coverage and contrast assertions (30 tests).
+- Targeted tests passing: theme tokens, contrast assertions, badge token definitions.
+- Full test suite has pre-existing failures unrelated to this patch:
+  - executeAssistantCommand.test.ts: "handles open command with no matches" assertion error
+  - hobbies.test.ts: hobby supplies UUID comparison failure
+  - Missing dependencies: @tanstack/react-query, @testing-library/user-event in renderer test environment
+- Renderer typecheck no longer reports the AppearancePanel badge token error, but full renderer typecheck is currently blocked by missing installed dependencies.
+- Main typecheck has pre-existing errors related to @supabase/supabase-js dependencies (unrelated to this patch).
+
 ## [3.8.0] - 2026-05-28
 
 ### Added
