@@ -1,0 +1,421 @@
+.calendarCreateForm {
+  padding: var(--space-2);
+  background: var(--input-background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: var(--space-2);
+}
+
+.calendarCreateFormHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.calendarCreateFormTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calendarCreateFormBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarCreateFormInput {
+  padding: 8px;
+  background: var(--panel-background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.calendarCreateFormInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.calendarCreateFormInput::placeholder {
+  color: var(--muted);
+}
+
+.calendarCreateFormRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.calendarCreateFormSelect {
+  flex: 1;
+  padding: 8px;
+  background: var(--panel-background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.calendarCreateFormSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.calendarCreateFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.calendarSourceFilter {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.calendarSourceFilterButton {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-background);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.calendarSourceFilterButtonActive {
+  background: var(--primary);
+  color: var(--primary-contrast, #fff);
+  border-color: var(--primary);
+}
+
+.calendarEventBarButton {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  min-height: 4px;
+}
+
+.calendarProviderBadge {
+  font-size: 11px;
+}
+
+.calendarEventDetail {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-background);
+}
+
+.calendarEventDetailHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.calendarReadOnlyMarker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.calendarExternalAgendaButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.connectedAccountsPanel .connectedAccountsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.connectedAccountsListItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.connectedAccountsListMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.connectedAccountsError {
+  color: var(--errorColor, #c62828);
+  font-size: 12px;
+}
+
+.connectedAccountsSetupWarning {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--warning-bg, #fff8e6);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.connectedAccountsOauthBox {
+  padding: var(--space-2);
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-background);
+}
+
+/* Calendar toolbar */
+.calendarToolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.calendarToolbarButton {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calendarToolbarButton:hover {
+  background: var(--ghost-bg);
+  color: var(--text);
+}
+
+.calendarToolbarButtonActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* Day view */
+.calendarDayView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarDayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  --cal-reminder-bg: var(--cal-reminder-bg);
+  --cal-task-bg: var(--cal-task-bg);
+  --cal-task-high-bg: var(--cal-task-high-bg);
+  --cal-completed-bg: var(--cal-completed-bg);
+  --cal-memo-bg: var(--cal-memo-bg);
+  --cal-event-text: var(--cal-event-text);
+  --cal-grid-bg: var(--cal-grid-bg);
+  --cal-grid-border: var(--cal-grid-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) 0;
+}
+
+.calendarAllDayStrip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--cal-grid-bg);
+  border: 1px solid var(--cal-grid-border);
+  border-radius: var(--radius-sm);
+}
+
+.calendarAllDayEvent {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.calendarHourlyGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarHourRow {
+  display: flex;
+  min-height: 3rem;
+  border-bottom: 1px solid var(--cal-grid-border);
+}
+
+.calendarHourLabel {
+  width: 3rem;
+  padding: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+  border-right: 1px solid var(--cal-grid-border);
+}
+
+.calendarHourContent {
+  flex: 1;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarHourEvent {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+/* Agenda view */
+.calendarAgendaView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarAgendaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+/* Upcoming view */
+.calendarUpcomingView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarUpcomingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.calendarUpcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.calendarUpcomingSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarUpcomingSectionTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Week view */
+.calendarWeekView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.calendarWeekHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+
+.calendarWeekGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.calendarWeekHeaderCell {
+  padding: var(--space-1);
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekTimeHeader {
+  text-align: left;
+}
+
+.calendarWeekRow {
+  display: flex;
+  min-height: 3rem;
+  border-bottom: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekTimeCell {
+  width: 3rem;
+  padding: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+  border-right: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekDayCell {
+  flex: 1;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border-right: 1px solid var(--cal-grid-border);
+}
+
+.calendarWeekDayCell:last-child {
+  border-right: none;
+}
+
+.calendarWeekEvent {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+}
+
+/* Calendar event bars */
+.calendarCellEvents {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.calendarEventBar {
+  height: 4px;
+  border-radius: 2px;
+  width: 100%;
+}
+
+.calendarOverflow {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}

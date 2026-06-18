@@ -1,0 +1,293 @@
+.workspaceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workspaceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.5rem;
+  background: var(--panel-background, #ffffff);
+}
+
+.workspaceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.workspaceName {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceKey {
+  font-size: 0.8125rem;
+  color: var(--muted, #6b6b76);
+}
+
+.workspaceContext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.workspaceContextInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.workspaceContextLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted, #6b6b76);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.workspaceContextName {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceContextKey {
+  font-size: 0.8125rem;
+  color: var(--muted, #6b6b76);
+}
+
+.workspaceSwitchForm {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  margin-top: 0.75rem;
+}
+
+.workspaceSwitchForm h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceSwitchItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.workspaceSwitchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.workspaceSwitchName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.workspaceSwitchKey {
+  font-size: 0.75rem;
+  color: var(--muted, #6b6b76);
+}
+
+.workspaceActions {
+  padding: 0.75rem 0;
+}
+
+.teamSetupGuide {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.teamSetupSteps {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.teamSetupStep {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--subtitle, #5c5c66);
+  font-size: 0.875rem;
+}
+
+.teamSetupStepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--accent-soft, rgba(32, 94, 179, 0.12));
+  color: var(--accent, #205eb3);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.formHelp {
+  margin: 0.375rem 0 0;
+  color: var(--muted, #6b6b76);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.teamSetupDetails {
+  border-top: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  color: var(--subtitle, #5c5c66);
+  font-size: 0.875rem;
+  padding-top: 0.875rem;
+}
+
+.teamSetupDetails summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text, #141418);
+}
+
+.teamSetupDetails ol {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.teamSetupDetails li + li {
+  margin-top: 0.375rem;
+}
+
+.teamTaskList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.teamTaskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.375rem;
+}
+
+.taskInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}
+
+.taskMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text, #141418);
+}
+
+.taskProject {
+  color: var(--subtitle, #5c5c66);
+}
+
+.taskAssignee {
+  color: var(--subtitle, #5c5c66);
+}
+
+.taskActions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Accessible state-token badges for task priority and status.
+ * Use higher specificity than the shared life-areas.css defaults so the
+ * Projects panel renders with solid, theme-aware backgrounds that satisfy
+ * WCAG AA contrast against the panel surface.
+ *
+ * Backgrounds are mixed against --bg (fully opaque) rather than the
+ * semi-transparent --panel-bg / --primary-soft so axe can compute a
+ * deterministic contrast ratio and the text remains readable even with the
+ * panel's backdrop-filter blur. */
+.teamTaskItem .taskPriority,
+.teamTaskItem .taskStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+}
+
+.teamTaskItem .taskPriority.low {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--panel-border);
+}
+
+.teamTaskItem .taskPriority.normal,
+.teamTaskItem .taskStatus.open {
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--bg));
+}
+
+.teamTaskItem .taskPriority.high {
+  background: color-mix(in srgb, var(--error-text) 10%, var(--bg));
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--error-text) 30%, var(--bg));
+}
+
+.teamTaskItem .taskStatus.done {
+  background: color-mix(in srgb, var(--success-text) 10%, var(--bg));
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--success-text) 30%, var(--bg));
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.projectItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--panel-border, rgba(20, 20, 28, 0.1));
+  border-radius: 0.375rem;
+  background: var(--panel-background, #ffffff);
+}
+
+.projectName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text, #141418);
+}

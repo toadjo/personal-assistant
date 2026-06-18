@@ -1,0 +1,44 @@
+node_modules/
+.vite/
+dist/
+release/
+releases/
+installer-history/
+release-current-*/
+release-clean-*/
+release-fixed*/
+win-unpacked/
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local / IDE
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+
+# Tooling / caches
+coverage/
+.eslintcache
+*.tsbuildinfo
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
+# Rotated / extra log fragments
+*.log.*
+
+# Generated assets
+assets/generated/
+assets/calendar-oauth-clients.local.json
+
+# TypeScript build artifacts should never be emitted beside source files
+src/shared/**/*.js

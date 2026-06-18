@@ -1,0 +1,94 @@
+import { useCallback, useEffect, useState } from "react";
+import { getAssistantInvokeErrorMessage } from "../../lib/errors";
+import { getAssistantApi, requireAssistantApi } from "../../lib/assistantApi";
+
+type Messages = { setStatus: (value: string) => void; setError: (value: string) => void };
+
+export function useHomeAssistantCredentials({ setStatus, setError }: Messages) {
+  const [haUrl, setHaUrl] = useState("");
+  const [haToken, setHaToken] = useState("");
+  const [hasHaToken, setHasHaToken] = useState(false);
+  const [isSavingHa, setIsSavingHa] = useState(false);
+  const [isRefreshingHa, setIsRefreshingHa] = useState(false);
+
+  useEffect(() => {
+    const api = getAssistantApi();
+    if (!api?.getHomeAssistantConfig) return;
+    void (async () => {
+      try {
+        const config = await api.getHomeAssistantConfig();
+        if (config.url) setHaUrl(config.url);
+        setHasHaToken(config.hasToken);
+        if (config.hasToken) setStatus("I already have a Home Assistant token on file for the Household window.");
+      } catch {
+        // Expected when HA is not configured yet or prefs cannot be read; desk still works.
+      }
+    })();
+  }, [setStatus]);
+
+  const saveHomeAssistantConfig = useCallback(async () => {
+    try {
+      setError("");
+      setIsSavingHa(true);
+      setStatus("Saving your Home Assistant settings...");
+      const api = requireAssistantApi();
+      await api.configureHomeAssistant({ url: haUrl, token: haToken });
+      const config = await api.getHomeAssistantConfig();
+      setHasHaToken(config.hasToken);
+      setHaToken("");
+      setStatus("Saved. Next step: Test connection, then Refresh devices so I see your entities.");
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    } finally {
+      setIsSavingHa(false);
+    }
+  }, [haUrl, haToken, setError, setStatus]);
+
+  const testHomeAssistant = useCallback(async () => {
+    try {
+      setError("");
+      setStatus("Pinging Home Assistant...");
+      const api = requireAssistantApi();
+      setStatus(
+        (await api.testHomeAssistant())
+          ? "Connection looks good - we can talk to Home Assistant."
+          : "That test did not succeed. Double-check the URL, token, and that HA allows this machine."
+      );
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    }
+  }, [setError, setStatus]);
+
+  const refreshHomeAssistantEntities = useCallback(
+    async (refreshAll: () => Promise<void>) => {
+      try {
+        setError("");
+        setIsRefreshingHa(true);
+        setStatus("Pulling the latest device list from Home Assistant...");
+        const api = requireAssistantApi();
+        await api.refreshHomeAssistantEntities();
+        setStatus("Entities updated - syncing this app...");
+        await refreshAll();
+        setStatus("All synced. You should see fresh states below.");
+      } catch (err) {
+        setError(getAssistantInvokeErrorMessage(err));
+      } finally {
+        setIsRefreshingHa(false);
+      }
+    },
+    [setError, setStatus]
+  );
+
+  return {
+    haUrl,
+    setHaUrl,
+    haToken,
+    setHaToken,
+    hasHaToken,
+    isSavingHa,
+    isRefreshingHa,
+    saveHomeAssistantConfig,
+    testHomeAssistant,
+    refreshHomeAssistantEntities
+  };
+}

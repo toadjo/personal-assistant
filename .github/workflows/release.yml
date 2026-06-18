@@ -1,0 +1,313 @@
+name: Release package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver to package (e.g. 1.2.3), must match package.json unless you change it first"
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  create-draft-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      release_tag: ${{ steps.metadata.outputs.release_tag }}
+      version: ${{ steps.metadata.outputs.version }}
+      already_published: ${{ steps.release.outputs.already_published }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve and validate release metadata
+        id: metadata
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            want="${{ github.event.inputs.version }}"
+            if [[ ! "$want" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Version must be semver x.y.z"
+              exit 1
+            fi
+            if [ "$want" != "$v" ]; then
+              echo "::error::package.json version is $v but workflow requested $want. Bump package.json first or pass matching version."
+              exit 1
+            fi
+          fi
+          if [ "${{ github.ref_type }}" = "tag" ] && [ "${{ github.ref_name }}" != "$tag" ]; then
+            echo "::error::Git tag '${{ github.ref_name }}' must equal package.json version as '$tag'."
+            exit 1
+          fi
+          echo "release_tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Create clean draft release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.metadata.outputs.release_tag }}"
+          echo "already_published=false" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" --json isDraft --jq '.isDraft' >/tmp/release-is-draft 2>/dev/null; then
+            if [ "$(cat /tmp/release-is-draft)" != "true" ]; then
+              echo "Release $tag already exists and is published; skipping packaging."
+              echo "already_published=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            gh release delete "$tag" --yes
+          fi
+          gh release create "$tag" \
+            --draft \
+            --target "$GITHUB_SHA" \
+            --title "Personal Assistant $tag" \
+            --generate-notes
+
+  package-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    needs: create-draft-release
+    if: needs.create-draft-release.outputs.already_published != 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate version (tag builds only)
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $pkg = (Get-Content -Raw package.json | ConvertFrom-Json).version
+          $expected = "v$pkg"
+          if ($tag -ne $expected) {
+            Write-Error "Git tag '$tag' must equal package.json version as 'v$pkg' (expected '$expected')."
+            exit 1
+          }
+          Write-Host "OK: tag $tag matches package.json version $pkg"
+
+      - name: Validate workflow_dispatch version
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $want = "${{ github.event.inputs.version }}".Trim()
+          if ($want -notmatch '^\d+\.\d+\.\d+$') {
+            Write-Error "Version must be semver x.y.z"
+            exit 1
+          }
+          $pkg = (Get-Content -Raw package.json | ConvertFrom-Json).version
+          if ($want -ne $pkg) {
+            Write-Error "package.json version is $pkg but workflow requested $want. Bump package.json first or pass matching version."
+            exit 1
+          }
+          Write-Host "OK: dispatch version matches package.json ($pkg)"
+
+      - name: Package Windows installer (no git bump in CI)
+        run: npm run release:build -- -SkipVersionBump -AllowDirtyGit -ReplaceExisting
+
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: pwsh
+        run: |
+          $v = (Get-Content -Raw package.json | ConvertFrom-Json).version
+          $tag = "v$v"
+          $releaseDir = Join-Path "release" $tag
+          $historyDir = Join-Path "installer-history" $tag
+          if (-not (Test-Path -LiteralPath $releaseDir)) { throw "Missing $releaseDir - packaging may have failed." }
+          if (-not (Test-Path -LiteralPath $historyDir)) { throw "Missing $historyDir - packaging may have failed." }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "release_tag=$tag"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "history_dir=$historyDir"
+
+      - name: Upload Windows release assets to draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ steps.artifacts.outputs.release_tag }}"
+          $historyDir = "${{ steps.artifacts.outputs.history_dir }}"
+          $assets = @()
+          $assets += Get-ChildItem -LiteralPath $historyDir -File -Filter "*.exe"
+          $assets += Get-ChildItem -LiteralPath $historyDir -File -Filter "*.blockmap"
+          $assets += Get-ChildItem -LiteralPath $historyDir -File -Filter "*.yml"
+          if (-not ($assets | Where-Object { $_.Name.EndsWith(".exe") })) {
+            throw "Missing Windows .exe installer in $historyDir"
+          }
+          gh release upload $tag @($assets.FullName) --clobber
+
+  package-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: create-draft-release
+    if: needs.create-draft-release.outputs.already_published != 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Linux AppImage
+        run: npm run dist:linux
+
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Upload Linux release assets to draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          tag="${{ steps.artifacts.outputs.release_tag }}"
+          assets=(release/*.AppImage release/*.AppImage.zsync release/*.yml)
+          app_images=(release/*.AppImage)
+          if [ "${#app_images[@]}" -eq 0 ]; then
+            echo "::error::Missing Linux .AppImage artifact in release/"
+            exit 1
+          fi
+          gh release upload "$tag" "${assets[@]}" --clobber
+
+  package-macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: create-draft-release
+    if: needs.create-draft-release.outputs.already_published != 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build macOS universal DMG/zip
+        run: npm run dist:mac
+
+      - name: Resolve versioned artifact paths
+        id: artifacts
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          tag="v$v"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Upload macOS release assets to draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          tag="${{ steps.artifacts.outputs.release_tag }}"
+          assets=(release/*.dmg release/*.zip release/*.blockmap release/*.yml)
+          dmgs=(release/*.dmg)
+          zips=(release/*.zip)
+          if [ "${#dmgs[@]}" -eq 0 ]; then
+            echo "::error::Missing macOS .dmg artifact in release/"
+            exit 1
+          fi
+          if [ "${#zips[@]}" -eq 0 ]; then
+            echo "::error::Missing macOS .zip artifact in release/"
+            exit 1
+          fi
+          gh release upload "$tag" "${assets[@]}" --clobber
+
+  publish-releases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [create-draft-release, package-windows, package-linux, package-macos]
+    if: needs.create-draft-release.outputs.already_published != 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Resolve release metadata
+        id: artifacts
+        shell: bash
+        run: |
+          v="${{ needs.create-draft-release.outputs.version }}"
+          tag="${{ needs.create-draft-release.outputs.release_tag }}"
+          echo "release_tag=$tag" >> $GITHUB_OUTPUT
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Download draft release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-assets
+          gh release download "${{ steps.artifacts.outputs.release_tag }}" \
+            --dir release-assets \
+            --clobber
+
+      - name: Validate release assets
+        shell: bash
+        run: |
+          shopt -s nullglob
+          exe=(release-assets/*.exe)
+          app_image=(release-assets/*.AppImage)
+          dmg=(release-assets/*.dmg)
+          zip=(release-assets/*.zip)
+          if [ "${#exe[@]}" -eq 0 ]; then echo "::error::Missing Windows .exe asset"; exit 1; fi
+          if [ "${#app_image[@]}" -eq 0 ]; then echo "::error::Missing Linux .AppImage asset"; exit 1; fi
+          if [ "${#dmg[@]}" -eq 0 ]; then echo "::error::Missing macOS .dmg asset"; exit 1; fi
+          if [ "${#zip[@]}" -eq 0 ]; then echo "::error::Missing macOS .zip asset"; exit 1; fi
+
+      - name: Publish draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "${{ steps.artifacts.outputs.release_tag }}" \
+            --draft=false \
+            --latest

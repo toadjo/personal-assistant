@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Verify preload IPC codegen
+        run: npm run check:preload-ipc
+
+      - name: Unit tests with coverage
+        run: npm run test -- --coverage
+
+      - name: Build (renderer + main)
+        run: npm run build
+
+      - name: Electron preload smoke (real preload in BrowserWindow)
+        run: npm run test:preload-electron
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Browser-stub E2E tests
+        run: npm run test:e2e
+
+      - name: Electron E2E tests
+        run: npm run test:e2e:electron
+        env:
+          ELECTRON_E2E_TEST_MODE: 1
+
+      - name: npm audit (high+ advisory)
+        run: npm audit --audit-level=high
+
+  verify-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Verify preload IPC codegen
+        run: npm run check:preload-ipc
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build (renderer + main)
+        run: npm run build
+
+      - name: Build Linux AppImage
+        run: npm run dist:linux

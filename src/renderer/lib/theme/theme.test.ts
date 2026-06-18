@@ -1,0 +1,320 @@
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import {
+  TOKEN_CSS_VAR,
+  THEME_PRESETS,
+  THEME_IDS,
+  SAFE_ACCENTS,
+  ACCENT_TOKEN_KEYS,
+  getPresetTokens,
+  resolveTokens
+} from "./tokens";
+import { applyThemeTokens, applyPreset, clearThemeTokens } from "./applyTheme";
+import { readThemeState, writeThemeState } from "./storage";
+import type { ThemeMode, ThemeTokenKey, AccentPreset } from "./tokens";
+
+describe("Theme token system (v1.5.6)", () => {
+  beforeEach(() => {
+    clearThemeTokens();
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    clearThemeTokens();
+    window.localStorage.clear();
+  });
+
+  describe("TOKEN_CSS_VAR", () => {
+    it("maps every token to a CSS custom property", () => {
+      const keys = Object.keys(TOKEN_CSS_VAR) as ThemeTokenKey[];
+      for (const key of keys) {
+        expect(TOKEN_CSS_VAR[key]).toMatch(/^--/);
+      }
+    });
+  });
+
+  describe("THEME_PRESETS", () => {
+    it("includes all expected presets", () => {
+      const ids = THEME_PRESETS.map((p) => p.id);
+      expect(ids).toContain("glass");
+      expect(ids).toContain("paper");
+      expect(ids).toContain("obsidian");
+      expect(ids).toContain("fog");
+      expect(ids).toContain("deepblue");
+      expect(ids).toContain("corporate");
+    });
+
+    it("each preset has a full token set", () => {
+      const tokenKeys = Object.keys(TOKEN_CSS_VAR) as ThemeTokenKey[];
+      for (const preset of THEME_PRESETS) {
+        for (const key of tokenKeys) {
+          expect(preset.tokens[key]).toBeDefined();
+          expect(typeof preset.tokens[key]).toBe("string");
+          expect(preset.tokens[key].length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it("each preset includes calendar event color tokens", () => {
+      const calendarTokens: ThemeTokenKey[] = [
+        "calReminderBg",
+        "calTaskBg",
+        "calTaskHighBg",
+        "calCompletedBg",
+        "calEventText",
+        "calGridBg",
+        "calGridBorder"
+      ];
+      for (const preset of THEME_PRESETS) {
+        for (const token of calendarTokens) {
+          expect(preset.tokens[token]).toBeDefined();
+          expect(typeof preset.tokens[token]).toBe("string");
+          expect(preset.tokens[token].length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it("light themes are not token-identical across key visible tokens", () => {
+      const glassTokens = getPresetTokens("glass")!;
+      const paperTokens = getPresetTokens("paper")!;
+      const corporateTokens = getPresetTokens("corporate")!;
+
+      const visibleTokens: ThemeTokenKey[] = [
+        "bg",
+        "panelBg",
+        "panelBorder",
+        "surfaceBorderStrong",
+        "primary",
+        "muted",
+        "ghostBg",
+        "ghostBorder",
+        "statBg"
+      ];
+
+      for (const token of visibleTokens) {
+        // Glass vs Paper should differ
+        expect(glassTokens[token]).not.toBe(paperTokens[token]);
+        // Glass vs Corporate should differ
+        expect(glassTokens[token]).not.toBe(corporateTokens[token]);
+        // Paper vs Corporate should differ
+        expect(paperTokens[token]).not.toBe(corporateTokens[token]);
+      }
+    });
+  });
+
+  describe("THEME_IDS", () => {
+    it("contains every preset ID", () => {
+      for (const preset of THEME_PRESETS) {
+        expect(THEME_IDS.has(preset.id)).toBe(true);
+      }
+    });
+  });
+
+  describe("getPresetTokens", () => {
+    it("returns the correct token set for each preset", () => {
+      for (const preset of THEME_PRESETS) {
+        const tokens = getPresetTokens(preset.id);
+        expect(tokens).toBeDefined();
+        expect(tokens).toEqual(preset.tokens);
+      }
+    });
+
+    it("returns undefined for an unknown preset", () => {
+      expect(getPresetTokens("unknown" as ThemeMode)).toBeUndefined();
+    });
+  });
+
+  describe("resolveTokens", () => {
+    it("returns base tokens when no overrides", () => {
+      const result = resolveTokens("paper");
+      expect(result).toEqual(getPresetTokens("paper"));
+    });
+
+    it("merges overrides into base tokens", () => {
+      const result = resolveTokens("paper", { primary: "#ff0000" });
+      expect(result.primary).toBe("#ff0000");
+      expect(result.bg).toBe(getPresetTokens("paper")!.bg);
+    });
+
+    it("falls back to paper tokens for unknown preset", () => {
+      const result = resolveTokens("unknown" as ThemeMode);
+      expect(result).toEqual(getPresetTokens("paper"));
+    });
+  });
+
+  describe("SAFE_ACCENTS", () => {
+    it("includes all expected accent presets", () => {
+      const keys = Object.keys(SAFE_ACCENTS) as AccentPreset[];
+      expect(keys).toContain("blue");
+      expect(keys).toContain("green");
+      expect(keys).toContain("violet");
+      expect(keys).toContain("slate");
+    });
+
+    it("each accent defines all four accent tokens", () => {
+      for (const preset of Object.keys(SAFE_ACCENTS) as AccentPreset[]) {
+        const def = SAFE_ACCENTS[preset];
+        expect(def.label).toBeTruthy();
+        for (const key of ACCENT_TOKEN_KEYS) {
+          expect(def.overrides[key]).toBeDefined();
+          expect(typeof def.overrides[key]).toBe("string");
+          expect(def.overrides[key].length).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it("accent overrides merge cleanly with base presets via resolveTokens", () => {
+      const accent = SAFE_ACCENTS.green.overrides;
+      const result = resolveTokens("paper", accent);
+      expect(result.primary).toBe(accent.primary);
+      expect(result.primaryHover).toBe(accent.primaryHover);
+      expect(result.primarySoft).toBe(accent.primarySoft);
+      expect(result.focusRing).toBe(accent.focusRing);
+      expect(result.bg).toBe(getPresetTokens("paper")!.bg);
+    });
+  });
+
+  describe("applyThemeTokens", () => {
+    it("sets CSS variables on the document root", () => {
+      const tokens = getPresetTokens("corporate")!;
+      applyThemeTokens(tokens);
+
+      const root = document.documentElement;
+      expect(root.style.getPropertyValue("--bg")).toBe(tokens.bg);
+      expect(root.style.getPropertyValue("--primary")).toBe(tokens.primary);
+    });
+  });
+
+  describe("applyPreset", () => {
+    it("sets data-theme attribute and CSS variables", () => {
+      applyPreset("obsidian");
+
+      expect(document.documentElement.getAttribute("data-theme")).toBe("obsidian");
+      expect(document.documentElement.style.getPropertyValue("--bg")).toBe("#000000");
+    });
+
+    it("applies custom overrides alongside preset", () => {
+      applyPreset("paper", { primary: "#ff0000" });
+
+      expect(document.documentElement.style.getPropertyValue("--primary")).toBe("#ff0000");
+      expect(document.documentElement.style.getPropertyValue("--bg")).toBe("#faf9f7");
+    });
+  });
+
+  describe("clearThemeTokens", () => {
+    it("removes all applied theme CSS variables and data-theme", () => {
+      applyPreset("deepblue");
+      clearThemeTokens();
+
+      expect(document.documentElement.getAttribute("data-theme")).toBeNull();
+      expect(document.documentElement.style.getPropertyValue("--bg")).toBe("");
+    });
+  });
+
+  describe("readThemeState", () => {
+    it("defaults to paper on light system preference when nothing is stored", () => {
+      const mql = { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList;
+      vi.stubGlobal("matchMedia", () => mql);
+      const state = readThemeState();
+      expect(state.preset).toBe("paper");
+      expect(state.custom).toBeUndefined();
+      vi.unstubAllGlobals();
+    });
+
+    it("defaults to obsidian on dark system preference when nothing is stored", () => {
+      const mql = { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList;
+      vi.stubGlobal("matchMedia", () => mql);
+      const state = readThemeState();
+      expect(state.preset).toBe("obsidian");
+      expect(state.custom).toBeUndefined();
+      vi.unstubAllGlobals();
+    });
+
+    it("reads a v1.5.6 structured state", () => {
+      window.localStorage.setItem("assistant-theme", JSON.stringify({ preset: "corporate" }));
+      const state = readThemeState();
+      expect(state.preset).toBe("corporate");
+    });
+
+    it("reads a structured state with custom overrides", () => {
+      window.localStorage.setItem(
+        "assistant-theme",
+        JSON.stringify({
+          preset: "corporate",
+          custom: {
+            basePreset: "corporate",
+            overrides: { primary: "#ff0000", bg: "#ffffff" }
+          }
+        })
+      );
+      const state = readThemeState();
+      expect(state.preset).toBe("corporate");
+      expect(state.custom?.basePreset).toBe("corporate");
+      expect(state.custom?.overrides?.primary).toBe("#ff0000");
+    });
+
+    it("migrates legacy plain-string preset", () => {
+      window.localStorage.setItem("assistant-theme", "fog");
+      const state = readThemeState();
+      expect(state.preset).toBe("fog");
+    });
+
+    it("migrates legacy 'light' to paper", () => {
+      window.localStorage.setItem("assistant-theme", "light");
+      const state = readThemeState();
+      expect(state.preset).toBe("paper");
+    });
+
+    it("migrates legacy 'dark' to obsidian", () => {
+      window.localStorage.setItem("assistant-theme", "dark");
+      const state = readThemeState();
+      expect(state.preset).toBe("obsidian");
+    });
+
+    it("migrates legacy 'graphite' to fog", () => {
+      window.localStorage.setItem("assistant-theme", "graphite");
+      const state = readThemeState();
+      expect(state.preset).toBe("fog");
+    });
+
+    it("falls back to system preference for unknown value", () => {
+      const mql = { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList;
+      vi.stubGlobal("matchMedia", () => mql);
+      window.localStorage.setItem("assistant-theme", "neoncyan");
+      const state = readThemeState();
+      expect(state.preset).toBe("paper");
+      vi.unstubAllGlobals();
+    });
+
+    it("rejects invalid custom token overrides", () => {
+      window.localStorage.setItem(
+        "assistant-theme",
+        JSON.stringify({
+          preset: "paper",
+          custom: {
+            basePreset: "paper",
+            overrides: {
+              primary: "#ff0000",
+              invalidToken: "#000000",
+              emptyValue: "",
+              numericValue: 123
+            }
+          }
+        })
+      );
+      const state = readThemeState();
+      const overrides = state.custom?.overrides as Record<string, string | undefined>;
+      expect(overrides.primary).toBe("#ff0000");
+      expect(overrides.invalidToken).toBe("#000000"); // non-empty strings are kept
+      expect(overrides.emptyValue).toBeUndefined();
+      expect(overrides.numericValue).toBeUndefined();
+    });
+  });
+
+  describe("writeThemeState", () => {
+    it("persists structured state to localStorage", () => {
+      writeThemeState({ preset: "corporate" });
+      const raw = window.localStorage.getItem("assistant-theme");
+      expect(raw).toBe(JSON.stringify({ preset: "corporate" }));
+    });
+  });
+});

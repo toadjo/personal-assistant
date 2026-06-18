@@ -1,0 +1,51 @@
+/* Status chip - compact counter with icon */
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--stat-border);
+  background: var(--stat-bg);
+  color: var(--stat-text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(6px);
+  min-height: 32px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.statusChip:hover {
+  border-color: color-mix(in srgb, var(--primary) 22%, var(--stat-border) 78%);
+  background: color-mix(in srgb, var(--primary-soft) 35%, var(--stat-bg) 65%);
+  color: var(--title);
+}
+
+.statusChip:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--bg) 72%, transparent),
+    0 0 0 4px var(--focus-ring);
+}
+
+.statusChipAttention {
+  border-color: color-mix(in srgb, var(--error-border) 55%, var(--stat-border) 45%);
+  background: color-mix(in srgb, var(--error-bg) 35%, var(--stat-bg) 65%);
+  color: color-mix(in srgb, var(--error-text) 55%, var(--stat-text) 45%);
+}
+
+.statusChipSuccess {
+  border-color: color-mix(in srgb, var(--success-border) 55%, var(--stat-border) 45%);
+  background: color-mix(in srgb, var(--success-bg) 35%, var(--stat-bg) 65%);
+  color: color-mix(in srgb, var(--success-text) 55%, var(--stat-text) 45%);
+}
+
+.statusChipCount {
+  font-weight: 700;
+}

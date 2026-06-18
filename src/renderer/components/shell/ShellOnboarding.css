@@ -1,0 +1,121 @@
+/* Compact onboarding coach */
+.onboardingCoach {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--primary-border) 48%, var(--panel-border) 52%);
+  background: color-mix(in srgb, var(--primary-soft) 12%, var(--panel-bg) 88%);
+  margin-bottom: var(--space-4);
+}
+
+.onboardingCoachContent {
+  min-width: 0;
+}
+
+.onboardingCoachTitle {
+  margin: 0 0 var(--space-2);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--title);
+}
+
+.onboardingCoachActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.onboardingCoachActions .primaryButton,
+.onboardingCoachActions .ghostButton {
+  min-height: 32px;
+  font-size: 13px;
+}
+
+.onboardingCoachDismiss {
+  flex-shrink: 0;
+  padding: 4px;
+  color: var(--muted);
+}
+
+.onboardingCoachDismiss:hover {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .onboardingCoach {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .onboardingCoachActions {
+    width: 100%;
+  }
+
+  .onboardingCoachActions .primaryButton,
+  .onboardingCoachActions .ghostButton {
+    flex: 1;
+  }
+
+  .onboardingCoachDismiss {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+  }
+}
+
+@media (max-width: 1024px) {
+  .homeDashboardHero {
+    grid-template-columns: 1fr;
+  }
+
+  .homeDashboardHeroActions {
+    justify-content: flex-start;
+  }
+
+  .homeLayout {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-inline: 16px;
+  }
+
+  .utilityToolbar {
+    align-items: stretch;
+  }
+
+  .utilityToolbarLeft,
+  .utilityToolbarRight {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .utilityToolbarRight .statusChip {
+    flex: 0 1 auto;
+  }
+
+  .themeSelect {
+    flex: 1 1 150px;
+    max-width: none;
+  }
+
+  .homeDashboardHero {
+    padding: var(--space-3);
+  }
+
+  .homeDashboardHeroNext {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .homeDashboardHeroNextControls {
+    justify-content: flex-start;
+  }
+}

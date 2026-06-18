@@ -1,0 +1,28 @@
+/* Utility toolbar - compact macOS-style header */
+.utilityToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-3);
+  min-height: 40px;
+}
+
+.utilityToolbarLeft {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.utilityToolbarRight {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}

@@ -1,0 +1,23 @@
+/* Panel header - compact with icon and title on one line */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.panelHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--title);
+  line-height: 1.2;
+}
+
+.panelHeaderIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+}

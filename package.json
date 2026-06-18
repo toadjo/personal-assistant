@@ -1,0 +1,161 @@
+{
+  "name": "personal-assistant",
+  "version": "3.8.0",
+  "description": "Desktop utility for notes, reminders, calendar, and household assistant workflows",
+  "main": "dist/main/main/main.js",
+  "author": "toadjo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0 <26.0.0"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "postinstall": "electron-builder install-app-deps",
+    "dev": "npm run rebuild:electron && node scripts/load-env-file.mjs && node scripts/generate-calendar-oauth-clients.mjs && node scripts/generate-preload-ipc.mjs && concurrently \"vite\" \"tsc -p tsconfig.main.json --watch\" \"wait-on tcp:5173 file:dist/main/main/main.js file:dist/main/main/preload.js && electron .\"",
+    "build": "npm run build:renderer && npm run build:main",
+    "build:report": "vite build --mode report",
+    "build:renderer": "node scripts/generate-release-notes.mjs && vite build",
+    "build:main": "node scripts/generate-team-hosted-backend.mjs && node scripts/generate-calendar-oauth-clients.mjs && node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json",
+    "check:preload-ipc": "node scripts/generate-preload-ipc.mjs --check",
+    "icons:prepare": "node scripts/ensure-win-icon.mjs",
+    "icons:prepare:linux": "node scripts/ensure-linux-icon.mjs",
+    "icons:prepare:mac": "node scripts/ensure-mac-icon.mjs",
+    "clean:release": "node scripts/clean-release.mjs",
+    "dist": "npm run build && npm run clean:release && electron-builder --publish never",
+    "dist:win": "npm run build && npm run icons:prepare && npm run clean:release && electron-builder --win --publish never",
+    "dist:linux": "npm run build && npm run icons:prepare:linux && npm run clean:release && electron-builder --linux --publish never",
+    "dist:mac": "npm run build && npm run icons:prepare:mac && npm run clean:release && electron-builder --mac --universal --publish never",
+    "release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-package.ps1",
+    "release:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1",
+    "release:clean:all": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\release-clean.ps1 -All -ConfirmAll",
+    "typecheck": "node scripts/generate-release-notes.mjs && node scripts/generate-preload-ipc.mjs && tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "lint": "eslint . --no-warn-ignored",
+    "lint:fix": "eslint . --fix --no-warn-ignored",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
+    "test": "node scripts/run-vitest-for-node.mjs run",
+    "test:node": "npm test",
+    "test:watch": "node scripts/run-vitest-for-node.mjs watch",
+    "test:smoke": "node scripts/smoke-check.mjs",
+    "test:preload-electron": "node scripts/run-preload-smoke.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:electron": "playwright test --config=playwright.electron.config.ts",
+    "handoff": "node scripts/handoff.mjs",
+    "activity": "node scripts/activity.mjs",
+    "security:sbom": "npm run build && node scripts/generate-sbom.mjs",
+    "security:audit": "npm audit --audit-level=high",
+    "security:release-evidence": "node scripts/generate-release-evidence.mjs",
+    "release:hygiene": "node scripts/release-hygiene.mjs"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored",
+    "*.{json,css,html,md,yml,yaml}": "prettier --check"
+  },
+  "dependencies": {
+    "@sentry/electron": "^7.13.0",
+    "@supabase/supabase-js": "^2.105.4",
+    "@tanstack/react-query": "^5.100.14",
+    "better-sqlite3": "^12.10.0",
+    "electron-log": "^5.2.4",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@electron/rebuild": "^4.0.4",
+    "@eslint/js": "^9.18.0",
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.10.6",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "concurrently": "^9.1.2",
+    "electron": "^41.0.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.15.0",
+    "happy-dom": "^20.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "png-to-ico": "^3.0.1",
+    "prettier": "^3.4.2",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "sharp": "^0.34.5",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.20.0",
+    "vite": "^6.0.5",
+    "vitest": "^3.2.4",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.toadjo.personalassistant",
+    "productName": "PersonalAssistant",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/app-icon.ico",
+        "to": "app-icon.ico"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/app-icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "installerIcon": "assets/app-icon.ico",
+      "uninstallerIcon": "assets/app-icon.ico",
+      "include": "build/installer.nsh",
+      "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/generated/app-icon-linux.png",
+      "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/app-icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+name: Validate macOS package
+
+on:
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  validate-macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Confirm macOS icon exists
+        shell: bash
+        run: |
+          if [ ! -f "assets/app-icon.icns" ]; then
+            echo "ERROR: assets/app-icon.icns does not exist"
+            exit 1
+          fi
+          echo "OK: assets/app-icon.icns exists"
+
+      - name: Prepare macOS icon
+        run: npm run icons:prepare:mac
+
+      - name: Build macOS universal DMG/zip
+        run: npm run dist:mac
+
+      - name: List release directory
+        shell: bash
+        run: |
+          echo "Release directory contents:"
+          ls -la release/
+
+      - name: Validate .dmg artifact
+        shell: bash
+        run: |
+          if [ ! -z "$(find release/ -name '*.dmg')" ]; then
+            echo "OK: Found .dmg artifact(s)"
+            find release/ -name '*.dmg'
+          else
+            echo "ERROR: No .dmg artifact found in release/"
+            exit 1
+          fi
+
+      - name: Validate .zip artifact
+        shell: bash
+        run: |
+          if [ ! -z "$(find release/ -name '*.zip')" ]; then
+            echo "OK: Found .zip artifact(s)"
+            find release/ -name '*.zip'
+          else
+            echo "ERROR: No .zip artifact found in release/"
+            exit 1
+          fi
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-artifacts
+          path: release/
+          retention-days: 1
