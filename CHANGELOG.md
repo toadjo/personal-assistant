@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added Vite manualChunks strategy to split renderer into index, react, life-areas, and vendor chunks.
 - Main bundle reduced from ~491 kB to ~304 kB (38% reduction) via code-splitting.
 - Added bundle size budgets for life-areas (150 kB) and vendor (150 kB) chunks in CI.
+- Added `registerValidated` helper in `invoke-handle.ts` to collapse repetitive `schema.parse(payload)` boilerplate in IPC handlers.
+- Applied `registerValidated` to car.handlers.ts for simple create/delete operations (update and list operations retain `registerInvoke` for custom logic).
 
 ## [3.8.0] - 2026-05-28
 

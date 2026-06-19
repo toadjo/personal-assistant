@@ -1,6 +1,6 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { ipcMain } from "electron";
-import { ZodError } from "zod";
+import { ZodError, type ZodSchema } from "zod";
 import { encodeAssistantInvokeFailure, IPC_VALIDATION_DEFAULT_MESSAGE } from "../../shared/invokeErrors";
 import { mainLog } from "../log";
 import { recordWrites } from "../services/optimizeTracker";
@@ -84,5 +84,21 @@ export function registerInvoke(
       }
       throw error;
     }
+  });
+}
+
+/**
+ * Registers `ipcMain.handle` with schema validation, trusted-sender assertion, and stable Zod to renderer error mapping.
+ * Collapses the common pattern of `(_event, payload) => service(schema.parse(payload))` into a single call.
+ */
+export function registerValidated<T>(
+  channel: string,
+  assertSender: AssertSender,
+  schema: ZodSchema<T>,
+  handler: (event: IpcMainInvokeEvent, parsed: T) => unknown | Promise<unknown>
+): void {
+  registerInvoke(channel, assertSender, (event, payload) => {
+    const parsed = schema.parse(payload);
+    return handler(event, parsed);
   });
 }

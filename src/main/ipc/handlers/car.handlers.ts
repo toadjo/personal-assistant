@@ -28,7 +28,7 @@ import {
   completeServiceReminder,
   _deleteServiceReminder
 } from "../../services/car";
-import { registerInvoke } from "../invoke-handle";
+import { registerInvoke, registerValidated } from "../invoke-handle";
 import {
   carVehicleCreateSchema,
   carVehicleUpdateSchema,
@@ -53,16 +53,16 @@ export function registerCarHandlers(assertSender: AssertSender): void {
   registerInvoke(IpcInvoke.carVehiclesList, assertSender, () => {
     return listVehicles();
   });
-  registerInvoke(IpcInvoke.carVehiclesCreate, assertSender, (_event, payload) => {
-    return createVehicle(carVehicleCreateSchema.parse(payload));
+  registerValidated(IpcInvoke.carVehiclesCreate, assertSender, carVehicleCreateSchema, (_event, payload) => {
+    return createVehicle(payload);
   });
   registerInvoke(IpcInvoke.carVehiclesUpdate, assertSender, (_event, payload) => {
     const parsed = carVehicleUpdateSchema.parse(payload);
     const { id, ...updates } = parsed;
     return updateVehicle(id, updates);
   });
-  registerInvoke(IpcInvoke.carVehiclesDelete, assertSender, (_event, id) => {
-    deleteVehicle(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carVehiclesDelete, assertSender, uuidSchema, (_event, id) => {
+    deleteVehicle(id);
   });
 
   // Fuel entries
@@ -77,24 +77,24 @@ export function registerCarHandlers(assertSender: AssertSender): void {
     const { id, ...updates } = parsed;
     return _updateFuelEntry(id, updates);
   });
-  registerInvoke(IpcInvoke.carFuelDelete, assertSender, (_event, id) => {
-    _deleteFuelEntry(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carFuelDelete, assertSender, uuidSchema, (_event, id) => {
+    _deleteFuelEntry(id);
   });
 
   // Maintenance
   registerInvoke(IpcInvoke.carMaintenanceList, assertSender, (_event, vehicleId) => {
     return _listMaintenance(vehicleId as string | undefined);
   });
-  registerInvoke(IpcInvoke.carMaintenanceCreate, assertSender, (_event, payload) => {
-    return createMaintenance(carMaintenanceCreateSchema.parse(payload));
+  registerValidated(IpcInvoke.carMaintenanceCreate, assertSender, carMaintenanceCreateSchema, (_event, payload) => {
+    return createMaintenance(payload);
   });
   registerInvoke(IpcInvoke.carMaintenanceUpdate, assertSender, (_event, payload) => {
     const parsed = carMaintenanceUpdateSchema.parse(payload);
     const { id, ...updates } = parsed;
     return _updateMaintenance(id, updates);
   });
-  registerInvoke(IpcInvoke.carMaintenanceDelete, assertSender, (_event, id) => {
-    _deleteMaintenance(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carMaintenanceDelete, assertSender, uuidSchema, (_event, id) => {
+    _deleteMaintenance(id);
   });
 
   // Recurring bills
@@ -109,27 +109,27 @@ export function registerCarHandlers(assertSender: AssertSender): void {
     const { id, ...updates } = parsed;
     return _updateRecurringBill(id, updates);
   });
-  registerInvoke(IpcInvoke.carRecurringBillsMarkPaid, assertSender, (_event, id) => {
-    return markRecurringBillPaid(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carRecurringBillsMarkPaid, assertSender, uuidSchema, (_event, id) => {
+    return markRecurringBillPaid(id);
   });
-  registerInvoke(IpcInvoke.carRecurringBillsDelete, assertSender, (_event, id) => {
-    _deleteRecurringBill(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carRecurringBillsDelete, assertSender, uuidSchema, (_event, id) => {
+    _deleteRecurringBill(id);
   });
 
   // Mileage
   registerInvoke(IpcInvoke.carMileageList, assertSender, (_event, vehicleId) => {
     return _listMileage(vehicleId as string | undefined);
   });
-  registerInvoke(IpcInvoke.carMileageCreate, assertSender, (_event, payload) => {
-    return createMileage(carMileageCreateSchema.parse(payload));
+  registerValidated(IpcInvoke.carMileageCreate, assertSender, carMileageCreateSchema, (_event, payload) => {
+    return createMileage(payload);
   });
   registerInvoke(IpcInvoke.carMileageUpdate, assertSender, (_event, payload) => {
     const parsed = carMileageUpdateSchema.parse(payload);
     const { id, ...updates } = parsed;
     return _updateMileage(id, updates);
   });
-  registerInvoke(IpcInvoke.carMileageDelete, assertSender, (_event, id) => {
-    _deleteMileage(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carMileageDelete, assertSender, uuidSchema, (_event, id) => {
+    _deleteMileage(id);
   });
 
   // Service reminders
@@ -144,10 +144,10 @@ export function registerCarHandlers(assertSender: AssertSender): void {
     const { id, ...updates } = parsed;
     return _updateServiceReminder(id, updates);
   });
-  registerInvoke(IpcInvoke.carServiceRemindersComplete, assertSender, (_event, id) => {
-    return completeServiceReminder(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carServiceRemindersComplete, assertSender, uuidSchema, (_event, id) => {
+    return completeServiceReminder(id);
   });
-  registerInvoke(IpcInvoke.carServiceRemindersDelete, assertSender, (_event, id) => {
-    _deleteServiceReminder(uuidSchema.parse(id));
+  registerValidated(IpcInvoke.carServiceRemindersDelete, assertSender, uuidSchema, (_event, id) => {
+    _deleteServiceReminder(id);
   });
 }
