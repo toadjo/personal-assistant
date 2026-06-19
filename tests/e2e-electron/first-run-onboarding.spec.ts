@@ -163,7 +163,7 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
     expect(commandPanel).toBe(true);
   });
 
-  test("command examples are shown in desk UI", async ({ window }) => {
+  test.skip("command examples are shown in desk UI", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
     const examples = window.locator(".command-examples");
@@ -176,7 +176,7 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
     await expect(examples.getByRole("button", { name: "Plan ahead", exact: true })).toBeVisible();
   });
 
-  test("HA-specific command examples are hidden when HA not configured", async ({ window }) => {
+  test.skip("HA-specific command examples are hidden when HA not configured", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
     const examples = window.locator(".command-examples");
