@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Onboarding restart button exposed in the first-run panel.
 - Disk-space pre-check for backup exports (requires 2x headroom, blocks export with clear error message).
 - VACUUM/optimize suggestion prompts after 500+ write operations (tracked via persistent counter, resets after successful optimize).
+- Encrypted backup format for portable encrypted archives (uses Electron safeStorage, auto-enabled in corporate mode).
+- Sentry breadcrumb filtering to reduce noise from UI mouse events.
 
 ### Changed
 

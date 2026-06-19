@@ -279,7 +279,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
       const api = requireAssistantApi();
       const suggestion = await api.getOptimizeSuggestion();
       setOptimizeSuggestion(suggestion);
-    } catch (_err) {
+    } catch {
       // Silently fail; suggestion is optional
     }
   }
