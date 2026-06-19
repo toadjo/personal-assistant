@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Mutation testing pilot (stryker.conf.mjs) for src/main/services/* with 60% mutation score threshold.
 - Visual regression test placeholder (tests/e2e/visual/visual.spec.ts) for Daily Command Center and Calendar.
 - Dependabot PR grouping by dependency type (electron, build-tools, react, testing) to reduce noise.
+- ProjectsPanel color contrast fix: accessible state color tokens for task priority/status badges (issue #34).
 
 ### Changed
 

@@ -73,19 +73,23 @@ test("projects mode renders team task surface and matches snapshot", async ({ pa
   await page.getByRole("button", { name: /^Projects$/ }).click();
   await expect(page.getByRole("heading", { name: /^Shared Tasks$/ })).toBeVisible();
   await expect(page.getByText("Design logo")).toBeVisible();
-  
-  // Check accessibility on projects panel (non-blocking for now)
+
+  // Check accessibility on projects panel - fail on serious/critical violations
   const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
-  if (accessibilityScanResults.violations.length > 0) {
-    console.log(`Projects panel accessibility violations: ${accessibilityScanResults.violations.length}`);
-    accessibilityScanResults.violations.forEach((violation) => {
+  const seriousViolations = accessibilityScanResults.violations.filter(
+    (v) => v.impact === "serious" || v.impact === "critical"
+  );
+  if (seriousViolations.length > 0) {
+    console.log(`Projects panel serious/critical accessibility violations: ${seriousViolations.length}`);
+    seriousViolations.forEach((violation) => {
       console.log(`- ${violation.id}: ${violation.description} (${violation.impact})`);
       violation.nodes.forEach((node) => {
         console.log(`  Target: ${node.target.join(', ')}`);
       });
     });
+    throw new Error(`Found ${seriousViolations.length} serious/critical accessibility violations`);
   }
-  
+
   const projectsPanel = page.locator(".panel").filter({ hasText: "Shared Tasks" });
   await expect(projectsPanel).toHaveScreenshot("projects-panel.png");
 });
