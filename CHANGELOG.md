@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Life-area module SDK: Finance, Car, Family, Health, and Hobbies now registered via manifest objects in `src/main/services/lifeAreas/`, collapsing migrations, backup modules, and IPC handlers into one module definition per area.
 - GitHub issue templates for bug reports, feature ideas, accessibility reports, and security disclosures.
 - Contributor guide (CONTRIBUTING.md) with good first issue suggestions and safe first change patterns.
+- Bundle size budget check in CI (scripts/check-bundle-size.mjs) with budgets for main bundle (600 kB) and React chunk (200 kB).
 
 ### Changed
 

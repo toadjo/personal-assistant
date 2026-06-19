@@ -65,7 +65,7 @@ Acceptance signal:
 
 Goal: keep the project welcoming and hard to accidentally break as more people touch it.
 
-- Add performance budgets in CI for renderer bundle size and panel mount time.
+- ~~Add performance budgets in CI for renderer bundle size and panel mount time.~~
 - Pilot mutation testing on `src/main/services/*`.
 - Add visual regression snapshots for Daily Command Center and Calendar.
 - Group Dependabot PRs and fast-track security updates.

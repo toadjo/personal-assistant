@@ -44,6 +44,9 @@ jobs:
       - name: Build (renderer + main)
         run: npm run build
 
+      - name: Check bundle size budget
+        run: npm run check:bundle-size
+
       - name: Electron preload smoke (real preload in BrowserWindow)
         run: npm run test:preload-electron
 
