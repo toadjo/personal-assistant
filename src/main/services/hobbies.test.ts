@@ -604,7 +604,9 @@ describe("hobbies service", () => {
 
       const result = listHobbySupplies(hobby.id);
       expect(result).toHaveLength(2);
-      expect(result[0]?.projectId).toBe(project1.id);
+      const project1Supply = result.find((s) => s.projectId === project1.id);
+      expect(project1Supply).toBeDefined();
+      expect(project1Supply?.name).toBe("Song Book");
     });
 
     it("updates a hobby supply", () => {
