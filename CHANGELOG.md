@@ -4,6 +4,13 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Removed deprecated OAuth client ID re-exports (`getGoogleOAuthClientId`, `getMicrosoftOAuthClientId`) — use canonical names `getGoogleCalendarClientId` and `getMicrosoftCalendarClientId`.
+- Updated v3.7.0 release notes to reflect that Outlook / Microsoft 365 is now supported alongside Google Calendar (previously listed as "planned, not enabled").
+
 ## [3.8.0] - 2026-05-28
 
 ### Added
@@ -76,10 +83,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Experimental Access Note
 
-- Google Calendar is the only connected calendar provider enabled for this release.
-- This feature is still experimental and requires a build configured with calendar OAuth credentials.
+- Connected Calendar is experimental and requires a build configured with calendar OAuth credentials.
 - Public builds that are not configured for calendar OAuth disable the affected sign-in buttons.
-- Outlook and Microsoft Teams calendar display remain planned, but are not enabled for this release.
+- Google Calendar and Outlook / Microsoft 365 are both supported when configured.
 
 ## [3.6.0] - 2026-05-26
 

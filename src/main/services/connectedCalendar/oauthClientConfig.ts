@@ -90,16 +90,6 @@ export function getMicrosoftCalendarClientId(): string {
   return resolveClientId("MICROSOFT_CALENDAR_CLIENT_ID", "microsoftClientId");
 }
 
-/** @deprecated Use getGoogleCalendarClientId */
-export function getGoogleOAuthClientId(): string {
-  return getGoogleCalendarClientId();
-}
-
-/** @deprecated Use getMicrosoftCalendarClientId */
-export function getMicrosoftOAuthClientId(): string {
-  return getMicrosoftCalendarClientId();
-}
-
 export function getConnectedCalendarOAuthSetupStatus(): ConnectedCalendarOAuthSetupStatus {
   return {
     googleConfigured: Boolean(getGoogleCalendarClientId() && getGoogleCalendarClientSecret()),

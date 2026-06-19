@@ -1,8 +1,6 @@
 export {
   getGoogleCalendarClientId,
-  getGoogleOAuthClientId,
-  getMicrosoftCalendarClientId,
-  getMicrosoftOAuthClientId
+  getMicrosoftCalendarClientId
 } from "../oauthClientConfig";
 
 export const GOOGLE_CALENDAR_SCOPE =
