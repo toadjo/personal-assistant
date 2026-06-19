@@ -4,7 +4,7 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.9.0] - 2026-06-19
 
 ### Changed
 
@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added bundle size budgets for life-areas (150 kB) and vendor (150 kB) chunks in CI.
 - Added `registerValidated` helper in `invoke-handle.ts` to collapse repetitive `schema.parse(payload)` boilerplate in IPC handlers.
 - Applied `registerValidated` to car.handlers.ts for simple create/delete operations (update and list operations retain `registerInvoke` for custom logic).
+- Verified UI consistency: accessible state tokens already reconciled (ProjectsPanel fix from v3.8.0), empty/loading states already standardized via shared components, axe E2E passing (12/12 browser tests).
+
+### Tests
+
+- Lint passing with zero warnings.
+- Typecheck passing.
+- Build passing.
+- Unit tests passing (1322 tests).
+- E2E passing (12/12 browser tests including axe accessibility checks).
+- Bundle size budgets passing: index 304 kB, react 167 kB, life-areas 74 kB, vendor 89 kB.
 
 ## [3.8.0] - 2026-05-28
 
