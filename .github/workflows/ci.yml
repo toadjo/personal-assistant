@@ -99,5 +99,8 @@ jobs:
       - name: Build (renderer + main)
         run: npm run build
 
+      - name: Check bundle size budget
+        run: npm run check:bundle-size
+
       - name: Build Linux AppImage
         run: npm run dist:linux
