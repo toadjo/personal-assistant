@@ -260,6 +260,12 @@ export type AssistantApi = {
     recommendations: string[];
   }>;
   optimizeDatabase: () => Promise<{ success: boolean; message: string }>;
+  checkBackupDiskSpace: () => Promise<{
+    freeBytes: number;
+    totalBytes: number;
+    estimatedBackupBytes: number;
+    sufficient: boolean;
+  }>;
   logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
   onRemindersUpdated: (cb: () => void) => () => void;
   onCommand: (cb: (_event: unknown, command: string) => void) => () => void;

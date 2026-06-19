@@ -88,7 +88,7 @@ const END_HOUR = 22;
 function selectedDayHeading(selectedKey: string, todayKey: string): string {
   if (selectedKey === todayKey) return "Today";
   const d = parseLocalDateKey(selectedKey);
-  return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 }
 
 export const CalendarPanel = memo(function CalendarPanel({
@@ -198,7 +198,7 @@ export const CalendarPanel = memo(function CalendarPanel({
           </div>
         }
       />
-      <p className="muted">{calendarCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</p>
+      <p className="muted">{calendarCursor.toLocaleString("en-US", { month: "long", year: "numeric" })}</p>
       <div className="calendarSourceFilter" role="toolbar" aria-label="Calendar source filter">
         {SOURCE_FILTERS.map((filter) => (
           <button
@@ -237,7 +237,7 @@ export const CalendarPanel = memo(function CalendarPanel({
           ))}
           {monthCells.map((cell, idx) => {
             const selected = cell.dateKey === selectedDateKey;
-            const labelDate = parseLocalDateKey(cell.dateKey).toLocaleDateString(undefined, {
+            const labelDate = parseLocalDateKey(cell.dateKey).toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
               day: "numeric",
@@ -369,7 +369,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                 const startDate = days[0] ? parseLocalDateKey(days[0]) : selectedDate;
                 const lastDayKey = days[days.length - 1];
                 const endDate = lastDayKey ? parseLocalDateKey(lastDayKey) : selectedDate;
-                const dateRange = `${startDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+                const dateRange = `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
                 return (
                   <>
                     <p className="muted" style={{ gridColumn: "1 / -1", marginBottom: "var(--space-1)" }}>
@@ -400,7 +400,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                     <div className="calendarWeekHeaderCell calendarWeekTimeHeader">Time</div>
                     {days.map((dayKey) => (
                       <div key={dayKey} className="calendarWeekHeaderCell">
-                        {parseLocalDateKey(dayKey).toLocaleDateString(undefined, {
+                        {parseLocalDateKey(dayKey).toLocaleDateString("en-US", {
                           weekday: "short",
                           month: "short",
                           day: "numeric"
@@ -522,7 +522,7 @@ export const CalendarPanel = memo(function CalendarPanel({
                       <h4 className="calendarUpcomingSectionTitle">
                         {dayKey === todayKey
                           ? "Today"
-                          : parseLocalDateKey(dayKey).toLocaleDateString(undefined, {
+                          : parseLocalDateKey(dayKey).toLocaleDateString("en-US", {
                               weekday: "long",
                               month: "short",
                               day: "numeric"
@@ -669,7 +669,7 @@ export const CalendarPanel = memo(function CalendarPanel({
           <p className="muted">
             {selectedEvent.allDay
               ? "All day"
-              : `${new Date(selectedEvent.startsAt).toLocaleString()}${selectedEvent.endsAt ? ` – ${new Date(selectedEvent.endsAt).toLocaleString()}` : ""}`}
+              : `${new Date(selectedEvent.startsAt).toLocaleString("en-US")}${selectedEvent.endsAt ? ` – ${new Date(selectedEvent.endsAt).toLocaleString("en-US")}` : ""}`}
           </p>
           {selectedEvent.calendarName ? <p className="muted">Calendar: {selectedEvent.calendarName}</p> : null}
           {selectedEvent.location ? <p className="muted">Location: {selectedEvent.location}</p> : null}

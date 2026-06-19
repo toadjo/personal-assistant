@@ -1,4 +1,4 @@
-import { Compass, CheckCircle } from "lucide-react";
+import { Compass, CheckCircle, RotateCcw } from "lucide-react";
 
 type Props = {
   visible: boolean;
@@ -6,6 +6,7 @@ type Props = {
   commandHistoryLength: number;
   onHideForNow: () => void;
   onFinishSetup: () => void;
+  onRestart?: () => void;
   onRunPreset: (command: string) => void;
 };
 
@@ -15,6 +16,7 @@ export function OnboardingPanel({
   commandHistoryLength,
   onHideForNow,
   onFinishSetup,
+  onRestart,
   onRunPreset
 }: Props): JSX.Element | null {
   if (!visible) return null;
@@ -25,6 +27,9 @@ export function OnboardingPanel({
           <Compass size={16} className="panelHeaderIcon" /> First time here
         </h2>
         <div className="miniActions">
+          <button type="button" className="ghostButton" onClick={onRestart} aria-label="Restart onboarding">
+            <RotateCcw size={14} /> Restart
+          </button>
           <button type="button" className="ghostButton" onClick={onHideForNow}>
             Skip
           </button>

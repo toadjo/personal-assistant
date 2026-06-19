@@ -9,7 +9,7 @@
  * Supports routing to Note, Task, Reminder, or Inbox.
  */
 
-import { memo, useState, useEffect, useRef, useCallback } from "react";
+import { memo, useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { X, FileText, ListTodo, Bell, Inbox } from "lucide-react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { requireAssistantApi } from "../../lib/assistantApi";
@@ -72,20 +72,19 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens/closes
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isOpen) {
-      // Store current focus before opening dialog
+      // Store current focus before opening dialog and before the dialog's
+      // own input is focused, so focus can be restored to the trigger later.
       focusStack.push();
-      
+
       setCaptureType(initialType);
       setText(initialText);
       setTaskDueAt("");
       setTaskPriority("normal");
       setReminderDueAt("");
-      // Focus input after a short delay to allow dialog to render
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      // Focus input synchronously after the dialog is committed to the DOM.
+      inputRef.current?.focus();
     } else {
       // Restore focus when dialog closes
       focusStack.pop();
@@ -237,10 +236,10 @@ export const QuickCaptureDialog = memo(function QuickCaptureDialog({
             type="text"
             className="quick-capture-input"
             placeholder="What do you want to capture?"
+            aria-label="What do you want to capture?"
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={isSubmitting}
-            autoFocus
           />
 
           {captureType === "task" && (

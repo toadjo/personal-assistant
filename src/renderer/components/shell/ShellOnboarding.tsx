@@ -81,6 +81,10 @@ export function ShellOnboarding({
           window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
           onSetStatus("Welcome aboard - intro marked complete.");
         }}
+        onRestart={() => {
+          onboarding.reset();
+          onSetStatus("Onboarding restarted - follow the steps again.");
+        }}
         onRunPreset={onRunPreset}
       />
     </div>

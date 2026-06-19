@@ -172,11 +172,12 @@ describe("useAssistantWorkspace after refactor", () => {
     expect(result.current.profile).toHaveProperty("persistUserPreferredName");
   });
 
-  it("onboarding section has show and setShow", () => {
+  it("onboarding section has show, setShow, and reset", () => {
     const { result } = renderHook(() => useAssistantWorkspace(), { wrapper });
 
     expect(result.current.onboarding).toHaveProperty("show");
     expect(result.current.onboarding).toHaveProperty("setShow");
+    expect(result.current.onboarding).toHaveProperty("reset");
   });
 
   it("desk section has hideWindow action", () => {

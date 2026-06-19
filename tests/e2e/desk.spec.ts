@@ -226,3 +226,75 @@ test("keyboard-only navigation for main workflow", async ({ page }) => {
   await expect(homeButton).toHaveClass(/moduleTabActive/);
   await expect(page.getByRole("heading", { name: /^calendar$/i })).toBeVisible();
 });
+
+test("command palette returns focus to trigger on Escape", async ({ page }) => {
+  await page.goto("/");
+
+  const commandInput = page.getByRole("textbox", { name: /message the assistant/i });
+  await commandInput.focus();
+  await expect(commandInput).toBeFocused();
+
+  // Open command palette with Ctrl+K
+  await page.keyboard.press("Control+k");
+  const paletteInput = page.getByRole("textbox", { name: "Search" });
+  await expect(paletteInput).toBeVisible();
+  await expect(paletteInput).toBeFocused();
+
+  // Close with Escape
+  await page.keyboard.press("Escape");
+  await expect(paletteInput).not.toBeVisible();
+  await expect(commandInput).toBeFocused();
+});
+
+test("quick capture returns focus to trigger on Escape", async ({ page }) => {
+  await page.goto("/");
+
+  const commandInput = page.getByRole("textbox", { name: /message the assistant/i });
+  await commandInput.focus();
+  await expect(commandInput).toBeFocused();
+
+  // Open quick capture via command
+  await commandInput.fill("capture");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: /^Quick Capture$/i })).toBeVisible();
+  const quickCaptureInput = page.getByRole("textbox", { name: /what do you want to capture/i });
+  await expect(quickCaptureInput).toBeVisible();
+  await expect(quickCaptureInput).toBeFocused();
+
+  // Close with Escape
+  await page.keyboard.press("Escape");
+  await expect(quickCaptureInput).not.toBeVisible();
+  await expect(commandInput).toBeFocused();
+});
+
+test("theme switches without page reload", async ({ page }) => {
+  await page.goto("/");
+
+  // Track whether the page reloads during the theme switch.
+  let reloadCount = 0;
+  page.on("load", () => {
+    reloadCount += 1;
+  });
+
+  // Open the Appearance panel.
+  await page.getByRole("button", { name: /Customize appearance/i }).click();
+  await expect(page.getByRole("heading", { name: /^Appearance$/i })).toBeVisible();
+
+  // Switch to the Obsidian preset.
+  const obsidianButton = page.getByRole("button", { name: "Obsidian", exact: true });
+  await obsidianButton.click();
+  await expect(obsidianButton).toHaveClass(/pillButtonActive/);
+
+  // Verify the theme persisted to localStorage without a reload.
+  const theme = await page.evaluate(() => {
+    const raw = window.localStorage.getItem("assistant-theme");
+    return raw ? JSON.parse(raw).preset : null;
+  });
+  expect(theme).toBe("obsidian");
+  expect(reloadCount).toBe(0);
+
+  // Close the panel and confirm the app remains on the same page.
+  await page.getByRole("button", { name: /Close appearance panel/i }).click();
+  await expect(page.getByRole("heading", { name: /^Appearance$/i })).not.toBeVisible();
+  await expect(page).toHaveURL("/");
+});

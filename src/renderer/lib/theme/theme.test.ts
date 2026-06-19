@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import {
   TOKEN_CSS_VAR,
   THEME_PRESETS,
@@ -211,10 +211,22 @@ describe("Theme token system (v1.5.6)", () => {
   });
 
   describe("readThemeState", () => {
-    it("defaults to glass when nothing is stored", () => {
+    it("defaults to paper on light system preference when nothing is stored", () => {
+      const mql = { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList;
+      vi.stubGlobal("matchMedia", () => mql);
       const state = readThemeState();
-      expect(state.preset).toBe("glass");
+      expect(state.preset).toBe("paper");
       expect(state.custom).toBeUndefined();
+      vi.unstubAllGlobals();
+    });
+
+    it("defaults to obsidian on dark system preference when nothing is stored", () => {
+      const mql = { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList;
+      vi.stubGlobal("matchMedia", () => mql);
+      const state = readThemeState();
+      expect(state.preset).toBe("obsidian");
+      expect(state.custom).toBeUndefined();
+      vi.unstubAllGlobals();
     });
 
     it("reads a v1.5.6 structured state", () => {
@@ -264,10 +276,13 @@ describe("Theme token system (v1.5.6)", () => {
       expect(state.preset).toBe("fog");
     });
 
-    it("falls back to glass for unknown value", () => {
+    it("falls back to system preference for unknown value", () => {
+      const mql = { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList;
+      vi.stubGlobal("matchMedia", () => mql);
       window.localStorage.setItem("assistant-theme", "neoncyan");
       const state = readThemeState();
-      expect(state.preset).toBe("glass");
+      expect(state.preset).toBe("paper");
+      vi.unstubAllGlobals();
     });
 
     it("rejects invalid custom token overrides", () => {

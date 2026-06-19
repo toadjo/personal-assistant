@@ -135,4 +135,22 @@ describe("OnboardingPanel", () => {
     const doneButton = screen.getByRole("button", { name: "Done" });
     expect(doneButton).not.toBeDisabled();
   });
+
+  it("calls onRestart when restart button is clicked", () => {
+    const onRestart = vi.fn();
+    render(
+      <OnboardingPanel
+        visible
+        haReady={false}
+        commandHistoryLength={0}
+        onHideForNow={vi.fn()}
+        onFinishSetup={vi.fn()}
+        onRestart={onRestart}
+        onRunPreset={vi.fn()}
+      />
+    );
+
+    screen.getByRole("button", { name: /Restart onboarding/i }).click();
+    expect(onRestart).toHaveBeenCalledTimes(1);
+  });
 });

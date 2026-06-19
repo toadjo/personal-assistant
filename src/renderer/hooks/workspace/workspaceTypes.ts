@@ -181,6 +181,7 @@ export type AssistantWorkspace = {
     markReminderCreated: () => void;
     markHomeAssistantConnected: () => void;
     skipHomeAssistant: () => void;
+    reset: () => void;
   };
   desk: {
     hideWindow: () => void;

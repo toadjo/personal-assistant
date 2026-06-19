@@ -13,7 +13,7 @@
  * Onboarding dismissal after first command is handled by useAssistantWorkspace
  * to avoid circular dependencies with command state.
  */
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useState, useCallback, type Dispatch, type SetStateAction } from "react";
 import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../../lib/theme/tokens";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
@@ -54,6 +54,7 @@ export type DeskUiState = {
     markReminderCreated: () => void;
     markHomeAssistantConnected: () => void;
     skipHomeAssistant: () => void;
+    reset: () => void;
   };
   display: DisplayPreferences & {
     setDensity: (density: Density) => void;
@@ -80,6 +81,12 @@ export function useDeskUiState(): DeskUiState {
   const [showOnboarding, setShowOnboarding] = useState(
     () => !window.localStorage.getItem(STORAGE_ONBOARDED) && !window.localStorage.getItem(STORAGE_ONBOARDING_DEFERRED)
   );
+
+  const resetOnboarding = useCallback(() => {
+    onboardingProgress.reset();
+    window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
+    setShowOnboarding(true);
+  }, [onboardingProgress]);
 
   const [deskMode, setDeskMode] = useState<DeskMode>("personal");
 
@@ -109,7 +116,8 @@ export function useDeskUiState(): DeskUiState {
       markNoteCreated: onboardingProgress.markNoteCreated,
       markReminderCreated: onboardingProgress.markReminderCreated,
       markHomeAssistantConnected: onboardingProgress.markHomeAssistantConnected,
-      skipHomeAssistant: onboardingProgress.skipHomeAssistant
+      skipHomeAssistant: onboardingProgress.skipHomeAssistant,
+      reset: resetOnboarding
     },
     display: {
       ...display.prefs,

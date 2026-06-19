@@ -215,54 +215,59 @@
   color: var(--subtitle, #5c5c66);
 }
 
-.taskPriority {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskPriority.low {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskPriority.normal {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskPriority.high {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskDue {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskStatus {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskStatus.open {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskStatus.done {
-  color: #000000;
-  font-weight: 900;
-}
-
-.taskStatus.done {
-  color: var(--success-text, #1a5f3a);
-}
-
 .taskActions {
   display: flex;
   gap: 0.25rem;
   flex-shrink: 0;
+}
+
+/* Accessible state-token badges for task priority and status.
+ * Use higher specificity than the shared life-areas.css defaults so the
+ * Projects panel renders with solid, theme-aware backgrounds that satisfy
+ * WCAG AA contrast against the panel surface.
+ *
+ * Backgrounds are mixed against --bg (fully opaque) rather than the
+ * semi-transparent --panel-bg / --primary-soft so axe can compute a
+ * deterministic contrast ratio and the text remains readable even with the
+ * panel's backdrop-filter blur. */
+.teamTaskItem .taskPriority,
+.teamTaskItem .taskStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+}
+
+.teamTaskItem .taskPriority.low {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--panel-border);
+}
+
+.teamTaskItem .taskPriority.normal,
+.teamTaskItem .taskStatus.open {
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--bg));
+}
+
+.teamTaskItem .taskPriority.high {
+  background: color-mix(in srgb, var(--error-text) 10%, var(--bg));
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--error-text) 30%, var(--bg));
+}
+
+.teamTaskItem .taskStatus.done {
+  background: color-mix(in srgb, var(--success-text) 10%, var(--bg));
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--success-text) 30%, var(--bg));
 }
 
 .projectList {

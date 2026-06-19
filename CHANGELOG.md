@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Keyboard-only smoke coverage for the main workflow.
 - Focus-stack manager for modal and overlay focus restoration.
 - Command Palette scope filters and improved fuzzy ranking.
+- Focus-return E2E coverage for Command Palette and Quick Capture.
+- Theme default now respects `prefers-color-scheme` (Paper for light, Obsidian for dark) when no theme is saved.
+- Onboarding restart button exposed in the first-run panel.
+- Disk-space pre-check for backup exports (requires 2x headroom, blocks export with clear error message).
 
 ### Changed
 
@@ -23,10 +27,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Notes search now uses debounced query values instead of polling.
 - Command Palette search now boosts recent, active, and better fuzzy matches.
 - Roadmap now treats Phase C as the active future track.
+- Theme storage now resolves defaults from the system color scheme instead of always defaulting to Glass.
 
 ### Fixed
 
 - Reduced documented axe accessibility violations across Calendar, Projects, Hobbies, Release Notes, and heading hierarchy.
+- Fixed Projects panel task priority/status color contrast violation with opaque, theme-aware badge backgrounds.
+- Fixed Quick Capture focus restoration: focus stack now captures the trigger before the dialog input is focused.
 - Improved list semantics in Hobbies and release-note rendering.
 - Preserved shell stability when individual panels or overlays fail.
 
@@ -34,8 +41,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Lint passing with zero warnings.
 - Typecheck passing.
-- Full test suite passing (1 pre-existing test failure in executeAssistantCommand.test.ts for "handles open command with no matches" - unrelated to accessibility fixes).
-- E2E passing.
+- Build, smoke, and preload-electron checks passing.
+- E2E passing (10/10 browser tests, including focus-return and theme-switching coverage).
+- Full test suite: all tests passing (executeAssistantCommand "open no matches" and CalendarPanel locale determinism fixed).
 
 ## [3.7.0] - 2026-05-27
 

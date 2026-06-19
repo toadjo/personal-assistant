@@ -12,6 +12,13 @@ const LEGACY_THEME: Record<string, ThemeMode> = {
   midnight: "obsidian"
 };
 
+/** Determine the default preset from the system color-scheme preference. */
+export function getDefaultPreset(): ThemeMode {
+  if (typeof window === "undefined") return "paper";
+  const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  return prefersDark ? "obsidian" : "paper";
+}
+
 function isValidTokenValue(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
@@ -70,7 +77,7 @@ export function readThemeState(): ThemeState {
   const raw = window.localStorage.getItem(STORAGE_THEME);
   const parsed = parseStored(raw);
   if (parsed) return parsed;
-  return { preset: "glass" };
+  return { preset: getDefaultPreset() };
 }
 
 /** Persist theme state to localStorage. */

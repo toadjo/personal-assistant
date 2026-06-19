@@ -29,6 +29,7 @@ describe("useBackupActions", () => {
   it("exports data, downloads JSON, revokes object URL, and sets success status", async () => {
     const mockPayload = { notes: 5, reminders: 3, tasks: 2, automation_rules: 1, finance_bills: 0, finance_expenses: 0, car_vehicles: 0, car_fuel_entries: 0, car_maintenance: 0, car_recurring_bills: 0, car_mileage: 0, car_service_reminders: 0, family_members: 0, family_occasions: 0, family_obligations: 0, health_appointments: 0, health_medications: 0, health_symptoms: 0, health_measurements: 0, health_obligations: 0, hobbies: 0, hobby_sessions: 0, hobby_projects: 0, hobby_milestones: 0, hobby_supplies: 0, app_settings: 1 };
     (window as any).assistantApi = {
+      checkBackupDiskSpace: vi.fn().mockResolvedValue({ freeBytes: 1_000_000_000, totalBytes: 2_000_000_000, estimatedBackupBytes: 100_000, sufficient: true }),
       exportData: vi.fn().mockResolvedValue(mockPayload)
     };
     const createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock-url");
@@ -38,6 +39,7 @@ describe("useBackupActions", () => {
 
     await result.current.exportData();
 
+    expect(window.assistantApi.checkBackupDiskSpace).toHaveBeenCalled();
     expect(window.assistantApi.exportData).toHaveBeenCalled();
     expect(createObjectURLSpy).toHaveBeenCalled();
     expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url");
@@ -46,6 +48,22 @@ describe("useBackupActions", () => {
 
     createObjectURLSpy.mockRestore();
     revokeObjectURLSpy.mockRestore();
+  });
+
+  it("export fails when disk space is insufficient", async () => {
+    (window as any).assistantApi = {
+      checkBackupDiskSpace: vi.fn().mockResolvedValue({ freeBytes: 100, totalBytes: 2_000_000_000, estimatedBackupBytes: 100_000, sufficient: false }),
+      exportData: vi.fn()
+    };
+
+    const { result } = renderHook(() => useBackupActions(mockRefreshAll, mockSetStatus, mockSetError));
+
+    await result.current.exportData();
+
+    expect(window.assistantApi.checkBackupDiskSpace).toHaveBeenCalled();
+    expect(window.assistantApi.exportData).not.toHaveBeenCalled();
+    expect(mockSetError).toHaveBeenCalledWith("Insufficient disk space for backup. Free: 0.00 GB, Estimated: 0.00 GB");
+    expect(result.current.isExporting).toBe(false);
   });
 
   it("imports cancel returns null and does not call the API", async () => {

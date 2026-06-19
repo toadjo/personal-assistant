@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { useOnboardingProgress } from "./useOnboardingProgress";
-import { STORAGE_ONBOARDING_PROGRESS } from "../constants/storageKeys";
+import { STORAGE_ONBOARDING_PROGRESS, STORAGE_ONBOARDED } from "../constants/storageKeys";
 
 describe("useOnboardingProgress", () => {
   beforeEach(() => {
@@ -165,6 +165,39 @@ describe("useOnboardingProgress", () => {
       expect(progress.skippedHomeAssistant).toBe(true);
       expect(result.current.state.status).toBe("completed");
       expect(result.current.isComplete).toBe(true);
+    });
+  });
+
+  it("reset restarts the persisted onboarding flow from the first step", async () => {
+    window.localStorage.setItem(STORAGE_ONBOARDED, "1");
+    window.localStorage.setItem(
+      STORAGE_ONBOARDING_PROGRESS,
+      JSON.stringify({
+        noteCreated: true,
+        reminderCreated: true,
+        homeAssistantConnected: true,
+        skippedHomeAssistant: false
+      })
+    );
+    const { result } = renderHook(() => useOnboardingProgress());
+    expect(result.current.isComplete).toBe(true);
+
+    act(() => {
+      result.current.reset();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe("inProgress");
+      expect(result.current.currentStep).toBe("note");
+      expect(result.current.isComplete).toBe(false);
+      const saved = window.localStorage.getItem(STORAGE_ONBOARDING_PROGRESS);
+      expect(saved).toBeTruthy();
+      const progress = JSON.parse(saved!);
+      expect(progress.noteCreated).toBe(false);
+      expect(progress.reminderCreated).toBe(false);
+      expect(progress.homeAssistantConnected).toBe(false);
+      expect(progress.skippedHomeAssistant).toBe(false);
+      expect(window.localStorage.getItem(STORAGE_ONBOARDED)).toBeNull();
     });
   });
 });

@@ -103,6 +103,16 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     setIsExporting(true);
     try {
       const api = requireAssistantApi();
+      
+      // Check disk space before export
+      const spaceCheck = await api.checkBackupDiskSpace();
+      if (!spaceCheck.sufficient) {
+        const freeGB = (spaceCheck.freeBytes / 1024 / 1024 / 1024).toFixed(2);
+        const estimatedGB = (spaceCheck.estimatedBackupBytes / 1024 / 1024 / 1024).toFixed(2);
+        setError(`Insufficient disk space for backup. Free: ${freeGB} GB, Estimated: ${estimatedGB} GB`);
+        return;
+      }
+      
       const payload = await api.exportData();
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);

@@ -76,13 +76,15 @@ export async function executeAssistantCommand(deps: AssistantCommandDeps): Promi
       deps.notes || [],
       deps.tasks || [],
       deps.reminders || [],
-      deps.rules || [],
-      deps.devices,
+      [],
+      [],
       deps.teamTasks || [],
       deps.teamProjects || []
     );
 
-    const results = search(query, index);
+    const OPENABLE_CATEGORIES = ["note", "task", "reminder", "team-task"];
+    const openableIndex = index.filter((item) => OPENABLE_CATEGORIES.includes(item.category));
+    const results = search(query, openableIndex);
 
     if (results.length === 0) {
       throw new Error(`No matches found for "${query}". Try a different search term.`);
