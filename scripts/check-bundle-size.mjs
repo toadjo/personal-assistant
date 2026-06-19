@@ -22,6 +22,16 @@ const BUDGETS = {
   "react.js": {
     max: 200, // kB
     warn: 180 // kB
+  },
+  // Life areas chunk (Finance, Car, Family, Health, Hobbies)
+  "life-areas.js": {
+    max: 150, // kB
+    warn: 120 // kB
+  },
+  // Vendor chunk (third-party dependencies)
+  "vendor.js": {
+    max: 150, // kB
+    warn: 120 // kB
   }
 };
 

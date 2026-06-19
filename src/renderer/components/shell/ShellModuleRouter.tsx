@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { HomeDashboardPanel } from "../panels/HomeDashboardPanel";
 import { CalendarPanel } from "../panels/CalendarPanel";
 import { CommandPanel } from "../panels/CommandPanel";
@@ -9,11 +10,7 @@ import { InboxPanel } from "../panels/InboxPanel";
 import { NotesPanel } from "../panels/NotesPanel";
 import { RemindersPanel } from "../panels/RemindersPanel";
 import { TasksPanel } from "../panels/TasksPanel";
-import { FinancePanel } from "../panels/FinancePanel";
-import { CarPanel } from "../panels/CarPanel";
-import { FamilyPanel } from "../panels/FamilyPanel";
-import { HealthPanel } from "../panels/HealthPanel";
-import { HobbiesPanel } from "../panels/HobbiesPanel";
+import { LoadingState } from "../life-areas/LoadingState";
 import { setAutomationFocusIntent } from "../../lib/automation-focus-intent";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { requireAssistantApi } from "../../lib/assistantApi";
@@ -23,6 +20,12 @@ import type { AssistantWorkspace } from "../../hooks/workspace/workspaceTypes";
 import type { TeamState } from "../../hooks/team/useTeamState";
 import type { BriefItem } from "../../types";
 import type { UnifiedWorkItem } from "../../lib/derived/unified-work";
+
+const FinancePanel = lazy(() => import("../panels/FinancePanel").then((m) => ({ default: m.FinancePanel })));
+const CarPanel = lazy(() => import("../panels/CarPanel").then((m) => ({ default: m.CarPanel })));
+const FamilyPanel = lazy(() => import("../panels/FamilyPanel").then((m) => ({ default: m.FamilyPanel })));
+const HealthPanel = lazy(() => import("../panels/HealthPanel").then((m) => ({ default: m.HealthPanel })));
+const HobbiesPanel = lazy(() => import("../panels/HobbiesPanel").then((m) => ({ default: m.HobbiesPanel })));
 
 export type ShellModuleRouterProps = {
   active: PersonalModule;
@@ -367,12 +370,14 @@ export function ShellModuleRouter({
     return (
       <div className="contentGrid">
         <div className="contentMain">
-          <FinancePanel
-            isRefreshing={data.isFetching}
-            onRefresh={data.refreshAll}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-          />
+          <Suspense fallback={<LoadingState message="Loading Finance..." />}>
+            <FinancePanel
+              isRefreshing={data.isFetching}
+              onRefresh={data.refreshAll}
+              onError={ui.reportError}
+              onShowSuccess={ui.showSuccess}
+            />
+          </Suspense>
         </div>
       </div>
     );
@@ -382,12 +387,14 @@ export function ShellModuleRouter({
     return (
       <div className="contentGrid">
         <div className="contentMain">
-          <CarPanel
-            isRefreshing={data.isFetching}
-            onRefresh={data.refreshAll}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-          />
+          <Suspense fallback={<LoadingState message="Loading Car..." />}>
+            <CarPanel
+              isRefreshing={data.isFetching}
+              onRefresh={data.refreshAll}
+              onError={ui.reportError}
+              onShowSuccess={ui.showSuccess}
+            />
+          </Suspense>
         </div>
       </div>
     );
@@ -397,12 +404,14 @@ export function ShellModuleRouter({
     return (
       <div className="contentGrid">
         <div className="contentMain">
-          <FamilyPanel
-            isRefreshing={data.isFetching}
-            onRefresh={data.refreshAll}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-          />
+          <Suspense fallback={<LoadingState message="Loading Family..." />}>
+            <FamilyPanel
+              isRefreshing={data.isFetching}
+              onRefresh={data.refreshAll}
+              onError={ui.reportError}
+              onShowSuccess={ui.showSuccess}
+            />
+          </Suspense>
         </div>
       </div>
     );
@@ -412,12 +421,14 @@ export function ShellModuleRouter({
     return (
       <div className="contentGrid">
         <div className="contentMain">
-          <HealthPanel
-            isRefreshing={data.isFetching}
-            onRefresh={data.refreshAll}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-          />
+          <Suspense fallback={<LoadingState message="Loading Health..." />}>
+            <HealthPanel
+              isRefreshing={data.isFetching}
+              onRefresh={data.refreshAll}
+              onError={ui.reportError}
+              onShowSuccess={ui.showSuccess}
+            />
+          </Suspense>
         </div>
       </div>
     );
@@ -427,12 +438,14 @@ export function ShellModuleRouter({
     return (
       <div className="contentGrid">
         <div className="contentMain">
-          <HobbiesPanel
-            isRefreshing={data.isFetching}
-            onRefresh={data.refreshAll}
-            onError={ui.reportError}
-            onShowSuccess={ui.showSuccess}
-          />
+          <Suspense fallback={<LoadingState message="Loading Hobbies..." />}>
+            <HobbiesPanel
+              isRefreshing={data.isFetching}
+              onRefresh={data.refreshAll}
+              onError={ui.reportError}
+              onShowSuccess={ui.showSuccess}
+            />
+          </Suspense>
         </div>
       </div>
     );

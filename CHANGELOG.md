@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Removed deprecated OAuth client ID re-exports (`getGoogleOAuthClientId`, `getMicrosoftOAuthClientId`) — use canonical names `getGoogleCalendarClientId` and `getMicrosoftCalendarClientId`.
 - Updated v3.7.0 release notes to reflect that Outlook / Microsoft 365 is now supported alongside Google Calendar (previously listed as "planned, not enabled").
+- Lazy-loaded life-area panels (Finance, Car, Family, Health, Hobbies) with React.lazy + Suspense to reduce initial bundle size.
+- Added Vite manualChunks strategy to split renderer into index, react, life-areas, and vendor chunks.
+- Main bundle reduced from ~491 kB to ~304 kB (38% reduction) via code-splitting.
+- Added bundle size budgets for life-areas (150 kB) and vendor (150 kB) chunks in CI.
 
 ## [3.8.0] - 2026-05-28
 

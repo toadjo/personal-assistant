@@ -48,8 +48,16 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
       reportCompressedSize: true,
       rollupOptions: {
         output: {
-          manualChunks: {
-            react: ["react", "react-dom"]
+          manualChunks: (id) => {
+            if (id.includes("node_modules")) {
+              if (id.includes("react") || id.includes("react-dom")) {
+                return "react";
+              }
+              return "vendor";
+            }
+            if (id.includes("FinancePanel") || id.includes("CarPanel") || id.includes("FamilyPanel") || id.includes("HealthPanel") || id.includes("HobbiesPanel")) {
+              return "life-areas";
+            }
           }
         }
       }
