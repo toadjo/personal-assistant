@@ -4,7 +4,37 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 5
+    groups:
+      # Group Electron-related updates together
+      electron:
+        patterns:
+          - "electron*"
+          - "@electron/*"
+        exclude-patterns:
+          - "*electron-rebuild*"
+      # Group build tooling together
+      build-tools:
+        patterns:
+          - "vite*"
+          - "vitest*"
+          - "@vitejs/*"
+          - "@vitest/*"
+          - "rollup*"
+          - "esbuild*"
+      # Group React-related updates together
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+          - "@vitejs/plugin-react"
+      # Group testing updates together
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "@playwright/*"
+          - "@axe-core/*"
     # Major bumps need deliberate upgrades (Electron ABI, Vitest/Vite API, etc.); keep Dependabot to patch/minor.
     ignore:
       - dependency-name: "electron"
