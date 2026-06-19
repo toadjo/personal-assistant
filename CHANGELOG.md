@@ -4,6 +4,15 @@ All notable changes to Personal OS are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Added macOS CI job to verify build and packaging (macos-latest, Node 22)
+- Runs lint, typecheck, unit tests, build, bundle-size check, macOS DMG build
+- Parallels existing verify (Windows) and verify-linux (Ubuntu) jobs
+- Enables cross-platform validation for future releases
+
 ## [3.9.0] - 2026-06-19
 
 ### Changed
