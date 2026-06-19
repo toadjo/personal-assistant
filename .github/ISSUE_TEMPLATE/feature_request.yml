@@ -1,0 +1,62 @@
+name: Feature idea
+description: Suggest a new capability or improvement
+title: "[Feature]: "
+labels: ["feature", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Personal OS is local-first and community-driven, so practical, well-scoped suggestions are the most likely to land.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or pain point this feature would address.
+      placeholder: "I keep losing track of ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+      description: A concise description of the proposed behavior. Mockups or examples welcome.
+      placeholder: "Add a panel that ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this touch?
+      options:
+        - Capture / Inbox
+        - Plan / Today / Review
+        - Calendar
+        - Life area (finance, car, family, health, hobbies)
+        - AI / Ask
+        - Backup / Data Control
+        - Team / Sync
+        - Settings / Theme
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Rough scope
+      description: Best guess at effort. This helps triage; it's not a commitment.
+      options:
+        - Small (one file or one panel tweak)
+        - Medium (new panel or service)
+        - Large (cross-cutting or new subsystem)
+        - Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and could not find a duplicate.
+          required: true
+        - label: This fits the local-first, inspectable, forkable direction of the project.
+          required: false

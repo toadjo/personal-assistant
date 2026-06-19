@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Maintainer guide
+    url: https://github.com/toadjo/personal-assistant/blob/main/docs/MAINTAINER_GUIDE.md
+    about: Read the maintainer guide before opening a contribution PR (architecture map, change workflow, verification checklist).
+  - name: Roadmap
+    url: https://github.com/toadjo/personal-assistant/blob/main/docs/ROADMAP.md
+    about: Check the roadmap to see what's planned and where your idea might fit.
+  - name: Life-area module guide
+    url: https://github.com/toadjo/personal-assistant/blob/main/docs/LIFE_AREAS.md
+    about: Adding a new life area? Start here for the one-manifest recipe.

@@ -1,0 +1,76 @@
+name: Security disclosure
+description: Report a security vulnerability privately
+title: "[Security]: "
+labels: ["security", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting responsibly. Please do **not** include sensitive secrets, tokens, or live credentials in this issue. If the issue is high severity or you have a proof of concept that should stay private, prefer the coordinated disclosure path below.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A short description of the vulnerability and its impact. Avoid pasting secrets or live credentials.
+      placeholder: "A path in ... allows ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity (your best guess)
+      options:
+        - Critical (RCE, data exfiltration, auth bypass)
+        - High (privilege escalation, sensitive data exposure)
+        - Medium (bypass of a security control with limited impact)
+        - Low (defense in depth, hardening)
+    validations:
+      required: true
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected component
+      description: Which part of the app is affected? (preload, IPC handler, backup, connected calendar, corporate mode, etc.)
+      placeholder: "src/main/ipc/handlers/..."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version / commit
+      placeholder: "3.8.0 or commit hash"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps (non-destructive)
+      description: Describe how to trigger the issue without exposing secrets or live credentials. Redact anything sensitive.
+      placeholder: |
+        1. ...
+        2. ...
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What can an attacker do? Who is affected (all users, corporate mode users, etc.)?
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested mitigation (optional)
+      description: If you have a fix in mind, describe it. PRs are welcome but not required.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have not included secrets, tokens, or live credentials in this report.
+          required: true
+        - label: I searched existing issues and could not find a duplicate.
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        **Prefer a private report?** For critical or high severity issues with a proof of concept, you can email the maintainer directly instead of using this public issue. Include a brief summary and a way to contact you; do not send the full exploit over email initially.

@@ -154,9 +154,18 @@ Outputs renderer assets to `dist/renderer/` and compiles main/preload to `dist/m
 
 ---
 
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for a guide to finding a good first issue, making a safe first change, and running the verification checklist.
+
+When reporting issues, please use the GitHub issue templates (bug report, feature idea, accessibility report, or security disclosure).
+
 ## Project Docs
 
+- [Contributing](./CONTRIBUTING.md)
+- [Maintainer guide](./docs/MAINTAINER_GUIDE.md)
 - [Architecture](./docs/ARCHITECTURE.md)
 - [Roadmap](./docs/ROADMAP.md)
 - [Release process](./docs/RELEASING.md)
+- [Life-area module guide](./docs/LIFE_AREAS.md)
 - [Changelog](./CHANGELOG.md)

@@ -1,0 +1,80 @@
+name: Accessibility report
+description: Report an accessibility issue (keyboard, screen reader, contrast, focus)
+title: "[A11y]: "
+labels: ["accessibility", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Personal OS usable for everyone. Accessibility issues are tracked against WCAG 2.1 AA where applicable.
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is the accessibility issue?
+      description: Describe the barrier. What were you trying to do, and what got in the way?
+      placeholder: "I couldn't reach the Save button with the keyboard because ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Keyboard navigation / focus
+        - Screen reader / ARIA
+        - Color contrast
+        - Text size / zoom
+        - Motion / animation
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Impact
+      description: How much does this block usage?
+      options:
+        - Blocks a core workflow entirely
+        - Makes a workflow frustrating but possible
+        - Minor inconvenience
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can someone else trigger this?
+      placeholder: |
+        1. Open ...
+        2. Press Tab until ...
+        3. Observe that ...
+    validations:
+      required: true
+  - type: input
+    id: panel
+    attributes:
+      label: Panel or screen
+      description: Which panel, dialog, or screen is affected?
+      placeholder: "Daily Command Center, Quick Capture, Finance panel, ..."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: "3.8.0"
+    validations:
+      required: true
+  - type: textarea
+    id: assistive-tech
+    attributes:
+      label: Assistive technology used (optional)
+      description: e.g. NVDA, JAWS, VoiceOver, Windows Magnifier, high-contrast mode.
+      placeholder: "NVDA 2024.1"
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and could not find a duplicate.
+          required: true
