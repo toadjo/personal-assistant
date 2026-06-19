@@ -19,6 +19,14 @@ vi.mock("../db", () => ({
 describe("db health service", () => {
   beforeEach(() => {
     testDb = createMemoryDatabase();
+    // Ensure app_settings table exists for optimizeTracker tests
+    testDb.exec(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )
+    `);
   });
 
   afterEach(() => {
@@ -113,6 +121,21 @@ describe("db health service", () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Database optimized successfully");
+    });
+
+    it("resets write counter on successful optimize", () => {
+      // Set a write counter
+      testDb.prepare("INSERT INTO app_settings (key, value, updatedAt) VALUES (?, ?, ?)").run(
+        "db.writesSinceOptimize",
+        "100",
+        new Date().toISOString()
+      );
+
+      optimizeDatabase();
+
+      // Counter should be reset to 0
+      const counter = testDb.prepare("SELECT value FROM app_settings WHERE key = ?").get("db.writesSinceOptimize") as { value?: string };
+      expect(counter?.value).toBe("0");
     });
 
     it("handles optimization errors gracefully", () => {

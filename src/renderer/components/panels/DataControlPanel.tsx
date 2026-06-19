@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import { Database, Download, Upload, Trash2, Activity, Zap, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { Database, Download, Upload, Trash2, Activity, Zap, CheckCircle, AlertCircle, XCircle, Info } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
-import type { BackupResult, HealthCheckResult, OptimizeResult } from "../../hooks/workspace/useBackupActions";
+import type { BackupResult, HealthCheckResult, OptimizeResult, OptimizeSuggestion } from "../../hooks/workspace/useBackupActions";
 
 type Props = {
   onExport: () => Promise<void>;
@@ -16,6 +16,7 @@ type Props = {
   isOptimizing?: boolean;
   lastHealthCheck?: HealthCheckResult | null;
   lastOptimize?: OptimizeResult | null;
+  optimizeSuggestion?: OptimizeSuggestion | null;
 };
 
 export function DataControlPanel({
@@ -30,7 +31,8 @@ export function DataControlPanel({
   isHealthChecking = false,
   isOptimizing = false,
   lastHealthCheck,
-  lastOptimize
+  lastOptimize,
+  optimizeSuggestion
 }: Props): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,16 +81,38 @@ export function DataControlPanel({
     const statusColor = lastOptimize.success ? "var(--successColor)" : "var(--errorColor)";
 
     return (
-      <div style={{ 
-        padding: "var(--space-2)", 
-        backgroundColor: "var(--backgroundColor)", 
-        borderRadius: "4px", 
+      <div style={{
+        padding: "var(--space-2)",
+        backgroundColor: "var(--backgroundColor)",
+        borderRadius: "4px",
         fontSize: "12px",
         marginTop: "var(--space-2)"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <StatusIcon size={14} style={{ color: statusColor }} />
           <span style={{ color: statusColor }}>{lastOptimize.message}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderOptimizeSuggestion = () => {
+    if (!optimizeSuggestion || !optimizeSuggestion.shouldOptimize) return null;
+
+    return (
+      <div style={{
+        padding: "var(--space-2)",
+        backgroundColor: "var(--infoBackgroundColor)",
+        borderRadius: "4px",
+        fontSize: "12px",
+        marginTop: "var(--space-2)",
+        border: "1px solid var(--infoBorderColor)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <Info size={14} style={{ color: "var(--infoColor)" }} />
+          <span style={{ color: "var(--infoColor)" }}>
+            You've made {optimizeSuggestion.writesSinceOptimize}+ changes since last optimize — consider optimizing.
+          </span>
         </div>
       </div>
     );
@@ -135,6 +159,7 @@ export function DataControlPanel({
 
       {renderHealthStatus()}
       {renderOptimizeStatus()}
+      {renderOptimizeSuggestion()}
 
       <div style={{ padding: "var(--space-2) 0", borderTop: "1px solid var(--borderColor)" }}>
         <button

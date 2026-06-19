@@ -3,8 +3,29 @@ import { ipcMain } from "electron";
 import { ZodError } from "zod";
 import { encodeAssistantInvokeFailure, IPC_VALIDATION_DEFAULT_MESSAGE } from "../../shared/invokeErrors";
 import { mainLog } from "../log";
+import { recordWrites } from "../services/optimizeTracker";
 
 type AssertSender = (event: IpcMainInvokeEvent) => void;
+
+/**
+ * Detects if an IPC channel is a write operation (mutates the database).
+ * Based on channel name suffixes: create, update, delete, complete, markPaid, snooze, duplicate, setEnabled, import, reset.
+ */
+function isWriteChannel(channel: string): boolean {
+  const writeSuffixes = [
+    "create",
+    "update",
+    "delete",
+    "complete",
+    "markPaid",
+    "snooze",
+    "duplicate",
+    "setEnabled",
+    "import",
+    "reset",
+  ];
+  return writeSuffixes.some((suffix) => channel.endsWith(suffix));
+}
 
 function validationUserMessage(err: ZodError): string {
   const issues = err.issues;
@@ -41,7 +62,12 @@ export function registerInvoke(
   ipcMain.handle(channel, async (event, ...args) => {
     assertSender(event);
     try {
-      return await handler(event, ...args);
+      const result = await handler(event, ...args);
+      // Track write operations for optimize suggestions
+      if (isWriteChannel(channel)) {
+        recordWrites(1);
+      }
+      return result;
     } catch (error) {
       if (error instanceof ZodError) {
         mainLog.warn("[ipc:validation]", {

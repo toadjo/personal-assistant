@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Theme default now respects `prefers-color-scheme` (Paper for light, Obsidian for dark) when no theme is saved.
 - Onboarding restart button exposed in the first-run panel.
 - Disk-space pre-check for backup exports (requires 2x headroom, blocks export with clear error message).
+- VACUUM/optimize suggestion prompts after 500+ write operations (tracked via persistent counter, resets after successful optimize).
 
 ### Changed
 

@@ -16,7 +16,8 @@ describe("DataControlPanel", () => {
     isHealthChecking: false,
     isOptimizing: false,
     lastHealthCheck: null,
-    lastOptimize: null
+    lastOptimize: null,
+    optimizeSuggestion: null
   };
 
   it("renders export, import, health check, optimize, and reset buttons when health check and optimize are provided", () => {
@@ -260,5 +261,29 @@ describe("DataControlPanel", () => {
     expect(screen.queryByText("DEGRADED")).not.toBeInTheDocument();
     expect(screen.queryByText("CRITICAL")).not.toBeInTheDocument();
     expect(screen.queryByText(/Database optimized/)).not.toBeInTheDocument();
+  });
+
+  it("displays optimize suggestion when shouldOptimize is true", () => {
+    const suggestion = {
+      shouldOptimize: true,
+      writesSinceOptimize: 500,
+      threshold: 500
+    };
+
+    render(<DataControlPanel {...defaultProps} optimizeSuggestion={suggestion} />);
+
+    expect(screen.getByText(/You've made 500\+ changes since last optimize/)).toBeInTheDocument();
+  });
+
+  it("does not display optimize suggestion when shouldOptimize is false", () => {
+    const suggestion = {
+      shouldOptimize: false,
+      writesSinceOptimize: 100,
+      threshold: 500
+    };
+
+    render(<DataControlPanel {...defaultProps} optimizeSuggestion={suggestion} />);
+
+    expect(screen.queryByText(/changes since last optimize/)).not.toBeInTheDocument();
   });
 });

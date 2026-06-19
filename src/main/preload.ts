@@ -54,6 +54,7 @@ const invokeChannelMap = {
   dataReset: "data:reset",
   dbHealthCheck: "db:healthCheck",
   dbOptimize: "db:optimize",
+  dbGetOptimizeSuggestion: "db:getOptimizeSuggestion",
   backupCheckDiskSpace: "backup:checkDiskSpace",
   rendererLogError: "renderer:logError",
   appOpenHouseholdWindow: "app:openHouseholdWindow",
@@ -298,6 +299,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
   resetData: () => ipcRenderer.invoke(invoke.dataReset),
   checkDbHealth: () => ipcRenderer.invoke(invoke.dbHealthCheck),
   optimizeDatabase: () => ipcRenderer.invoke(invoke.dbOptimize),
+  getOptimizeSuggestion: () => ipcRenderer.invoke(invoke.dbGetOptimizeSuggestion),
   checkBackupDiskSpace: () => ipcRenderer.invoke(invoke.backupCheckDiskSpace),
   logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) =>
     ipcRenderer.invoke(invoke.rendererLogError, payload),

@@ -4,6 +4,7 @@ import { backupPayloadSchema } from "../schemas";
 import { exportBackup, importBackup, previewBackup, resetAllData } from "../../services/backup";
 import { checkDbHealth, optimizeDatabase } from "../../services/dbHealth";
 import { checkBackupDiskSpace } from "../../services/diskSpace";
+import { getOptimizeSuggestion } from "../../services/optimizeTracker";
 import { registerInvoke } from "../invoke-handle";
 import { isBackupExportAllowed, isBackupImportAllowed } from "../../security/policy";
 
@@ -44,6 +45,9 @@ export function registerBackupHandlers(assertSender: AssertSender): void {
   });
   registerInvoke(IpcInvoke.dbOptimize, assertSender, () => {
     return optimizeDatabase();
+  });
+  registerInvoke(IpcInvoke.dbGetOptimizeSuggestion, assertSender, () => {
+    return getOptimizeSuggestion();
   });
   registerInvoke(IpcInvoke.backupCheckDiskSpace, assertSender, () => {
     return checkBackupDiskSpace();

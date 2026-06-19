@@ -140,6 +140,7 @@ export function ShellOverlays({
             isOptimizing={backupActions.isOptimizing}
             lastHealthCheck={backupActions.lastHealthCheck}
             lastOptimize={backupActions.lastOptimize}
+            optimizeSuggestion={backupActions.optimizeSuggestion}
           />
         </PanelErrorBoundary>
       )}

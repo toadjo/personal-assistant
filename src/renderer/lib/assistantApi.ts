@@ -260,6 +260,11 @@ export type AssistantApi = {
     recommendations: string[];
   }>;
   optimizeDatabase: () => Promise<{ success: boolean; message: string }>;
+  getOptimizeSuggestion: () => Promise<{
+    shouldOptimize: boolean;
+    writesSinceOptimize: number;
+    threshold: number;
+  }>;
   checkBackupDiskSpace: () => Promise<{
     freeBytes: number;
     totalBytes: number;

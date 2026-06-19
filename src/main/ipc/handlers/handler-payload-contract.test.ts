@@ -48,6 +48,8 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.dataReset,
   IpcInvoke.dbHealthCheck,
   IpcInvoke.dbOptimize,
+  IpcInvoke.dbGetOptimizeSuggestion,
+  IpcInvoke.backupCheckDiskSpace,
   IpcInvoke.appOpenHouseholdWindow,
   IpcInvoke.appFocusDeskWindow,
   IpcInvoke.appHideDeskWindow,

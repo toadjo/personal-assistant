@@ -86,6 +86,12 @@ export type OptimizeResult = {
   message: string;
 };
 
+export type OptimizeSuggestion = {
+  shouldOptimize: boolean;
+  writesSinceOptimize: number;
+  threshold: number;
+};
+
 type SetStatus = (value: string) => void;
 type SetError = (value: string) => void;
 
@@ -98,6 +104,7 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [lastHealthCheck, setLastHealthCheck] = useState<HealthCheckResult | null>(null);
   const [lastOptimize, setLastOptimize] = useState<OptimizeResult | null>(null);
+  const [optimizeSuggestion, setOptimizeSuggestion] = useState<OptimizeSuggestion | null>(null);
 
   async function exportData(): Promise<void> {
     setIsExporting(true);
@@ -257,6 +264,9 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
       setLastOptimize(result);
       setStatus(`Database optimization complete: ${result.message}`);
       await refreshAll();
+      // Refresh optimize suggestion after optimize
+      const suggestion = await api.getOptimizeSuggestion();
+      setOptimizeSuggestion(suggestion);
     } catch (err) {
       setError(getAssistantInvokeErrorMessage(err));
     } finally {
@@ -264,5 +274,18 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     }
   }
 
-  return { exportData, importData, previewImportData, resetData, healthCheck, optimize, isExporting, isImporting, isPreviewing, isResetting, isHealthChecking, isOptimizing, lastHealthCheck, lastOptimize };
+  async function fetchOptimizeSuggestion(): Promise<void> {
+    try {
+      const api = requireAssistantApi();
+      const suggestion = await api.getOptimizeSuggestion();
+      setOptimizeSuggestion(suggestion);
+    } catch (_err) {
+      // Silently fail; suggestion is optional
+    }
+  }
+
+  // Fetch optimize suggestion on mount
+  void fetchOptimizeSuggestion();
+
+  return { exportData, importData, previewImportData, resetData, healthCheck, optimize, isExporting, isImporting, isPreviewing, isResetting, isHealthChecking, isOptimizing, lastHealthCheck, lastOptimize, optimizeSuggestion };
 }

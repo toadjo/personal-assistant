@@ -1,4 +1,5 @@
 import { getDb } from "../db";
+import { resetWriteCounter } from "./optimizeTracker";
 
 export interface DbHealthCheckResult {
   overall_health: "healthy" | "degraded" | "critical";
@@ -170,6 +171,9 @@ export function optimizeDatabase(): { success: boolean; message: string } {
 
     // Rebuild indexes
     db.pragma("optimize");
+
+    // Reset write counter after successful optimize
+    resetWriteCounter();
 
     return { success: true, message: "Database optimized successfully" };
   } catch (err) {
