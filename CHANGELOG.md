@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - VACUUM/optimize suggestion prompts after 500+ write operations (tracked via persistent counter, resets after successful optimize).
 - Encrypted backup format for portable encrypted archives (uses Electron safeStorage, auto-enabled in corporate mode).
 - Sentry breadcrumb filtering to reduce noise from UI mouse events.
+- Life-area module SDK: Finance, Car, Family, Health, and Hobbies now registered via manifest objects in `src/main/services/lifeAreas/`, collapsing migrations, backup modules, and IPC handlers into one module definition per area.
 
 ### Changed
 

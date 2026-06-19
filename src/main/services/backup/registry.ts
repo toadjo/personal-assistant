@@ -3,13 +3,13 @@ import { notesModule } from "./modules/notes";
 import { remindersModule } from "./modules/reminders";
 import { tasksModule } from "./modules/tasks";
 import { automationModule } from "./modules/automation";
-import { financeModule } from "./modules/finance";
-import { carModule } from "./modules/car";
-import { familyModule } from "./modules/family";
-import { healthModule } from "./modules/health";
-import { hobbiesModule } from "./modules/hobbies";
 import { connectedCalendarModule } from "./modules/connectedCalendar";
 import { settingsModule } from "./modules/settings";
+import { financeLifeArea } from "../lifeAreas/finance.module";
+import { carLifeArea } from "../lifeAreas/car.module";
+import { familyLifeArea } from "../lifeAreas/family.module";
+import { healthLifeArea } from "../lifeAreas/health.module";
+import { hobbiesLifeArea } from "../lifeAreas/hobbies.module";
 
 /** FK-safe import order; delete in reverse. */
 export const BACKUP_MODULES: readonly BackupModule[] = [
@@ -17,11 +17,11 @@ export const BACKUP_MODULES: readonly BackupModule[] = [
   remindersModule,
   tasksModule,
   automationModule,
-  financeModule,
-  carModule,
-  familyModule,
-  healthModule,
-  hobbiesModule,
+  financeLifeArea.backupModule,
+  carLifeArea.backupModule,
+  familyLifeArea.backupModule,
+  healthLifeArea.backupModule,
+  hobbiesLifeArea.backupModule,
   connectedCalendarModule,
   settingsModule
 ];
