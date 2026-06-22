@@ -11,7 +11,7 @@ import { ProjectsPanel } from "./panels/ProjectsPanel";
 import { ShellChrome } from "./shell/ShellChrome";
 import { ShellModuleTabs } from "./shell/ShellModuleTabs";
 import { ShellOverlays } from "./shell/ShellOverlays";
-import { ShellOnboarding } from "./shell/ShellOnboarding";
+import { OnboardingFlow } from "./shell/OnboardingFlow";
 import { ShellModuleRouter } from "./shell/ShellModuleRouter";
 import { ShellWorkItemDrawer } from "./shell/ShellWorkItemDrawer";
 import { useShellModals } from "../hooks/shell/useShellModals";
@@ -99,8 +99,11 @@ export function AssistantShell(): JSX.Element {
     reportError: ui.reportError
   });
 
-  const { externalEvents: loadedExternalEvents, reload: reloadExternalCalendarEvents } =
-    useExternalCalendarEvents(calendar.calendarCursor, externalCalendarRefreshKey, ui.reportError);
+  const { externalEvents: loadedExternalEvents, reload: reloadExternalCalendarEvents } = useExternalCalendarEvents(
+    calendar.calendarCursor,
+    externalCalendarRefreshKey,
+    ui.reportError
+  );
 
   useEffect(() => {
     setExternalCalendarEvents(loadedExternalEvents);
@@ -232,7 +235,7 @@ export function AssistantShell(): JSX.Element {
             onCloseReleaseNotes={handleCloseReleaseNotes}
             onQuickCaptureSaved={handleQuickCaptureSaved}
           />
-          <ShellOnboarding
+          <OnboardingFlow
             onboarding={workspace.onboarding}
             haReady={ha.haReady}
             commandHistoryLength={command.commandHistory.length}
@@ -273,12 +276,7 @@ export function AssistantShell(): JSX.Element {
         </>
       )}
 
-      <ShellWorkItemDrawer
-        item={drawer.selectedWorkItem}
-        onClose={drawer.close}
-        workspace={workspace}
-        team={team}
-      />
+      <ShellWorkItemDrawer item={drawer.selectedWorkItem} onClose={drawer.close} workspace={workspace} team={team} />
     </main>
   );
 }

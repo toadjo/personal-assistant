@@ -98,41 +98,39 @@ Personal Assistant is a cross-platform desktop application built with Electron, 
 9. Upload assets to GitHub release
 10. Post-release QA: Verify GitHub release assets include all required files (.exe, .blockmap, latest.yml) and installed About version matches release
 
-## Current Release (v3.7.0 - Connected Calendar)
+## Current Release (v3.9.1)
 
-### Features Implemented
+### Recent Highlights
 
-- Experimental Connected Calendar support for Google Calendar with local OAuth loopback and secure token storage
-- Google Calendar events sync into the existing app Calendar with provider source filtering
-- Connected Accounts panel with one-click sign-in flow
-- Detailed Google OAuth and sync error messages
-- Life-area modules consolidated and shipped: Finance (v3.2), Family (v3.3), Health (v3.4), Hobbies (v3.5)
-- Shared Life Area UI components: `LoadingState`, `SummaryCard`, shared date/number formatters
-- Reliability foundation from v2.9: backup preview, SQLite health diagnostics, database optimize/VACUUM
+- v3.9.1: macOS CI job added (cross-platform validation now covers Windows, Linux, macOS)
+- v3.9.0: Code cleanup, performance, and IPC ergonomics — deprecated OAuth re-exports removed, life-area panels lazy-loaded with React.lazy + Suspense and Vite manualChunks (main bundle reduced 38%), `registerValidated` IPC helper added
+- v3.8.0: TanStack Query renderer data layer with optimistic mutations, axe E2E accessibility checks, keyboard smoke coverage, focus-stack manager, Command Palette ranking upgrades, theme `prefers-color-scheme` defaults, disk-space pre-check for backups, VACUUM/optimize suggestion prompts, encrypted backup format, Sentry breadcrumb filtering, life-area module SDK (manifest-based registration), GitHub issue templates, CONTRIBUTING.md, bundle size budgets in CI, mutation testing pilot, visual regression placeholder, Dependabot PR grouping, ProjectsPanel color contrast fix (#34)
+- v3.7.0: Connected Calendar (Google + Outlook/Microsoft 365) with local OAuth loopback and secure token storage; life-area modules consolidated and shipped (Finance v3.2, Family v3.3, Health v3.4, Hobbies v3.5); reliability foundation from v2.9 (backup preview, SQLite health diagnostics, database optimize/VACUUM)
 
 ### Key Files
 
-- `src/main/services/connectedCalendar*.ts` - Connected calendar service, sync, secrets, OAuth
-- `src/main/services/{finance,family,health,hobbies,car}.ts` - Life-area services
-- `src/main/db/migrations/006_finance.ts` through `011_connected_calendar.ts` - Schema for life areas + calendar
+- `src/main/services/connectedCalendar*.ts` - Connected calendar service, sync, secrets, OAuth (Google + Microsoft)
+- `src/main/services/lifeAreas/` - Manifest-based life-area module SDK
+- `src/main/db/migrations/` - Schema migrations (006_finance through 011_connected_calendar and beyond)
 - `src/renderer/components/panels/ConnectedAccountsPanel.tsx` - Account management UI
+- `src/renderer/components/panels/AppearancePanel.tsx` - Theme editor with token overrides, accent presets, contrast checks, import/export
+- `src/renderer/lib/theme/` - JSON-backed theme storage, tokens, contrast utilities
 - `src/renderer/components/life-areas/` - Shared UI for all life-area panels
 - `src/renderer/lib/dateFormat.ts` - Shared formatters
 - `src/shared/connectedCalendar*.ts` - Shared calendar display types
-- `docs/V3.7_CONNECTED_CALENDAR_DESIGN.md`, `docs/CONNECTED_CALENDAR_OAUTH.md` - Design and setup docs
+- `docs/ROADMAP.md` - Forward-looking improvement plan (phases C through F; A and B completed)
 - `docs/LIFE_AREAS.md` - Guide for adding new life-area modules
-- `docs/ROADMAP.md` - Forward-looking improvement plan (phases A through F)
 
 ### Testing
 
-- Full test suite: 1065+ tests passing
-- Test layers: Vitest unit (main + renderer), preload smoke, browser Playwright E2E, Electron Playwright E2E
+- Full test suite: 1322+ tests passing (per v3.9.0 changelog)
+- Test layers: Vitest unit (main + renderer), preload smoke, browser Playwright E2E (12/12 including axe), Electron Playwright E2E
+- Bundle size budgets enforced in CI: index 304 kB, react 167 kB, life-areas 74 kB, vendor 89 kB
 
 ## Known Issues
 
-- Windows-first manual releases while cross-platform packaging validation continues
+- Windows-first manual releases; macOS and Linux release assets not yet published (CI now validates all three platforms, so publishing is unblocked pending release process work — see Phase D in ROADMAP.md)
 - Linux tray support varies by desktop environment
-- macOS and Linux builds skipped in current release process
 
 ## Development Notes
 

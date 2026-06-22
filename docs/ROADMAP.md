@@ -15,9 +15,9 @@ Final boss goal: friendly AI takeover of your tasks, calendar, chores, reminders
 Goal: make the app feel polished, keyboard-safe, and reliable for repeated daily use.
 
 - ~~Resolve remaining ProjectsPanel color contrast violation via accessible state color tokens ([#34](https://github.com/toadjo/personal-assistant/issues/34)).~~
-- Add focus-return E2E coverage for Command Palette and Quick Capture ([#35](https://github.com/toadjo/personal-assistant/issues/35)).
-- Move themes toward a JSON-backed system with user-authored themes and `prefers-color-scheme` defaults.
-- Refactor onboarding into one persisted flow with clear skip points and restart support.
+- ~~Add focus-return E2E coverage for Command Palette and Quick Capture ([#35](https://github.com/toadjo/personal-assistant/issues/35)).~~
+- ~~Move themes toward a JSON-backed system with user-authored themes and `prefers-color-scheme` defaults.~~
+- ~~Refactor onboarding into one persisted flow with clear skip points and restart support. Consolidated three localStorage keys into a single `assistant-onboarding` key with one-time migration, merged `OnboardingCoach` + `OnboardingPanel` into `OnboardingFlow`, deleted dead `GuidedOnboardingPanel`, and centralized all dismissal/skip/defer/restart logic in `useOnboardingProgress`.~~
 
 Acceptance signal:
 
@@ -31,11 +31,11 @@ Goal: make Personal OS safe enough to trust as a daily-driver tool.
 
 - Add renderer breadcrumbs to Sentry, gated by `allowCrashReporting`.
 - Add automatic local backups with rolling daily and weekly retention.
-- Add disk-space checks before backup writes.
-- Ship encrypted backup format for users who want portable encrypted archives.
-- Expose database health metrics in diagnostics.
-- Suggest `VACUUM` or optimize after meaningful write thresholds.
-- Restore validated macOS and Linux release assets once packaging is reliable.
+- ~~Add disk-space checks before backup writes.~~
+- ~~Ship encrypted backup format for users who want portable encrypted archives.~~
+- ~~Expose database health metrics in diagnostics.~~
+- ~~Suggest `VACUUM` or optimize after meaningful write thresholds.~~
+- Restore validated macOS and Linux release assets once packaging is reliable. (Cross-platform CI jobs landed in v3.9.1; publishing validated non-Windows assets remains open.)
 
 Acceptance signal:
 
@@ -47,8 +47,8 @@ Acceptance signal:
 
 Goal: move from a personal assistant app toward a real Personal OS.
 
-- Build a plugin/module SDK for life areas: schema migration, IPC registration, panel registration, and backup registration from one manifest.
-- Add Outlook / Microsoft 365 calendar provider parity.
+- ~~Build a plugin/module SDK for life areas: schema migration, IPC registration, panel registration, and backup registration from one manifest.~~
+- ~~Add Outlook / Microsoft 365 calendar provider parity.~~
 - Upgrade AI commands from prompt-template parsing to structured tool-calling against existing IPC handlers.
 - Keep the preview-then-confirm pattern for AI-created changes.
 - Explore encrypted optional sync using the existing Supabase infrastructure.
@@ -57,8 +57,8 @@ Goal: move from a personal assistant app toward a real Personal OS.
 
 Acceptance signal:
 
-- A new life area can be added in one PR with a manifest plus its own files.
-- Outlook events appear beside Google events in the unified Calendar.
+- ~~A new life area can be added in one PR with a manifest plus its own files.~~
+- ~~Outlook events appear beside Google events in the unified Calendar.~~
 - An Ask command can create a reminder through tool-calling without regex parsing.
 
 ## Phase F: Community And Quality Bar
@@ -90,10 +90,12 @@ Acceptance signal:
 
 **Phase B (Completed in v3.7.0)**: Renderer data layer migrated to TanStack Query with optimistic mutations and panel crash isolation. See commit `175792c` and CHANGELOG.md for details.
 
-**v3.8.0 accessibility foundation**: Axe E2E checks, keyboard smoke coverage, focus-stack manager, Command Palette ranking upgrades, and initial axe fixes shipped in v3.8.0. See commit `6016aef` and CHANGELOG.md for details.
+**v3.8.0 accessibility and reliability foundation**: Axe E2E checks, keyboard smoke coverage, focus-stack manager, Command Palette ranking upgrades, initial axe fixes, disk-space pre-check for backup exports, VACUUM/optimize suggestion prompts, encrypted backup format, Sentry breadcrumb filtering, and the life-area module SDK all shipped in v3.8.0. See commit `6016aef` and CHANGELOG.md for details.
 
-**Phase C follow-up issues**:
+**v3.9.0 cleanup and performance**: Deprecated OAuth re-exports removed, Outlook/Microsoft 365 calendar parity confirmed (Phase E acceptance signal met), life-area panels lazy-loaded with code-splitting (main bundle reduced 38%), `registerValidated` IPC helper added. See CHANGELOG.md for details.
 
-- [#35](https://github.com/toadjo/personal-assistant/issues/35): Add focus-return E2E coverage for Command Palette and Quick Capture after investigating keyboard shortcut behavior
+**v3.9.1 cross-platform CI**: macOS CI job added alongside existing Windows and Linux verify jobs, enabling validation of future non-Windows release assets (Phase D acceptance signal partially met).
+
+**Phase C remaining work**: Phase C is complete. All items shipped: ProjectsPanel contrast (#34), focus-return E2E (#35), JSON-backed themes, and the onboarding consolidation.
 
 **Non-blocking cleanup**: React `act(...)` warnings in async error-path tests remain as a low-priority maintenance item. These do not block Phase C work.

@@ -1,10 +1,14 @@
 export const STORAGE_THEME = "assistant-theme";
 export const STORAGE_DISPLAY = "assistant-display";
 export const STORAGE_COMMAND_HISTORY = "assistant-command-history";
+/**
+ * Single persisted key for the entire onboarding flow.
+ * Stores a JSON {@link PersistedOnboarding} object with progress + status.
+ */
+export const STORAGE_ONBOARDING = "assistant-onboarding";
+// Legacy keys — kept for one-time migration only. Do not use in new code.
 export const STORAGE_ONBOARDED = "assistant-onboarded";
-/** User dismissed the intro panel without finishing; do not show again until cleared. */
 export const STORAGE_ONBOARDING_DEFERRED = "assistant-onboarding-deferred";
-/** Tracks progress through the guided first-run flow. JSON string with completed steps. */
 export const STORAGE_ONBOARDING_PROGRESS = "assistant-onboarding-progress";
 /** Tracks the last app version for which release notes were shown. */
 export const STORAGE_LAST_SEEN_RELEASE_VERSION = "assistant-last-seen-release-version";

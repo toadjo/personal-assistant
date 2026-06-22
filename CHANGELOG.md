@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Consolidated onboarding state from three localStorage keys (`assistant-onboarded`, `assistant-onboarding-deferred`, `assistant-onboarding-progress`) into a single `assistant-onboarding` key with a `PersistedOnboarding` shape (progress + status). Legacy keys are migrated on first load and cleaned up.
+- Merged `OnboardingCoach` + `OnboardingPanel` + `ShellOnboarding` into one `OnboardingFlow` component with two phases (guided coach + welcome panel). All state transitions (defer, complete, skip, reset) are now centralized in `useOnboardingProgress`.
+- Deleted dead `GuidedOnboardingPanel` component (was never imported).
+- Removed `setShow` from the public onboarding API; visibility is now owned by `useOnboardingProgress` and driven by the persisted status.
+- Updated `first-run-onboarding.spec.ts` E2E tests to the new single-key shape.
+
+### CI
+
 - Added macOS CI job to verify build and packaging (macos-latest, Node 22)
 - Runs lint, typecheck, unit tests, build, bundle-size check, macOS DMG build
 - Parallels existing verify (Windows) and verify-linux (Ubuntu) jobs
@@ -58,7 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - GitHub issue templates for bug reports, feature ideas, accessibility reports, and security disclosures.
 - Contributor guide (CONTRIBUTING.md) with good first issue suggestions and safe first change patterns.
 - Bundle size budget check in CI (scripts/check-bundle-size.mjs) with budgets for main bundle (600 kB) and React chunk (200 kB).
-- Mutation testing pilot (stryker.conf.mjs) for src/main/services/* with 60% mutation score threshold.
+- Mutation testing pilot (stryker.conf.mjs) for src/main/services/\* with 60% mutation score threshold.
 - Visual regression test placeholder (tests/e2e/visual/visual.spec.ts) for Daily Command Center and Calendar.
 - Dependabot PR grouping by dependency type (electron, build-tools, react, testing) to reduce noise.
 - ProjectsPanel color contrast fix: accessible state color tokens for task priority/status badges (issue #34).
