@@ -173,7 +173,6 @@ export type AssistantWorkspace = {
   };
   onboarding: {
     show: boolean;
-    setShow: (value: boolean) => void;
     guidedState: OnboardingState;
     currentStep: OnboardingStep | null;
     isComplete: boolean;
@@ -181,6 +180,8 @@ export type AssistantWorkspace = {
     markReminderCreated: () => void;
     markHomeAssistantConnected: () => void;
     skipHomeAssistant: () => void;
+    defer: () => void;
+    complete: () => void;
     reset: () => void;
   };
   desk: {

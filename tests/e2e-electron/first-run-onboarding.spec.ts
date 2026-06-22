@@ -1,6 +1,33 @@
 import { test, expect } from "./electron-harness.js";
 
-test.describe("First-Run Onboarding (v1.2.7)", () => {
+const ONBOARDING_KEY = "assistant-onboarding";
+
+function setOnboardingState(state: {
+  progress: {
+    noteCreated: boolean;
+    reminderCreated: boolean;
+    homeAssistantConnected: boolean;
+    skippedHomeAssistant: boolean;
+  };
+  status: "inProgress" | "deferred" | "completed";
+}): void {
+  localStorage.setItem(ONBOARDING_KEY, JSON.stringify(state));
+}
+
+function getOnboardingState(): {
+  progress: {
+    noteCreated: boolean;
+    reminderCreated: boolean;
+    homeAssistantConnected: boolean;
+    skippedHomeAssistant: boolean;
+  };
+  status: string;
+} | null {
+  const stored = localStorage.getItem(ONBOARDING_KEY);
+  return stored ? JSON.parse(stored) : null;
+}
+
+test.describe("First-Run Onboarding (v3.10)", () => {
   test("shows guided onboarding panel on first run", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
@@ -29,31 +56,29 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
     await window.waitForTimeout(1000);
 
     // Check that onboarding progress was saved with correct key and shape
-    const progress = await window.evaluate(() => {
-      const stored = localStorage.getItem("assistant-onboarding-progress");
-      return stored ? JSON.parse(stored) : null;
-    });
+    const state = await window.evaluate(() => getOnboardingState());
 
-    expect(progress).toBeTruthy();
-    expect(progress.noteCreated).toBe(true);
-    expect(progress.reminderCreated).toBe(false);
+    expect(state).toBeTruthy();
+    expect(state!.progress.noteCreated).toBe(true);
+    expect(state!.progress.reminderCreated).toBe(false);
+    expect(state!.status).toBe("inProgress");
   });
 
   test("creating a reminder advances onboarding progress", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Set up onboarding at note step using correct key and shape
-    await window.evaluate(() => {
-      localStorage.setItem(
-        "assistant-onboarding-progress",
-        JSON.stringify({
+    // Set up onboarding at note step using the single onboarding key
+    await window.evaluate(() =>
+      setOnboardingState({
+        progress: {
           noteCreated: true,
           reminderCreated: false,
           homeAssistantConnected: false,
           skippedHomeAssistant: false
-        })
-      );
-    });
+        },
+        status: "inProgress"
+      })
+    );
 
     // Reload to pick up the new state
     await window.reload();
@@ -81,30 +106,27 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
 
     // Poll localStorage until reminderCreated becomes true
     await expect(async () => {
-      const progress = await window.evaluate(() => {
-        const stored = localStorage.getItem("assistant-onboarding-progress");
-        return stored ? JSON.parse(stored) : null;
-      });
-      expect(progress).toBeTruthy();
-      expect(progress.reminderCreated).toBe(true);
+      const state = await window.evaluate(() => getOnboardingState());
+      expect(state).toBeTruthy();
+      expect(state!.progress.reminderCreated).toBe(true);
     }).toPass({ timeout: 5000 });
   });
 
   test("skipping Home Assistant completes onboarding flow", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Set up onboarding at HA step using correct key and shape
-    await window.evaluate(() => {
-      localStorage.setItem(
-        "assistant-onboarding-progress",
-        JSON.stringify({
+    // Set up onboarding at HA step using the single onboarding key
+    await window.evaluate(() =>
+      setOnboardingState({
+        progress: {
           noteCreated: true,
           reminderCreated: true,
           homeAssistantConnected: false,
           skippedHomeAssistant: false
-        })
-      );
-    });
+        },
+        status: "inProgress"
+      })
+    );
 
     // Reload to pick up the new state
     await window.reload();
@@ -112,38 +134,39 @@ test.describe("First-Run Onboarding (v1.2.7)", () => {
 
     // Skip HA connection via the API (simulate calling skipHomeAssistant)
     await window.evaluate(() => {
-      const progress = JSON.parse(localStorage.getItem("assistant-onboarding-progress") || "{}");
-      progress.skippedHomeAssistant = true;
-      localStorage.setItem("assistant-onboarding-progress", JSON.stringify(progress));
+      const state = getOnboardingState();
+      if (state) {
+        state.progress.skippedHomeAssistant = true;
+        state.status = "completed";
+        setOnboardingState(state);
+      }
     });
 
     // Check that onboarding is marked as complete
-    const progress = await window.evaluate(() => {
-      const stored = localStorage.getItem("assistant-onboarding-progress");
-      return stored ? JSON.parse(stored) : null;
-    });
+    const state = await window.evaluate(() => getOnboardingState());
 
-    expect(progress).toBeTruthy();
-    expect(progress.noteCreated).toBe(true);
-    expect(progress.reminderCreated).toBe(true);
-    expect(progress.skippedHomeAssistant).toBe(true);
+    expect(state).toBeTruthy();
+    expect(state!.progress.noteCreated).toBe(true);
+    expect(state!.progress.reminderCreated).toBe(true);
+    expect(state!.progress.skippedHomeAssistant).toBe(true);
+    expect(state!.status).toBe("completed");
   });
 
   test("completed onboarding shows normal panels instead of guided flow", async ({ window }) => {
     await window.waitForLoadState("domcontentloaded");
 
-    // Set up onboarding as complete using correct key and shape
-    await window.evaluate(() => {
-      localStorage.setItem(
-        "assistant-onboarding-progress",
-        JSON.stringify({
+    // Set up onboarding as complete using the single onboarding key
+    await window.evaluate(() =>
+      setOnboardingState({
+        progress: {
           noteCreated: true,
           reminderCreated: true,
           homeAssistantConnected: true,
           skippedHomeAssistant: false
-        })
-      );
-    });
+        },
+        status: "completed"
+      })
+    );
 
     // Reload to pick up the new state
     await window.reload();

@@ -4,8 +4,10 @@
  * Ownership:
  * - Status/error messaging and auto-clear timing
  * - Theme preference
- * - Onboarding visibility (guided first-run flow)
  * - Desk window actions (hide)
+ *
+ * Onboarding state (progress, visibility, dismissal) is owned entirely by
+ * {@link useOnboardingProgress}. This hook just passes it through.
  *
  * Dependencies:
  * - None - this hook is self-contained UI state
@@ -13,11 +15,10 @@
  * Onboarding dismissal after first command is handled by useAssistantWorkspace
  * to avoid circular dependencies with command state.
  */
-import { useState, useCallback, type Dispatch, type SetStateAction } from "react";
+import { useState } from "react";
 import type { ThemeMode, ThemeTokenKey, CustomTheme } from "../../lib/theme/tokens";
 import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
 import type { SuccessMessage } from "../ui/usePersistentSuccess";
-import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../../constants/storageKeys";
 import { useWorkspaceMessages } from "../ui/useWorkspaceMessages";
 import { useThemePreference } from "../ui/useThemePreference";
 import { useDisplayPreferences } from "../ui/useDisplayPreferences";
@@ -45,8 +46,6 @@ export type DeskUiState = {
   dismissAllSuccesses: () => void;
   onboarding: {
     show: boolean;
-    setShow: Dispatch<SetStateAction<boolean>>;
-    // guided onboarding
     guidedState: OnboardingState;
     currentStep: OnboardingStep | null;
     isComplete: boolean;
@@ -54,6 +53,8 @@ export type DeskUiState = {
     markReminderCreated: () => void;
     markHomeAssistantConnected: () => void;
     skipHomeAssistant: () => void;
+    defer: () => void;
+    complete: () => void;
     reset: () => void;
   };
   display: DisplayPreferences & {
@@ -76,17 +77,7 @@ export function useDeskUiState(): DeskUiState {
   const display = useDisplayPreferences();
   const { status, setStatus, error, setError, reportError, persistentSuccess } = useWorkspaceMessages();
 
-  const onboardingProgress = useOnboardingProgress();
-
-  const [showOnboarding, setShowOnboarding] = useState(
-    () => !window.localStorage.getItem(STORAGE_ONBOARDED) && !window.localStorage.getItem(STORAGE_ONBOARDING_DEFERRED)
-  );
-
-  const resetOnboarding = useCallback(() => {
-    onboardingProgress.reset();
-    window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-    setShowOnboarding(true);
-  }, [onboardingProgress]);
+  const onboarding = useOnboardingProgress();
 
   const [deskMode, setDeskMode] = useState<DeskMode>("personal");
 
@@ -107,17 +98,17 @@ export function useDeskUiState(): DeskUiState {
     dismissSuccess: persistentSuccess.dismissSuccess,
     dismissAllSuccesses: persistentSuccess.dismissAll,
     onboarding: {
-      show: showOnboarding,
-      setShow: setShowOnboarding,
-      // guided onboarding
-      guidedState: onboardingProgress.state,
-      currentStep: onboardingProgress.currentStep,
-      isComplete: onboardingProgress.isComplete,
-      markNoteCreated: onboardingProgress.markNoteCreated,
-      markReminderCreated: onboardingProgress.markReminderCreated,
-      markHomeAssistantConnected: onboardingProgress.markHomeAssistantConnected,
-      skipHomeAssistant: onboardingProgress.skipHomeAssistant,
-      reset: resetOnboarding
+      show: onboarding.show,
+      guidedState: onboarding.state,
+      currentStep: onboarding.currentStep,
+      isComplete: onboarding.isComplete,
+      markNoteCreated: onboarding.markNoteCreated,
+      markReminderCreated: onboarding.markReminderCreated,
+      markHomeAssistantConnected: onboarding.markHomeAssistantConnected,
+      skipHomeAssistant: onboarding.skipHomeAssistant,
+      defer: onboarding.defer,
+      complete: onboarding.complete,
+      reset: onboarding.reset
     },
     display: {
       ...display.prefs,

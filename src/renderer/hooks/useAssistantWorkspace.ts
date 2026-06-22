@@ -13,7 +13,6 @@
  * logic in a dedicated composition hook before adding it here.
  */
 import { useEffect } from "react";
-import { STORAGE_ONBOARDED, STORAGE_ONBOARDING_DEFERRED } from "../constants/storageKeys";
 import { useDeskUiState } from "./composition/useDeskUiState";
 import { useDeskDataState } from "./composition/useDeskDataState";
 import { useDeskHomeAssistantState } from "./composition/useDeskHomeAssistantState";
@@ -111,13 +110,11 @@ export function useAssistantWorkspace(
   // This is the single place where onboarding dismissal is handled
   useEffect(() => {
     if (command.commandHistory.length > 0 && ui.onboarding.show) {
-      window.localStorage.setItem(STORAGE_ONBOARDED, "1");
-      window.localStorage.removeItem(STORAGE_ONBOARDING_DEFERRED);
-      ui.onboarding.setShow(false);
+      ui.onboarding.complete();
       ui.setStatus("Nice - first command received. I will stay out of your way unless you need me.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [command.commandHistory.length, ui.onboarding.show, ui.onboarding.setShow, ui.setStatus]);
+  }, [command.commandHistory.length, ui.onboarding.show, ui.onboarding.complete, ui.setStatus]);
 
   return {
     ui: {
