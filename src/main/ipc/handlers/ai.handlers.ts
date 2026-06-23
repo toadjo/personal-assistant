@@ -64,7 +64,11 @@ export function registerAiHandlers(assertSender: AssertSender): void {
     const adapter = createAdapter(config.provider);
     try {
       const rawResponse = await adapter.chat(apiKey, parsed);
-      // Parse the response to extract JSON and actionDraft if present
+      // If the provider returned an actionDraft via native tool-calling, use it directly.
+      // Otherwise, fall back to text-based JSON parsing for backward compatibility.
+      if (rawResponse.actionDraft) {
+        return rawResponse;
+      }
       return parseAiResponse(rawResponse.reply);
     } catch (error) {
       if (error instanceof OutboundIntegrationBlockedError || error instanceof HostNotAllowedError) {
