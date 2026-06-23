@@ -121,6 +121,28 @@
     deleteRule: async () => {},
     setRuleEnabled: async () => {},
     logRendererError: async () => {},
+    getAutoBackupStatus: async () => ({
+      enabled: false,
+      lastRunAt: null,
+      lastSuccessAt: null,
+      lastError: null,
+      backupDir: "/tmp/backups",
+      retainedCount: 0
+    }),
+    setAutoBackupEnabled: async (enabled) => ({
+      enabled,
+      lastRunAt: null,
+      lastSuccessAt: null,
+      lastError: null,
+      backupDir: "/tmp/backups",
+      retainedCount: 0
+    }),
+    runAutoBackupNow: async () => ({
+      success: true,
+      filePath: "/tmp/backups/auto-backup-test.json",
+      error: null,
+      pruned: []
+    }),
     onRemindersUpdated: () => () => {},
     onCommand: () => () => {},
     onShowAbout: () => () => {},

@@ -2,6 +2,15 @@ import { useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { requireAssistantApi } from "../../lib/assistantApi";
 
+export type AutoBackupStatus = {
+  enabled: boolean;
+  lastRunAt: string | null;
+  lastSuccessAt: string | null;
+  lastError: string | null;
+  backupDir: string;
+  retainedCount: number;
+};
+
 export type BackupResult = {
   notes: number;
   reminders: number;
@@ -105,6 +114,9 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
   const [lastHealthCheck, setLastHealthCheck] = useState<HealthCheckResult | null>(null);
   const [lastOptimize, setLastOptimize] = useState<OptimizeResult | null>(null);
   const [optimizeSuggestion, setOptimizeSuggestion] = useState<OptimizeSuggestion | null>(null);
+  const [autoBackupStatus, setAutoBackupStatus] = useState<AutoBackupStatus | null>(null);
+  const [isTogglingAutoBackup, setIsTogglingAutoBackup] = useState(false);
+  const [isRunningAutoBackup, setIsRunningAutoBackup] = useState(false);
 
   async function exportData(): Promise<void> {
     setIsExporting(true);
@@ -284,8 +296,74 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     }
   }
 
+  async function fetchAutoBackupStatus(): Promise<void> {
+    try {
+      const api = requireAssistantApi();
+      const status = await api.getAutoBackupStatus();
+      setAutoBackupStatus(status);
+    } catch {
+      // Silently fail; status is optional
+    }
+  }
+
+  async function toggleAutoBackup(enabled: boolean): Promise<void> {
+    setIsTogglingAutoBackup(true);
+    try {
+      const api = requireAssistantApi();
+      const status = await api.setAutoBackupEnabled(enabled);
+      setAutoBackupStatus(status);
+      setStatus(enabled ? "Automatic backups enabled." : "Automatic backups disabled.");
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    } finally {
+      setIsTogglingAutoBackup(false);
+    }
+  }
+
+  async function runAutoBackupNow(): Promise<void> {
+    setIsRunningAutoBackup(true);
+    try {
+      const api = requireAssistantApi();
+      const result = await api.runAutoBackupNow();
+      if (result.success) {
+        setStatus("Auto-backup completed.");
+      } else if (result.error) {
+        setError(`Auto-backup failed: ${result.error}`);
+      }
+      await fetchAutoBackupStatus();
+    } catch (err) {
+      setError(getAssistantInvokeErrorMessage(err));
+    } finally {
+      setIsRunningAutoBackup(false);
+    }
+  }
+
   // Fetch optimize suggestion on mount
   void fetchOptimizeSuggestion();
+  // Fetch auto-backup status on mount
+  void fetchAutoBackupStatus();
 
-  return { exportData, importData, previewImportData, resetData, healthCheck, optimize, isExporting, isImporting, isPreviewing, isResetting, isHealthChecking, isOptimizing, lastHealthCheck, lastOptimize, optimizeSuggestion };
+  return {
+    exportData,
+    importData,
+    previewImportData,
+    resetData,
+    healthCheck,
+    optimize,
+    isExporting,
+    isImporting,
+    isPreviewing,
+    isResetting,
+    isHealthChecking,
+    isOptimizing,
+    lastHealthCheck,
+    lastOptimize,
+    optimizeSuggestion,
+    autoBackupStatus,
+    isTogglingAutoBackup,
+    isRunningAutoBackup,
+    toggleAutoBackup,
+    runAutoBackupNow,
+    fetchAutoBackupStatus
+  };
 }

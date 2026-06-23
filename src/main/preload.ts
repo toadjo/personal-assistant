@@ -56,6 +56,9 @@ const invokeChannelMap = {
   dbOptimize: "db:optimize",
   dbGetOptimizeSuggestion: "db:getOptimizeSuggestion",
   backupCheckDiskSpace: "backup:checkDiskSpace",
+  autoBackupGetStatus: "autoBackup:getStatus",
+  autoBackupSetEnabled: "autoBackup:setEnabled",
+  autoBackupRunNow: "autoBackup:runNow",
   rendererLogError: "renderer:logError",
   appOpenHouseholdWindow: "app:openHouseholdWindow",
   appFocusDeskWindow: "app:focusDeskWindow",
@@ -302,6 +305,9 @@ contextBridge.exposeInMainWorld("assistantApi", {
   optimizeDatabase: () => ipcRenderer.invoke(invoke.dbOptimize),
   getOptimizeSuggestion: () => ipcRenderer.invoke(invoke.dbGetOptimizeSuggestion),
   checkBackupDiskSpace: () => ipcRenderer.invoke(invoke.backupCheckDiskSpace),
+  getAutoBackupStatus: () => ipcRenderer.invoke(invoke.autoBackupGetStatus),
+  setAutoBackupEnabled: (enabled: boolean) => ipcRenderer.invoke(invoke.autoBackupSetEnabled, enabled),
+  runAutoBackupNow: () => ipcRenderer.invoke(invoke.autoBackupRunNow),
   logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) =>
     ipcRenderer.invoke(invoke.rendererLogError, payload),
   onRemindersUpdated: (cb: () => void) => {

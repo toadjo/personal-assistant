@@ -4,6 +4,7 @@ import { backupPayloadSchema } from "../schemas";
 import { exportBackup, importBackup, previewBackup, resetAllData } from "../../services/backup";
 import { checkDbHealth, optimizeDatabase } from "../../services/dbHealth";
 import { checkBackupDiskSpace } from "../../services/diskSpace";
+import { getAutoBackupStatus, setAutoBackupEnabled, runAutoBackup } from "../../services/autoBackup";
 import { getOptimizeSuggestion } from "../../services/optimizeTracker";
 import { registerInvoke } from "../invoke-handle";
 import { isBackupExportAllowed, isBackupImportAllowed } from "../../security/policy";
@@ -51,5 +52,15 @@ export function registerBackupHandlers(assertSender: AssertSender): void {
   });
   registerInvoke(IpcInvoke.backupCheckDiskSpace, assertSender, () => {
     return checkBackupDiskSpace();
+  });
+  registerInvoke(IpcInvoke.autoBackupGetStatus, assertSender, () => {
+    return getAutoBackupStatus();
+  });
+  registerInvoke(IpcInvoke.autoBackupSetEnabled, assertSender, (_event, ...args) => {
+    const enabled = Boolean(args[0]);
+    return setAutoBackupEnabled(enabled);
+  });
+  registerInvoke(IpcInvoke.autoBackupRunNow, assertSender, () => {
+    return runAutoBackup();
   });
 }

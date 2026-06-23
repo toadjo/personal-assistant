@@ -50,6 +50,8 @@ const ZERO_ARG_INVOKE_CHANNELS: readonly string[] = [
   IpcInvoke.dbOptimize,
   IpcInvoke.dbGetOptimizeSuggestion,
   IpcInvoke.backupCheckDiskSpace,
+  IpcInvoke.autoBackupGetStatus,
+  IpcInvoke.autoBackupRunNow,
   IpcInvoke.appOpenHouseholdWindow,
   IpcInvoke.appFocusDeskWindow,
   IpcInvoke.appHideDeskWindow,
@@ -227,7 +229,9 @@ describe("IPC handler payload contracts", () => {
         ch === IpcInvoke.teamTasksCreate ||
         ch === IpcInvoke.teamTasksUpdate ||
         ch === IpcInvoke.aiSetKey ||
-        ch === IpcInvoke.aiChat
+        ch === IpcInvoke.aiChat ||
+        // Auto-backup boolean payload
+        ch === IpcInvoke.autoBackupSetEnabled
       );
       expect(covered, `Add ${ch} to this test (schema or ZERO_ARG list)`).toBe(true);
     }
