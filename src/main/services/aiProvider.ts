@@ -1,4 +1,5 @@
-import type { AiProvider, AiChatRequest, AiChatResponse } from "../../shared/ai/types";
+import type { AiProvider, AiChatRequest, AiChatResponse, AiActionDraft } from "../../shared/ai/types";
+import { getLocalToolRegistry, toOpenAiTool, toAnthropicTool, toolCallToActionDraft } from "../../shared/ai/tools";
 import { throwAssistantInvoke } from "./structuredInvokeError";
 import { checkAiAllowed, checkHostAllowed } from "../security/outboundGuard";
 
@@ -128,6 +129,8 @@ export class OpenAiAdapter implements AiProviderAdapter {
       throwAi({ code: "NOT_CONFIGURED", message: "OpenAI API key is not configured.", retryable: false });
     }
 
+    const tools = getLocalToolRegistry().tools.map(toOpenAiTool);
+
     try {
       const res = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
@@ -141,10 +144,12 @@ export class OpenAiAdapter implements AiProviderAdapter {
             {
               role: "system",
               content:
-                "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields."
+                "You are a helpful personal assistant. Respond concisely. When the user asks you to create a note, task, reminder, or toggle a device, use the appropriate tool. Do not include JSON in your text response — use the tools instead."
             },
             { role: "user", content: request.message }
           ],
+          tools,
+          tool_choice: "auto",
           max_tokens: 500
         }),
         signal: AbortSignal.timeout(30_000)
@@ -188,13 +193,34 @@ export class OpenAiAdapter implements AiProviderAdapter {
       if (!message || typeof message !== "object") {
         throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response has no message.", retryable: false });
       }
-      const content = (message as { content?: unknown }).content;
-      if (!content || typeof content !== "string") {
-        throwAi({ code: "MALFORMED_RESPONSE", message: "OpenAI response has no message content.", retryable: false });
-      }
-      const reply = content;
 
-      return { reply };
+      // Extract text content (may be null when only tool_calls are present)
+      const content = (message as { content?: unknown }).content;
+      const reply = typeof content === "string" ? content : "";
+
+      // Parse tool_calls if present (OpenAI function-calling)
+      const toolCalls = (message as { tool_calls?: unknown }).tool_calls;
+      let actionDraft: AiActionDraft | undefined;
+      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+        const firstToolCall = toolCalls[0];
+        if (firstToolCall && typeof firstToolCall === "object") {
+          const fn = (firstToolCall as { function?: unknown }).function;
+          if (fn && typeof fn === "object") {
+            const name = (fn as { name?: unknown }).name;
+            const rawArgs = (fn as { arguments?: unknown }).arguments;
+            if (typeof name === "string" && typeof rawArgs === "string") {
+              try {
+                const args = JSON.parse(rawArgs) as Record<string, unknown>;
+                actionDraft = toolCallToActionDraft(name, args);
+              } catch {
+                // Invalid JSON arguments — fall through to text-based parsing
+              }
+            }
+          }
+        }
+      }
+
+      return { reply, actionDraft };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "OpenAI API request timed out.", retryable: true });
@@ -312,6 +338,8 @@ export class AnthropicAdapter implements AiProviderAdapter {
       throwAi({ code: "NOT_CONFIGURED", message: "Anthropic API key is not configured.", retryable: false });
     }
 
+    const tools = getLocalToolRegistry().tools.map(toAnthropicTool);
+
     try {
       const res = await fetch(`${this.baseUrl}/messages`, {
         method: "POST",
@@ -324,7 +352,8 @@ export class AnthropicAdapter implements AiProviderAdapter {
           model: this.modelId,
           max_tokens: 500,
           system:
-            "You are a helpful assistant. Respond concisely. When suggesting actions, include a JSON object with type, action, and reason fields.",
+            "You are a helpful personal assistant. Respond concisely. When the user asks you to create a note, task, reminder, or toggle a device, use the appropriate tool. Do not include JSON in your text response — use the tools instead.",
+          tools,
           messages: [{ role: "user", content: request.message }]
         }),
         signal: AbortSignal.timeout(30_000)
@@ -360,19 +389,30 @@ export class AnthropicAdapter implements AiProviderAdapter {
       if (!content || !Array.isArray(content) || content.length === 0) {
         throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic response has no content.", retryable: false });
       }
+
+      // Extract text from text blocks (may be absent when only tool_use blocks present)
       const textBlock = content.find((block) => {
         return block && typeof block === "object" && (block as { type?: string }).type === "text";
       });
-      if (!textBlock || typeof textBlock !== "object") {
-        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic response has no text block.", retryable: false });
-      }
-      const text = (textBlock as { text?: unknown }).text;
-      if (!text || typeof text !== "string") {
-        throwAi({ code: "MALFORMED_RESPONSE", message: "Anthropic text block has no text.", retryable: false });
-      }
-      const reply = text;
+      const reply =
+        textBlock && typeof textBlock === "object" && typeof (textBlock as { text?: unknown }).text === "string"
+          ? (textBlock as { text: string }).text
+          : "";
 
-      return { reply };
+      // Parse tool_use blocks (Anthropic tool-calling)
+      const toolUseBlock = content.find((block) => {
+        return block && typeof block === "object" && (block as { type?: string }).type === "tool_use";
+      });
+      let actionDraft: AiActionDraft | undefined;
+      if (toolUseBlock && typeof toolUseBlock === "object") {
+        const name = (toolUseBlock as { name?: unknown }).name;
+        const input = (toolUseBlock as { input?: unknown }).input;
+        if (typeof name === "string" && input && typeof input === "object" && !Array.isArray(input)) {
+          actionDraft = toolCallToActionDraft(name, input as Record<string, unknown>);
+        }
+      }
+
+      return { reply, actionDraft };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         throwAi({ code: "NETWORK_FAILURE", message: "Anthropic API request timed out.", retryable: true });

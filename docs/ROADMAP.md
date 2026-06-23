@@ -29,8 +29,8 @@ Acceptance signal:
 
 Goal: make Personal OS safe enough to trust as a daily-driver tool.
 
-- Add renderer breadcrumbs to Sentry, gated by `allowCrashReporting`.
-- Add automatic local backups with rolling daily and weekly retention.
+- ~~Add renderer breadcrumbs to Sentry, gated by `allowCrashReporting`.~~
+- ~~Add automatic local backups with rolling daily and weekly retention.~~
 - ~~Add disk-space checks before backup writes.~~
 - ~~Ship encrypted backup format for users who want portable encrypted archives.~~
 - ~~Expose database health metrics in diagnostics.~~
@@ -97,5 +97,7 @@ Acceptance signal:
 **v3.9.1 cross-platform CI**: macOS CI job added alongside existing Windows and Linux verify jobs, enabling validation of future non-Windows release assets (Phase D acceptance signal partially met).
 
 **Phase C remaining work**: Phase C is complete. All items shipped: ProjectsPanel contrast (#34), focus-return E2E (#35), JSON-backed themes, and the onboarding consolidation.
+
+**Phase D reliability work**: Renderer Sentry gated behind `allowCrashReporting` policy with user-action breadcrumbs (#43). Automatic local backups with rolling daily/weekly retention, encrypted snapshots written to `userData/backups/`, scheduler with disk-space and policy guards (#44). Disk-space pre-check, encrypted backup format, DB health diagnostics, and VACUUM/optimize prompts all shipped in v3.8.0. Only remaining item is publishing validated non-Windows release assets (release-process work for the next release).
 
 **Non-blocking cleanup**: React `act(...)` warnings in async error-path tests remain as a low-priority maintenance item. These do not block Phase C work.
