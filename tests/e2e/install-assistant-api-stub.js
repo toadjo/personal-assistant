@@ -99,6 +99,22 @@
       settings.userPreferredNameIsSet = Boolean(trimmed);
       return { ...settings };
     },
+    getSecurityPolicy: async () => ({
+      schemaVersion: 1,
+      mode: "personal",
+      allowAi: true,
+      allowTeamSync: true,
+      allowHomeAssistant: true,
+      allowConnectedCalendar: true,
+      allowGoogleCalendar: true,
+      allowMicrosoftCalendar: true,
+      allowCrashReporting: false,
+      allowBackupExport: true,
+      allowBackupImport: true,
+      allowExternalUrls: true,
+      requireSecureSecretStorage: false,
+      allowedHosts: []
+    }),
     listExecutionLogs: async () => [],
     listRules: async () => [],
     createRule: async () => {},

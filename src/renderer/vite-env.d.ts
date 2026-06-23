@@ -60,6 +60,7 @@ declare global {
       getAssistantSettings: () => Promise<AssistantSettings>;
       setAssistantName: (name: string) => Promise<AssistantSettings>;
       setUserPreferredName: (name: string) => Promise<AssistantSettings>;
+      getSecurityPolicy: () => Promise<import("../shared/security").SecurityPolicy>;
       listConnectedCalendarAccounts: () => Promise<ConnectedCalendarAccount[]>;
       getConnectedCalendarAccountsSummary: () => Promise<{ total: number; synced: number; error: number }>;
       getConnectedCalendarOAuthSetup: () => Promise<import("../shared/connectedCalendarOAuth").ConnectedCalendarOAuthSetupStatus>;

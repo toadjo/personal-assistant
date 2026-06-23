@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { addBreadcrumb } from "../../lib/sentry";
 
 export type PersonalModule =
   | "home"
@@ -35,7 +36,13 @@ export function useShellNav(): ShellNav {
   const [quickCaptureType, setQuickCaptureType] = useState<QuickCaptureType>("inbox");
   const [quickCaptureText, setQuickCaptureText] = useState("");
 
+  const navigateToModule = (m: PersonalModule) => {
+    addBreadcrumb({ category: "navigation", message: `module:${m}`, level: "info" });
+    setActivePersonalModule(m);
+  };
+
   const openQuickCapture = (type: QuickCaptureType, text: string) => {
+    addBreadcrumb({ category: "ui", message: `quick-capture:${type}`, level: "info" });
     setQuickCaptureType(type);
     setQuickCaptureText(text);
     setShowQuickCapture(true);
@@ -47,7 +54,7 @@ export function useShellNav(): ShellNav {
 
   return {
     activePersonalModule,
-    setActivePersonalModule,
+    setActivePersonalModule: navigateToModule,
     quickCapture: {
       isOpen: showQuickCapture,
       type: quickCaptureType,

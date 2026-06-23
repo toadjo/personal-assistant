@@ -17,7 +17,7 @@ const preloadPath = join(root, "src", "main", "preload.ts");
 const viteEnvPath = join(root, "src", "renderer", "vite-env.d.ts");
 
 /** Renderer-only invoke channels (no `window.assistantApi` entry). */
-const RENDERER_EXCLUDED_METHOD_NAMES = new Set(["getSecurityPolicy"]);
+const RENDERER_EXCLUDED_METHOD_NAMES = new Set();
 
 function extractBlock(text, exportName) {
   const re = new RegExp(`export const ${exportName} = \\{([\\s\\S]*?)\\} as const`, "m");

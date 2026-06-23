@@ -2,6 +2,7 @@ import path from "node:path";
 import { existsSync, readFileSync, constants, accessSync } from "node:fs";
 import { z } from "zod";
 import { mainLog } from "../log";
+import type { SecurityPolicy } from "../../shared/security";
 
 export const SecurityPolicySchema = z.object({
   schemaVersion: z.literal(1),
@@ -20,7 +21,7 @@ export const SecurityPolicySchema = z.object({
   allowedHosts: z.array(z.string()).default([])
 });
 
-export type SecurityPolicy = z.infer<typeof SecurityPolicySchema>;
+export type { SecurityPolicy };
 
 export const PERSONAL_DEFAULTS: SecurityPolicy = {
   schemaVersion: 1,
