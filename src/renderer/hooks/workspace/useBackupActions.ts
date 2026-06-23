@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAssistantInvokeErrorMessage } from "../../lib/errors";
 import { requireAssistantApi } from "../../lib/assistantApi";
 
@@ -338,10 +338,11 @@ export function useBackupActions(refreshAll: () => Promise<void>, setStatus: Set
     }
   }
 
-  // Fetch optimize suggestion on mount
-  void fetchOptimizeSuggestion();
-  // Fetch auto-backup status on mount
-  void fetchAutoBackupStatus();
+  // Fetch optimize suggestion and auto-backup status on mount
+  useEffect(() => {
+    void fetchOptimizeSuggestion();
+    void fetchAutoBackupStatus();
+  }, []);
 
   return {
     exportData,
