@@ -232,6 +232,7 @@ contextBridge.exposeInMainWorld("assistantApi", {
   getAssistantSettings: () => ipcRenderer.invoke(invoke.settingsGetAssistant),
   setAssistantName: (name: string) => ipcRenderer.invoke(invoke.settingsSetAssistantName, name),
   setUserPreferredName: (name: string) => ipcRenderer.invoke(invoke.settingsSetUserPreferredName, name),
+  getSecurityPolicy: () => ipcRenderer.invoke(invoke.settingsGetSecurityPolicy),
   listConnectedCalendarAccounts: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsList),
   getConnectedCalendarAccountsSummary: () => ipcRenderer.invoke(invoke.connectedCalendarAccountsSummary),
   getConnectedCalendarOAuthSetup: () => ipcRenderer.invoke(invoke.connectedCalendarOAuthSetup),

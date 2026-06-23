@@ -46,6 +46,7 @@ declare global {
       deleteRule: (id: string) => Promise<void>;
       setRuleEnabled: (id: string, enabled: boolean) => Promise<void>;
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
+      getSecurityPolicy: () => Promise<import("../shared/security").SecurityPolicy>;
       onRemindersUpdated: (cb: () => void) => () => void;
       onCommand: (cb: (_event: unknown, command: string) => void) => () => void;
       openHouseholdWindow: () => Promise<boolean>;

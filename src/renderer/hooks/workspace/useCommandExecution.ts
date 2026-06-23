@@ -10,6 +10,7 @@ import { persistCommandHistory, loadCommandHistory } from "../../lib/storage/com
 import type { AiActionDraft } from "../../../shared/ai/types";
 import type { HaDeviceRow } from "../../types";
 import { getAssistantApi, requireAssistantApi } from "../../lib/assistantApi";
+import { addBreadcrumb } from "../../lib/sentry";
 import type { Note, Task, Reminder, AutomationRule } from "../../../shared/types";
 import type { TeamProjectTask, TeamProject } from "../../../shared/team/types";
 
@@ -177,6 +178,7 @@ export function useCommandExecution(args: {
     const trimmed = rawInput.trim();
     if (!trimmed) return;
     const normalized = normalizeCommandAlias(trimmed);
+    addBreadcrumb({ category: "command", message: normalized.slice(0, 200), level: "info" });
     try {
       setError("");
       setIsRunningCommand(true);
