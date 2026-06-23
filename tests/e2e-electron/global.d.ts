@@ -46,6 +46,28 @@ declare global {
       deleteRule: (id: string) => Promise<void>;
       setRuleEnabled: (id: string, enabled: boolean) => Promise<void>;
       logRendererError: (payload: { message: string; stack?: string; componentStack?: string }) => Promise<void>;
+      getAutoBackupStatus: () => Promise<{
+        enabled: boolean;
+        lastRunAt: string | null;
+        lastSuccessAt: string | null;
+        lastError: string | null;
+        backupDir: string;
+        retainedCount: number;
+      }>;
+      setAutoBackupEnabled: (enabled: boolean) => Promise<{
+        enabled: boolean;
+        lastRunAt: string | null;
+        lastSuccessAt: string | null;
+        lastError: string | null;
+        backupDir: string;
+        retainedCount: number;
+      }>;
+      runAutoBackupNow: () => Promise<{
+        success: boolean;
+        filePath: string | null;
+        error: string | null;
+        pruned: string[];
+      }>;
       getSecurityPolicy: () => Promise<import("../shared/security").SecurityPolicy>;
       onRemindersUpdated: (cb: () => void) => () => void;
       onCommand: (cb: (_event: unknown, command: string) => void) => () => void;

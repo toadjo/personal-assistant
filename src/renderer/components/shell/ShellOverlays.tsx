@@ -141,6 +141,11 @@ export function ShellOverlays({
             lastHealthCheck={backupActions.lastHealthCheck}
             lastOptimize={backupActions.lastOptimize}
             optimizeSuggestion={backupActions.optimizeSuggestion}
+            autoBackupStatus={backupActions.autoBackupStatus}
+            isTogglingAutoBackup={backupActions.isTogglingAutoBackup}
+            isRunningAutoBackup={backupActions.isRunningAutoBackup}
+            onToggleAutoBackup={backupActions.toggleAutoBackup}
+            onRunAutoBackupNow={backupActions.runAutoBackupNow}
           />
         </PanelErrorBoundary>
       )}

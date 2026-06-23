@@ -23,6 +23,7 @@ import { createWindow, installDefaultContentSecurityPolicy, showMainWindow } fro
 import { type TrayOptions } from "./tray";
 import { routeDeskBackground, tryCreateTray } from "./desk-background";
 import { startAutomationScheduler } from "./automation-scheduler";
+import { startAutoBackupScheduler } from "./auto-backup-scheduler";
 import { mainLog } from "./log";
 import { IpcRendererEvent } from "../shared/ipc-channels";
 import { safeWebContentsSend } from "./ipc-safe-send";
@@ -39,6 +40,7 @@ let deskWin: BrowserWindow | null = null;
 let householdWin: BrowserWindow | null = null;
 let reminderSchedulerStop: (() => void) | null = null;
 let stopAutomationScheduler: (() => void) | null = null;
+let stopAutoBackupScheduler: (() => void) | null = null;
 let stopTaskScheduler: (() => void) | null = null;
 let isQuitting = false;
 let trayOptions: TrayOptions | null = null;
@@ -205,6 +207,7 @@ function startAppAfterDbOpen(): void {
     reminderSchedulerStop = startReminderScheduler(getTrustedWindows).stop;
     stopTaskScheduler = startTaskScheduler(getTrustedWindows).stop;
     stopAutomationScheduler = startAutomationScheduler();
+    stopAutoBackupScheduler = startAutoBackupScheduler();
   }
 }
 
@@ -285,6 +288,8 @@ if (!isE2ETestMode && !app.requestSingleInstanceLock()) {
     reminderSchedulerStop = null;
     stopAutomationScheduler?.();
     stopAutomationScheduler = null;
+    stopAutoBackupScheduler?.();
+    stopAutoBackupScheduler = null;
     stopTaskScheduler?.();
     stopTaskScheduler = null;
     void stopAllTeamRealtime();

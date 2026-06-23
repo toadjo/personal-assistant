@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import { Database, Download, Upload, Trash2, Activity, Zap, CheckCircle, AlertCircle, XCircle, Info } from "lucide-react";
+import { Database, Download, Upload, Trash2, Activity, Zap, CheckCircle, AlertCircle, XCircle, Info, Clock, HardDrive } from "lucide-react";
 import { PanelHeader } from "../ui/PanelHeader";
-import type { BackupResult, HealthCheckResult, OptimizeResult, OptimizeSuggestion } from "../../hooks/workspace/useBackupActions";
+import type { BackupResult, HealthCheckResult, OptimizeResult, OptimizeSuggestion, AutoBackupStatus } from "../../hooks/workspace/useBackupActions";
 
 type Props = {
   onExport: () => Promise<void>;
@@ -17,6 +17,11 @@ type Props = {
   lastHealthCheck?: HealthCheckResult | null;
   lastOptimize?: OptimizeResult | null;
   optimizeSuggestion?: OptimizeSuggestion | null;
+  autoBackupStatus?: AutoBackupStatus | null;
+  isTogglingAutoBackup?: boolean;
+  isRunningAutoBackup?: boolean;
+  onToggleAutoBackup?: (enabled: boolean) => Promise<void>;
+  onRunAutoBackupNow?: () => Promise<void>;
 };
 
 export function DataControlPanel({
@@ -32,7 +37,12 @@ export function DataControlPanel({
   isOptimizing = false,
   lastHealthCheck,
   lastOptimize,
-  optimizeSuggestion
+  optimizeSuggestion,
+  autoBackupStatus,
+  isTogglingAutoBackup = false,
+  isRunningAutoBackup = false,
+  onToggleAutoBackup,
+  onRunAutoBackupNow
 }: Props): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -160,6 +170,52 @@ export function DataControlPanel({
       {renderHealthStatus()}
       {renderOptimizeStatus()}
       {renderOptimizeSuggestion()}
+
+      {autoBackupStatus && onToggleAutoBackup && (
+        <div style={{ padding: "var(--space-2) 0", borderTop: "1px solid var(--borderColor)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "var(--space-1)" }}>
+            <Clock size={14} />
+            <strong style={{ fontSize: "13px" }}>Automatic local backups</strong>
+          </div>
+          <p className="muted" style={{ fontSize: "12px", marginBottom: "var(--space-2)" }}>
+            Encrypted snapshots saved daily to a local folder with rolling retention (7 daily + 4 weekly).
+          </p>
+          <div className="row" style={{ gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={autoBackupStatus.enabled}
+                disabled={isTogglingAutoBackup || isBusy}
+                onChange={(e) => void onToggleAutoBackup(e.target.checked)}
+              />
+              {autoBackupStatus.enabled ? "Enabled" : "Disabled"}
+            </label>
+            {onRunAutoBackupNow && (
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={() => void onRunAutoBackupNow()}
+                disabled={isRunningAutoBackup || isBusy}
+              >
+                <HardDrive size={14} />
+                {isRunningAutoBackup ? "Backing up..." : "Back up now"}
+              </button>
+            )}
+          </div>
+          {autoBackupStatus.lastSuccessAt && (
+            <div style={{ fontSize: "11px", color: "var(--mutedColor)", marginTop: "var(--space-1)" }}>
+              <CheckCircle size={11} style={{ display: "inline", marginRight: "4px", color: "var(--successColor)" }} />
+              Last backup: {new Date(autoBackupStatus.lastSuccessAt).toLocaleString()} ({autoBackupStatus.retainedCount} retained)
+            </div>
+          )}
+          {autoBackupStatus.lastError && (
+            <div style={{ fontSize: "11px", color: "var(--errorColor)", marginTop: "var(--space-1)" }}>
+              <AlertCircle size={11} style={{ display: "inline", marginRight: "4px" }} />
+              {autoBackupStatus.lastError}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ padding: "var(--space-2) 0", borderTop: "1px solid var(--borderColor)" }}>
         <button
